@@ -16,6 +16,8 @@
     Version: 1.0
     Date: 7-3-2019 */
 
+`timescale 1ns/1ps
+
 module jtframe_mist(
     input   [1:0]   CLOCK_27,
     output          clk_rgb,
@@ -34,7 +36,6 @@ module jtframe_mist(
     input           hs,
     input           vs,
     // VGA
-    output          clk_vga,
     output  [5:0]   VGA_R,
     output  [5:0]   VGA_G,
     output  [5:0]   VGA_B,
@@ -101,7 +102,7 @@ parameter CONF_STR = "";
 parameter CONF_STR_LEN = 0;
 parameter CLK_SPEED = 12;
 
-wire locked,snd_pwm;
+wire locked, clk_vga;
 
 wire   [5:0]   board_r, board_g, board_b;
 wire           board_hsync, board_vsync;
@@ -190,7 +191,7 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .downloading    ( downloading     ),
 
     .clk_rgb        ( clk_rgb         ),
-    .clk_dac        ( clk_rom         ),
+    .clk_dac        ( clk_rgb         ),
     // audio
     .snd            ( snd             ),
     .snd_pwm        ( AUDIO_L         ),
