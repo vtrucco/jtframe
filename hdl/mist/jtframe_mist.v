@@ -84,7 +84,7 @@ module jtframe_mist(
     // Sound
     input   [15:0]    snd,
     output            AUDIO_L,
-    output            AUDIO_R,    
+    output            AUDIO_R,
     // VGA
     input             en_mixing,
     // joystick
@@ -92,7 +92,7 @@ module jtframe_mist(
     output     [9:0]  game_joystick2,
     output     [1:0]  game_coin,
     output     [1:0]  game_start,
-    output            game_pause        
+    output            game_pause
 );
 
 parameter SIGNED_SND=1'b0;

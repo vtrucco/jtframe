@@ -27,7 +27,7 @@ initial c1=1'b0;
         if ( div=='d4 ) c1 <= 1'b1;
 
     end
-`else 
+`else
     always @(posedge c2) begin
         div <= div=='d8 ? 'd0 : div+'d1;
         case( div )
