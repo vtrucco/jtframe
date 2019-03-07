@@ -1,5 +1,7 @@
+jtframe_mist.v
 jtgng_mist_base.v
-../hybrid_pwm_sd.v
+../jtgng_board.v
+../sound/hybrid_pwm_sd.v
 -sv user_io.v
 ../ver/fast_pll.v
 ../ver/spitx.v
