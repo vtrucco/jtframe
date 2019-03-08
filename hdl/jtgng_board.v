@@ -52,7 +52,9 @@ module jtgng_board(
     output reg [9:0]  game_joystick2,
     output reg [1:0]  game_coin,
     output reg [1:0]  game_start,
-    output reg        game_pause
+    output reg        game_pause,
+    // GFX enable
+    output reg [3:0]  gfx_en
 );
 
 
@@ -146,6 +148,7 @@ assign vga_vsync  = 1'b0;
 
 wire [9:0] key_joy1, key_joy2;
 wire [1:0] key_start, key_coin;
+wire [3:0] key_gfx;
 
 
 `ifndef SIMULATION
@@ -161,7 +164,8 @@ jtgng_keyboard u_keyboard(
     .key_start   ( key_start     ),
     .key_coin    ( key_coin      ),
     .key_reset   ( key_reset     ),
-    .key_pause   ( key_pause     )
+    .key_pause   ( key_pause     ),
+    .key_gfx     ( key_gfx       )
 );
 `else
 assign key_joy2  = 6'h0;
@@ -184,16 +188,21 @@ localparam START_BIT = 7+THREE_BUTTONS;
 localparam COIN_BIT  = 6+THREE_BUTTONS;
 
 reg last_pause, last_joypause_b, last_reset;
+reg [3:0] last_gfx;
 wire joy_pause_b = joy1_sync[PAUSE_BIT] & joy2_sync[PAUSE_BIT];
+
+integer cnt;
 
 always @(posedge clk_rgb)
     if(rst ) begin
         game_pause <= 1'b0;
         soft_rst   <= 1'b0;
+        gfx_en     <= 4'hf;
     end else begin
         last_pause <= key_pause;
         last_reset <= key_reset;
         last_joypause_b <= joy_pause_b; // joy is active low!
+        last_gfx   <= key_gfx;
 
         game_joystick1 <= joy1_sync & ~key_joy1;
         game_joystick2 <= joy2_sync & ~key_joy2;
@@ -202,6 +211,8 @@ always @(posedge clk_rgb)
         if(key_pause && !last_pause)    game_pause  <= ~game_pause;
         if(!joy_pause_b && last_joypause_b) game_pause  <= ~game_pause;
         soft_rst <= key_reset && !last_reset;
+        for(cnt=0; cnt<4; cnt=cnt+1)
+            if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
     end
 
 

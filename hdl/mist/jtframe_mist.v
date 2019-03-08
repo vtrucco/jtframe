@@ -93,7 +93,9 @@ module jtframe_mist(
     output     [9:0]  game_joystick2,
     output     [1:0]  game_coin,
     output     [1:0]  game_start,
-    output            game_pause
+    output            game_pause,
+    // Debug
+    output     [3:0]  gfx_en
 );
 
 parameter SIGNED_SND=1'b0;
@@ -220,7 +222,9 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .game_coin      ( game_coin       ),
     .game_start     ( game_start      ),
 `endif
-    .game_pause     ( game_pause      )
+    .game_pause     ( game_pause      ),
+    // Debug
+    .gfx_en         ( gfx_en          )
 );
 
 endmodule // jtframe

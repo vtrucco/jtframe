@@ -32,7 +32,8 @@ module jtgng_keyboard(
     output reg [1:0] key_start,
     output reg [1:0] key_coin,
     output reg key_reset,
-    output reg key_pause
+    output reg key_pause,
+    output reg [3:0] key_gfx
 );
 
 wire valid;
@@ -60,7 +61,7 @@ always @(posedge clk) begin
     end else begin
         // ps2 decoder has received a valid ps2byte
         if(valid) begin
-            if(ps2byte == 8'he0)
+            if(ps2byte == 8'he0 /*|| ps2byte == 8'h12*/)
                 // extended key code
             key_extended <= 1'b1;
          else if(ps2byte == 8'hf0)
@@ -95,6 +96,11 @@ always @(posedge clk) begin
                     // system control
                     9'h4d: key_pause <= !key_released;
                     9'h04: key_reset <= !key_released;
+                    // GFX enable
+                    9'h0_83: key_gfx[0] <= !key_released; // F7: CHAR enable
+                    9'h0_0a: key_gfx[1] <= !key_released; // F8: SCR1 enable
+                    9'h0_01: key_gfx[2] <= !key_released; // F9: SCR2 enable
+                    9'h0_09: key_gfx[3] <= !key_released; // F10:OBJ  enable
                 endcase
             end
         end
