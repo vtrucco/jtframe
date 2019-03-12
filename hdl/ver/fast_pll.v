@@ -39,7 +39,13 @@ initial c1=1'b0;
     end
 `endif
 
+`ifdef SDRAM_DELAY
+initial $display("INFO: SDRAM_CLK delay set to %d ns",`SDRAM_DELAY);
+assign #(`SDRAM_DELAY) c3 = c2;
+`else
+initial $display("INFO: SDRAM_CLK delay set to 2.5 ns");
 assign #2.5 c3 = c2;
+`endif
 
 endmodule // jtgng_pll0
 
