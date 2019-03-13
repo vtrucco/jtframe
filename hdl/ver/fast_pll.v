@@ -10,10 +10,17 @@ module jtgng_pll0(
 
 assign locked = 1'b1;
 
+`ifdef BASE_CLK
+real base_clk = `BASE_CLK;
+initial $display("INFO: base clock set to %f ns",base_clk);
+`else
+real base_clk = 9.259;
+`endif
+
 initial begin
     c2 = 1'b0;
     // forever c2 = #(10.417/2) ~c2; // 96 MHz
-    forever c2 = #(9.259/2) ~c2; // 108 MHz
+    forever c2 = #(base_clk/2.0) ~c2; // 108 MHz
 end
 
 reg [3:0] div=5'd0;
@@ -40,8 +47,9 @@ initial c1=1'b0;
 `endif
 
 `ifdef SDRAM_DELAY
-initial $display("INFO: SDRAM_CLK delay set to %d ns",`SDRAM_DELAY);
-assign #(`SDRAM_DELAY) c3 = c2;
+real sdram_delay = `SDRAM_DELAY;
+initial $display("INFO: SDRAM_CLK delay set to %f ns",sdram_delay);
+assign #sdram_delay c3 = c2;
 `else
 initial $display("INFO: SDRAM_CLK delay set to 2.5 ns");
 assign #2.5 c3 = c2;

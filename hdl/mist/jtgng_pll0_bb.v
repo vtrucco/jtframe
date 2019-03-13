@@ -1,7 +1,7 @@
 // megafunction wizard: %ALTPLL%VBB%
 // GENERATION: STANDARD
 // VERSION: WM1.0
-// MODULE: altpll
+// MODULE: altpll 
 
 // ============================================================
 // File Name: jtgng_pll0.v
@@ -18,17 +18,17 @@
 // ************************************************************
 
 //Copyright (C) 1991-2014 Altera Corporation
-//Your use of Altera Corporation's design tools, logic functions
-//and other software and tools, and its AMPP partner logic
-//functions, and any output files from any of the foregoing
-//(including device programming or simulation files), and any
-//associated documentation or information are expressly subject
-//to the terms and conditions of the Altera Program License
-//Subscription Agreement, Altera MegaCore Function License
-//Agreement, or other applicable license agreement, including,
-//without limitation, that your use is for the sole purpose of
-//programming logic devices manufactured by Altera and sold by
-//Altera or its authorized distributors.  Please refer to the
+//Your use of Altera Corporation's design tools, logic functions 
+//and other software and tools, and its AMPP partner logic 
+//functions, and any output files from any of the foregoing 
+//(including device programming or simulation files), and any 
+//associated documentation or information are expressly subject 
+//to the terms and conditions of the Altera Program License 
+//Subscription Agreement, Altera MegaCore Function License 
+//Agreement, or other applicable license agreement, including, 
+//without limitation, that your use is for the sole purpose of 
+//programming logic devices manufactured by Altera and sold by 
+//Altera or its authorized distributors.  Please refer to the 
 //applicable agreement for further details.
 
 module jtgng_pll0 (
@@ -117,11 +117,11 @@ endmodule
 // Retrieval info: PRIVATE: PHASE_RECONFIG_INPUTS_CHECK STRING "0"
 // Retrieval info: PRIVATE: PHASE_SHIFT1 STRING "0.00000000"
 // Retrieval info: PRIVATE: PHASE_SHIFT2 STRING "0.00000000"
-// Retrieval info: PRIVATE: PHASE_SHIFT3 STRING "2.00000000"
+// Retrieval info: PRIVATE: PHASE_SHIFT3 STRING "1157.40000000"
 // Retrieval info: PRIVATE: PHASE_SHIFT_STEP_ENABLED_CHECK STRING "0"
 // Retrieval info: PRIVATE: PHASE_SHIFT_UNIT1 STRING "deg"
 // Retrieval info: PRIVATE: PHASE_SHIFT_UNIT2 STRING "deg"
-// Retrieval info: PRIVATE: PHASE_SHIFT_UNIT3 STRING "ns"
+// Retrieval info: PRIVATE: PHASE_SHIFT_UNIT3 STRING "ps"
 // Retrieval info: PRIVATE: PLL_ADVANCED_PARAM_CHECK STRING "0"
 // Retrieval info: PRIVATE: PLL_ARESET_CHECK STRING "0"
 // Retrieval info: PRIVATE: PLL_AUTOPLL_CHECK NUMERIC "1"
@@ -170,7 +170,7 @@ endmodule
 // Retrieval info: CONSTANT: CLK3_DIVIDE_BY NUMERIC "1"
 // Retrieval info: CONSTANT: CLK3_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK3_MULTIPLY_BY NUMERIC "4"
-// Retrieval info: CONSTANT: CLK3_PHASE_SHIFT STRING "2000"
+// Retrieval info: CONSTANT: CLK3_PHASE_SHIFT STRING "1157"
 // Retrieval info: CONSTANT: COMPENSATE_CLOCK STRING "CLK1"
 // Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "37037"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone III"
