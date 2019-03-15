@@ -48,27 +48,36 @@ function add_dir {
     done
 }
 
-function find_core_name {
+function get_named_arg {
+    ARGNAME="$1"
+    shift
     while [ $# -gt 0 ]; do
-        if [ "$1" = "-sysname" ]; then
+        if [ "$1" = "$ARGNAME" ]; then
             echo $2
+            return
         fi
         shift
     done
 }
 
 # Which core is this for?
-SYSNAME=$(find_core_name $*)
+SYSNAME=$(get_named_arg -sysname $*)
+MODULES=$(get_named_arg -modules $*)
 PERCORE=
+
+if [ "$MODULES" = "" ]; then
+    echo "ERROR: Missing required argument -modules"
+    exit 1
+fi
 
 case "$SYSNAME" in
     "")
         echo "ERROR: Needs system name. Use -sysname"
         exit 1;;
-    gng)    PERCORE=$(add_dir ../../../modules/jt12/hdl jt03.f);;
-    1942)   PERCORE=$(add_dir ../../../modules/jt12/jt49/hdl jt49.f);;
-    popeye) PERCORE=$(add_dir ../../../modules/jt49/hdl jt49.f);;
-    1943)   PERCORE=$(add_dir ../../../modules/jt12/hdl jt03.f);
+    gng)    PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);;
+    1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f);;
+    popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f);;
+    1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
             MEM_CHECK_TIME=250_000_000;;
 esac
 # switch to NCVerilog if available
@@ -77,9 +86,11 @@ if which ncverilog; then
     MACROPREFIX="+define+"
 fi
 
+
 while [ $# -gt 0 ]; do
 case "$1" in
     "-sysname") shift;; # ignore here
+    "-modules") shift;; # ignore here
     "-w" | "-deep")
         DUMP=${MACROPREFIX}DUMP
         echo Signal dump enabled
@@ -101,11 +112,16 @@ case "$1" in
     "-mist")
         TOP=mist_test
         if [ $SIMULATOR == iverilog ]; then
-            MIST=$(add_dir ../../../modules/jtframe/hdl/mist/mist mist_iverilog.f)
+            MIST=$(add_dir $MODULES/jtframe/hdl/mist/mist mist_iverilog.f)
         else
-            MIST="-F ../../../modules/jtframe/hdl/mist/mist.f"
+            MIST="-F $MODULES/jtframe/hdl/mist/mist.f"
         fi
-        MIST="../../../modules/jtframe/hdl/mist/mist_test.v ../../hdl/jt${SYSNAME}_mist.v $MIST mist_dump.v"
+        MIST="$MODULES/jtframe/hdl/mist/mist_test.v ../../hdl/jt${SYSNAME}_mist.v $MIST mist_dump.v"
+        # Add a local copy of mist_dump if it doesn't exist
+        if [ ! -e mist_dump.v ]; then
+            cp $MODULES/jtframe/hdl/ver/mist_dump.v .
+            git add -v mist_dump.v
+        fi
         ;;
     "-slowpll")
         echo "INFO: Simulation will use the slow PLL model"
@@ -248,17 +264,17 @@ EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=
 
 # Add the PLL
 if [[ $SIMULATOR == iverilog && $TOP == mist_test ]]; then
-    MIST="$MIST $(add_dir ../../../modules/jtframe/hdl/mist/mist $MIST_PLL)"
+    MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist/mist $MIST_PLL)"
 else
-    MIST="$MIST -F ../../../modules/jtframe/hdl/mist/$MIST_PLL"
+    MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
 fi
 
 case $SIMULATOR in
 iverilog)
     iverilog -g2005-sv $MIST \
         -f game.f $PERCORE \
-        $(add_dir ../../../modules/jtframe/hdl/ver/sim.f ) \
-        ../../../modules/tv80/*.v  \
+        $(add_dir $MODULES/jtframe/hdl/ver/sim.f ) \
+        $MODULES/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
         $MAXFRAME -DIVERILOG $EXTRA \
@@ -266,18 +282,18 @@ iverilog)
 ncverilog)
     ncverilog +access+r +nc64bit +define+NCVERILOG \
         -f game.f $PERCORE \
-        -F ../../../modules/jtframe/hdl/ver/sim.f -disable_sem2009 $MIST \
+        -F $MODULES/jtframe/hdl/ver/sim.f -disable_sem2009 $MIST \
         +define+SIM_MS=$SIM_MS +define+SIMULATION \
         $DUMP $LOADROM \
         $MAXFRAME \
-        -ncvhdl_args,-V93 ../../../modules/t80/T80{pa,_ALU,_Reg,_MCode,""}.vhd \
-        ../../../modules/tv80/*.v \
+        -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,""}.vhd \
+        $MODULES/tv80/*.v \
         $MIST $EXTRA;;
 verilator)
     verilator -I../../hdl \
         -f game.f $PERCORE \
-        ../../../modules/tv80/*.v \
-        ../../../modules/ver/quick_sdram.v \
+        $MODULES/tv80/*.v \
+        $MODULES/ver/quick_sdram.v \
         --top-module jt${SYSNAME}_game -o sim \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM -DFASTSDRAM \
         -DVERILATOR_LINT \
