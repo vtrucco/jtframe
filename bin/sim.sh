@@ -70,21 +70,24 @@ if [ "$MODULES" = "" ]; then
     exit 1
 fi
 
+# switch to NCVerilog if available
+if which ncverilog; then
+    SIMULATOR=ncverilog
+    MACROPREFIX="+define+"
+fi
+
 case "$SYSNAME" in
     "")
         echo "ERROR: Needs system name. Use -sysname"
         exit 1;;
     gng)    PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);;
     1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f);;
-    popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f);;
+    popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
+            EXTRA="$EXTRA ${MACROPREFIX}NOGNGCEN"
+            ;;
     1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
             MEM_CHECK_TIME=250_000_000;;
 esac
-# switch to NCVerilog if available
-if which ncverilog; then
-    SIMULATOR=ncverilog
-    MACROPREFIX="+define+"
-fi
 
 
 while [ $# -gt 0 ]; do
@@ -209,6 +212,8 @@ case "$1" in
     "-help")
         cat << EOF
 JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
+    -sysname  Specify the name of the core
+    -modules  Location of the modules folder with respect to the simulation folder
     -mist     Use MiST setup for simulation, instead of using directly the
               game module. This is slower but more informative.
     -video    Enable video output
@@ -286,7 +291,7 @@ ncverilog)
         +define+SIM_MS=$SIM_MS +define+SIMULATION \
         $DUMP $LOADROM \
         $MAXFRAME \
-        -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,""}.vhd \
+        -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
         $MODULES/tv80/*.v \
         $MIST $EXTRA;;
 verilator)

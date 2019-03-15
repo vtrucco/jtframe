@@ -140,7 +140,9 @@ always @(negedge clk or posedge rst_base)
         else rst<=rst_base;
     end
 
-
+`ifndef NOGNGCEN
+// This module is useful for jt*_game simulations when the
+// game module does not include its own cen signal generator
 jtgng_cen #(.CLK_SPEED(CLK_SPEED)) u_cen(
     .clk    ( clk    ),
     .cen12  ( cen12  ),
@@ -148,6 +150,12 @@ jtgng_cen #(.CLK_SPEED(CLK_SPEED)) u_cen(
     .cen3   ( cen3   ),
     .cen1p5 ( cen1p5 )
 );
+`else 
+assign cen12  = 1'b0;
+assign cen6   = 1'b0;
+assign cen3   = 1'b0;
+assign cen1p5 = 1'b0;
+`endif
 
 generate
     if (sdram_instance==1) begin
