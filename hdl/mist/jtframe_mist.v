@@ -23,7 +23,7 @@ module jtframe_mist(
     output          clk_rgb,
     output          clk_rom,
     input           cen12,
-    input           cen6,
+    input           pxl_cen,
     // interface with microcontroller
     output  [31:0]  status,
     // Base video
@@ -198,7 +198,7 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .snd            ( snd             ),
     .snd_pwm        ( AUDIO_L         ),
     // VGA
-    .cen6           ( cen6            ),
+    .pxl_cen        ( pxl_cen            ),
     .clk_vga        ( clk_vga         ),
     .en_mixing      ( ~status[9]      ),
     .game_r         ( game_r          ),

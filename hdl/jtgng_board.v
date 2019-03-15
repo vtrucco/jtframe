@@ -27,7 +27,7 @@ module jtgng_board(
     input             clk_dac,
     input             clk_rgb,
     input             clk_vga,
-    input             cen6,
+    input             pxl_cen,
     input   [15:0]    snd,
     output            snd_pwm,
     // VGA
@@ -64,11 +64,17 @@ parameter THREE_BUTTONS=0;
 wire key_reset, key_pause;
 reg [7:0] rst_cnt=8'd0;
 
-always @(posedge clk_rgb) // if(cen6)
+always @(posedge clk_rgb)
     if( rst_cnt != ~8'b0 ) begin
         rst <= 1'b1;
         rst_cnt <= rst_cnt + 8'd1;
     end else rst <= 1'b0;
+
+always @(negedge clk_rgb)
+    if( rst )
+        rst_n <= 1'b0;
+    else
+        rst_n <= 1'b1;
 
 reg soft_rst;
 reg last_dip_flip;
@@ -123,7 +129,7 @@ assign vga_b[0] = vga_b[5];
 `ifndef SIMULATION
 jtgng_vga u_scandoubler (
     .clk_rgb    ( clk_rgb       ), // 24 MHz
-    .cen6       ( cen6          ), //  6 MHz
+    .pxl_cen       ( pxl_cen          ), //  6 MHz
     .clk_vga    ( clk_vga       ), // 25 MHz
     .rst        ( rst           ),
     .red        ( game_r        ),
@@ -178,7 +184,7 @@ assign key_pause = 1'b0;
 
 reg [9:0] joy1_sync, joy2_sync;
 
-always @(posedge clk_rgb) if(cen6) begin
+always @(posedge clk_rgb) begin
     joy1_sync <= ~board_joystick1;
     joy2_sync <= ~board_joystick2;
 end

@@ -35,7 +35,7 @@ mist_dump u_dump(
     .frame_cnt  ( frame_cnt )
 );
 
-test_harness #(.sdram_instance(0),.GAME_ROMNAME("../../../rom/JT1943.rom"),
+test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .TX_LEN(887808), .CLK_SPEED(CLK_SPEED) ) u_harness(
     .rst         ( rst           ),
     .clk         ( clk           ),

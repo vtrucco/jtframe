@@ -84,6 +84,7 @@ case "$SYSNAME" in
     1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f);;
     popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
             EXTRA="$EXTRA ${MACROPREFIX}NOGNGCEN"
+            EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../rom/jtpopeye.rom\""
             ;;
     1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
             MEM_CHECK_TIME=250_000_000;;
