@@ -80,14 +80,20 @@ case "$SYSNAME" in
     "")
         echo "ERROR: Needs system name. Use -sysname"
         exit 1;;
-    gng)    PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);;
-    1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f);;
+    gng)    PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f)
+            EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../../rom/JTGNG.rom\""
+            ;;
+    1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f)
+            EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../../rom/JT1942.rom\""
+            ;;
     popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
             EXTRA="$EXTRA ${MACROPREFIX}NOGNGCEN"
             EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../rom/jtpopeye.rom\""
             ;;
     1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
-            MEM_CHECK_TIME=250_000_000;;
+            EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../../rom/JT1943.rom\""
+            MEM_CHECK_TIME=250_000_000
+            ;;
 esac
 
 

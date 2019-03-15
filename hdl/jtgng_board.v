@@ -17,7 +17,8 @@
     Date: 8-2-2019 */
 
 module jtgng_board(
-    output  reg       rst,
+    output  reg       rst,      // use as synchrnous reset
+    output  reg       rst_n,    // use as asynchronous reset
     output  reg       game_rst,
     // reset forcing signals:
     input             dip_flip, // A change in dip_flip implies a reset
