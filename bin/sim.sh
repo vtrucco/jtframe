@@ -89,20 +89,21 @@ case "$SYSNAME" in
         echo "ERROR: Needs system name. Use -sysname"
         exit 1;;
     gng)    PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f)
-            EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../../rom/JTGNG.rom\""
+            GAME_ROM_PATH=../../../rom/JTGNG.rom
             ;;
     1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f)
-            EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../../rom/JT1942.rom\""
+            GAME_ROM_PATH=../../../rom/JT1942.rom
             ;;
     popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
             EXTRA="$EXTRA ${MACROPREFIX}NOGNGCEN"
-            EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../rom/jtpopeye.rom\""
+            GAME_ROM_PATH=../../rom/jtpopeye.rom
             ;;
     1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
-            EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"../../../rom/JT1943.rom\""
+            GAME_ROM_PATH=../../../rom/JT1943.rom
             MEM_CHECK_TIME=250_000_000
             ;;
 esac
+EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"${GAME_ROM_PATH}\""
 
 
 while [ $# -gt 0 ]; do
@@ -208,9 +209,8 @@ case "$1" in
     "-load")
         LOADROM=${MACROPREFIX}LOADROM
         echo ROM load through SPI enabled
-        if [ ! -e ../../../rom/JT1942.rom ]; then
-            echo "Missing file JT1942.rom in rom folder"
-            echo "Run 1942rom.py in rom folder to generate it."
+        if [ ! -e $GAME_ROM_PATH ]; then
+            echo "Missing file $GAME_ROM_PATH"
             exit 1
         fi
         ;;
@@ -264,6 +264,7 @@ done
 
 if [ $FIRMONLY = FIRMONLY ]; then exit 0; fi
 
+# Use this function to create
 # HEX files with initial contents for some of the RAMs
 function clear_hex_file {
     cnt=0
@@ -273,8 +274,6 @@ function clear_hex_file {
         cnt=$((cnt+1))
     done
 }
-
-clear_hex_file obj_buf  128
 
 if [ "$EXTRA" != "" ]; then
     echo Verilog macros: "$EXTRA"

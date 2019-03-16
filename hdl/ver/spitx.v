@@ -54,9 +54,9 @@ module spitx(
 );
 
 parameter filename="../../../rom/JT1942.rom";
-parameter TX_LEN           = 242688;
+parameter TX_LEN           = 1024*1024;
 
-integer file, tx_cnt;
+integer file, tx_cnt, file_len;
 assign SPI_SS3=1'b0;
 assign SPI_SS4=1'b0;
 
@@ -73,11 +73,7 @@ initial begin
         $display("ERROR: %m\n\tcould not open file %s", filename );
         $finish;
     end
-    tx_cnt=$fread( rom_buffer, file );
-    if( tx_cnt != TX_LEN ) begin
-        $display("ERROR: %m\n\t%s", filename," was expected to be of length %d", TX_LEN );
-        $finish;
-    end
+    file_len=$fread( rom_buffer, file );
     $display("INFO: Read %s for SPI transmission.",filename);
     $fclose(file);
 end
@@ -158,7 +154,7 @@ else begin
             tx_cnt <= tx_cnt + 1;
         end
         9: if( data_sent ) begin
-            if( tx_cnt!=TX_LEN ) state <= 8;
+            if( tx_cnt!=file_len ) state <= 8;
             hold <= 1'b0;
         end
         // finish DOWNLOAD signal
