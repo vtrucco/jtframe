@@ -77,7 +77,8 @@ module jtframe_mist(
     output          loop_rst,
     input           autorefresh,
 //////////// board
-    output            rst,
+    output            rst,      // synchronous reset
+    output            rst_n,    // asynchronous reset
     output            game_rst,
     // reset forcing signals:
     input             dip_flip, // A change in dip_flip implies a reset
@@ -187,6 +188,7 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)) u_base(
 
 jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .rst            ( rst             ),
+    .rst_n          ( rst_n           ),
     .game_rst       ( game_rst        ),
     .dip_flip       ( dip_flip        ),
     .rst_req        ( rst_req         ),
