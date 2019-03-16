@@ -38,7 +38,7 @@ begin
 			// Pick a new PWM threshold using a Sigma Delta
 			scaledin<=33'd134217728 // (1<<(16-5))<<16, offset to keep centre aligned.
 				+({1'b0,din}*61440); // 30<<(16-5)-1;
-			sigma<=scaledin[31:16]+{5'b000000,sigma[10:0]};	// Will use previous iteration's scaledin value
+			sigma<=scaledin[31:16]+{4'b0,sigma[10:0]};	// Will use previous iteration's scaledin value
 			pwmthreshold<=sigma[15:11]; // Will lag 2 cycles behind, but shouldn't matter.
 			out<=1'b1;
 		end
