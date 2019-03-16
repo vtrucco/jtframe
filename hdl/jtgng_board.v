@@ -23,6 +23,7 @@ module jtgng_board(
     // reset forcing signals:
     input             dip_flip, // A change in dip_flip implies a reset
     input             downloading,
+    input             loop_rst,
     input             rst_req,
 
     input             clk_dac,
@@ -71,11 +72,17 @@ always @(posedge clk_rgb)
         rst_cnt <= rst_cnt + 8'd1;
     end else rst <= 1'b0;
 
-always @(negedge clk_rgb)
-    if( rst )
+// rst_n is meant to be used as an asynchronous reset
+// for the clk_rgb domain
+reg pre_rst_n;
+always @(posedge clk_rgb)
+    if( rst | downloading | loop_rst ) begin
+        pre_rst_n <= 1'b0;
         rst_n <= 1'b0;
-    else
-        rst_n <= 1'b1;
+    end else begin
+        pre_rst_n <= 1'b1;
+        rst_n <= pre_rst_n;
+    end
 
 reg soft_rst;
 reg last_dip_flip;

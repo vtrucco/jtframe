@@ -193,6 +193,7 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .dip_flip       ( dip_flip        ),
     .rst_req        ( rst_req         ),
     .downloading    ( downloading     ),
+    .loop_rst       ( loop_rst        ),
 
     .clk_rgb        ( clk_rgb         ),
     .clk_dac        ( clk_rgb         ),
