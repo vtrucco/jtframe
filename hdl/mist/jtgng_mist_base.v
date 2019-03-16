@@ -128,7 +128,7 @@ assign ps2_kbd_clk  = 1'b0;
 assign scandoubler_disable = 1'b1;
 `endif
 
-jtgng_pll0 clk_gen (
+jtgng_pll0 u_pll_game (
     .inclk0 ( CLOCK_27[0] ),
     .c1     ( clk_rgb     ),
     .c2     ( clk_rom     ), // 96
@@ -138,7 +138,7 @@ jtgng_pll0 clk_gen (
 
 // assign SDRAM_CLK = clk_rom;
 
-jtgng_pll1 clk_gen2 (
+jtgng_pll1 u_pll_vga (
     .inclk0 ( clk_rgb   ),
     .c0     ( clk_vga   ) // 25
 );

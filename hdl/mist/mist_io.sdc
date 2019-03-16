@@ -48,7 +48,7 @@ create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_port
 #**************************************************************
 
 derive_pll_clocks -create_base_clocks
-create_generated_clock -name {sdclk_pin} -source [get_pins {u_frame|u_base|clk_gen|altpll_component|auto_generated|pll1|clk[2]}] -master_clock {u_frame|u_base|clk_gen|altpll_component|auto_generated|pll1|clk[2]} [get_ports {SDRAM_CLK}] 
+create_generated_clock -name {sdclk_pin} -source [get_pins {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] -master_clock {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2]} [get_ports {SDRAM_CLK}] 
 
 
 
@@ -84,7 +84,7 @@ set_output_delay -clock sdclk_pin -min -0.8 [get_ports SDRAM_*]
 #**************************************************************
 
 set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks {*|altpll_component|auto_generated|pll1|clk[*]}]
-set_clock_groups -asynchronous -group [get_clocks {u_frame|u_base|clk_gen|altpll_component|auto_generated|pll1|clk[1]}] -group [get_clocks {u_frame|u_base|clk_gen2|altpll_component|auto_generated|pll1|clk[0]}]
+set_clock_groups -asynchronous -group [get_clocks {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[1]}] -group [get_clocks {u_frame|u_base|u_pll_vga|altpll_component|auto_generated|pll1|clk[0]}]
 
 #**************************************************************
 # Set False Path
