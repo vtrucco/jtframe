@@ -135,7 +135,7 @@ always @(negedge clk or posedge rst_base)
     if( rst_base ) begin
         rst <= 1'b1;
         rst_cnt <= 2;
-    end else if(cen6) begin
+    end else begin
         if(rst_cnt) rst_cnt<=rst_cnt-1;
         else rst<=rst_base;
     end

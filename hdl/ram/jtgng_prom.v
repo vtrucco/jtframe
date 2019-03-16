@@ -65,6 +65,9 @@ initial begin
         end
         $display("INFO: %m memory check succedded");
     end
+    else begin
+        $display("ERROR: Cannot find file %s to check memory %m", simfile );
+    end
 end
 `endif
 

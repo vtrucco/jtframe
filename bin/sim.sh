@@ -97,6 +97,8 @@ case "$SYSNAME" in
     popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
             EXTRA="$EXTRA ${MACROPREFIX}NOGNGCEN"
             GAME_ROM_PATH=../../rom/jtpopeye.rom
+            # check after only 22ms. ROM loading is very fast for POPEYE
+            MEM_CHECK_TIME=22_000_000
             ;;
     1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
             GAME_ROM_PATH=../../../rom/JT1943.rom
