@@ -8,6 +8,7 @@ module rgb2ypbpr (
 	output [5:0]    pr
 );
 
+`ifndef IVERILOG
 wire [5:0] yuv_full[225] = '{
   6'd0,   6'd0,  6'd0,  6'd0,  6'd1,  6'd1,  6'd1,  6'd1,
   6'd2,   6'd2,  6'd2,  6'd3,  6'd3,  6'd3,  6'd3,  6'd4,
@@ -39,6 +40,11 @@ wire [5:0] yuv_full[225] = '{
   6'd61, 6'd61, 6'd62, 6'd62, 6'd62, 6'd62, 6'd63, 6'd63,
   6'd63
 };
+`else 
+wire [5:0] yuv_full[225]; // Leave it empty. Output will be X's but
+  // it won't stop iVerilog from running
+`endif
+
 
 wire [18:0]  y_8 = 19'd04096 + ({red, 8'd0} + {red, 3'd0}) + ({green, 9'd0} + {green, 2'd0}) + ({blue, 6'd0} + {blue, 5'd0} + {blue, 2'd0});
 wire [18:0] pb_8 = 19'd32768 - ({red, 7'd0} + {red, 4'd0} + {red, 3'd0}) - ({green, 8'd0} + {green, 5'd0} + {green, 3'd0}) + ({blue, 8'd0} + {blue, 7'd0} + {blue, 6'd0});

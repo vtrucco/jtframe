@@ -38,7 +38,15 @@ MEM_CHECK_TIME=140_000_000
 rm -f test2.bin
 
 function add_dir {
+    if [ ! -d "$1" ]; then
+        echo "ERROR: add_dir (sim.sh) failed because $1 is not a directory"
+        exit 1
+    fi
     for i in $(cat $1/$2); do
+        if [ "$i" = "-sv" ]; then 
+            # ignore statements that iVerilog cannot understand
+            continue; 
+        fi
         fn="$1/$i"
         if [ ! -e "$fn" ]; then
             (>&2 echo "Cannot find file $fn")
@@ -122,7 +130,7 @@ case "$1" in
     "-mist")
         TOP=mist_test
         if [ $SIMULATOR == iverilog ]; then
-            MIST=$(add_dir $MODULES/jtframe/hdl/mist/mist mist_iverilog.f)
+            MIST=$(add_dir $MODULES/jtframe/hdl/mist mist.f)
         else
             MIST="-F $MODULES/jtframe/hdl/mist/mist.f"
         fi
@@ -276,7 +284,7 @@ EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=
 
 # Add the PLL
 if [[ $SIMULATOR == iverilog && $TOP == mist_test ]]; then
-    MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist/mist $MIST_PLL)"
+    MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist $MIST_PLL)"
 else
     MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
 fi
@@ -285,7 +293,7 @@ case $SIMULATOR in
 iverilog)
     iverilog -g2005-sv $MIST \
         -f game.f $PERCORE \
-        $(add_dir $MODULES/jtframe/hdl/ver/sim.f ) \
+        $(add_dir $MODULES/jtframe/hdl/ver sim.f ) \
         $MODULES/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
@@ -300,7 +308,7 @@ ncverilog)
         $MAXFRAME \
         -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
         $MODULES/tv80/*.v \
-        $MIST $EXTRA;;
+        $EXTRA;;
 verilator)
     verilator -I../../hdl \
         -f game.f $PERCORE \

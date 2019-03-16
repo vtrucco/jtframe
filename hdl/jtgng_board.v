@@ -130,7 +130,7 @@ assign vga_b[0] = vga_b[5];
 `ifndef SIMULATION
 jtgng_vga u_scandoubler (
     .clk_rgb    ( clk_rgb       ), // 24 MHz
-    .pxl_cen       ( pxl_cen          ), //  6 MHz
+    .cen6       ( pxl_cen       ), //  6 MHz
     .clk_vga    ( clk_vga       ), // 25 MHz
     .rst        ( rst           ),
     .red        ( game_r        ),

@@ -7,4 +7,3 @@ data_io.v
 ../ver/spitx.v
 -sv rgb2ypbpr.sv
 osd.v
-../jtgng_board.v
