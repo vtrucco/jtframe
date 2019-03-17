@@ -113,8 +113,6 @@ wire           board_hsync, board_vsync;
 // control
 wire [31:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
-// joystick
-wire   [9:0]  board_joystick1, board_joystick2;
 
 assign AUDIO_R = AUDIO_L;
 
@@ -219,7 +217,7 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .ps2_kbd_data   ( ps2_kbd_data    ),
     .board_joystick1( joystick1[9:0]  ),
     .board_joystick2( joystick2[9:0]  ),
-`ifndef SIMULATION
+`ifndef SIM_INPUTS
     .game_joystick1 ( game_joystick1  ),
     .game_joystick2 ( game_joystick2  ),
     .game_coin      ( game_coin       ),
