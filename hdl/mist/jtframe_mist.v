@@ -116,7 +116,9 @@ wire          ps2_kbd_clk, ps2_kbd_data;
 
 assign AUDIO_R = AUDIO_L;
 
-jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)) u_base(
+jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
+    .CLK_SPEED( CLK_SPEED )
+) u_base(
     .rst            ( rst           ),
     .locked         ( locked        ),
     .clk_rgb        ( clk_rgb       ),
