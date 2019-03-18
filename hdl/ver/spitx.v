@@ -1,5 +1,6 @@
 `timescale 1 ns / 1 ps
 
+`ifdef LOADROM
 module spitx_sub(
     input       rst,
     input       clk,
@@ -37,6 +38,7 @@ always @(posedge clk)
         end
     end
 endmodule
+`endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,7 +54,7 @@ module spitx(
     output  reg CONF_DATA0,
     output  reg spi_done
 );
-
+`ifdef LOADROM
 parameter filename="../../../rom/JT1942.rom";
 parameter TX_LEN           = 1024*1024;
 
@@ -173,5 +175,5 @@ else begin
         end
     endcase
 end
-
+`endif
 endmodule // spitx

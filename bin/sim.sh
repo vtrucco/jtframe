@@ -147,6 +147,7 @@ case "$1" in
     "-slowpll")
         echo "INFO: Simulation will use the slow PLL model"
         MIST_PLL=altera_pll.f
+        EXTRA="$EXTRA ${MACROPREFIX}SLOWPLL"
         ;;
     "-nosnd")
         EXTRA="$EXTRA ${MACROPREFIX}NOSOUND";;

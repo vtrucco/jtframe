@@ -54,6 +54,7 @@ end
 `endif
 // check contents after 80ms
 reg [dw-1:0] mem_check[0:(2**aw)-1];
+reg check_ok=1'b1;
 initial begin
     #(`MEM_CHECK_TIME);
     f=$fopen(simfile,"rb");
@@ -63,10 +64,11 @@ initial begin
         for( readcnt=readcnt-1;readcnt>0; readcnt=readcnt-1) begin
             if( mem_check[readcnt] != mem[readcnt] ) begin
                 $display("ERROR: memory content check failed for file %s (%m)", simfile );
-                //$finish;
+                check_ok = 1'b0;
+                break;
             end
         end
-        $display("INFO: %m memory check succedded");
+        if( check_ok ) $display("INFO: %m memory check succedded");
     end
     else begin
         $display("ERROR: Cannot find file %s to check memory %m", simfile );

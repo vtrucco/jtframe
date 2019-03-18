@@ -152,11 +152,11 @@ end
 if( CLK_SPEED == 20 ) begin
     // 20 MHz base clock
     // SDRAM at 10*8 = 80 MHz
-    jtframe_pll20 u_pll_fame(
+    jtframe_pll20 u_pll20(
         .inclk0 ( CLOCK_27[0] ),
-        .c1     ( clk_rgb     ), // 20
-        .c2     ( clk_rom     ), // 80
-        .c3     ( SDRAM_CLK   ), // 80 (shifted)
+        .c0     ( clk_rgb     ), // 20
+        .c1     ( clk_rom     ), // 80
+        .c2     ( SDRAM_CLK   ), // 80 (shifted)
         .locked ( locked      )
     );
 

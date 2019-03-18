@@ -49,6 +49,12 @@ module jtframe_pll20 (
 	output	  c2;
 	output	  locked;
 
+`ifndef SIMULATION
+`define SLOWPLL
+`endif
+
+`ifdef SLOWPLL
+
 	wire [4:0] sub_wire0;
 	wire  sub_wire2;
 	wire [0:0] sub_wire7 = 1'h0;
@@ -164,7 +170,15 @@ module jtframe_pll20 (
 		altpll_component.port_extclk3 = "PORT_UNUSED",
 		altpll_component.self_reset_on_loss_lock = "OFF",
 		altpll_component.width_clock = 5;
-
+`else
+    jtframe_pll20_fast u_pll20fast(
+        .inclk0   (  inclk0  ),
+        .c0       (  c0      ),     // 20
+        .c1       (  c1      ),     // 80
+        .c2       (  c2      ),     // 80 (shifted by -2.5ns)
+        .locked   (  locked  )
+    );
+`endif
 
 endmodule
 
