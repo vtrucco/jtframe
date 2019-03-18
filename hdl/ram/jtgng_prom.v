@@ -16,6 +16,9 @@
     Version: 1.0
     Date: 27-10-2017 */
 
+`timescale 1ns/1ps
+
+
 module jtgng_prom #(parameter dw=8, aw=10, simfile="", cen_rd=0 )(
     input   clk,
     input   cen,

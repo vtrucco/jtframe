@@ -95,6 +95,7 @@ module jtframe_mist(
     output     [1:0]  game_coin,
     output     [1:0]  game_start,
     output            game_pause,
+    output            game_service,
     // Debug
     output     [3:0]  gfx_en
 );
@@ -226,6 +227,7 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .game_start     ( game_start      ),
 `endif
     .game_pause     ( game_pause      ),
+    .game_service   ( game_service    ),
     // Debug
     .gfx_en         ( gfx_en          )
 );

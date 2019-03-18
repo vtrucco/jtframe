@@ -91,10 +91,11 @@ integer fincnt;
 wire clk_rom;
 jtgng_pll0 u_pll(
     .inclk0 ( 1'b0    ),
-    .c1     ( clk     ),      // 12
-    .c2     ( clk_rom )      // 96
-    // output       c3,     // 96 (shifted by -2.5ns)
-    // output   locked
+    .c1     ( clk     ),     // 12
+    .c2     ( clk_rom ),     // 96
+    // unused
+    .c3     (         ),     // 96 (shifted by -2.5ns)
+    .locked (         )
 );
 
 ////////////////////////////////////////////////////////////////////

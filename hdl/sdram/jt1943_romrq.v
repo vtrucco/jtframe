@@ -36,7 +36,6 @@ reg [AW-1:0] cached_addr1;
 reg [31:0]   cached_data0;
 reg [31:0]   cached_data1;
 reg deleterus;
-reg [1:0]    subaddr;
 reg init;
 reg hit0, hit1;
 
@@ -75,17 +74,20 @@ always @(posedge clk or negedge rst_n)
             init        <= 1'b0;
         end
     end
-always @(*) begin
-    subaddr[1] <= addr[1];
-    if( INVERT_A0 )
-        subaddr[0] <= ~addr[0];
-    else
-        subaddr[0] <=  addr[0];
-end
 
 wire [31:0] data_mux = hit0 ? cached_data0 : cached_data1;
 
 generate
+    if( DW==8 || DW==16 ) begin
+        reg [1:0]    subaddr;        
+        always @(*) begin
+            subaddr[1] <= addr[1];
+            if( INVERT_A0 )
+                subaddr[0] <= ~addr[0];
+            else
+                subaddr[0] <=  addr[0];
+        end
+    end
     if(DW==8) begin
         always @(posedge clk)
         if(!req) case( subaddr )

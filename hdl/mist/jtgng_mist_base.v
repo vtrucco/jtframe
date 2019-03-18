@@ -172,12 +172,12 @@ data_io #(.aw(22)) u_datain (
     .sck                ( SPI_SCK      ),
     .ss                 ( SPI_SS2      ),
     .sdi                ( SPI_DI       ),
-    // .index      (index        ),
     .clk_sdram          ( clk_rom      ),
     .downloading_sdram  ( downloading  ),
     .ioctl_addr         ( ioctl_addr   ),
     .ioctl_data         ( ioctl_data   ),
-    .ioctl_wr           ( ioctl_wr     )
+    .ioctl_wr           ( ioctl_wr     ),
+    .index              ( /* unused*/  )
 );
 
 jtgng_sdram u_sdram(

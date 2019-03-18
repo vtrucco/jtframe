@@ -33,6 +33,7 @@ module jtgng_keyboard(
     output reg [1:0] key_coin,
     output reg key_reset,
     output reg key_pause,
+    output reg key_service,
     output reg [3:0] key_gfx
 );
 
@@ -52,12 +53,13 @@ always @(posedge clk) begin
     if(rst) begin
       key_released <= 1'b0;
       key_extended <= 1'b0;
-      key_joy1 <=  'd0;
-      key_joy2 <=  'd0;
-      key_coin <= 2'd0;
-      key_start<= 2'd0;
-      key_reset<= 1'b0;
-      key_pause<= 1'b0;
+      key_joy1     <=  'd0;
+      key_joy2     <=  'd0;
+      key_coin     <= 2'd0;
+      key_start    <= 2'd0;
+      key_reset    <= 1'b0;
+      key_pause    <= 1'b0;
+      key_service  <= 1'b0;
     end else begin
         // ps2 decoder has received a valid ps2byte
         if(valid) begin

@@ -55,6 +55,7 @@ module jtgng_board(
     output reg [1:0]  game_coin,
     output reg [1:0]  game_start,
     output reg        game_pause,
+    output reg        game_service,
     // GFX enable
     output reg [3:0]  gfx_en
 );
@@ -163,7 +164,7 @@ assign vga_vsync  = 1'b0;
 wire [9:0] key_joy1, key_joy2;
 wire [1:0] key_start, key_coin;
 wire [3:0] key_gfx;
-
+wire       key_service;
 
 `ifndef SIMULATION
 jtgng_keyboard u_keyboard(
@@ -179,6 +180,7 @@ jtgng_keyboard u_keyboard(
     .key_coin    ( key_coin      ),
     .key_reset   ( key_reset     ),
     .key_pause   ( key_pause     ),
+    .key_service ( key_service   ),
     .key_gfx     ( key_gfx       )
 );
 `else
@@ -201,7 +203,7 @@ localparam PAUSE_BIT = 8+THREE_BUTTONS;
 localparam START_BIT = 7+THREE_BUTTONS;
 localparam COIN_BIT  = 6+THREE_BUTTONS;
 
-reg last_pause, last_joypause_b, last_reset;
+reg last_pause, last_joypause_b, last_reset, last_service;
 reg [3:0] last_gfx;
 wire joy_pause_b = joy1_sync[PAUSE_BIT] & joy2_sync[PAUSE_BIT];
 
@@ -209,24 +211,28 @@ integer cnt;
 
 always @(posedge clk_rgb)
     if(rst ) begin
-        game_pause <= 1'b0;
-        soft_rst   <= 1'b0;
-        gfx_en     <= 4'hf;
+        game_pause   <= 1'b0;
+        game_service <= 1'b0;
+        soft_rst     <= 1'b0;
+        gfx_en       <= 4'hf;
     end else begin
-        last_pause <= key_pause;
-        last_reset <= key_reset;
+        last_pause   <= key_pause;
+        last_service <= key_service;
+        last_reset   <= key_reset;
         last_joypause_b <= joy_pause_b; // joy is active low!
-        last_gfx   <= key_gfx;
+        last_gfx     <= key_gfx;
 
         game_joystick1 <= joy1_sync & ~key_joy1;
         game_joystick2 <= joy2_sync & ~key_joy2;
         game_coin      <= {joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} & ~key_coin;
         game_start     <= {joy2_sync[START_BIT],joy1_sync[START_BIT]} & ~key_start;
-        if(key_pause && !last_pause)    game_pause  <= ~game_pause;
-        if(!joy_pause_b && last_joypause_b) game_pause  <= ~game_pause;
         soft_rst <= key_reset && !last_reset;
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
+        // state variables:
+        if( (key_pause && !last_pause) || (!joy_pause_b && last_joypause_b) )
+            game_pause   <= ~game_pause;
+        if(key_service && !last_service)  game_service <= ~game_service;
     end
 
 
