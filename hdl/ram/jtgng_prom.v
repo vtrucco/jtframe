@@ -30,6 +30,9 @@ module jtgng_prom #(parameter dw=8, aw=10, simfile="", cen_rd=0 )(
 );
 
 reg [dw-1:0] mem[0:(2**aw)-1];
+parameter check_start=0; // lowest address at which the memory check
+    // comparison is performed. Useful when the dumped file to load
+    // has part of it invalid
 
 `ifdef SIMULATION
 integer f, readcnt;
@@ -61,11 +64,15 @@ initial begin
     if( f!= 0 ) begin
         readcnt = $fread( mem_check, f );
         $fclose(f);
-        for( readcnt=readcnt-1;readcnt>0; readcnt=readcnt-1) begin
+        for( readcnt=readcnt-1;readcnt>=check_start; readcnt=readcnt-1) begin
             if( mem_check[readcnt] != mem[readcnt] ) begin
-                $display("ERROR: memory content check failed for file %s (%m)", simfile );
+                $display("ERROR: memory content check failed for file %s (%m) @ 0x%x", simfile, readcnt );
                 check_ok = 1'b0;
+                `ifndef IVERILOG
                 break;
+                `else 
+                    readcnt = 0; // force a break
+                `endif
             end
         end
         if( check_ok ) $display("INFO: %m memory check succedded");
