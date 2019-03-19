@@ -18,8 +18,11 @@
 
 `timescale 1ns/1ps
 
+    // check_start: lowest address at which the memory check
+    // comparison is performed. Useful when the dumped file to load
+    // has part of it invalid
 
-module jtgng_prom #(parameter dw=8, aw=10, simfile="", cen_rd=0 )(
+module jtgng_prom #(parameter dw=8, aw=10, simfile="", cen_rd=0, check_start=0 )(
     input   clk,
     input   cen,
     input   [dw-1:0] data,
@@ -30,9 +33,6 @@ module jtgng_prom #(parameter dw=8, aw=10, simfile="", cen_rd=0 )(
 );
 
 reg [dw-1:0] mem[0:(2**aw)-1];
-parameter check_start=0; // lowest address at which the memory check
-    // comparison is performed. Useful when the dumped file to load
-    // has part of it invalid
 
 `ifdef SIMULATION
 integer f, readcnt;
