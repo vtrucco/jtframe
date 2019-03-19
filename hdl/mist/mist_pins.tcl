@@ -1,3 +1,5 @@
+set_global_assignment -name DEVICE EP3C25E144C8
+
 set_location_assignment PIN_7 -to LED
 set_location_assignment PIN_54 -to CLOCK_27[0]
 set_location_assignment PIN_55 -to CLOCK_27[1]
