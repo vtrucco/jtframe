@@ -50,6 +50,8 @@ parameter CLK_SPEED=12;
 
 ////////////////////////////////////////////////////////////////////
 // video output dump
+wire pxl_cen;
+
 `ifdef DUMP_VIDEO
 integer fvideo;
 initial begin
@@ -64,7 +66,7 @@ wire [15:0] video_dump = { 2'b0,VS,HS, red, green, blue  };
 `define VIDEO_START 0
 `endif
 
-always @(posedge clk) if(cen6 && frame_cnt>=`VIDEO_START ) begin
+always @(posedge clk) if(pxl_cen && frame_cnt>=`VIDEO_START ) begin
     $fwrite(fvideo,"%u", video_dump);
 end
 
@@ -141,7 +143,7 @@ always @(negedge clk or posedge rst_base)
         else rst<=rst_base;
     end
 
-`ifndef NOGNGCEN
+`ifndef POPEYECEN
 // This module is useful for jt*_game simulations when the
 // game module does not include its own cen signal generator
 jtgng_cen #(.CLK_SPEED(CLK_SPEED)) u_cen(
@@ -151,7 +153,16 @@ jtgng_cen #(.CLK_SPEED(CLK_SPEED)) u_cen(
     .cen3   ( cen3   ),
     .cen1p5 ( cen1p5 )
 );
-`else 
+assign pxl_cen = cen6;
+`else // POPEYE CEN
+jtpopeye_cen u_cen(
+    .clk        ( clk           ),  // 20 MHz
+    .H0_cen     (  ),
+    .cpu_cen    (  ),
+    .ay_cen     (  ),
+    .pxl_cen    (  ),  // TXT pixel clock
+    .pxl2_cen   ( pxl_cen      )   // OBJ pixel clock
+);
 assign cen12  = 1'b0;
 assign cen6   = 1'b0;
 assign cen3   = 1'b0;

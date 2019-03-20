@@ -22,7 +22,7 @@
     // comparison is performed. Useful when the dumped file to load
     // has part of it invalid
 
-module jtgng_prom #(parameter dw=8, aw=10, simfile="", cen_rd=0, check_start=0 )(
+module jtgng_prom #(parameter dw=8, aw=10, simfile="", cen_rd=0, offset=0 )(
     input   clk,
     input   cen,
     input   [dw-1:0] data,
@@ -42,6 +42,7 @@ initial begin
     if( simfile != "" ) begin
         f=$fopen(simfile,"rb");
         if( f != 0 ) begin
+            readcnt=$fseek( f, offset, 0 );
             readcnt=$fread( mem, f );
             $display("INFO: %m file %s loaded",simfile);
             $fclose(f);
@@ -62,9 +63,10 @@ initial begin
     #(`MEM_CHECK_TIME);
     f=$fopen(simfile,"rb");
     if( f!= 0 ) begin
+        readcnt = $fseek( f, offset, 0 );   // return value assigned to readcnt to avoid a warning
         readcnt = $fread( mem_check, f );
         $fclose(f);
-        for( readcnt=readcnt-1;readcnt>=check_start; readcnt=readcnt-1) begin
+        for( readcnt=readcnt-1;readcnt>=0; readcnt=readcnt-1) begin
             if( mem_check[readcnt] != mem[readcnt] ) begin
                 $display("ERROR: memory content check failed for file %s (%m) @ 0x%x", simfile, readcnt );
                 check_ok = 1'b0;

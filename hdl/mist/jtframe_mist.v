@@ -102,6 +102,7 @@ module jtframe_mist(
 
 parameter SIGNED_SND=1'b0;
 parameter THREE_BUTTONS=1'b0;
+parameter GAME_INPUTS_ACTIVE_HIGH=1'b0;
 parameter CONF_STR = "";
 parameter CONF_STR_LEN = 0;
 parameter CLK_SPEED = 12;
@@ -187,7 +188,9 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .data_read      ( data_read     )
 );
 
-jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
+jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS),
+    .GAME_INPUTS_ACTIVE_HIGH(GAME_INPUTS_ACTIVE_HIGH)
+) u_board(
     .rst            ( rst             ),
     .rst_n          ( rst_n           ),
     .game_rst       ( game_rst        ),

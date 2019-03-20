@@ -95,7 +95,7 @@ case "$SYSNAME" in
             GAME_ROM_PATH=../../../rom/JT1942.rom
             ;;
     popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
-            EXTRA="$EXTRA ${MACROPREFIX}NOGNGCEN"
+            EXTRA="$EXTRA ${MACROPREFIX}POPEYECEN"
             GAME_ROM_PATH=../../rom/jtpopeye.rom
             # check after only 22ms. ROM loading is very fast for POPEYE
             MEM_CHECK_TIME=22_000_000
@@ -180,7 +180,7 @@ case "$1" in
         fi
         echo "Using test firmware $FIRMWARE"
         LOADROM="${MACROPREFIX}TESTROM ${MACROPREFIX}FIRMWARE_SIM"
-        if ! z80asm $FIRMWARE -o test.bin -l; then
+        if ! z80asm $FIRMWARE -o test.bin -l &> $FIRMWARE.lst; then
             exit 1
         fi
         ;;
@@ -323,5 +323,5 @@ verilator)
 esac
 
 if [ "$VIDEO_DUMP" = TRUE ]; then
-    ../../../bin/bin2png.py
+    $MODULES/jtframe/bin/bin2png.py
 fi

@@ -63,7 +63,9 @@ module jtgng_board(
 
 parameter SIGNED_SND=1'b0;
 parameter THREE_BUTTONS=0;
+parameter GAME_INPUTS_ACTIVE_HIGH=1'b0;
 
+wire invert_inputs = GAME_INPUTS_ACTIVE_HIGH;
 wire key_reset, key_pause;
 reg [7:0] rst_cnt=8'd0;
 
@@ -212,7 +214,7 @@ integer cnt;
 always @(posedge clk_rgb)
     if(rst ) begin
         game_pause   <= 1'b0;
-        game_service <= 1'b0;
+        game_service <= 1'b1 ^ invert_inputs;
         soft_rst     <= 1'b0;
         gfx_en       <= 4'hf;
     end else begin
@@ -222,11 +224,19 @@ always @(posedge clk_rgb)
         last_joypause_b <= joy_pause_b; // joy is active low!
         last_gfx     <= key_gfx;
 
-        game_joystick1 <= joy1_sync & ~key_joy1;
-        game_joystick2 <= joy2_sync & ~key_joy2;
-        game_coin      <= {joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} & ~key_coin;
-        game_start     <= {joy2_sync[START_BIT],joy1_sync[START_BIT]} & ~key_start;
+        // joystick, coin, start and service inputs are inverted
+        // as indicated in the instance parameter
+        game_joystick1 <= {10{invert_inputs}} ^ (joy1_sync & ~key_joy1);
+        game_joystick2 <= {10{invert_inputs}} ^ (joy2_sync & ~key_joy2);
+        
+        game_coin      <= {2{invert_inputs}} ^ 
+            ({joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} & ~key_coin);
+        
+        game_start     <= {2{invert_inputs}} ^ 
+            ({joy2_sync[START_BIT],joy1_sync[START_BIT]} & ~key_start);
+        
         soft_rst <= key_reset && !last_reset;
+
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
         // state variables:
