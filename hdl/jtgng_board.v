@@ -137,7 +137,14 @@ assign vga_r[0] = vga_r[5];
 assign vga_g[0] = vga_g[5];
 assign vga_b[0] = vga_b[5];
 
-`ifndef SIMULATION
+// Do not simulate the scan doubler unless explicitly asked for it:
+`ifndef SIM_SCANDOUBLER
+`ifdef SIMULATION
+`define NOSCANDOUBLER
+`endif
+`endif
+
+`ifndef NOSCANDOUBLER
 jtgng_vga u_scandoubler (
     .clk_rgb    ( clk_rgb       ), // 24 MHz
     .cen6       ( pxl_cen       ), //  6 MHz
