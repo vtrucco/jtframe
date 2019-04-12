@@ -31,7 +31,7 @@ module jtframe_2308(
     output reg [11:0] adc_read
 );
 
-parameter ADC_PIN = 2'b00;
+parameter ADC_PIN  = 2'b00;
 parameter DIV_MAX  = 8'd100;  // frequency divider to get sampling rate
 
 wire [1:0] adc_pin = ADC_PIN;

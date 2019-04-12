@@ -36,7 +36,7 @@ initial begin
     mem[0] <= 12'h023;
     mem[1] <= 12'h11f;
     mem[2] <= 12'h1e5;
-    mem[3] <= 12'h2be;
+    mem[3] <= 12'hfbe;
 end
 
 always @(posedge adc_convst) begin
