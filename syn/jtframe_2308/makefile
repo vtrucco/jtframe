@@ -8,7 +8,8 @@ ASSIGNMENT_FILES = adc_test.qpf adc_test.qsf
 all: smart.log $(PROJECT).asm.rpt $(PROJECT).sta.rpt
 
 clean:
-	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db qdb incremental_db *jdi *fit.* *summary
+	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db qdb
+	rm -rf hc_output incremental_db *jdi *fit.* *summary
 	rm -f $(PROJECT).qsf *.qws *.qpf *.smsg
 
 map: smart.log $(PROJECT).map.rpt
@@ -19,7 +20,7 @@ smart: smart.log
 
 MAP_ARGS = --family="Cyclone V"
 # MAP_ARGS = --part=5CSEBA6U23I7DK
-FIT_ARGS = --part=5CSEBA6U23I7DK
+FIT_ARGS = --part=5CSEBA6U23I7
 ASM_ARGS =
 STA_ARGS =
 
@@ -33,7 +34,7 @@ $(PROJECT).map.rpt: map.chg $(SOURCE_FILES)
 $(PROJECT).fit.rpt: fit.chg $(PROJECT).map.rpt
 	quartus_fit $(FIT_ARGS) $(PROJECT)
 	$(STAMP) asm.chg
-	$(STAMP) sta.chg
+	# $(STAMP) sta.chg
 
 $(PROJECT).asm.rpt: asm.chg $(PROJECT).fit.rpt
 	quartus_asm $(ASM_ARGS) $(PROJECT)
