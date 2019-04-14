@@ -12,6 +12,9 @@ clean:
 	rm -rf hc_output incremental_db *jdi *fit.* *summary
 	rm -f $(PROJECT).qsf *.qws *.qpf *.smsg
 
+prog: $(PROJECT).sof
+	quartus_pgm -c "DE-SoC [1-1.2.1.1]" $(PROJECT).sof
+
 map: smart.log $(PROJECT).map.rpt
 fit: smart.log $(PROJECT).fit.rpt
 asm: smart.log $(PROJECT).asm.rpt
