@@ -40,9 +40,12 @@ if( simfile != "" ) begin
     end
     end
 else begin
-    for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
-        mem[readcnt] = {dw{1'b0}};
-    end
+    if( synfile!= "" ) begin
+        $readmemh(synfile,mem);
+    end else
+        for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
+            mem[readcnt] = {dw{1'b0}};
+end
 `else
 // file for synthesis:
 /* verilator lint_off WIDTH */
