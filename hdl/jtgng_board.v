@@ -23,6 +23,7 @@ module jtgng_board(
     // reset forcing signals:
     input             dip_flip, // A change in dip_flip implies a reset
     input             downloading,
+    input             loop_rst,
     input             rst_req,
 
     input             clk_dac,
@@ -54,6 +55,7 @@ module jtgng_board(
     output reg [1:0]  game_coin,
     output reg [1:0]  game_start,
     output reg        game_pause,
+    output reg        game_service,
     // GFX enable
     output reg [3:0]  gfx_en
 );
@@ -61,7 +63,9 @@ module jtgng_board(
 
 parameter SIGNED_SND=1'b0;
 parameter THREE_BUTTONS=0;
+parameter GAME_INPUTS_ACTIVE_HIGH=1'b0;
 
+wire invert_inputs = GAME_INPUTS_ACTIVE_HIGH;
 wire key_reset, key_pause;
 reg [7:0] rst_cnt=8'd0;
 
@@ -71,11 +75,17 @@ always @(posedge clk_rgb)
         rst_cnt <= rst_cnt + 8'd1;
     end else rst <= 1'b0;
 
-always @(negedge clk_rgb)
-    if( rst )
+// rst_n is meant to be used as an asynchronous reset
+// for the clk_rgb domain
+reg pre_rst_n;
+always @(posedge clk_rgb)
+    if( rst | downloading | loop_rst ) begin
+        pre_rst_n <= 1'b0;
         rst_n <= 1'b0;
-    else
-        rst_n <= 1'b1;
+    end else begin
+        pre_rst_n <= 1'b1;
+        rst_n <= pre_rst_n;
+    end
 
 reg soft_rst;
 reg last_dip_flip;
@@ -127,7 +137,14 @@ assign vga_r[0] = vga_r[5];
 assign vga_g[0] = vga_g[5];
 assign vga_b[0] = vga_b[5];
 
-`ifndef SIMULATION
+// Do not simulate the scan doubler unless explicitly asked for it:
+`ifndef SIM_SCANDOUBLER
+`ifdef SIMULATION
+`define NOSCANDOUBLER
+`endif
+`endif
+
+`ifndef NOSCANDOUBLER
 jtgng_vga u_scandoubler (
     .clk_rgb    ( clk_rgb       ), // 24 MHz
     .cen6       ( pxl_cen       ), //  6 MHz
@@ -156,7 +173,7 @@ assign vga_vsync  = 1'b0;
 wire [9:0] key_joy1, key_joy2;
 wire [1:0] key_start, key_coin;
 wire [3:0] key_gfx;
-
+wire       key_service;
 
 `ifndef SIMULATION
 jtgng_keyboard u_keyboard(
@@ -172,6 +189,7 @@ jtgng_keyboard u_keyboard(
     .key_coin    ( key_coin      ),
     .key_reset   ( key_reset     ),
     .key_pause   ( key_pause     ),
+    .key_service ( key_service   ),
     .key_gfx     ( key_gfx       )
 );
 `else
@@ -194,7 +212,7 @@ localparam PAUSE_BIT = 8+THREE_BUTTONS;
 localparam START_BIT = 7+THREE_BUTTONS;
 localparam COIN_BIT  = 6+THREE_BUTTONS;
 
-reg last_pause, last_joypause_b, last_reset;
+reg last_pause, last_joypause_b, last_reset, last_service;
 reg [3:0] last_gfx;
 wire joy_pause_b = joy1_sync[PAUSE_BIT] & joy2_sync[PAUSE_BIT];
 
@@ -202,24 +220,36 @@ integer cnt;
 
 always @(posedge clk_rgb)
     if(rst ) begin
-        game_pause <= 1'b0;
-        soft_rst   <= 1'b0;
-        gfx_en     <= 4'hf;
+        game_pause   <= 1'b0;
+        game_service <= 1'b1 ^ invert_inputs;
+        soft_rst     <= 1'b0;
+        gfx_en       <= 4'hf;
     end else begin
-        last_pause <= key_pause;
-        last_reset <= key_reset;
+        last_pause   <= key_pause;
+        last_service <= key_service;
+        last_reset   <= key_reset;
         last_joypause_b <= joy_pause_b; // joy is active low!
-        last_gfx   <= key_gfx;
+        last_gfx     <= key_gfx;
 
-        game_joystick1 <= joy1_sync & ~key_joy1;
-        game_joystick2 <= joy2_sync & ~key_joy2;
-        game_coin      <= {joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} & ~key_coin;
-        game_start     <= {joy2_sync[START_BIT],joy1_sync[START_BIT]} & ~key_start;
-        if(key_pause && !last_pause)    game_pause  <= ~game_pause;
-        if(!joy_pause_b && last_joypause_b) game_pause  <= ~game_pause;
+        // joystick, coin, start and service inputs are inverted
+        // as indicated in the instance parameter
+        game_joystick1 <= {10{invert_inputs}} ^ (joy1_sync & ~key_joy1);
+        game_joystick2 <= {10{invert_inputs}} ^ (joy2_sync & ~key_joy2);
+        
+        game_coin      <= {2{invert_inputs}} ^ 
+            ({joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} & ~key_coin);
+        
+        game_start     <= {2{invert_inputs}} ^ 
+            ({joy2_sync[START_BIT],joy1_sync[START_BIT]} & ~key_start);
+        
         soft_rst <= key_reset && !last_reset;
+
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
+        // state variables:
+        if( (key_pause && !last_pause) || (!joy_pause_b && last_joypause_b) )
+            game_pause   <= ~game_pause;
+        if(key_service && !last_service)  game_service <= ~game_service;
     end
 
 

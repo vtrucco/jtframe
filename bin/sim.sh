@@ -95,7 +95,7 @@ case "$SYSNAME" in
             GAME_ROM_PATH=../../../rom/JT1942.rom
             ;;
     popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
-            EXTRA="$EXTRA ${MACROPREFIX}NOGNGCEN"
+            EXTRA="$EXTRA ${MACROPREFIX}POPEYECEN"
             GAME_ROM_PATH=../../rom/jtpopeye.rom
             # check after only 22ms. ROM loading is very fast for POPEYE
             MEM_CHECK_TIME=22_000_000
@@ -147,6 +147,7 @@ case "$1" in
     "-slowpll")
         echo "INFO: Simulation will use the slow PLL model"
         MIST_PLL=altera_pll.f
+        EXTRA="$EXTRA ${MACROPREFIX}SLOWPLL"
         ;;
     "-nosnd")
         EXTRA="$EXTRA ${MACROPREFIX}NOSOUND";;
@@ -179,7 +180,7 @@ case "$1" in
         fi
         echo "Using test firmware $FIRMWARE"
         LOADROM="${MACROPREFIX}TESTROM ${MACROPREFIX}FIRMWARE_SIM"
-        if ! z80asm $FIRMWARE -o test.bin -l; then
+        if ! z80asm $FIRMWARE -o test.bin -l &> $FIRMWARE.lst; then
             exit 1
         fi
         ;;
@@ -255,6 +256,7 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
                         NOMAIN macro
         SDRAM_DELAY=X   ns delay for SDRAM_CLK (cannot use with -slowpll)
         BASE_CLK=X      Base period for game clock (cannot use with -slowpll)
+        SIM_SCANDOUBLER Simulate scan doubler
 EOF
         exit 0
         ;;
@@ -322,5 +324,5 @@ verilator)
 esac
 
 if [ "$VIDEO_DUMP" = TRUE ]; then
-    ../../../bin/bin2png.py
+    $MODULES/jtframe/bin/bin2png.py
 fi

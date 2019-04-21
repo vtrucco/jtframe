@@ -77,7 +77,8 @@ module jtframe_mist(
     output          loop_rst,
     input           autorefresh,
 //////////// board
-    output            rst,
+    output            rst,      // synchronous reset
+    output            rst_n,    // asynchronous reset
     output            game_rst,
     // reset forcing signals:
     input             dip_flip, // A change in dip_flip implies a reset
@@ -94,12 +95,14 @@ module jtframe_mist(
     output     [1:0]  game_coin,
     output     [1:0]  game_start,
     output            game_pause,
+    output            game_service,
     // Debug
     output     [3:0]  gfx_en
 );
 
 parameter SIGNED_SND=1'b0;
 parameter THREE_BUTTONS=1'b0;
+parameter GAME_INPUTS_ACTIVE_HIGH=1'b0;
 parameter CONF_STR = "";
 parameter CONF_STR_LEN = 0;
 parameter CLK_SPEED = 12;
@@ -112,12 +115,12 @@ wire           board_hsync, board_vsync;
 // control
 wire [31:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
-// joystick
-wire   [9:0]  board_joystick1, board_joystick2;
 
 assign AUDIO_R = AUDIO_L;
 
-jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)) u_base(
+jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
+    .CLK_SPEED( CLK_SPEED )
+) u_base(
     .rst            ( rst           ),
     .locked         ( locked        ),
     .clk_rgb        ( clk_rgb       ),
@@ -185,12 +188,16 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)) u_base(
     .data_read      ( data_read     )
 );
 
-jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
+jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS),
+    .GAME_INPUTS_ACTIVE_HIGH(GAME_INPUTS_ACTIVE_HIGH)
+) u_board(
     .rst            ( rst             ),
+    .rst_n          ( rst_n           ),
     .game_rst       ( game_rst        ),
     .dip_flip       ( dip_flip        ),
     .rst_req        ( rst_req         ),
     .downloading    ( downloading     ),
+    .loop_rst       ( loop_rst        ),
 
     .clk_rgb        ( clk_rgb         ),
     .clk_dac        ( clk_rgb         ),
@@ -198,9 +205,9 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .snd            ( snd             ),
     .snd_pwm        ( AUDIO_L         ),
     // VGA
-    .pxl_cen        ( pxl_cen            ),
+    .pxl_cen        ( pxl_cen         ),
     .clk_vga        ( clk_vga         ),
-    .en_mixing      ( ~status[9]      ),
+    .en_mixing      ( en_mixing       ),
     .game_r         ( game_r          ),
     .game_g         ( game_g          ),
     .game_b         ( game_b          ),
@@ -216,13 +223,14 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS)) u_board(
     .ps2_kbd_data   ( ps2_kbd_data    ),
     .board_joystick1( joystick1[9:0]  ),
     .board_joystick2( joystick2[9:0]  ),
-`ifndef SIMULATION
+`ifndef SIM_INPUTS
     .game_joystick1 ( game_joystick1  ),
     .game_joystick2 ( game_joystick2  ),
     .game_coin      ( game_coin       ),
     .game_start     ( game_start      ),
 `endif
     .game_pause     ( game_pause      ),
+    .game_service   ( game_service    ),
     // Debug
     .gfx_en         ( gfx_en          )
 );

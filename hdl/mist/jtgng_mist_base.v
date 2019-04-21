@@ -89,6 +89,7 @@ module jtgng_mist_base(
 
 parameter CONF_STR="CORE";
 parameter CONF_STR_LEN=4;
+parameter CLK_SPEED = 12;
 
 wire ypbpr;
 wire scandoubler_disable;
@@ -128,31 +129,55 @@ assign ps2_kbd_clk  = 1'b0;
 assign scandoubler_disable = 1'b1;
 `endif
 
-jtgng_pll0 u_pll_game (
-    .inclk0 ( CLOCK_27[0] ),
-    .c1     ( clk_rgb     ),
-    .c2     ( clk_rom     ), // 96
-    .c3     ( SDRAM_CLK   ), // 96 (shifted by -2.5ns)
-    .locked ( locked      )
-);
+generate
+    
+if( CLK_SPEED==12 || CLK_SPEED==24 ) begin
+    // 24 MHz or 12 MHz base clock
+    jtgng_pll0 u_pll_game (
+        .inclk0 ( CLOCK_27[0] ),
+        .c1     ( clk_rgb     ),
+        .c2     ( clk_rom     ), // 96
+        .c3     ( SDRAM_CLK   ), // 96 (shifted by -2.5ns)
+        .locked ( locked      )
+    );
 
-// assign SDRAM_CLK = clk_rom;
+    // assign SDRAM_CLK = clk_rom;
 
-jtgng_pll1 u_pll_vga (
-    .inclk0 ( clk_rgb   ),
-    .c0     ( clk_vga   ) // 25
-);
+    jtgng_pll1 u_pll_vga (
+        .inclk0 ( clk_rgb   ),
+        .c0     ( clk_vga   ) // 25
+    );
+end
+
+if( CLK_SPEED == 20 ) begin
+    // 20 MHz base clock
+    // SDRAM at 10*8 = 80 MHz
+    jtframe_pll20 u_pll20(
+        .inclk0 ( CLOCK_27[0] ),
+        .c0     ( clk_rgb     ), // 20
+        .c1     ( clk_rom     ), // 80
+        .c2     ( SDRAM_CLK   ), // 80 (shifted)
+        .locked ( locked      )
+    );
+
+    jtgng_pll1 u_pll_vga (
+        .inclk0 ( clk_rgb   ),
+        .c0     ( clk_vga   ) // 25
+    );
+end
+
+endgenerate
 
 data_io #(.aw(22)) u_datain (
     .sck                ( SPI_SCK      ),
     .ss                 ( SPI_SS2      ),
     .sdi                ( SPI_DI       ),
-    // .index      (index        ),
     .clk_sdram          ( clk_rom      ),
     .downloading_sdram  ( downloading  ),
     .ioctl_addr         ( ioctl_addr   ),
     .ioctl_data         ( ioctl_data   ),
-    .ioctl_wr           ( ioctl_wr     )
+    .ioctl_wr           ( ioctl_wr     ),
+    .index              ( /* unused*/  )
 );
 
 jtgng_sdram u_sdram(

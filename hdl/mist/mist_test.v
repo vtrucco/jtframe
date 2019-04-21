@@ -31,7 +31,8 @@ wire [5:0] VGA_R, VGA_G, VGA_B;
 `endif
 
 mist_dump u_dump(
-    .VGA_VS     ( VGA_VS    ), 
+    .VGA_VS     ( VGA_VS    ),
+    .led        ( led       ),
     .frame_cnt  ( frame_cnt )
 );
 
