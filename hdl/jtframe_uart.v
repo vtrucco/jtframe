@@ -20,6 +20,7 @@
         Milkymist VJ SoC, Sebastien Bourdeauducq and Das Labor
 */
 
+`timescale 1ns/1ps
 
 module jtframe_uart(
     input            rst_n,
@@ -34,6 +35,7 @@ module jtframe_uart(
     output reg       rx_error,
     // Tx interface
     output reg       tx_done,
+    output reg       tx_busy,
     input      [7:0] tx_data,
     input            tx_wr      // write strobe
 );
@@ -44,8 +46,8 @@ module jtframe_uart(
             clk_div = 14, uart_div = 30 -> 115kbps, 0.01% timing error
             clk_div =  7, uart_div = 30 -> 230kbps, 0.01% timing error
     */
-paremeter CLK_DIVIDER  = 5'd28;
-paremeter UART_DIVIDER = 5'd30; // number of divisions of the UART bit period
+parameter CLK_DIVIDER  = 5'd28;
+parameter UART_DIVIDER = 5'd30; // number of divisions of the UART bit period
 
 wire [4:0] clk_div  = CLK_DIVIDER;
 wire [5:0] uart_div = UART_DIVIDER;
@@ -138,16 +140,17 @@ end
 //-----------------------------------------------------------------
 // UART TX Logic
 //-----------------------------------------------------------------
-reg tx_busy;
 reg [3:0] tx_bitcnt;
 reg [4:0] tx_divcnt;
 reg [7:0] tx_reg;
 
 always @(posedge clk or negedge rst_n) begin :tx_logic
     if(!rst_n) begin
-        tx_done <= 1'b0;
-        tx_busy <= 1'b0;
-        uart_tx <= 1'b1;
+        tx_done   <= 'b0;
+        tx_busy   <= 'b0;
+        uart_tx   <= 'b1;
+        tx_divcnt <= 'b0;
+        tx_reg    <= 'b0;
     end else if(cen) begin
         tx_done <= 1'b0;
         if(tx_wr) begin

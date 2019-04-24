@@ -81,6 +81,11 @@ test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .ioctl_wr    ()
 );
 
+`ifdef SIM_UART
+wire UART_RX, UART_TX;
+assign UART_RX = UART_TX; // make a loop!
+`endif
+
 `SYSTOP #(.CLK_SPEED(CLK_SPEED)) UUT(
     .CLOCK_27   ( { 1'b0, clk27 }),
     .VGA_R      ( VGA_R     ),
@@ -100,7 +105,11 @@ test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .SDRAM_BA   ( SDRAM_BA  ),
     .SDRAM_CLK  ( SDRAM_CLK ),
     .SDRAM_CKE  ( SDRAM_CKE ),
-   // SPI interface to arm io controller
+    `ifdef SIM_UART
+    .UART_RX    ( UART_RX   ),
+    .UART_TX    ( UART_TX   ),
+    `endif    
+    // SPI interface to arm io controller
     .SPI_DO     ( SPI_DO    ),
     .SPI_DI     ( SPI_DI    ),
     .SPI_SCK    ( SPI_SCK   ),

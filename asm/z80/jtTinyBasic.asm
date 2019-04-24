@@ -42,7 +42,7 @@
 ;  Adapted to work with GNU z80asm
 ;  Added interrupt handling
 
-SerialPort:     EQU     00H             ; This is for your I/0
+SerialPort:     EQU     0F0H            ; This the serial output port
 
 
 SPACE:          EQU     020H            ; Space
@@ -1753,16 +1753,17 @@ SERIAL_INIT:
         RET
 ;-------------------------------------------------------------------------------
 TX_RDY:
-
     ; This routine is checking if the Serial Port is ready to send
     ; a character.
-    
+    IN A,(0F1h)
+    AND 1
+    JP NZ,TX_RDY
     RET
         
 ;-------------------------------------------------------------------------------
 RX_RDY:
 
-    ; This routine is for checkif if a character is available over
+    ; This routine is for checking if a character is available over
     ; serial. If a character is available, it returns to the calling
     ; function with the character in 'A' and the Z-flag reset.
     ; However, if a character is not available, it returns with the

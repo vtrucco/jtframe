@@ -181,6 +181,7 @@ case "$1" in
         echo "Using test firmware $FIRMWARE"
         LOADROM="${MACROPREFIX}TESTROM ${MACROPREFIX}FIRMWARE_SIM"
         if ! z80asm $FIRMWARE -o test.bin -l &> $FIRMWARE.lst; then
+            cat $FIRMWARE.lst
             exit 1
         fi
         ;;
