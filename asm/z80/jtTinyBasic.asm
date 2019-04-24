@@ -38,8 +38,11 @@
 ; ask that if you do find use for it, please put a reference
 ; to me in your work. And please, distribute freely.
 ;*************************************************************
+; Notes for JTFrame version:
+;  Adapted to work with GNU z80asm
+;  Added interrupt handling
 
-SerialPort: EQU 00H     ;This is for your I/0
+SerialPort:     EQU     00H             ; This is for your I/0
 
 
 SPACE:          EQU     020H            ; Space
@@ -96,6 +99,7 @@ DWA:    MACRO WHERE
         ORG  0000H
 
 START:
+        DI                              ; Disable interrupts
         LD SP,STACK                     ;*** COLD START ***
         LD A,0FFH
         JP INIT
@@ -111,7 +115,7 @@ CRLF:
 RST10:  PUSH AF                         ;*** OUTC OR RST 10H ***
         LD A,(OCSW)                     ;PRINT CHARACTER ONLY
         OR A                            ;IF OCSW SWITCH IS ON
-        JP OUTC             ;REST OF THIS AT OUTC
+        JP OUTC                         ;REST OF THIS AT OUTC
 
 RST18:  CALL EXPR2                      ;*** EXPR OR RST 18H ***
         PUSH HL                         ;EVALUATE AN EXPRESSION
