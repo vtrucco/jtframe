@@ -106,7 +106,7 @@ end
 
 always @(posedge clk or posedge rst)
 if( rst ) begin
-    tx_cnt <= 8000;
+    tx_cnt <= 8500;
     state <= 0;
     SPI_SS2 <= 1'b0;
     spi_done <= 1'b0;

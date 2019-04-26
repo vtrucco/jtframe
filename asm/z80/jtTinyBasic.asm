@@ -61,7 +61,8 @@ CTRLU:          EQU     015H            ; Control "U"
 ESC:            EQU     01BH            ; Escape
 DEL:            EQU     07FH            ; Delete
 
-STACK:          EQU     0FFFFH          ; STACK
+; Adjust to fit RAM mapping
+STACK:          EQU     087FFH          ; STACK (Last RAM address)
 OCSW:           EQU     08000H          ;SWITCH FOR OUTPUT
 CURRNT:         EQU     OCSW+1          ;POINTS FOR OUTPUT
 STKGOS:         EQU     OCSW+3          ;SAVES SP IN 'GOSUB'
@@ -76,7 +77,7 @@ RANPNT:         EQU     OCSW+19         ;RANDOM NUMBER POINTER
 TXTUNF:         EQU     OCSW+21         ;->UNFILLED TEXT AREA
 TXTBGN:         EQU     OCSW+23         ;TEXT SAVE AREA BEGINS
 
-TXTEND:         EQU     0FF00H          ;TEXT SAVE AREA ENDS
+TXTEND:         EQU     08700H          ;TEXT SAVE AREA ENDS
 
 
 ;*************************************************************
@@ -99,7 +100,6 @@ DWA:    MACRO WHERE
         ORG  0000H
 
 START:
-        DI                              ; Disable interrupts
         LD SP,STACK                     ;*** COLD START ***
         LD A,0FFH
         JP INIT
@@ -173,6 +173,9 @@ TV1:
         ADC A,H
         LD H,A
         RET
+
+NMI66:                                  ;MUST BE AT 66H
+        RETI
 
 TC1:
         INC HL                          ;COMPARE THE BYTE THAT
@@ -1554,6 +1557,7 @@ PU1:
 ;*************************************************************
 
 INIT:
+        DI
         CALL SERIAL_INIT        ;INITIALIZE THE SIO
         LD D,19H
 PATLOP:
@@ -1777,7 +1781,7 @@ RX_RDY:
 LSTROM:                                 ;ALL ABOVE CAN BE ROM
                     ;HERE DOWN MUST BE RAM
         ORG  08000H
-        ORG  0FF00H
+        ORG  08700H ; Last 256 bytes of RAM
 VARBGN: DS   55                         ;VARIABLE @(0)
 BUFFER: DS   64                         ;INPUT BUFFER
 BUFEND: DS   1                          ;BUFFER ENDS
