@@ -109,8 +109,8 @@ module jtframe_pll20_fast(
     real sdram_delay = `SDRAM_DELAY;
     initial $display("INFO: SDRAM_CLK delay set to %f ns",sdram_delay);
     `else
-    initial $display("INFO: SDRAM_CLK delay set to 8.97 ns");
-    real sdram_delay = 8.97;
+    initial $display("INFO: SDRAM_CLK delay set to 0 ns");
+    real sdram_delay = 0;
     `endif
 
     initial begin

@@ -189,8 +189,8 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm);
     wire      Debug            = 1'b0;                          // Debug messages : 1 = On
     wire      Dq_chk           = Sys_clk & Data_in_enable;      // Check setup/hold time for DQ
 
-    // Added 10ns delay for MiST
-    localparam tMiST = 10;
+    // Added x ns delay for MiST
+    localparam tMiST = 0;
     assign  Dq               = Dq_reg;                        // DQ buffer
 
     // Commands Operation
@@ -948,7 +948,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm);
         end
 
         if (Data_out_enable == 1'b0) begin
-            Dq_reg <= #tOH {data_bits{1'bz}};
+            Dq_reg <= #(tOH+tMiST) {data_bits{1'bz}};
         end
 
         // Detect Read or Write command

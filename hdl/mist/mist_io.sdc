@@ -67,8 +67,17 @@ derive_clock_uncertainty
 # Set Input Delay
 #**************************************************************
 
-set_input_delay -clock sdclk_pin -max 6.4 [get_ports SDRAM_DQ[*]]
-set_input_delay -clock sdclk_pin -min 3.2 [get_ports SDRAM_DQ[*]]
+# This is tAC in the data sheet. It is the time it takes to the
+# output pins of the SDRAM to change after a new clock edge.
+# This is used to calculate set-up time conditions in the FF
+# latching the signal inside the FPGA
+set_input_delay -clock sdclk_pin -max 6 [get_ports SDRAM_DQ[*]]
+
+# This is tOH in the data sheet. It is the time data is hold at the
+# output pins of the SDRAM after a new clock edge.
+# This is used to calculate hold time conditions in the FF
+# latching the signal inside the FPGA (3.2)
+set_input_delay -clock sdclk_pin -min 3 [get_ports SDRAM_DQ[*]]
 
 #**************************************************************
 # Set Output Delay
