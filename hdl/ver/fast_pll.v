@@ -51,8 +51,8 @@ real sdram_delay = `SDRAM_DELAY;
 initial $display("INFO: SDRAM_CLK delay set to %f ns",sdram_delay);
 assign #sdram_delay c3 = c2;
 `else
-initial $display("INFO: SDRAM_CLK delay set to 2.5 ns");
-assign #2.5 c3 = c2;
+initial $display("INFO: SDRAM_CLK delay set to 0 ns");
+assign c3 = c2;
 `endif
 
 endmodule // jtgng_pll0
@@ -107,9 +107,9 @@ module jtframe_pll20_fast(
 
     `ifdef SDRAM_DELAY
     real sdram_delay = `SDRAM_DELAY;
-    initial $display("INFO: SDRAM_CLK delay set to %f ns",sdram_delay);
+    initial $display("INFO pll20: SDRAM_CLK delay set to %f ns",sdram_delay);
     `else
-    initial $display("INFO: SDRAM_CLK delay set to 0 ns");
+    initial $display("INFO pll20: SDRAM_CLK delay set to 0 ns");
     real sdram_delay = 0;
     `endif
 
