@@ -87,11 +87,13 @@ reg downloading_last;
 
 reg set_burst, burst_done, burst_mode;
 reg readon, writeon;
+reg refresh_ok;
 
 always @(posedge clk or posedge rst)
     if(rst) begin
         set_burst <= 1'b0;
     end else begin
+        refresh_ok <= !read_req;
         readon  <= !downloading_last && (read_sync!=last_read_sync);
         writeon <= downloading_last && prog_we;
         downloading_last <= downloading;
@@ -103,7 +105,6 @@ always @(posedge clk or posedge rst)
     end
 
 reg autorefresh_cycle;
-wire refresh_ok = !read_req;
 
 always @(posedge clk or posedge rst)
     if( rst ) begin
