@@ -84,15 +84,16 @@ reg downloading_last;
 
 // Uses downloading_last instead of downloading to alleviate
 // top level timing
-wire readon  = !downloading_last && (read_sync!=last_read_sync);
-wire writeon = downloading_last && prog_we;
 
 reg set_burst, burst_done, burst_mode;
+reg readon, writeon;
 
 always @(posedge clk or posedge rst)
     if(rst) begin
         set_burst <= 1'b0;
     end else begin
+        readon  <= !downloading_last && (read_sync!=last_read_sync);
+        writeon <= downloading_last && prog_we;
         downloading_last <= downloading;
         if( downloading != downloading_last) begin
             set_burst <= 1'b1;
