@@ -71,7 +71,8 @@ module jtframe_mist(
     input           prog_we,
     output          downloading,
     // ROM access from game
-    input           sdram_re,
+    input           sdram_sync,
+    input           sdram_req,
     input  [21:0]   sdram_addr,
     output [31:0]   data_read,
     output          loop_rst,
@@ -128,7 +129,8 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .clk_rom        ( clk_rom       ),
     .SDRAM_CLK      ( SDRAM_CLK     ),
     .cen12          ( cen12         ),
-    .sdram_re       ( sdram_re      ),
+    .sdram_sync     ( sdram_sync    ),
+    .sdram_req      ( sdram_req     ),
     // Base video
     .osd_rotate     ( osd_rotate    ),
     .game_r         ( game_r        ),
@@ -183,7 +185,6 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .prog_we        ( prog_we       ),
     .downloading    ( downloading   ),
     .loop_rst       ( loop_rst      ),
-    .autorefresh    ( autorefresh   ),
     .sdram_addr     ( sdram_addr    ),
     .data_read      ( data_read     )
 );

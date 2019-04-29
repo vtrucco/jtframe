@@ -25,7 +25,8 @@ module jtgng_mist_base(
     output          clk_rom,
     output          clk_vga,
     input           cen12,
-    input           sdram_re,
+    input           sdram_sync,
+    input           sdram_req,
     // Base video
     input   [1:0]   osd_rotate,
     input   [3:0]   game_r,
@@ -83,8 +84,7 @@ module jtgng_mist_base(
     // ROM access from game
     input  [21:0]   sdram_addr,
     output [31:0]   data_read,
-    output          loop_rst,
-    input           autorefresh
+    output          loop_rst
 );
 
 parameter CONF_STR="CORE";
@@ -184,8 +184,8 @@ jtgng_sdram u_sdram(
     .rst            ( rst           ),
     .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
     .loop_rst       ( loop_rst      ),
-    .read_req       ( sdram_re      ),
-    .autorefresh    ( autorefresh   ),
+    .read_sync      ( sdram_sync    ),
+    .read_req       ( sdram_req     ),
     .data_read      ( data_read     ),
     // ROM-load interface
     .downloading    ( downloading   ),
