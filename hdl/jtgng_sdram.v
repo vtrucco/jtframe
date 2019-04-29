@@ -80,10 +80,13 @@ assign loop_rst = initialize;
 reg last_read_sync;
 
 always @(posedge clk) last_read_sync <= read_sync;
-wire readon  = !downloading && (read_sync!=last_read_sync);
-wire writeon = downloading && prog_we;
-
 reg downloading_last;
+
+// Uses downloading_last instead of downloading to alleviate
+// top level timing
+wire readon  = !downloading_last && (read_sync!=last_read_sync);
+wire writeon = downloading_last && prog_we;
+
 reg set_burst, burst_done, burst_mode;
 
 always @(posedge clk or posedge rst)
