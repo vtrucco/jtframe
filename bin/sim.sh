@@ -30,8 +30,10 @@ SIMULATOR=iverilog
 TOP=game_test
 MIST=
 MIST_PLL=fast_pll.f
+SIMFILE=sim.f
 MACROPREFIX=-D
 EXTRA=
+SHOWCMD=
 ARGNUMBER=1
 MEM_CHECK_TIME=140_000_000
 
@@ -110,6 +112,7 @@ EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"${GAME_ROM_PATH}\""
 
 while [ $# -gt 0 ]; do
 case "$1" in
+    "-showcmd") SHOWCMD="echo";;
     "-sysname") shift;; # ignore here
     "-modules") shift;; # ignore here
     "-w" | "-deep")
@@ -130,9 +133,10 @@ case "$1" in
         MAXFRAME="${MACROPREFIX}MAXFRAME=$1"
         echo Simulate up to $1 frames
         ;;
+    #################### MiST setup
     "-mist")
         TOP=mist_test
-        if [ $SIMULATOR == iverilog ]; then
+        if [ $SIMULATOR = iverilog ]; then
             MIST=$(add_dir $MODULES/jtframe/hdl/mist mist.f)
         else
             MIST="-F $MODULES/jtframe/hdl/mist/mist.f"
@@ -144,6 +148,26 @@ case "$1" in
             git add -v mist_dump.v
         fi
         ;;
+    #################### MiSTer setup
+    "-mister")
+        TOP=mister_test
+        if [ $SIMULATOR = iverilog ]; then
+            MIST=$(add_dir $MODULES/jtframe/hdl/mister mister.f)
+        else
+            MIST="-F $MODULES/jtframe/hdl/mist/mister.f"
+        fi
+        MIST="$MODULES/jtframe/hdl/mister/mister_test.v ../../hdl/jt${SYSNAME}_mister.sv $MIST mister_dump.v"
+        # Add a local copy of mist_dump if it doesn't exist
+        if [ ! -e mister_dump.v ]; then
+            cp $MODULES/jtframe/hdl/ver/mister_dump.v .
+            git add -v mister_dump.v
+        fi
+        SIMFILE=sim_mister.f
+        # Generate a fake build_id.v file
+        echo "\`define BUILD_DATE \"190311\"" > build_id.v
+        echo "\`define BUILD_TIME \"190311\"" >> build_id.v
+        ;;
+    ##########################
     "-slowpll")
         echo "INFO: Simulation will use the slow PLL model"
         MIST_PLL=altera_pll.f
@@ -250,6 +274,7 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
     -frame    Number of frames to simulate
     -time     Number of milliseconds to simulate
     -slowpll  Simulate using Altera's model for PLLs
+    -showcmd  Display the simulation command only. Do not run any simulation.
     -d        Add specific Verilog macros for the simulation. Common options
         VIDEO_START=X   video output will start on frame X
         TESTSCR1        disable scroll control by the CPU and scroll the
@@ -286,25 +311,27 @@ fi
 
 EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=jt${SYSNAME}_mist"
 
-# Add the PLL
-if [[ $SIMULATOR == iverilog && $TOP == mist_test ]]; then
-    MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist $MIST_PLL)"
-else
-    MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
+# Add the PLL (MiST only)
+if [ $TOP = mist_test ]; then
+    if [ $SIMULATOR = iverilog ]; then
+        MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist   $MIST_PLL)"
+    else
+        MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
+    fi
 fi
 
 case $SIMULATOR in
 iverilog)
-    iverilog -g2005-sv $MIST \
+    $SHOWCMD iverilog -g2005-sv $MIST \
         -f game.f $PERCORE \
-        $(add_dir $MODULES/jtframe/hdl/ver sim.f ) \
+        $(add_dir $MODULES/jtframe/hdl/ver $SIMFILE ) \
         $MODULES/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
         $MAXFRAME -DIVERILOG $EXTRA \
-    && sim -lxt;;
+    && $SHOWCMD sim -lxt;;
 ncverilog)
-    ncverilog +access+r +nc64bit +define+NCVERILOG \
+    $SHOWCMD ncverilog +access+r +nc64bit +define+NCVERILOG \
         -f game.f $PERCORE \
         -F $MODULES/jtframe/hdl/ver/sim.f -disable_sem2009 $MIST \
         +define+SIM_MS=$SIM_MS +define+SIMULATION \
@@ -314,7 +341,7 @@ ncverilog)
         $MODULES/tv80/*.v \
         $EXTRA;;
 verilator)
-    verilator -I../../hdl \
+    $SHOWCMD verilator -I../../hdl \
         -f game.f $PERCORE \
         $MODULES/tv80/*.v \
         $MODULES/ver/quick_sdram.v \

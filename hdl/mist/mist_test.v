@@ -86,6 +86,8 @@ wire UART_RX, UART_TX;
 assign UART_RX = UART_TX; // make a loop!
 `endif
 
+wire AUDIO_L, AUDIO_R;
+
 `SYSTOP #(.CLK_SPEED(CLK_SPEED)) UUT(
     .CLOCK_27   ( { 1'b0, clk27 }),
     .VGA_R      ( VGA_R     ),

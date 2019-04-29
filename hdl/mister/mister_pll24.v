@@ -26,24 +26,15 @@ reg [3:0] div=5'd0;
 
 initial outclk_2=1'b0;
 
-`ifndef CLK24
-    always @(posedge outclk_0) begin
-        div <= div=='d8 ? 'd0 : div+'d1;
-        if ( div=='d0 ) outclk_2 <= 1'b0;
-        if ( div=='d4 ) outclk_2 <= 1'b1;
-
-    end
-`else
-    always @(posedge outclk_0) begin
-        div <= div=='d8 ? 'd0 : div+'d1;
-        case( div )
-            5'd0: outclk_2 <= 1'b0;
-            5'd2: outclk_2 <= 1'b1;
-            5'd4: outclk_2 <= 1'b0;
-            5'd7: outclk_2 <= 1'b1;
-        endcase
-    end
-`endif
+always @(posedge outclk_0) begin
+    div <= div=='d8 ? 'd0 : div+'d1;
+    case( div )
+        5'd0: outclk_2 <= 1'b0;
+        5'd2: outclk_2 <= 1'b1;
+        5'd4: outclk_2 <= 1'b0;
+        5'd7: outclk_2 <= 1'b1;
+    endcase
+end
 
 `ifdef SDRAM_DELAY
 real sdram_delay = `SDRAM_DELAY;
