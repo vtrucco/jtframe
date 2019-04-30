@@ -162,7 +162,7 @@ always @(posedge clk or posedge rst)
         if( cnt_state!=3'd0 ||
             readon || /* when not downloading */
             writeon   /* when downloading */)
-            cnt_state <= cnt_state==3'd6 ? 3'd0 : (cnt_state + 3'd1);
+            cnt_state <= cnt_state==3'd5 ? 3'd0 : (cnt_state + 3'd1);
         case( cnt_state )
         default: begin // wait
             SDRAM_CMD <= CMD_NOP;
@@ -211,13 +211,13 @@ always @(posedge clk or posedge rst)
             SDRAM_CMD <= write_cycle ? CMD_WRITE :
                 autorefresh_cycle ? CMD_NOP : CMD_READ;
         end
-        3'd5: begin
+        3'd4: begin
             if( read_cycle) begin
                 data_read[31:16] <= SDRAM_DQ;
             end
             SDRAM_CMD <= CMD_NOP;
         end
-        3'd6: begin
+        3'd5: begin
             if( read_cycle) begin
                 data_read[15: 0] <= data_read[31:16];
                 data_read[31:16] <= SDRAM_DQ;

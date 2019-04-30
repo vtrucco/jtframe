@@ -17,6 +17,7 @@ initial $display("INFO: base clock set to %f ns",base_clk);
 // 108 MHz -> 9.259ns
 //  96 MHz -> 10.417ns
 //  84 MHz -> 11.905ns
+//  72 MHz -> 13.889ns X fails
 real base_clk = 10.417;
 `endif
 
@@ -35,6 +36,8 @@ initial c1=1'b0;
         // if ( div=='d0 ) c1 <= 1'b0;
         // if ( div=='d4 ) c1 <= 1'b1;
         { c1, div[1:0] } <= {c1, div[1:0] }+3'd1; // base_clk=10.417
+        //div <= div==4'd2 ? 4'd0 : div+4'd1;
+        //if(div==4'd2) c1 <= ~c1;
     end
 `else
     always @(posedge c2) begin
@@ -53,8 +56,8 @@ real sdram_delay = `SDRAM_DELAY;
 initial $display("INFO: SDRAM_CLK delay set to %f ns",sdram_delay);
 assign #sdram_delay c3 = c2;
 `else
-initial $display("INFO: SDRAM_CLK delay set to 0 ns");
-assign c3 = c2;
+initial $display("INFO: SDRAM_CLK delay set to 1 ns");
+assign #1 c3 = c2;
 `endif
 
 endmodule // jtgng_pll0
