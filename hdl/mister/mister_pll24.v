@@ -5,7 +5,7 @@ module pll(
     output reg locked,
     output reg outclk_0,    // clk_rom, 108 MHz
     output reg outclk_1,    // SDRAM_CLK
-    output reg outclk_2     // clk_sys, 24 MHz
+    output reg outclk_2=1'b0     // clk_sys, 24 MHz
 );
 
 assign locked = 1'b1;
@@ -14,7 +14,7 @@ assign locked = 1'b1;
 real base_clk = `BASE_CLK;
 initial $display("INFO mister_pll24: base clock set to %f ns",base_clk);
 `else
-real base_clk = 9.259;
+real base_clk = 10.4; // 96MHz
 `endif
 
 initial begin
@@ -22,18 +22,12 @@ initial begin
     forever outclk_0 = #(base_clk/2.0) ~outclk_0; // 108 MHz
 end
 
-reg [3:0] div=5'd0;
+reg div=1'b0;
 
 initial outclk_2=1'b0;
 
 always @(posedge outclk_0) begin
-    div <= div=='d8 ? 'd0 : div+'d1;
-    case( div )
-        5'd0: outclk_2 <= 1'b0;
-        5'd2: outclk_2 <= 1'b1;
-        5'd4: outclk_2 <= 1'b0;
-        5'd7: outclk_2 <= 1'b1;
-    endcase
+    { outclk_2, div } <= { outclk_2, div } + 2'd1;
 end
 
 `ifdef SDRAM_DELAY
