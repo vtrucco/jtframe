@@ -83,8 +83,10 @@ set_input_delay -clock sdclk_pin -min 3 [get_ports SDRAM_DQ[*]]
 # Set Output Delay
 #**************************************************************
 
+# This is tDS in the data sheet, setup time
 set_output_delay -clock sdclk_pin -max 1.5 [get_ports SDRAM_*]
-set_output_delay -clock sdclk_pin -min -0.8 [get_ports SDRAM_*]
+# This is tDH in the data sheet, hold time
+set_output_delay -clock sdclk_pin -min 0.8 [get_ports SDRAM_*]
 
 
 
