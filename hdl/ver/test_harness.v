@@ -96,7 +96,7 @@ jtgng_pll0 u_pll(
     .c1     ( clk     ),     // 12
     .c2     ( clk_rom ),     // 96
     // unused
-    .c3     (         ),     // 96 (shifted by -2.5ns)
+    //.c3     (         ),     // 96 (shifted by -2.5ns)
     .locked (         )
 );
 
@@ -176,6 +176,7 @@ generate
         jtgng_sdram u_sdram(
             .rst            ( rst           ),
             .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
+            .cen12          ( cen12         ),
             .H0             ( H0            ),
             .loop_rst       ( loop_rst      ),
             .autorefresh    ( autorefresh   ),

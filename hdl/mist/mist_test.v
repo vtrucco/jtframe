@@ -24,11 +24,7 @@ wire SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE,  SDRAM_nCAS,
 
 wire [5:0] VGA_R, VGA_G, VGA_B;
 
-`ifdef CLK24
-    parameter CLK_SPEED=24;
-`else
-    parameter CLK_SPEED=12;
-`endif
+parameter CLK_SPEED=48;
 
 mist_dump u_dump(
     .VGA_VS     ( VGA_VS    ),

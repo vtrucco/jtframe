@@ -131,24 +131,6 @@ assign scandoubler_disable = 1'b1;
 
 generate
     
-if( CLK_SPEED==12 || CLK_SPEED==24 ) begin
-    // 24 MHz or 12 MHz base clock
-    jtgng_pll0 u_pll_game (
-        .inclk0 ( CLOCK_27[0] ),
-        .c1     ( clk_rgb     ),
-        .c2     ( clk_rom     ), // 96
-        .c3     ( SDRAM_CLK   ), // 96 (shifted by -2.5ns)
-        .locked ( locked      )
-    );
-
-    // assign SDRAM_CLK = clk_rom;
-
-    jtgng_pll1 u_pll_vga (
-        .inclk0 ( clk_rgb   ),
-        .c0     ( clk_vga   ) // 25
-    );
-end
-
 if( CLK_SPEED == 20 ) begin
     // 20 MHz base clock
     // SDRAM at 10*8 = 80 MHz
@@ -159,6 +141,24 @@ if( CLK_SPEED == 20 ) begin
         .c2     ( SDRAM_CLK   ), // 80 (shifted)
         .locked ( locked      )
     );
+
+    jtgng_pll1 u_pll_vga (
+        .inclk0 ( clk_rgb   ),
+        .c0     ( clk_vga   ) // 25
+    );
+end
+else begin
+    // 24 MHz or 12 MHz base clock
+    jtgng_pll0 u_pll_game (
+        .inclk0 ( CLOCK_27[0] ),
+        .c1     ( clk_rom     ), // 48 MHz
+        .c2     ( SDRAM_CLK   ),
+        // .c3     (             ), // 96 (shifted by -2.5ns)
+        .locked ( locked      )
+    );
+
+    // assign SDRAM_CLK = clk_rom;
+    assign clk_rgb   = clk_rom;
 
     jtgng_pll1 u_pll_vga (
         .inclk0 ( clk_rgb   ),
@@ -183,6 +183,7 @@ data_io #(.aw(22)) u_datain (
 jtgng_sdram u_sdram(
     .rst            ( rst           ),
     .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
+    .cen12          ( cen12         ),
     .loop_rst       ( loop_rst      ),
     .read_sync      ( sdram_sync    ),
     .read_req       ( sdram_req     ),
