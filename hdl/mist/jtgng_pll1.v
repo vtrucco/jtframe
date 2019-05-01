@@ -1,7 +1,7 @@
 // megafunction wizard: %ALTPLL%
 // GENERATION: STANDARD
 // VERSION: WM1.0
-// MODULE: altpll
+// MODULE: altpll 
 
 // ============================================================
 // File Name: jtgng_pll1.v
@@ -19,17 +19,17 @@
 
 
 //Copyright (C) 1991-2013 Altera Corporation
-//Your use of Altera Corporation's design tools, logic functions
-//and other software and tools, and its AMPP partner logic
-//functions, and any output files from any of the foregoing
-//(including device programming or simulation files), and any
-//associated documentation or information are expressly subject
-//to the terms and conditions of the Altera Program License
-//Subscription Agreement, Altera MegaCore Function License
-//Agreement, or other applicable license agreement, including,
-//without limitation, that your use is for the sole purpose of
-//programming logic devices manufactured by Altera and sold by
-//Altera or its authorized distributors.  Please refer to the
+//Your use of Altera Corporation's design tools, logic functions 
+//and other software and tools, and its AMPP partner logic 
+//functions, and any output files from any of the foregoing 
+//(including device programming or simulation files), and any 
+//associated documentation or information are expressly subject 
+//to the terms and conditions of the Altera Program License 
+//Subscription Agreement, Altera MegaCore Function License 
+//Agreement, or other applicable license agreement, including, 
+//without limitation, that your use is for the sole purpose of 
+//programming logic devices manufactured by Altera and sold by 
+//Altera or its authorized distributors.  Please refer to the 
 //applicable agreement for further details.
 
 
@@ -99,12 +99,12 @@ module jtgng_pll1 (
 				.vcounderrange ());
 	defparam
 		altpll_component.bandwidth_type = "AUTO",
-		altpll_component.clk0_divide_by = 12,
+		altpll_component.clk0_divide_by = 48,
 		altpll_component.clk0_duty_cycle = 50,
 		altpll_component.clk0_multiply_by = 25,
 		altpll_component.clk0_phase_shift = "0",
 		altpll_component.compensate_clock = "CLK0",
-		altpll_component.inclk0_input_frequency = 83333,
+		altpll_component.inclk0_input_frequency = 20833,
 		altpll_component.intended_device_family = "Cyclone III",
 		altpll_component.lpm_hint = "CBX_MODULE_PREFIX=jtgng_pll1",
 		altpll_component.lpm_type = "altpll",
@@ -185,7 +185,7 @@ endmodule
 // Retrieval info: PRIVATE: GLOCKED_MODE_CHECK STRING "0"
 // Retrieval info: PRIVATE: GLOCK_COUNTER_EDIT NUMERIC "1048575"
 // Retrieval info: PRIVATE: HAS_MANUAL_SWITCHOVER STRING "1"
-// Retrieval info: PRIVATE: INCLK0_FREQ_EDIT STRING "12.000"
+// Retrieval info: PRIVATE: INCLK0_FREQ_EDIT STRING "48.000"
 // Retrieval info: PRIVATE: INCLK0_FREQ_UNIT_COMBO STRING "MHz"
 // Retrieval info: PRIVATE: INCLK1_FREQ_EDIT STRING "100.000"
 // Retrieval info: PRIVATE: INCLK1_FREQ_EDIT_CHANGED STRING "1"
@@ -241,12 +241,12 @@ endmodule
 // Retrieval info: PRIVATE: ZERO_DELAY_RADIO STRING "0"
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: BANDWIDTH_TYPE STRING "AUTO"
-// Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "12"
+// Retrieval info: CONSTANT: CLK0_DIVIDE_BY NUMERIC "48"
 // Retrieval info: CONSTANT: CLK0_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "25"
 // Retrieval info: CONSTANT: CLK0_PHASE_SHIFT STRING "0"
 // Retrieval info: CONSTANT: COMPENSATE_CLOCK STRING "CLK0"
-// Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "83333"
+// Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "20833"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone III"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altpll"
 // Retrieval info: CONSTANT: OPERATION_MODE STRING "NORMAL"

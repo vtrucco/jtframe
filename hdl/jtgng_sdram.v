@@ -107,13 +107,13 @@ always @(posedge clk or posedge rst)
 
 reg autorefresh_cycle;
 
-always @(posedge clk or posedge rst)
+always @(posedge clk)
     if( rst ) begin
         // initialization of SDRAM
         SDRAM_WRITE<= 1'b0;
         SDRAM_CMD <= CMD_NOP;
         init_cmd  <= CMD_NOP;
-        wait_cnt   <= 14'd9750; // wait for 100us
+        wait_cnt   <= 14'd5000; // wait for 100us
         initialize <= 1'b1;
         init_state <= 3'd0;
         // Main loop
@@ -162,10 +162,10 @@ always @(posedge clk or posedge rst)
             endcase
         end
     end else  begin // regular operation
-        //if( cnt_state!=3'd0 ||
-        //    readon || /* when not downloading */
-        //    writeon   /* when downloading */)
-        cnt_state <= cnt_state + 2'd1;
+        if( cnt_state!=2'd0 ||
+            !downloading_last || /* when not downloading */
+            writeon   /* when downloading */)
+            cnt_state <= cnt_state + 2'd1;
         case( cnt_state )
         default: begin // wait
             SDRAM_CMD <= CMD_NOP;
@@ -187,7 +187,7 @@ always @(posedge clk or posedge rst)
                 // or 1 = 2 words, used for normal operation
                 SDRAM_A   <= {12'b00_1_00_010_0_00, burst_mode}; // CAS Latency = 2
                 burst_done <= 1'b1;
-                cnt_state  <= 3'd3; // give one NOP cycle after changing the mode
+                cnt_state  <= 2'd3; // give one NOP cycle after changing the mode
             end else begin
                 SDRAM_CMD <= CMD_NOP;
                 if( writeon ) begin

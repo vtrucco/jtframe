@@ -149,11 +149,12 @@ if( CLK_SPEED == 20 ) begin
 end
 else begin
     // 24 MHz or 12 MHz base clock
+    wire clk_vga_in;
     jtgng_pll0 u_pll_game (
         .inclk0 ( CLOCK_27[0] ),
         .c1     ( clk_rom     ), // 48 MHz
         .c2     ( SDRAM_CLK   ),
-        // .c3     (             ), // 96 (shifted by -2.5ns)
+        .c3     ( clk_vga_in  ),
         .locked ( locked      )
     );
 
@@ -161,8 +162,8 @@ else begin
     assign clk_rgb   = clk_rom;
 
     jtgng_pll1 u_pll_vga (
-        .inclk0 ( clk_rgb   ),
-        .c0     ( clk_vga   ) // 25
+        .inclk0 ( clk_vga_in ),
+        .c0     ( clk_vga    ) // 25
     );
 end
 
@@ -208,8 +209,14 @@ jtgng_sdram u_sdram(
     .SDRAM_CKE      ( SDRAM_CKE     )
 );
 
+// OSD will only get simulated if SIMULATE_OSD is defined
+`ifndef SIMULATE_OSD
+`ifdef SIMULATION
+`define BYPASS_OSD
+`endif
+`endif
 
-`ifndef SIMULATION
+`ifndef BYPASS_OSD
 // include the on screen display
 wire [5:0] osd_r_o;
 wire [5:0] osd_g_o;
