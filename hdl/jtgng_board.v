@@ -27,23 +27,11 @@ module jtgng_board(
     input             rst_req,
 
     input             clk_dac,
-    input             clk_rgb,
-    input             clk_vga,
-    input             pxl_cen,
+    input             clk_sys,
+    //input             clk_vga,
+    //input             pxl_cen,
     input   [15:0]    snd,
     output            snd_pwm,
-    // VGA
-    input             en_mixing,
-    input   [3:0]     game_r,
-    input   [3:0]     game_g,
-    input   [3:0]     game_b,
-    input             LHBL,
-    input             LVBL,
-    output  [5:0]     vga_r,
-    output  [5:0]     vga_g,
-    output  [5:0]     vga_b,
-    output            vga_hsync,
-    output            vga_vsync,
     // keyboard
     input             ps2_kbd_clk,
     input             ps2_kbd_data,
@@ -69,16 +57,16 @@ wire invert_inputs = GAME_INPUTS_ACTIVE_HIGH;
 wire key_reset, key_pause;
 reg [7:0] rst_cnt=8'd0;
 
-always @(posedge clk_rgb)
+always @(posedge clk_sys)
     if( rst_cnt != ~8'b0 ) begin
         rst <= 1'b1;
         rst_cnt <= rst_cnt + 8'd1;
     end else rst <= 1'b0;
 
 // rst_n is meant to be used as an asynchronous reset
-// for the clk_rgb domain
+// for the clk_sys domain
 reg pre_rst_n;
-always @(posedge clk_rgb)
+always @(posedge clk_sys)
     if( rst | downloading | loop_rst ) begin
         pre_rst_n <= 1'b0;
         rst_n <= 1'b0;
@@ -90,7 +78,7 @@ always @(posedge clk_rgb)
 reg soft_rst;
 reg last_dip_flip;
 reg [7:0] game_rst_cnt=8'd0;
-always @(negedge clk_rgb) begin
+always @(negedge clk_sys) begin
     last_dip_flip <= dip_flip;
     if( downloading | rst | rst_req | (last_dip_flip!=dip_flip) | soft_rst ) begin
         game_rst_cnt <= 8'd0;
@@ -133,42 +121,35 @@ assign snd_pwm = 1'b0;
 
 
 // convert 5-bit colour to 6-bit colour
-assign vga_r[0] = vga_r[5];
-assign vga_g[0] = vga_g[5];
-assign vga_b[0] = vga_b[5];
+// assign vga_r[0] = vga_r[5];
+// assign vga_g[0] = vga_g[5];
+// assign vga_b[0] = vga_b[5];
 
-// Do not simulate the scan doubler unless explicitly asked for it:
-`ifndef SIM_SCANDOUBLER
-`ifdef SIMULATION
-`define NOSCANDOUBLER
-`endif
-`endif
-
-`ifndef NOSCANDOUBLER
-jtgng_vga u_scandoubler (
-    .clk_rgb    ( clk_rgb       ), // 24 MHz
-    .cen6       ( pxl_cen       ), //  6 MHz
-    .clk_vga    ( clk_vga       ), // 25 MHz
-    .rst        ( rst           ),
-    .red        ( game_r        ),
-    .green      ( game_g        ),
-    .blue       ( game_b        ),
-    .LHBL       ( LHBL          ),
-    .LVBL       ( LVBL          ),
-    .en_mixing  ( en_mixing     ),
-    .vga_red    ( vga_r[5:1]    ),
-    .vga_green  ( vga_g[5:1]    ),
-    .vga_blue   ( vga_b[5:1]    ),
-    .vga_hsync  ( vga_hsync     ),
-    .vga_vsync  ( vga_vsync     )
-);
-`else
-assign vga_r[5:1] = 4'd0;
-assign vga_g[5:1] = 4'd0;
-assign vga_b[5:1] = 4'd0;
-assign vga_hsync  = 1'b0;
-assign vga_vsync  = 1'b0;
-`endif
+// `ifndef NOSCANDOUBLER
+// jtgng_vga u_scandoubler (
+//     .clk_sys    ( clk_sys       ), // 24 MHz
+//     .cen6       ( pxl_cen       ), //  6 MHz
+//     .clk_vga    ( clk_vga       ), // 25 MHz
+//     .rst        ( rst           ),
+//     .red        ( game_r        ),
+//     .green      ( game_g        ),
+//     .blue       ( game_b        ),
+//     .LHBL       ( LHBL          ),
+//     .LVBL       ( LVBL          ),
+//     .en_mixing  ( en_mixing     ),
+//     .vga_red    ( vga_r[5:1]    ),
+//     .vga_green  ( vga_g[5:1]    ),
+//     .vga_blue   ( vga_b[5:1]    ),
+//     .vga_hsync  ( vga_hsync     ),
+//     .vga_vsync  ( vga_vsync     )
+// );
+// `else
+// assign vga_r[5:1] = 4'd0;
+// assign vga_g[5:1] = 4'd0;
+// assign vga_b[5:1] = 4'd0;
+// assign vga_hsync  = 1'b0;
+// assign vga_vsync  = 1'b0;
+// `endif
 
 wire [9:0] key_joy1, key_joy2;
 wire [1:0] key_start, key_coin;
@@ -177,7 +158,7 @@ wire       key_service;
 
 `ifndef SIMULATION
 jtgng_keyboard u_keyboard(
-    .clk         ( clk_rgb       ),
+    .clk         ( clk_sys       ),
     .rst         ( rst           ),
     // ps2 interface
     .ps2_clk     ( ps2_kbd_clk   ),
@@ -203,7 +184,7 @@ assign key_pause = 1'b0;
 
 reg [9:0] joy1_sync, joy2_sync;
 
-always @(posedge clk_rgb) begin
+always @(posedge clk_sys) begin
     joy1_sync <= ~board_joystick1;
     joy2_sync <= ~board_joystick2;
 end
@@ -218,7 +199,7 @@ wire joy_pause_b = joy1_sync[PAUSE_BIT] & joy2_sync[PAUSE_BIT];
 
 integer cnt;
 
-always @(posedge clk_rgb)
+always @(posedge clk_sys)
     if(rst ) begin
         game_pause   <= 1'b0;
         game_service <= 1'b1 ^ invert_inputs;

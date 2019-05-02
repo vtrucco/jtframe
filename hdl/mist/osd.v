@@ -1,34 +1,38 @@
 // A simple OSD implementation. Can be hooked up between a cores
 // VGA output and the physical VGA pins
 
-module osd (
+module osd #(parameter  
+        OSD_X_OFFSET = 10'd0,
+        OSD_Y_OFFSET = 10'd0,
+        OSD_COLOR    = 3'd0,
+        PXW          = 4 // bits per pixel, must be 4 at least
+)(
 	// OSDs pixel clock, should be synchronous to cores pixel clock to
 	// avoid jitter.
-	input        clk_sys,
+	input           clk_sys,
+    input           pxl_cen,
 
 	// SPI interface
-	input        SPI_SCK,
-	input        SPI_SS3,
-	input        SPI_DI,
+	input           SPI_SCK,
+	input           SPI_SS3,
+	input           SPI_DI,
 
-	input  [1:0] rotate, //[0] - rotate [1] - left or right
+	input  [1:0]    rotate, //[0] - rotate [1] - left or right
 
 	// VGA signals coming from core
-	input  [5:0] R_in,
-	input  [5:0] G_in,
-	input  [5:0] B_in,
-	input        HSync,
-	input        VSync,
+	input  [PXW-1:0] R_in,
+	input  [PXW-1:0] G_in,
+	input  [PXW-1:0] B_in,
+	input            HSync,
+	input            VSync,
 
 	// VGA signals going to video connector
-	output [5:0] R_out,
-	output [5:0] G_out,
-	output [5:0] B_out
+	output reg [PXW-1:0] R_out,
+	output reg [PXW-1:0] G_out,
+	output reg [PXW-1:0] B_out,
+    output reg           HS_out,
+    output reg           VS_out
 );
-
-parameter OSD_X_OFFSET = 10'd0;
-parameter OSD_Y_OFFSET = 10'd0;
-parameter OSD_COLOR    = 3'd0;
 
 localparam OSD_WIDTH   = 10'd256;
 localparam OSD_HEIGHT  = 10'd128;
@@ -43,7 +47,7 @@ reg        osd_enable;
 (* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[2047:0];  // the OSD buffer itself
 
 // the OSD has its own SPI interface to the io controller
-always@(posedge SPI_SCK, posedge SPI_SS3) begin
+always@(posedge SPI_SCK, posedge SPI_SS3) begin : spi
 	reg  [4:0] cnt;
 	reg [10:0] bcnt;
 	reg  [7:0] sbuf;
@@ -94,8 +98,8 @@ wire       vs_pol = vs_high < vs_low;
 wire [9:0] dsp_height = vs_pol ? vs_low : vs_high;
 
 wire doublescan = (dsp_height>350);
-
-reg ce_pix;
+/*
+reg pxl_cen;
 always @(negedge clk_sys) begin
 	integer cnt = 0;
 	integer pixsz, pixcnt;
@@ -106,21 +110,21 @@ always @(negedge clk_sys) begin
 
 	pixcnt <= pixcnt + 1;
 	if(pixcnt == pixsz) pixcnt <= 0;
-	ce_pix <= !pixcnt;
+	pxl_cen <= !pixcnt;
 
 	if(hs && ~HSync) begin
 		cnt    <= 0;
 		pixsz  <= (cnt >> 9) - 1;
 		pixcnt <= 0;
-		ce_pix <= 1;
+		pxl_cen <= 1;
 	end
 end
-
-always @(posedge clk_sys) begin
+*/
+always @(posedge clk_sys) begin : counters
 	reg hsD, hsD2;
 	reg vsD, vsD2;
 
-	if(ce_pix) begin
+	if(pxl_cen) begin
 		// bring hsync into local clock domain
 		hsD <= HSync;
 		hsD2 <= hsD;
@@ -176,7 +180,7 @@ wire [7:0] osd_byte = osd_buffer[osd_buffer_addr];
 reg        osd_pixel;
 
 always @(posedge clk_sys) begin
-    if(ce_pix) begin
+    if(pxl_cen) begin
 		osd_buffer_addr <= rotate[0] ? {rotate[1] ? osd_hcnt_next2[7:5] : ~osd_hcnt_next2[7:5],
 		                                rotate[1] ? (doublescan ? ~osd_vcnt[7:0] : ~{osd_vcnt[6:0], 1'b0}) :
 										            (doublescan ?  osd_vcnt[7:0]  : {osd_vcnt[6:0], 1'b0})} :
@@ -187,8 +191,18 @@ always @(posedge clk_sys) begin
 	end
 end
 
-assign R_out = !osd_de ? R_in : {osd_pixel, osd_pixel, OSD_COLOR[2], R_in[5:3]};
-assign G_out = !osd_de ? G_in : {osd_pixel, osd_pixel, OSD_COLOR[1], G_in[5:3]};
-assign B_out = !osd_de ? B_in : {osd_pixel, osd_pixel, OSD_COLOR[0], B_in[5:3]};
+always @(posedge clk_sys) begin
+    if( osd_de ) begin
+        R_out <= {osd_pixel, osd_pixel, OSD_COLOR[2], R_in[PXW-1:PXW-4]};
+        G_out <= {osd_pixel, osd_pixel, OSD_COLOR[1], G_in[PXW-1:PXW-4]};
+        B_out <= {osd_pixel, osd_pixel, OSD_COLOR[0], B_in[PXW-1:PXW-4]};
+    end else begin
+        R_out <= R_in;
+        G_out <= G_in;
+        B_out <= B_in;
+    end
+    HS_out <= HSync;
+    VS_out <= VSync;
+end
 
 endmodule

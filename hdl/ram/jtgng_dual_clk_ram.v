@@ -33,6 +33,13 @@ module jtgng_dual_clk_ram #(parameter dw=8, aw=10)(
 
 reg [dw-1:0] mem[0:(2**aw)-1];
 
+`ifdef SIMULATION
+initial begin : clr_mem
+    integer cnt;
+    for( cnt=0; cnt<(2**aw); cnt=cnt+1 ) mem[cnt]=0;
+end
+`endif
+
 always @(posedge clka) if(clka_en) begin
     q_a <= mem[addr_a];
     if(we_a) mem[addr_a] <= data_a;

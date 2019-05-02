@@ -20,7 +20,7 @@
 
 module jtframe_mist(
     input   [1:0]   CLOCK_27,
-    output          clk_rgb,
+    output          clk_sys,
     output          clk_rom,
     input           cen12,
     input           pxl_cen,
@@ -76,7 +76,6 @@ module jtframe_mist(
     input  [21:0]   sdram_addr,
     output [31:0]   data_read,
     output          loop_rst,
-    input           autorefresh,
 //////////// board
     output            rst,      // synchronous reset
     output            rst_n,    // asynchronous reset
@@ -124,18 +123,22 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
 ) u_base(
     .rst            ( rst           ),
     .locked         ( locked        ),
-    .clk_rgb        ( clk_rgb       ),
+    .clk_sys        ( clk_sys       ),
     .clk_vga        ( clk_vga       ),
     .clk_rom        ( clk_rom       ),
     .SDRAM_CLK      ( SDRAM_CLK     ),
     .cen12          ( cen12         ),
+    .pxl_cen        ( pxl_cen       ),
     .sdram_sync     ( sdram_sync    ),
     .sdram_req      ( sdram_req     ),
     // Base video
     .osd_rotate     ( osd_rotate    ),
+    .en_mixing      ( en_mixing     ),
     .game_r         ( game_r        ),
     .game_g         ( game_g        ),
     .game_b         ( game_b        ),
+    .LHBL           ( LHBL          ),
+    .LVBL           ( LVBL          ),
     .board_r        ( board_r       ),
     .board_g        ( board_g       ),
     .board_b        ( board_b       ),
@@ -200,25 +203,11 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS),
     .downloading    ( downloading     ),
     .loop_rst       ( loop_rst        ),
 
-    .clk_rgb        ( clk_rgb         ),
-    .clk_dac        ( clk_rgb         ),
+    .clk_sys        ( clk_sys         ),
+    .clk_dac        ( clk_sys         ),
     // audio
     .snd            ( snd             ),
     .snd_pwm        ( AUDIO_L         ),
-    // VGA
-    .pxl_cen        ( pxl_cen         ),
-    .clk_vga        ( clk_vga         ),
-    .en_mixing      ( en_mixing       ),
-    .game_r         ( game_r          ),
-    .game_g         ( game_g          ),
-    .game_b         ( game_b          ),
-    .LHBL           ( LHBL            ),
-    .LVBL           ( LVBL            ),
-    .vga_r          ( board_r         ),
-    .vga_g          ( board_g         ),
-    .vga_b          ( board_b         ),
-    .vga_hsync      ( board_hsync     ),
-    .vga_vsync      ( board_vsync     ),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
     .ps2_kbd_data   ( ps2_kbd_data    ),

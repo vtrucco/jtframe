@@ -21,17 +21,22 @@
 module jtgng_mist_base(
     input           rst,
     output          locked,
-    output          clk_rgb,
+    output          clk_sys,
     output          clk_rom,
     output          clk_vga,
     input           cen12,
+    input           pxl_cen,
+
     input           sdram_sync,
     input           sdram_req,
     // Base video
+    input           en_mixing,
     input   [1:0]   osd_rotate,
     input   [3:0]   game_r,
     input   [3:0]   game_g,
     input   [3:0]   game_b,
+    input           LHBL,
+    input           LVBL,    
     input   [5:0]   board_r,
     input   [5:0]   board_g,
     input   [5:0]   board_b,
@@ -40,12 +45,12 @@ module jtgng_mist_base(
     input           hs,
     input           vs,
     // VGA
-    input   [1:0]   CLOCK_27,
-    output  [5:0]   VGA_R,
-    output  [5:0]   VGA_G,
-    output  [5:0]   VGA_B,
-    output          VGA_HS,
-    output          VGA_VS,
+    input       [1:0]   CLOCK_27,
+    output  reg [5:0]   VGA_R,
+    output  reg [5:0]   VGA_G,
+    output  reg [5:0]   VGA_B,
+    output  reg         VGA_HS,
+    output  reg         VGA_VS,
     // SDRAM interface
     inout  [15:0]   SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output [12:0]   SDRAM_A,        // SDRAM Address bus 13 Bits
@@ -96,7 +101,7 @@ wire scandoubler_disable;
 
 `ifndef SIMULATION
 user_io #(.STRLEN(CONF_STR_LEN)) u_userio(
-    .clk_sys        ( clk_rgb   ),
+    .clk_sys        ( clk_sys   ),
     .conf_str       ( CONF_STR  ),
     .SPI_CLK        ( SPI_SCK   ),
     .SPI_SS_IO      ( CONF_DATA0),
@@ -126,7 +131,8 @@ assign joystick2 = 32'd0;
 assign status    = 32'd0;
 assign ps2_kbd_data = 1'b0;
 assign ps2_kbd_clk  = 1'b0;
-assign scandoubler_disable = 1'b1;
+assign scandoubler_disable = 1'b0;
+assign ypbpr = 1'b0;
 `endif
 
 generate
@@ -136,14 +142,14 @@ if( CLK_SPEED == 20 ) begin
     // SDRAM at 10*8 = 80 MHz
     jtframe_pll20 u_pll20(
         .inclk0 ( CLOCK_27[0] ),
-        .c0     ( clk_rgb     ), // 20
+        .c0     ( clk_sys     ), // 20
         .c1     ( clk_rom     ), // 80
         .c2     ( SDRAM_CLK   ), // 80 (shifted)
         .locked ( locked      )
     );
 
     jtgng_pll1 u_pll_vga (
-        .inclk0 ( clk_rgb   ),
+        .inclk0 ( clk_sys   ),
         .c0     ( clk_vga   ) // 25
     );
 end
@@ -159,7 +165,7 @@ else begin
     );
 
     // assign SDRAM_CLK = clk_rom;
-    assign clk_rgb   = clk_rom;
+    assign clk_sys   = clk_rom;
 
     jtgng_pll1 u_pll_vga (
         .inclk0 ( clk_vga_in ),
@@ -216,18 +222,34 @@ jtgng_sdram u_sdram(
 `endif
 `endif
 
+// Do not simulate the scan doubler unless explicitly asked for it:
+`ifndef SIM_SCANDOUBLER
+`ifdef SIMULATION
+`define NOSCANDOUBLER
+`endif
+`endif
+
+`ifdef SIMINFO
+initial begin
+    $display("INFO: use -d SIMULATE_OSD to simulate the MiST OSD")
+    $display("INFO: use -d SIM_SCANDOUBLER to simulate the VGA scan doubler")
+end
+`endif
+
+wire [5:0] vga_r, vga_g, vga_b;
+wire [3:0] osd_r, osd_g, osd_b;
+wire       osd_hs, osd_vs;
+
 `ifndef BYPASS_OSD
 // include the on screen display
-wire [5:0] osd_r_o;
-wire [5:0] osd_g_o;
-wire [5:0] osd_b_o;
-wire       HSync = scandoubler_disable ? ~hs : board_hsync;
-wire       VSync = scandoubler_disable ? ~vs : board_vsync;
+wire       HSync = ~hs;
+wire       VSync = ~vs;
 wire       CSync = ~(HSync ^ VSync);
 
-osd #(0,0,4) osd (
-   .clk_sys    ( scandoubler_disable ? clk_rgb : clk_vga ),
-
+osd #(.OSD_X_OFFSET(0),.OSD_Y_OFFSET(0),.OSD_COLOR(4),.PXW(4)) 
+u_osd (
+   .clk_sys    ( clk_sys      ),
+   .pxl_cen    ( pxl_cen      ),
    // spi for OSD
    .SPI_DI     ( SPI_DI       ),
    .SPI_SCK    ( SPI_SCK      ),
@@ -235,41 +257,109 @@ osd #(0,0,4) osd (
 
    .rotate     ( osd_rotate   ),
 
-   .R_in       ( scandoubler_disable ? { game_r, game_r[3:2] } : board_r ),
-   .G_in       ( scandoubler_disable ? { game_g, game_g[3:2] } : board_g ),
-   .B_in       ( scandoubler_disable ? { game_b, game_b[3:2] } : board_b ),
-   .HSync      ( HSync        ),
-   .VSync      ( VSync        ),
+   .R_in       ( game_r       ),
+   .G_in       ( game_g       ),
+   .B_in       ( game_b       ),
+   .HSync      ( hs           ),
+   .VSync      ( vs           ),
 
-   .R_out      ( osd_r_o      ),
-   .G_out      ( osd_g_o      ),
-   .B_out      ( osd_b_o      )
+   .R_out      ( osd_r        ),
+   .G_out      ( osd_g        ),
+   .B_out      ( osd_b        ),
+   .HS_out     ( osd_hs       ),
+   .VS_out     ( osd_vs       )
+);
+`else 
+assign osd_r  = game_r;
+assign osd_g  = game_g;
+assign osd_b  = game_b;
+assign osd_hs = hs;
+assign osd_vs = vs;
+`endif
+
+wire vga_vsync, vga_hsync;
+`ifndef NOSCANDOUBLER
+reg LHBL2, LVBL2;
+
+always @(posedge clk_sys) begin
+    LHBL2 <= LHBL;
+    LVBL2 <= LVBL;
+end
+
+jtgng_vga u_scandoubler (
+    .rst        ( rst           ),
+    .clk_rgb    ( clk_sys       ),
+    .cen6       ( pxl_cen       ),
+    .clk_vga    ( clk_vga       ), // 25 MHz
+    .red        ( osd_r         ),
+    .green      ( osd_g         ),
+    .blue       ( osd_b         ),
+    .LHBL       ( LHBL2         ),
+    .LVBL       ( LVBL2         ),
+    .en_mixing  ( en_mixing     ),
+    .vga_red    ( vga_r[5:1]    ),
+    .vga_green  ( vga_g[5:1]    ),
+    .vga_blue   ( vga_b[5:1]    ),
+    .vga_hsync  ( vga_hsync     ),
+    .vga_vsync  ( vga_vsync     )
 );
 
+// convert 5-bit colour to 6-bit colour
+assign vga_r[0] = vga_r[5];
+assign vga_g[0] = vga_g[5];
+assign vga_b[0] = vga_b[5];
+assign vga_vsync= vs;
+assign vga_hsync= hs;
+`else
+// simulation only
+assign vga_r = { 2'b0, osd_r };
+assign vga_g = { 2'b0, osd_g };
+assign vga_b = { 2'b0, osd_b };
+assign vga_hsync  = osd_hs;
+assign vga_vsync  = osd_vs;
+`endif
+
+`ifndef SIMULATION
 wire [5:0] Y, Pb, Pr;
 
 rgb2ypbpr u_rgb2ypbpr
 (
-    .red   ( osd_r_o ),
-    .green ( osd_g_o ),
-    .blue  ( osd_b_o ),
+    .red   ( osd_r   ),
+    .green ( osd_g   ),
+    .blue  ( osd_b   ),
     .y     ( Y       ),
     .pb    ( Pb      ),
     .pr    ( Pr      )
 );
 
-assign VGA_R = ypbpr?Pr:osd_r_o;
-assign VGA_G = ypbpr? Y:osd_g_o;
-assign VGA_B = ypbpr?Pb:osd_b_o;
-// a minimig vga->scart cable expects a composite sync signal on the VGA_HS output.
-// and VCC on VGA_VS (to switch into rgb mode)
-assign VGA_HS = (scandoubler_disable | ypbpr) ? CSync : HSync;
-assign VGA_VS = (scandoubler_disable | ypbpr) ? 1'b1 : VSync;
+always @(posedge clk_sys) begin : rgb_mux
+    if( ypbpr ) begin // RGB output
+        // a minimig vga->scart cable expects a composite sync signal 
+        // on the VGA_HS output and VCC on VGA_VS (to switch into rgb mode).
+        VGA_R  <= Pr;
+        VGA_G  <=  Y;
+        VGA_B  <= Pb;
+        VGA_HS <= CSync;
+        VGA_VS <= 1'b1;
+    end else begin // VGA output
+        VGA_R  <= vga_r;
+        VGA_G  <= vga_g;
+        VGA_B  <= vga_b;
+        VGA_HS <= vga_hsync;
+        VGA_VS <= vga_vsync;
+    end
+end
+// assign VGA_R = ypbpr?Pr:osd_r;
+// assign VGA_G = ypbpr? Y:osd_g;
+// assign VGA_B = ypbpr?Pb:osd_b;
+// assign VGA_HS = (scandoubler_disable | ypbpr) ? CSync : HSync;
+// assign VGA_VS = (scandoubler_disable | ypbpr) ? 1'b1 : VSync;
 `else
-assign VGA_R = game_r;// { game_r, game_r[3:2] };
-assign VGA_G = game_g;// { game_g, game_g[3:2] };
-assign VGA_B = game_b;// { game_b, game_b[3:2] };
+assign VGA_R  = vga_r;
+assign VGA_G  = vga_g;
+assign VGA_B  = vga_b;
 assign VGA_HS = hs;
 assign VGA_VS = vs;
 `endif
+
 endmodule // jtgng_mist_base
