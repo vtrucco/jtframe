@@ -135,45 +135,23 @@ assign scandoubler_disable = 1'b0;
 assign ypbpr = 1'b0;
 `endif
 
-generate
-    
-if( CLK_SPEED == 20 ) begin
-    // 20 MHz base clock
-    // SDRAM at 10*8 = 80 MHz
-    jtframe_pll20 u_pll20(
-        .inclk0 ( CLOCK_27[0] ),
-        .c0     ( clk_sys     ), // 20
-        .c1     ( clk_rom     ), // 80
-        .c2     ( SDRAM_CLK   ), // 80 (shifted)
-        .locked ( locked      )
-    );
+// 24 MHz or 12 MHz base clock
+wire clk_vga_in;
+jtgng_pll0 u_pll_game (
+    .inclk0 ( CLOCK_27[0] ),
+    .c1     ( clk_rom     ), // 48 MHz
+    .c2     ( SDRAM_CLK   ),
+    .c3     ( clk_vga_in  ),
+    .locked ( locked      )
+);
 
-    jtgng_pll1 u_pll_vga (
-        .inclk0 ( clk_sys   ),
-        .c0     ( clk_vga   ) // 25
-    );
-end
-else begin
-    // 24 MHz or 12 MHz base clock
-    wire clk_vga_in;
-    jtgng_pll0 u_pll_game (
-        .inclk0 ( CLOCK_27[0] ),
-        .c1     ( clk_rom     ), // 48 MHz
-        .c2     ( SDRAM_CLK   ),
-        .c3     ( clk_vga_in  ),
-        .locked ( locked      )
-    );
+// assign SDRAM_CLK = clk_rom;
+assign clk_sys   = clk_rom;
 
-    // assign SDRAM_CLK = clk_rom;
-    assign clk_sys   = clk_rom;
-
-    jtgng_pll1 u_pll_vga (
-        .inclk0 ( clk_vga_in ),
-        .c0     ( clk_vga    ) // 25
-    );
-end
-
-endgenerate
+jtgng_pll1 u_pll_vga (
+    .inclk0 ( clk_vga_in ),
+    .c0     ( clk_vga    ) // 25
+);
 
 data_io #(.aw(22)) u_datain (
     .sck                ( SPI_SCK      ),
@@ -240,11 +218,12 @@ wire [5:0] vga_r, vga_g, vga_b;
 wire [3:0] osd_r, osd_g, osd_b;
 wire       osd_hs, osd_vs;
 
-`ifndef BYPASS_OSD
-// include the on screen display
 wire       HSync = ~hs;
 wire       VSync = ~vs;
 wire       CSync = ~(HSync ^ VSync);
+
+`ifndef BYPASS_OSD
+// include the on screen display
 
 osd #(.OSD_X_OFFSET(0),.OSD_Y_OFFSET(0),.OSD_COLOR(4),.PXW(4)) 
 u_osd (
@@ -308,8 +287,6 @@ jtgng_vga u_scandoubler (
 assign vga_r[0] = vga_r[5];
 assign vga_g[0] = vga_g[5];
 assign vga_b[0] = vga_b[5];
-assign vga_vsync= vs;
-assign vga_hsync= hs;
 `else
 // simulation only
 assign vga_r = { 2'b0, osd_r };
