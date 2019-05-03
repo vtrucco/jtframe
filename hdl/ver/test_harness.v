@@ -29,6 +29,7 @@ module test_harness(
     output       SPI_DI,  // SPI always from FPGA's view
     input        SPI_DO,
     output       SPI_SS2,
+    output       SPI_SS3,
     output       CONF_DATA0,
     // SDRAM
     inout [15:0] SDRAM_DQ,
@@ -229,7 +230,7 @@ mt48lc16m16a2 #(.filename(GAME_ROMNAME)) mist_sdram (
 );
 `endif
 
-`ifdef LOADROM
+//`ifdef LOADROM
 spitx #(.filename(GAME_ROMNAME), .TX_LEN(TX_LEN) )
     u_spitx(
     .rst        ( rst        ),
@@ -238,7 +239,7 @@ spitx #(.filename(GAME_ROMNAME), .TX_LEN(TX_LEN) )
     .SPI_DI     ( SPI_DI     ),
     .SPI_SS2    ( SPI_SS2    ),
     .SPI_SS3    ( SPI_SS3    ),
-    .SPI_SS4    ( SPI_SS4    ),
+    .SPI_SS4    (            ),
     .CONF_DATA0 ( CONF_DATA0 ),
     .spi_done   ( spi_done   )
 );
@@ -254,12 +255,12 @@ data_io #(.aw(22)) datain (
     .ioctl_data ( ioctl_data  ),
     .ioctl_wr   ( ioctl_wr    )
 );
-`else
-assign downloading = 0;
-assign romload_addr = 0;
-assign romload_data = 0;
-assign spi_done = 1'b1;
-assign SPI_SS2  = 1'b0;
-`endif
+// `else
+// assign downloading = 0;
+// assign romload_addr = 0;
+// assign romload_data = 0;
+// assign spi_done = 1'b1;
+// assign SPI_SS2  = 1'b0;
+// `endif
 
 endmodule // jt_1942_a_test

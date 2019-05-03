@@ -246,7 +246,7 @@ wire       HSync = ~hs;
 wire       VSync = ~vs;
 wire       CSync = ~(HSync ^ VSync);
 
-osd #(.OSD_X_OFFSET(0),.OSD_Y_OFFSET(0),.OSD_COLOR(4),.PXW(4)) 
+osd #(.OSD_X_OFFSET(10'd0),.OSD_Y_OFFSET(10'd0),.OSD_COLOR(3'd4),.PXW(4)) 
 u_osd (
    .clk_sys    ( clk_sys      ),
    .pxl_cen    ( pxl_cen      ),

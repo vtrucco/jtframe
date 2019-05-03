@@ -14,7 +14,7 @@ wire    [ 7:0]  ioctl_data;
 wire cen12, cen6, cen3, cen1p5, clk, clk27, rst;
 wire [21:0]  sdram_addr;
 wire [15:0]  data_read;
-wire SPI_SCK, SPI_DO, SPI_DI, SPI_SS2, CONF_DATA0;
+wire SPI_SCK, SPI_DO, SPI_DI, SPI_SS2, SPI_SS3, CONF_DATA0;
 
 wire [15:0] SDRAM_DQ;
 wire [12:0] SDRAM_A;
@@ -24,8 +24,6 @@ wire SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE,  SDRAM_nCAS,
 
 wire [5:0] VGA_R, VGA_G, VGA_B;
 
-parameter CLK_SPEED=48;
-
 mist_dump u_dump(
     .VGA_VS     ( VGA_VS    ),
     .led        ( led       ),
@@ -33,7 +31,7 @@ mist_dump u_dump(
 );
 
 test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
-    .TX_LEN(887808), .CLK_SPEED(CLK_SPEED) ) u_harness(
+    .TX_LEN(887808), .CLK_SPEED(48) ) u_harness(
     .rst         ( rst           ),
     .clk         ( clk           ),
     .clk27       ( clk27         ),
@@ -46,6 +44,7 @@ test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .ioctl_data  ( ioctl_data    ),
     .SPI_SCK     ( SPI_SCK       ),
     .SPI_SS2     ( SPI_SS2       ),
+    .SPI_SS3     ( SPI_SS3       ),
     .SPI_DI      ( SPI_DI        ),
     .SPI_DO      ( SPI_DO        ),
     .CONF_DATA0  ( CONF_DATA0    ),
@@ -84,7 +83,7 @@ assign UART_RX = UART_TX; // make a loop!
 
 wire AUDIO_L, AUDIO_R;
 
-`SYSTOP #(.CLK_SPEED(CLK_SPEED)) UUT(
+`SYSTOP UUT(
     .CLOCK_27   ( { 1'b0, clk27 }),
     .VGA_R      ( VGA_R     ),
     .VGA_G      ( VGA_G     ),
@@ -112,7 +111,7 @@ wire AUDIO_L, AUDIO_R;
     .SPI_DI     ( SPI_DI    ),
     .SPI_SCK    ( SPI_SCK   ),
     .SPI_SS2    ( SPI_SS2   ),
-    .SPI_SS3    ( 1'b0      ),
+    .SPI_SS3    ( SPI_SS3   ),
     .SPI_SS4    ( 1'b0      ),
     .CONF_DATA0 ( CONF_DATA0),
     // sound
