@@ -21,13 +21,15 @@
 
 module jtgng_sdram(
     input               rst,
-    input               clk, // 96MHz = 32 * 6 MHz -> CL=2
+    input               clk, // same as game core
     input               cen12,
     output              loop_rst,
     input               read_sync,   // read strobe
     input               read_req,    // read strobe
     output reg  [31:0]  data_read,
     input       [21:0]  sdram_addr,
+    output reg          data_rdy,    // output data is valid
+    output reg          sdram_ack,
     // ROM-load interface
     input               downloading,
     input               prog_we,    // strobe
@@ -119,6 +121,8 @@ always @(posedge clk)
         // Main loop
         burst_done <= 1'b0;
         cnt_state  <= 2'd0; //Starts after the precharge
+        data_rdy   <= 1'b0;
+        sdram_ack  <= 1'b0;
     end else if( initialize ) begin
         if( |wait_cnt ) begin
             wait_cnt <= wait_cnt-14'd1;
@@ -179,7 +183,9 @@ always @(posedge clk)
             if( read_cycle) begin
                 data_read[15: 0] <= data_read[31:16];
                 data_read[31:16] <= SDRAM_DQ;
+                data_rdy         <= 1'b1;
             end
+            else data_rdy <= 1'b0;
             {SDRAM_DQMH, SDRAM_DQML } <= 2'b00;
             if( set_burst ) begin
                 SDRAM_CMD <= CMD_LOAD_MODE;
@@ -203,16 +209,19 @@ always @(posedge clk)
                     { SDRAM_A, col_addr } <= sdram_addr;
                     autorefresh_cycle <= refresh_ok;
                     read_cycle        <= ~refresh_ok;
+                    sdram_ack         <= ~refresh_ok;
                     write_cycle       <= 1'b0;
                 end
             end
         end
         2'd1: begin // set read/write
+            sdram_ack     <= 1'b0;
             SDRAM_A[12:9] <= 4'b0010; // auto precharge;
             SDRAM_A[ 8:0] <= col_addr;
             SDRAM_WRITE <= write_cycle;
             SDRAM_CMD   <= write_cycle ? CMD_WRITE :
                 autorefresh_cycle ? CMD_NOP : CMD_READ;
+            data_rdy    <= 1'b0;
         end
         2'd3: begin
             if( read_cycle) begin

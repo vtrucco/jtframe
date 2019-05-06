@@ -29,6 +29,7 @@ module jtgng_mist_base(
 
     input           sdram_sync,
     input           sdram_req,
+    output          sdram_ack,
     // Base video
     input           en_mixing,
     input   [1:0]   osd_rotate,
@@ -89,6 +90,7 @@ module jtgng_mist_base(
     // ROM access from game
     input  [21:0]   sdram_addr,
     output [31:0]   data_read,
+    output          data_rdy,
     output          loop_rst
 );
 
@@ -195,6 +197,7 @@ jtgng_sdram u_sdram(
     .read_sync      ( sdram_sync    ),
     .read_req       ( sdram_req     ),
     .data_read      ( data_read     ),
+    .data_rdy       ( data_rdy      ),
     // ROM-load interface
     .downloading    ( downloading   ),
     .prog_we        ( prog_we       ),
@@ -202,6 +205,7 @@ jtgng_sdram u_sdram(
     .prog_data      ( prog_data     ),
     .prog_mask      ( prog_mask     ),
     .sdram_addr     ( sdram_addr    ),
+    .sdram_ack      ( sdram_ack     ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ      ),
     .SDRAM_A        ( SDRAM_A       ),

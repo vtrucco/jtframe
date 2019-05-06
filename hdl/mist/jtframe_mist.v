@@ -73,8 +73,10 @@ module jtframe_mist(
     // ROM access from game
     input           sdram_sync,
     input           sdram_req,
+    output          sdram_ack,
     input  [21:0]   sdram_addr,
     output [31:0]   data_read,
+    output          data_rdy,
     output          loop_rst,
 //////////// board
     output            rst,      // synchronous reset
@@ -189,7 +191,9 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .downloading    ( downloading   ),
     .loop_rst       ( loop_rst      ),
     .sdram_addr     ( sdram_addr    ),
-    .data_read      ( data_read     )
+    .sdram_ack      ( sdram_ack     ),
+    .data_read      ( data_read     ),
+    .data_rdy       ( data_rdy      )
 );
 
 jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS),
