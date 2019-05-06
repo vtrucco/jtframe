@@ -27,7 +27,6 @@ module jtgng_mist_base(
     input           cen12,
     input           pxl_cen,
 
-    input           sdram_sync,
     input           sdram_req,
     output          sdram_ack,
     // Base video
@@ -194,7 +193,6 @@ jtgng_sdram u_sdram(
     .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
     .cen12          ( cen12         ),
     .loop_rst       ( loop_rst      ),
-    .read_sync      ( sdram_sync    ),
     .read_req       ( sdram_req     ),
     .data_read      ( data_read     ),
     .data_rdy       ( data_rdy      ),
