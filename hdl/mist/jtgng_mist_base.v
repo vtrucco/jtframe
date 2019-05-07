@@ -191,7 +191,6 @@ data_io #(.aw(22)) u_datain (
 jtgng_sdram u_sdram(
     .rst            ( rst           ),
     .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
-    .cen12          ( cen12         ),
     .loop_rst       ( loop_rst      ),
     .read_req       ( sdram_req     ),
     .data_read      ( data_read     ),

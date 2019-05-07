@@ -22,7 +22,6 @@
 module jtgng_sdram(
     input               rst,
     input               clk, // same as game core
-    input               cen12,
     output              loop_rst,
     input               read_req,    // read strobe
     output reg  [31:0]  data_read,
@@ -153,12 +152,14 @@ always @(posedge clk)
                     SDRAM_A[10]<= 1'b1; // all banks
                     wait_cnt   <= 14'd2;
                 end
-                3'd4: if(cen12) begin
+                3'd4: begin
                     initialize <= 1'b0;
                     cnt_state  <=  'd0;
                 end
-
-                default: SDRAM_CMD <= init_cmd;
+                default: begin
+                    SDRAM_CMD  <= init_cmd;
+                    initialize <= 1'b0;
+                end
             endcase
         end
     end else  begin // regular operation
