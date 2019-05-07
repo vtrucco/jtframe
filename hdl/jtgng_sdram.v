@@ -66,12 +66,12 @@ assign SDRAM_DQ =  SDRAM_WRITE ? {write_data, write_data} : 16'hzzzz;
 
 reg [8:0] col_addr;
 
-reg [3:0] SDRAM_CMD, 
+reg [3:0] SDRAM_CMD,
     init_cmd; // this is used to reduce the mux depth to SDRAM_CMD
 assign {SDRAM_nCS, SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE } = SDRAM_CMD;
 
 reg [13:0] wait_cnt;
-reg [ 1:0] cnt_state;
+reg [ 2:0] cnt_state;
 reg [ 2:0] init_state;
 reg       initialize;
 
@@ -86,14 +86,15 @@ reg downloading_last;
 
 reg set_burst, burst_done, burst_mode;
 reg readon, writeon;
-wire refresh_ok = !read_req;
+//wire refresh_ok = !read_req;
+reg refresh_ok;
 
 always @(posedge clk or posedge rst)
     if(rst) begin
-        set_burst <= 1'b0;
+        set_burst  <= 1'b0;
     end else begin
-        readon  <= !downloading_last;
-        writeon <= downloading_last && prog_we;
+        readon  <= !downloading;
+        writeon <= downloading && prog_we;
         downloading_last <= downloading;
         if( downloading != downloading_last) begin
             set_burst <= 1'b1;
@@ -103,6 +104,7 @@ always @(posedge clk or posedge rst)
     end
 
 reg autorefresh_cycle;
+reg [1:0] refresh_sr;
 
 always @(posedge clk)
     if( rst ) begin
@@ -118,6 +120,8 @@ always @(posedge clk)
         cnt_state  <= 2'd0; //Starts after the precharge
         data_rdy   <= 1'b0;
         sdram_ack  <= 1'b0;
+        refresh_sr <=  'd0;
+        refresh_ok <= 1'b0;
     end else if( initialize ) begin
         if( |wait_cnt ) begin
             wait_cnt <= wait_cnt-14'd1;
@@ -163,27 +167,28 @@ always @(posedge clk)
             endcase
         end
     end else  begin // regular operation
-        if( cnt_state!=2'd0 ||
-            !downloading_last || /* when not downloading */
+        if( cnt_state!=3'd0 ||
+            (!downloading && (read_req || refresh_ok) ) || /* when not downloading */
             writeon   /* when downloading */)
-            cnt_state <= cnt_state + 2'd1;
+            cnt_state <= cnt_state==3'd4 ? 3'd0 : cnt_state + 3'd1;
         case( cnt_state )
         default: begin // wait
             SDRAM_CMD <= CMD_NOP;
         end
-        2'd0: begin // activate or refresh
+        3'd0: begin // activate or refresh
             write_data        <= prog_data;
             write_cycle       <= 1'b0;
             read_cycle        <= 1'b0;
             autorefresh_cycle <= 1'b0;
             burst_done        <= 1'b0;
-            if( read_cycle) begin
-                data_read[15: 0] <= data_read[31:16];
-                data_read[31:16] <= SDRAM_DQ;
-                data_rdy         <= 1'b1;
-            end
-            else data_rdy <= 1'b0;
-            {SDRAM_DQMH, SDRAM_DQML } <= 2'b00;
+            //if( read_cycle) begin
+            //    data_read[15: 0] <= data_read[31:16];
+            //    data_read[31:16] <= SDRAM_DQ;
+            //    data_rdy         <= 1'b1;
+            //end
+            //else
+            data_rdy <= 1'b0;
+            {SDRAM_DQMH, SDRAM_DQML } <= downloading_last ? 2'b11 : 2'b00;
             if( set_burst ) begin
                 SDRAM_CMD <= CMD_LOAD_MODE;
                 // Burst mode can be 0 = 1 word. Used for ROM downloading
@@ -200,7 +205,7 @@ always @(posedge clk)
                     write_cycle       <= 1'b1;
                     {SDRAM_DQMH, SDRAM_DQML } <= prog_mask;
                 end
-                else if(!downloading_last) begin
+                else if(read_req || refresh_ok ) begin
                     SDRAM_CMD <=
                         refresh_ok ? CMD_AUTOREFRESH : CMD_ACTIVATE;
                     { SDRAM_A, col_addr } <= sdram_addr;
@@ -208,10 +213,20 @@ always @(posedge clk)
                     read_cycle        <= ~refresh_ok;
                     sdram_ack         <= ~refresh_ok;
                     write_cycle       <= 1'b0;
+                    refresh_sr        <= 'd0;
+                    refresh_ok        <= 1'b0;
+                end
+                else begin
+                    if( !downloading )
+                        { refresh_ok, refresh_sr } <=  { refresh_sr, 1'b1 };
+                    else begin // no autorefresh during downloading
+                        refresh_sr <= 'd0;
+                        refresh_ok <= 1'b0;
+                    end
                 end
             end
         end
-        2'd1: begin // set read/write
+        3'd1: begin // set read/write
             sdram_ack     <= 1'b0;
             SDRAM_A[12:9] <= 4'b0010; // auto precharge;
             SDRAM_A[ 8:0] <= col_addr;
@@ -220,9 +235,17 @@ always @(posedge clk)
                 autorefresh_cycle ? CMD_NOP : CMD_READ;
             data_rdy    <= 1'b0;
         end
-        2'd3: begin
+        3'd3: begin
             if( read_cycle) begin
                 data_read[31:16] <= SDRAM_DQ;
+            end
+            SDRAM_CMD <= CMD_NOP;
+        end
+        3'd4: begin
+            if( read_cycle) begin
+                data_read[15: 0] <= data_read[31:16];
+                data_read[31:16] <= SDRAM_DQ;
+                data_rdy         <= 1'b1;
             end
             SDRAM_CMD <= CMD_NOP;
         end

@@ -95,7 +95,6 @@ module jtgng_mist_base(
 
 parameter CONF_STR="CORE";
 parameter CONF_STR_LEN=4;
-parameter CLK_SPEED = 12;
 
 wire ypbpr;
 wire scandoubler_disable;
@@ -136,45 +135,23 @@ assign scandoubler_disable = 1'b0;
 assign ypbpr = 1'b0;
 `endif
 
-generate
-    
-if( CLK_SPEED == 20 ) begin
-    // 20 MHz base clock
-    // SDRAM at 10*8 = 80 MHz
-    jtframe_pll20 u_pll20(
-        .inclk0 ( CLOCK_27[0] ),
-        .c0     ( clk_sys     ), // 20
-        .c1     ( clk_rom     ), // 80
-        .c2     ( SDRAM_CLK   ), // 80 (shifted)
-        .locked ( locked      )
-    );
+// 24 MHz or 12 MHz base clock
+wire clk_vga_in;
+jtgng_pll0 u_pll_game (
+    .inclk0 ( CLOCK_27[0] ),
+    .c1     ( clk_rom     ), // 48 MHz
+    .c2     ( SDRAM_CLK   ),
+    .c3     ( clk_vga_in  ),
+    .locked ( locked      )
+);
 
-    jtgng_pll1 u_pll_vga (
-        .inclk0 ( clk_sys   ),
-        .c0     ( clk_vga   ) // 25
-    );
-end
-else begin
-    // 24 MHz or 12 MHz base clock
-    wire clk_vga_in;
-    jtgng_pll0 u_pll_game (
-        .inclk0 ( CLOCK_27[0] ),
-        .c1     ( clk_rom     ), // 48 MHz
-        .c2     ( SDRAM_CLK   ),
-        .c3     ( clk_vga_in  ),
-        .locked ( locked      )
-    );
+// assign SDRAM_CLK = clk_rom;
+assign clk_sys   = clk_rom;
 
-    // assign SDRAM_CLK = clk_rom;
-    assign clk_sys   = clk_rom;
-
-    jtgng_pll1 u_pll_vga (
-        .inclk0 ( clk_vga_in ),
-        .c0     ( clk_vga    ) // 25
-    );
-end
-
-endgenerate
+jtgng_pll1 u_pll_vga (
+    .inclk0 ( clk_vga_in ),
+    .c0     ( clk_vga    ) // 25
+);
 
 data_io #(.aw(22)) u_datain (
     .sck                ( SPI_SCK      ),

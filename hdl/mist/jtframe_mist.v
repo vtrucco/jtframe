@@ -106,7 +106,6 @@ parameter THREE_BUTTONS=1'b0;
 parameter GAME_INPUTS_ACTIVE_HIGH=1'b0;
 parameter CONF_STR = "";
 parameter CONF_STR_LEN = 0;
-parameter CLK_SPEED = 12;
 
 wire locked, clk_vga;
 
@@ -119,8 +118,7 @@ wire          ps2_kbd_clk, ps2_kbd_data;
 
 assign AUDIO_R = AUDIO_L;
 
-jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
-    .CLK_SPEED( CLK_SPEED )
+jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)
 ) u_base(
     .rst            ( rst           ),
     .locked         ( locked        ),
