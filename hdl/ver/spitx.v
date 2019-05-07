@@ -111,9 +111,14 @@ initial begin
     forever #(clkspeed) clk = ~clk;
 end
 
+// Define LOAD_RANDOM_DLY to delay the start of the load process
+`ifndef LOAD_RANDOM_DLY
+`define LOAD_RANDOM_DLY 0
+`endif
+
 always @(posedge clk or posedge rst)
 if( rst ) begin
-    tx_cnt <= 8500;
+    tx_cnt <= 8500+`LOAD_RANDOM_DLY;
 `ifdef LOADROM
     state <= 0;
 `else
@@ -176,7 +181,7 @@ else begin
         // finish DOWNLOAD signal
         10: SPI_SS2 <= 1'b1;
         11: begin
-            $display("ROM loading finished");
+            $display("ROM loading finished (%d bytes)", file_len);
             SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX;
             send <= 1'b1;
