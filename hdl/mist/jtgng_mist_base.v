@@ -310,8 +310,6 @@ jtgng_vga u_scandoubler (
 assign vga_r[0] = vga_r[5];
 assign vga_g[0] = vga_g[5];
 assign vga_b[0] = vga_b[5];
-assign vga_vsync= vs;
-assign vga_hsync= hs;
 `else
 // simulation only
 assign vga_r = { 2'b0, osd_r };

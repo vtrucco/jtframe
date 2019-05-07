@@ -85,12 +85,12 @@ set_input_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generated
 # Set Output Delay
 #**************************************************************
 
-# This is tDS in the data sheet, setup time
+# This is tDS in the data sheet, setup time, spec is 1.5ns
 set_output_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
     -max 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
-# This is tDH in the data sheet, hold time
+# This is tDH in the data sheet, hold time, spec is 0.8ns
 set_output_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
-    -min 0.8 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
+    -min 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
 
 
 

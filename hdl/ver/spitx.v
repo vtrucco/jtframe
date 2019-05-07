@@ -143,6 +143,7 @@ else begin
         // send DOWNLOAD signal
         1: begin
             $display("ROM loading starts");
+            SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX;
             send <= 1'b1;
             hold <= 1'b1;
@@ -156,6 +157,7 @@ else begin
         // send DATA signal
         5: SPI_SS2 <= 1'b1;
         6: begin
+            SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX_DAT;
             send <= 1'b1;
             hold <= 1'b1;

@@ -109,7 +109,7 @@ module jtgng_pll0 (
 		altpll_component.clk2_divide_by = 9,
 		altpll_component.clk2_duty_cycle = 50,
 		altpll_component.clk2_multiply_by = 16,
-		altpll_component.clk2_phase_shift = "1000",
+		altpll_component.clk2_phase_shift = "6944",
 		altpll_component.clk3_divide_by = 9,
 		altpll_component.clk3_duty_cycle = 50,
 		altpll_component.clk3_multiply_by = 16,
@@ -238,11 +238,11 @@ endmodule
 // Retrieval info: PRIVATE: PHASE_RECONFIG_FEATURE_ENABLED STRING "1"
 // Retrieval info: PRIVATE: PHASE_RECONFIG_INPUTS_CHECK STRING "0"
 // Retrieval info: PRIVATE: PHASE_SHIFT1 STRING "0.00000000"
-// Retrieval info: PRIVATE: PHASE_SHIFT2 STRING "1.00000000"
+// Retrieval info: PRIVATE: PHASE_SHIFT2 STRING "120.00000000"
 // Retrieval info: PRIVATE: PHASE_SHIFT3 STRING "0.00000000"
 // Retrieval info: PRIVATE: PHASE_SHIFT_STEP_ENABLED_CHECK STRING "0"
 // Retrieval info: PRIVATE: PHASE_SHIFT_UNIT1 STRING "deg"
-// Retrieval info: PRIVATE: PHASE_SHIFT_UNIT2 STRING "ns"
+// Retrieval info: PRIVATE: PHASE_SHIFT_UNIT2 STRING "deg"
 // Retrieval info: PRIVATE: PHASE_SHIFT_UNIT3 STRING "ps"
 // Retrieval info: PRIVATE: PLL_ADVANCED_PARAM_CHECK STRING "0"
 // Retrieval info: PRIVATE: PLL_ARESET_CHECK STRING "0"
@@ -288,7 +288,7 @@ endmodule
 // Retrieval info: CONSTANT: CLK2_DIVIDE_BY NUMERIC "9"
 // Retrieval info: CONSTANT: CLK2_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK2_MULTIPLY_BY NUMERIC "16"
-// Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "1000"
+// Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "6944"
 // Retrieval info: CONSTANT: CLK3_DIVIDE_BY NUMERIC "9"
 // Retrieval info: CONSTANT: CLK3_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK3_MULTIPLY_BY NUMERIC "16"
