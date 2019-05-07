@@ -34,6 +34,7 @@ module jtgng_sdram(
     input       [21:0]  prog_addr,
     input       [ 7:0]  prog_data,
     input       [ 1:0]  prog_mask,
+    input               refresh_en,    // enable refresh to happen automatically
     // SDRAM interface
     inout       [15:0]  SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output reg  [12:0]  SDRAM_A,        // SDRAM Address bus 13 Bits
@@ -169,8 +170,12 @@ always @(posedge clk)
     end else  begin // regular operation
         if( cnt_state!=3'd0 ||
             (!downloading && (read_req || refresh_ok) ) || /* when not downloading */
-            writeon   /* when downloading */)
-            cnt_state <= cnt_state==3'd4 ? 3'd0 : cnt_state + 3'd1;
+            writeon   /* when downloading */) begin
+            if( cnt_state==3'd4 || (autorefresh_cycle&&cnt_state==3'd3) )
+                cnt_state <= 3'd0; // Autorefresh needs only 60ns
+            else
+                cnt_state <= cnt_state + 3'd1;
+        end
         case( cnt_state )
         default: begin // wait
             SDRAM_CMD <= CMD_NOP;
@@ -217,7 +222,7 @@ always @(posedge clk)
                     refresh_ok        <= 1'b0;
                 end
                 else begin
-                    if( !downloading )
+                    if( !downloading && refresh_en )
                         { refresh_ok, refresh_sr } <=  { refresh_sr, 1'b1 };
                     else begin // no autorefresh during downloading
                         refresh_sr <= 'd0;

@@ -29,6 +29,7 @@ module jtgng_mist_base(
 
     input           sdram_req,
     output          sdram_ack,
+    input           refresh_en,
     // Base video
     input           en_mixing,
     input   [1:0]   osd_rotate,
@@ -172,6 +173,7 @@ jtgng_sdram u_sdram(
     .read_req       ( sdram_req     ),
     .data_read      ( data_read     ),
     .data_rdy       ( data_rdy      ),
+    .refresh_en     ( refresh_en    ),
     // ROM-load interface
     .downloading    ( downloading   ),
     .prog_we        ( prog_we       ),

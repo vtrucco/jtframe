@@ -77,6 +77,7 @@ module jtframe_mist(
     output [31:0]   data_read,
     output          data_rdy,
     output          loop_rst,
+    input           refresh_en,
 //////////// board
     output            rst,      // synchronous reset
     output            rst_n,    // asynchronous reset
@@ -189,7 +190,8 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)
     .sdram_addr     ( sdram_addr    ),
     .sdram_ack      ( sdram_ack     ),
     .data_read      ( data_read     ),
-    .data_rdy       ( data_rdy      )
+    .data_rdy       ( data_rdy      ),
+    .refresh_en     ( refresh_en    )
 );
 
 jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS),
