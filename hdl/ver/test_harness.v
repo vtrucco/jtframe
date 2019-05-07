@@ -67,7 +67,7 @@ wire [15:0] video_dump = { 2'b0,VS,HS, red, green, blue  };
 `define VIDEO_START 0
 `endif
 
-always @(posedge clk) if(pxl_cen && frame_cnt>=`VIDEO_START ) begin
+always @(posedge clk) if(pxl_cen && frame_cnt>=`VIDEO_START && !downloading) begin
     $fwrite(fvideo,"%u", video_dump);
 end
 

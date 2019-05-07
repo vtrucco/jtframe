@@ -131,6 +131,7 @@ else begin
     end
     send    <= 1'b0;
     case( state )
+        default: if(data_sent) hold <= 1'b0;
         0: begin
             SPI_SS2 <= 1'b0;
             if( tx_cnt )
@@ -148,7 +149,6 @@ else begin
             send <= 1'b1;
             hold <= 1'b1;
         end
-        2,4,7,12,14,17: if(data_sent) hold <= 1'b0;
         3: begin
             data <= 8'h1;
             send <= 1'b1;
@@ -177,6 +177,7 @@ else begin
         10: SPI_SS2 <= 1'b1;
         11: begin
             $display("ROM loading finished");
+            SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX;
             send <= 1'b1;
             hold <= 1'b1;
@@ -184,7 +185,7 @@ else begin
         13: begin
             data <= 8'h0; // Toggle down downloading signal
             send <= 1'b1;
-            hold <= 1'b0;
+            hold <= 1'b1;
             SPI_SS3  <= 1'b1;
         end
         // Send OSD image
