@@ -22,7 +22,7 @@
     // comparison is performed. Useful when the dumped file to load
     // has part of it invalid
 
-module jtgng_prom #(parameter dw=8, aw=10, simfile="", cen_rd=0, offset=0 )(
+module jtgng_prom #(parameter dw=8, aw=10, simfile="", offset=0 )(
     input   clk,
     input   cen,
     input   [dw-1:0] data,
@@ -86,18 +86,10 @@ end
 `endif
 
 // no clock enable for writtings to allow correct operation during SPI downloading.
-generate
-    if( cen_rd )
-        always @(posedge clk) begin
-            if( cen ) q <= mem[rd_addr];
-            if( we ) mem[wr_addr] <= data;
-        end
-    else
-        always @(posedge clk) begin
-            q <= mem[rd_addr];
-            if( we ) mem[wr_addr] <= data;
-        end
-endgenerate
+always @(posedge clk) begin
+    if( cen ) q <= mem[rd_addr];
+    if( we ) mem[wr_addr] <= data;
+end
 
 
 endmodule // jtgng_ram
