@@ -8,7 +8,7 @@ create_clock -period 10.0 [get_pins -compatibility_mode spi|sclk_out] -name spi_
 derive_pll_clocks
 
 # Specify PLL-generated clock(s)
-create_generated_clock -name SDRAM_CLK -source [get_pins {emu|pll|pll_inst|altera_pll_i|outclk_wire[1]~CLKENA0|outclk}] [get_ports {SDRAM_CLK}]
+#create_generated_clock -name SDRAM_CLK -source [get_pins {emu|pll|pll_inst|altera_pll_i|outclk_wire[1]~CLKENA0|outclk}] [get_ports {SDRAM_CLK}]
 
 create_generated_clock -source [get_pins -compatibility_mode {pll_hdmi|pll_hdmi_inst|altera_pll_i|cyclonev_pll|counter[0].output_counter|divclk}] \
                        -name HDMI_CLK [get_ports HDMI_TX_CLK]
@@ -19,20 +19,20 @@ derive_clock_uncertainty
 #############################################################
 ### SDRAM  AS4C16M16SA
 ###
+#set SDRAM_CLK emu|pll|pll_inst|altera_pll_i|outclk_wire[1]~CLKENA0|outclk
+set SDRAM_CLK {emu|pll|pll_inst|altera_pll_i|general[1].gpll~PLL_OUTPUT_COUNTER|divclk}
 
 # This is tAC in the data sheet
-set_input_delay -max -clock SDRAM_CLK 6.0ns [get_ports SDRAM_DQ[*]]
+set_input_delay -clock $SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
 # this is tOH in the data sheet
-set_input_delay -min -clock SDRAM_CLK 2.5ns [get_ports SDRAM_DQ[*]]
+set_input_delay -clock $SDRAM_CLK -min 2.5 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
 
-set_multicycle_path -from [get_clocks {SDRAM_CLK}] \
-                    -to [get_clocks {emu|pll|pll_inst|altera_pll_i|outclk_wire[0]~CLKENA0|outclk}] \
-                                                  -setup 1
-
-# This is tIS in the data sheet (setup time)
-set_output_delay -max -clock SDRAM_CLK 1.5ns [get_ports {SDRAM_D* SDRAM_A* SDRAM_BA* SDRAM_n* SDRAM_CKE}]
-# This is tiH in the data sheet (hold time)
-set_output_delay -min -clock SDRAM_CLK 0.8ns [get_ports {SDRAM_D* SDRAM_A* SDRAM_BA* SDRAM_n* SDRAM_CKE}]
+# This is tHS in the data sheet (setup time)
+set_output_delay -clock $SDRAM_CLK \
+    -max 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
+# This is tiH in the data sheet (hold time), 0.8ns in data sheet. Using 1.5ns for extra margin
+set_output_delay -clock $SDRAM_CLK \
+    -min 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
 
 ##################################################################
 
