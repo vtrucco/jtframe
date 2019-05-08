@@ -21,7 +21,8 @@
 module video_mixer
 #(
 	parameter LINE_LENGTH  = 768,
-	parameter HALF_DEPTH   = 0
+	HALF_DEPTH   = 0,
+    DWIDTH = HALF_DEPTH ? 3 : 7
 )
 (
 	// master clock
@@ -63,8 +64,6 @@ module video_mixer
 	output reg       VGA_DE
 );
 
-localparam DWIDTH = HALF_DEPTH ? 3 : 7;
-
 wire [DWIDTH:0] R_sd;
 wire [DWIDTH:0] G_sd;
 wire [DWIDTH:0] B_sd;
@@ -95,15 +94,16 @@ wire [DWIDTH:0] rt  = (scandoubler ? R_sd : R);
 wire [DWIDTH:0] gt  = (scandoubler ? G_sd : G);
 wire [DWIDTH:0] bt  = (scandoubler ? B_sd : B);
 
+wire [7:0] r, g, b;
 generate
 	if(HALF_DEPTH) begin
-		wire [7:0] r  = mono ? {gt,rt} : {rt,rt};
-		wire [7:0] g  = mono ? {gt,rt} : {gt,gt};
-		wire [7:0] b  = mono ? {gt,rt} : {bt,bt};
+		assign r  = mono ? {gt,rt} : {rt,rt};
+		assign g  = mono ? {gt,rt} : {gt,gt};
+		assign b  = mono ? {gt,rt} : {bt,bt};
 	end else begin
-		wire [7:0] r  = rt;
-		wire [7:0] g  = gt;
-		wire [7:0] b  = bt;
+		assign r  = rt;
+		assign g  = gt;
+		assign b  = bt;
 	end
 endgenerate
 

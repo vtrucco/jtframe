@@ -47,30 +47,31 @@ reg [aw-1:0] addr_in, addr_out;
 reg we_in;
 reg buff = 0;
 
-rram #(aw, DEPTH, memsize) ram
-(
-	.wrclock(clk),
-	.wraddress(addr_in),
-	.data(video_in),
-	.wren(en_we),
-	
-	.rdclock(clk),
-	.rdaddress(addr_out),
-	.q(out)
-);
-
 wire [DEPTH-1:0] out; 
 reg  [DEPTH-1:0] vout;
 
+
 assign video_out = vout;
 
-wire en_we = ce & ~blank & en_x & en_y;
+wire blank = hblank | vblank;
+integer xpos, ypos;
 wire en_x = (xpos<WIDTH);
 wire en_y = (ypos<HEIGHT);
-integer xpos, ypos;
+wire en_we = ce & ~blank & en_x & en_y;
 
-wire blank = hblank | vblank;
-always @(posedge clk) begin
+rram #(aw, DEPTH, memsize) ram
+(
+    .wrclock(clk),
+    .wraddress(addr_in),
+    .data(video_in),
+    .wren(en_we),
+    
+    .rdclock(clk),
+    .rdaddress(addr_out),
+    .q(out)
+);
+
+always @(posedge clk) begin : unnamed0
 	reg old_blank, old_vblank;
 	reg [aw-1:0] addr_row;
 
@@ -102,7 +103,7 @@ always @(posedge clk) begin
 	end
 end
 
-always @(posedge clk) begin
+always @(posedge clk) begin : unnamed1
 	reg old_buff;
 	reg hs;
 	reg ced;
@@ -234,53 +235,53 @@ endgenerate
 
 wire [DW-1:0] RGB_out;
 wire rhs,rvs,rhblank,rvblank;
+wire scandoubler = fx || forced_scandoubler;
 
 screen_rotate #(WIDTH,HEIGHT,DW,4,CCW) rotator
 (
-	.clk(VGA_CLK),
-	.ce(VGA_CE),
+    .clk(VGA_CLK),
+    .ce(VGA_CE),
 
-	.video_in(RGB_in),
-	.hblank(HBlank),
-	.vblank(VBlank),
+    .video_in(RGB_in),
+    .hblank(HBlank),
+    .vblank(VBlank),
 
-	.ce_out(VGA_CE | ~scandoubler),
-	.video_out(RGB_out),
-	.hsync(rhs),
-	.vsync(rvs),
-	.hblank_out(rhblank),
-	.vblank_out(rvblank)
+    .ce_out(VGA_CE | ~scandoubler),
+    .video_out(RGB_out),
+    .hsync(rhs),
+    .vsync(rvs),
+    .hblank_out(rhblank),
+    .vblank_out(rvblank)
 );
 
 wire [3:0] Rr,Gr,Br;
 
 generate
-	if(DW == 6) begin
-		assign Rr = {RGB_out[5:4],RGB_out[5:4]};
-		assign Gr = {RGB_out[3:2],RGB_out[3:2]};
-		assign Br = {RGB_out[1:0],RGB_out[1:0]};
-	end
-	else if(DW == 8) begin
-		assign Rr = {RGB_out[7:5],RGB_out[7]};
-		assign Gr = {RGB_out[4:2],RGB_out[4]};
-		assign Br = {RGB_out[1:0],RGB_out[1:0]};
-	end
-	else if(DW == 9) begin
-		assign Rr = {RGB_out[8:6],RGB_out[8]};
-		assign Gr = {RGB_out[5:3],RGB_out[5]};
-		assign Br = {RGB_out[2:0],RGB_out[2]};
-	end
-	else begin
-		assign Rr = RGB_out[11:8];
-		assign Gr = RGB_out[7:4];
-		assign Br = RGB_out[3:0];
-	end
+    if(DW == 6) begin
+        assign Rr = {RGB_out[5:4],RGB_out[5:4]};
+        assign Gr = {RGB_out[3:2],RGB_out[3:2]};
+        assign Br = {RGB_out[1:0],RGB_out[1:0]};
+    end
+    else if(DW == 8) begin
+        assign Rr = {RGB_out[7:5],RGB_out[7]};
+        assign Gr = {RGB_out[4:2],RGB_out[4]};
+        assign Br = {RGB_out[1:0],RGB_out[1:0]};
+    end
+    else if(DW == 9) begin
+        assign Rr = {RGB_out[8:6],RGB_out[8]};
+        assign Gr = {RGB_out[5:3],RGB_out[5]};
+        assign Br = {RGB_out[2:0],RGB_out[2]};
+    end
+    else begin
+        assign Rr = RGB_out[11:8];
+        assign Gr = RGB_out[7:4];
+        assign Br = RGB_out[3:0];
+    end
 endgenerate
 
+wire [2:0] sl = fx ? fx - 1'd1 : 3'd0;
 assign HDMI_CLK = VGA_CLK;
 assign HDMI_SL  = no_rotate ? 2'd0 : sl[1:0];
-wire [2:0] sl = fx ? fx - 1'd1 : 3'd0;
-wire scandoubler = fx || forced_scandoubler;
 
 video_mixer #(WIDTH+4, 1) video_mixer
 (
@@ -381,10 +382,10 @@ generate
 	end
 endgenerate
 
-assign HDMI_CLK = VGA_CLK;
-assign HDMI_SL  = sl[1:0];
 wire [2:0] sl = fx ? fx - 1'd1 : 3'd0;
 wire scandoubler = fx || forced_scandoubler;
+assign HDMI_CLK = VGA_CLK;
+assign HDMI_SL  = sl[1:0];
 
 video_mixer #(WIDTH+4, 1) video_mixer
 (

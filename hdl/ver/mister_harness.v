@@ -6,6 +6,14 @@ module mister_harness(
     // Frame count
     output  reg [31:0] frame_cnt,
     input              VS,
+    // video
+    input              VGA_CLK,
+    input              VGA_CE,
+    input  [7:0]       VGA_R,
+    input  [7:0]       VGA_G,
+    input  [7:0]       VGA_B,
+    input              VGA_HS,
+    input              VGA_VS,    
     // SDRAM
     inout [15:0]       SDRAM_DQ,
     inout [12:0]       SDRAM_A,
@@ -39,6 +47,29 @@ reg frames_done=1'b1;
 `endif
 
 integer fincnt;
+
+////////////////////////////////////////////////////////////////////
+// video output dump
+`ifdef DUMP_VIDEO
+integer fvideo;
+initial begin
+    fvideo = $fopen("video.bin","wb");
+end
+
+wire [15:0] video_dump = { 2'b0, VGA_VS, VGA_HS, VGA_R[3:0], VGA_G[3:0], VGA_B[3:0]  };
+
+// Define VIDEO_START with the first frame number for which
+// video will be dumped. If undefined, it will start from frame 0
+`ifndef VIDEO_START
+`define VIDEO_START 0
+`endif
+
+always @(posedge VGA_CLK) if(VGA_CE && frame_cnt>=`VIDEO_START ) begin
+    $fwrite(fvideo,"%u", video_dump);
+end
+
+`endif
+
 
 ////////////////////////////////////////////////////////////////////
 always @(posedge clk50)

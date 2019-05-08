@@ -54,7 +54,7 @@ parameter CLK_SPEED=24;
 
 mister_dump u_dump(
     .VGA_VS     ( VGA_VS    ),
-    .led        ( led       ),
+    .led        ( LED_USER  ),
     .frame_cnt  ( frame_cnt )
 );
 
@@ -64,6 +64,14 @@ mister_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .clk50       ( clk50     ),
     .frame_cnt   ( frame_cnt ),
     .VS          ( VGA_VS    ),
+    // VGA
+    .VGA_CLK     ( VGA_CLK   ),
+    .VGA_CE      ( VGA_CE    ),
+    .VGA_R       ( VGA_R     ),
+    .VGA_G       ( VGA_G     ),
+    .VGA_B       ( VGA_B     ),
+    .VGA_HS      ( VGA_HS    ),
+    .VGA_VS      ( VGA_VS    ),
     // SDRAM
     .SDRAM_DQ    ( SDRAM_DQ  ),
     .SDRAM_A     ( SDRAM_A   ),

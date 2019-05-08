@@ -1,10 +1,10 @@
 `timescale 1ns/1ps
 
-module mister_pll_48(
+module pll(
     input      refclk,
-    output reg locked,
+    output     locked,
     output reg outclk_0,    // clk_sys, 48 MHz
-    output reg outclk_1,    // SDRAM_CLK = clk_sys delayed
+    output     outclk_1     // SDRAM_CLK = clk_sys delayed
 );
 
 assign locked = 1'b1;

@@ -19,7 +19,7 @@
 
 // TODO: Delay vsync one line
 
-module scandoubler #(parameter LENGTH, parameter HALF_DEPTH)
+module scandoubler #(parameter LENGTH=100, parameter HALF_DEPTH=50)
 (
 	// system interface
 	input             clk_sys,
@@ -65,7 +65,7 @@ wire [7:0] pl = pix_len + 1'b1;
 wire [7:0] pc = pix_cnt + 1'b1;
 
 reg ce_x4, ce_x2, ce_x1;
-always @(negedge clk_sys) begin
+always @(negedge clk_sys) begin : unnamed0
 	reg old_ce, valid, hs;
 	reg [2:0] ce_cnt;
 

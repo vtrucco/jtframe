@@ -70,11 +70,11 @@ initial begin
             if( mem_check[readcnt] != mem[readcnt] ) begin
                 $display("ERROR: memory content check failed for file %s (%m) @ 0x%x", simfile, readcnt );
                 check_ok = 1'b0;
-                `ifndef IVERILOG
-                break;
-                `else 
+                //`ifndef IVERILOG
+                //break;
+                //`else 
                     readcnt = 0; // force a break
-                `endif
+                //`endif
             end
         end
         if( check_ok ) $display("INFO: %m memory check succedded");

@@ -1,3 +1,2 @@
-arcade_rotate_fx.v
-mister_pll24.v
+mister_pll48.v
 hps_io.v

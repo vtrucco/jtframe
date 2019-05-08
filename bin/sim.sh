@@ -154,7 +154,7 @@ case "$1" in
         if [ $SIMULATOR = iverilog ]; then
             MIST=$(add_dir $MODULES/jtframe/hdl/mister mister.f)
         else
-            MIST="-F $MODULES/jtframe/hdl/mist/mister.f"
+            MIST="-F $MODULES/jtframe/hdl/mister/mister.f"
         fi
         MIST="$MODULES/jtframe/hdl/mister/mister_test.v ../../hdl/jt${SYSNAME}_mister.sv $MIST mister_dump.v"
         # Add a local copy of mist_dump if it doesn't exist
@@ -333,7 +333,7 @@ iverilog)
 ncverilog)
     $SHOWCMD ncverilog +access+r +nc64bit +define+NCVERILOG \
         -f game.f $PERCORE \
-        -F $MODULES/jtframe/hdl/ver/sim.f -disable_sem2009 $MIST \
+        -F $MODULES/jtframe/hdl/ver/$SIMFILE -disable_sem2009 $MIST \
         +define+SIM_MS=$SIM_MS +define+SIMULATION \
         $DUMP $LOADROM \
         $MAXFRAME \

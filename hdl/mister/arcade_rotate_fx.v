@@ -35,4 +35,12 @@ module arcade_rotate_fx #(parameter WIDTH=320, HEIGHT=240, DW=8, CCW=0)
     input         no_rotate
 );
 
+assign VGA_VS = VBlank;
+assign VGA_HS = HBlank;
+assign VGA_R  = RGB_in[11:8];
+assign VGA_G  = RGB_in[ 7:4];
+assign VGA_B  = RGB_in[ 3:0];
+assign VGA_CE = ce_pix;
+assign VGA_CLK= clk_video;
+
 endmodule // arcade_rotate_fx
