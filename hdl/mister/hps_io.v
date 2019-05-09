@@ -107,4 +107,7 @@ assign ps2_key = 11'd0;
 assign ioctl_download = 1'b0;
 assign ioctl_wr = 1'b0;
 
+assign status = 32'd0;
+assign forced_scandoubler = 1'b0;
+
 endmodule // hps_io

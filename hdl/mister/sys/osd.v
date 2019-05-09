@@ -84,7 +84,7 @@ always@(posedge clk_sys) begin
 	end
 end
 
-reg ce_pix;
+(* direct_enable *) reg ce_pix;
 always @(negedge clk_video) begin
 	integer cnt = 0;
 	integer pixsz, pixcnt;

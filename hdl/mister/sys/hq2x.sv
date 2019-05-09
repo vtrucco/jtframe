@@ -12,8 +12,9 @@
 `timescale 1 ps / 1 ps
 // synopsys translate_on
 
-module Hq2x #(parameter LENGTH, parameter HALF_DEPTH)
-(
+module Hq2x #(parameter LENGTH=32,  HALF_DEPTH=0,  // arbitrary default values
+    DWIDTH = HALF_DEPTH ? 11 : 23
+)(
 	input             clk,
 	input             ce_x4,
 	input  [DWIDTH:0] inputpixel,
@@ -28,7 +29,6 @@ module Hq2x #(parameter LENGTH, parameter HALF_DEPTH)
 
 
 localparam AWIDTH = $clog2(LENGTH)-1;
-localparam DWIDTH = HALF_DEPTH ? 11 : 23;
 localparam DWIDTH1 = DWIDTH+1;
 
 wire [5:0] hqTable[256] = '{
@@ -92,6 +92,8 @@ begin
 end
 endfunction
 
+reg [AWIDTH:0] offs;
+
 hq2x_in #(.LENGTH(LENGTH), .DWIDTH(DWIDTH)) hq2x_in
 (
 	.clk(clk),
@@ -131,7 +133,6 @@ hq2x_buf #(.NUMWORDS(LENGTH*2), .AWIDTH(AWIDTH+1), .DWIDTH(DWIDTH1*4-1)) hq2x_ou
 
 wire [DWIDTH:0] blend_result = HALF_DEPTH ? rgb2h(blend_result_pre) : blend_result_pre[DWIDTH:0];
 
-reg [AWIDTH:0] offs;
 always @(posedge clk) begin
 	reg old_reset_line;
 	reg old_reset_frame;
@@ -205,8 +206,11 @@ endmodule
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-module hq2x_in #(parameter LENGTH, parameter DWIDTH)
-(
+module hq2x_in #(parameter 
+    LENGTH = 100, // arbitrary default value
+    DWIDTH = 8,   // arbitrary default value
+    AWIDTH = $clog2(LENGTH)-1
+)(
 	input            clk,
 
 	input [AWIDTH:0] rdaddr,
@@ -219,7 +223,6 @@ module hq2x_in #(parameter LENGTH, parameter DWIDTH)
 	input            wren
 );
 
-	localparam AWIDTH = $clog2(LENGTH)-1;
 	wire  [DWIDTH:0] out[2];
 	assign q0 = out[rdbuf0];
 	assign q1 = out[rdbuf1];
@@ -228,7 +231,7 @@ module hq2x_in #(parameter LENGTH, parameter DWIDTH)
 	hq2x_buf #(.NUMWORDS(LENGTH), .AWIDTH(AWIDTH), .DWIDTH(DWIDTH)) buf1(clk,data,rdaddr,wraddr,wren && (wrbuf == 1),out[1]);
 endmodule
 
-module hq2x_buf #(parameter NUMWORDS, parameter AWIDTH, parameter DWIDTH)
+module hq2x_buf #(parameter NUMWORDS=1024, parameter AWIDTH=10, parameter DWIDTH=8)
 (
 	input                   clock,
 	input        [DWIDTH:0] data,

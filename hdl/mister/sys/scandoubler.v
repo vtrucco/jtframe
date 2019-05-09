@@ -19,7 +19,7 @@
 
 // TODO: Delay vsync one line
 
-module scandoubler #(parameter LENGTH=100, parameter HALF_DEPTH=50)
+module scandoubler #(parameter LENGTH=100, HALF_DEPTH=50, DWIDTH = HALF_DEPTH ? 3 : 7)
 (
 	// system interface
 	input             clk_sys,
@@ -50,7 +50,19 @@ module scandoubler #(parameter LENGTH=100, parameter HALF_DEPTH=50)
 );
 
 
-localparam DWIDTH = HALF_DEPTH ? 3 : 7;
+// localparam DWIDTH = HALF_DEPTH ? 3 : 7;
+
+reg [DWIDTH:0] r_d;
+reg [DWIDTH:0] g_d;
+reg [DWIDTH:0] b_d;
+
+reg [1:0] sd_line;
+reg [3:0] vbo;
+reg [3:0] vso;
+reg [8:0] hbo;
+
+reg req_line_reset;
+reg ce_x4, ce_x2, ce_x1;
 
 assign vs_out = vso[3];
 assign ce_pix_out = hq2x ? ce_x4 : ce_x2;
@@ -64,12 +76,11 @@ reg  [7:0] pix_cnt = 0;
 wire [7:0] pl = pix_len + 1'b1;
 wire [7:0] pc = pix_cnt + 1'b1;
 
-reg ce_x4, ce_x2, ce_x1;
 always @(negedge clk_sys) begin : unnamed0
 	reg old_ce, valid, hs;
 	reg [2:0] ce_cnt;
 
-	reg [7:0] pixsz, pixsz2, pixsz4 = 0;
+	reg [7:0] pixsz, pixsz2, pixsz4; // = 0;
 
 	if(~&pix_len) pix_len <= pl;
 	if(~&pix_cnt) pix_cnt <= pc;
@@ -118,17 +129,7 @@ Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 	.outpixel({b_out,g_out,r_out})
 );
 
-reg [DWIDTH:0] r_d;
-reg [DWIDTH:0] g_d;
-reg [DWIDTH:0] b_d;
-
-reg [1:0] sd_line;
-reg [3:0] vbo;
-reg [3:0] vso;
-reg [8:0] hbo;
-
-reg req_line_reset;
-always @(posedge clk_sys) begin
+always @(posedge clk_sys) begin : unnamed1
 
 	reg [31:0] hcnt;
 	reg [30:0] sd_hcnt;

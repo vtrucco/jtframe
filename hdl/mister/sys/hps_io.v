@@ -179,7 +179,7 @@ reg [31:0] vid_vcnt = 0;
 reg  [7:0] vid_nres = 0;
 integer hcnt;
 
-always @(posedge clk_vid) begin
+always @(posedge clk_vid) begin : unnamed5
 	integer vcnt;
 	reg old_vs= 0, old_de = 0, old_vmode = 0;
 	reg calch = 0;
@@ -210,7 +210,7 @@ reg [31:0] vid_htime = 0;
 reg [31:0] vid_vtime = 0;
 reg [31:0] vid_pix = 0;
 
-always @(posedge clk_100) begin
+always @(posedge clk_100) begin : unnamed4
 	integer vtime, htime, hcnt;
 	reg old_vs, old_hs, old_vs2, old_hs2, old_de, old_de2;
 	reg calch = 0;
@@ -268,7 +268,7 @@ reg [31:0] ps2_key_raw = 0;
 wire       pressed  = (ps2_key_raw[15:8] != 8'hf0);
 wire       extended = (~pressed ? (ps2_key_raw[23:16] == 8'he0) : (ps2_key_raw[15:8] == 8'he0));
 
-always@(posedge clk_sys) begin
+always@(posedge clk_sys) begin : unnamed1
 	reg [15:0] cmd;
 	reg  [9:0] byte_cnt;   // counts bytes
 	reg  [2:0] b_wr;
@@ -467,7 +467,7 @@ end
 
 ///////////////////////////////   PS2   ///////////////////////////////
 reg clk_ps2;
-always @(negedge clk_sys) begin
+always @(negedge clk_sys) begin : unnamed2
 	integer cnt;
 	cnt <= cnt + 1'd1;
 	if(cnt == PS2DIV) begin
@@ -530,7 +530,7 @@ localparam UIO_FILE_TX_DAT  = 8'h54;
 localparam UIO_FILE_INDEX   = 8'h55;
 localparam UIO_FILE_INFO    = 8'h56;
 
-always@(posedge clk_sys) begin
+always@(posedge clk_sys) begin : unnamed0
 	reg [15:0] cmd;
 	reg  [2:0] cnt;
 	reg        has_cmd;
@@ -626,7 +626,7 @@ reg       has_data;
 reg [7:0] data;
 assign    rdata = {has_data, data};
 
-always@(posedge clk_sys) begin
+always@(posedge clk_sys) begin : unnamed3
 	reg [7:0] tx_byte;
 	reg parity;
 	reg r_inc;

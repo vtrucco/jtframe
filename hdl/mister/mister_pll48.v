@@ -2,8 +2,9 @@
 
 module pll(
     input      refclk,
+    input      rst,
     output     locked,
-    output reg outclk_0,    // clk_sys, 48 MHz
+    output     outclk_0,    // clk_sys, 48 MHz
     output     outclk_1     // SDRAM_CLK = clk_sys delayed
 );
 
@@ -16,10 +17,14 @@ initial $display("INFO mister_pll24: base clock set to %f ns",base_clk);
 real base_clk = 20.833; // 48 MHz
 `endif
 
+reg clk;
+
 initial begin
-    outclk_0 = 1'b0;
-    forever outclk_0 = #(base_clk/2.0) ~outclk_0; // 108 MHz
+    clk = 1'b0;
+    forever clk = #(base_clk/2.0) ~clk; // 108 MHz
 end
+
+assign outclk_0 = clk & ~rst;
 
 reg div=1'b0;
 
