@@ -663,7 +663,7 @@ assign VGA_B  = VGA_EN ? 6'bZZZZZZ : vga_o[7:2];
 
 
 /////////////////////////  Audio output  ////////////////////////////////
-
+`ifndef NOSOUND
 assign AUDIO_SPDIF = SW[0] ? HDMI_LRCLK : aspdif;
 assign AUDIO_R     = SW[0] ? HDMI_I2S   : anr;
 assign AUDIO_L     = SW[0] ? HDMI_SCLK  : anl;
@@ -780,6 +780,11 @@ alsa alsa
 	.pcm_l(alsa_l),
 	.pcm_r(alsa_r)
 );
+`else 
+assign AUDIO_SPDIF = 1'b0;
+assign AUDIO_R     = 1'b0;
+assign AUDIO_L     = 1'b0;
+`endif
 
 
 ////////////////  User I/O (USB 3.0 connector) /////////////////////////
