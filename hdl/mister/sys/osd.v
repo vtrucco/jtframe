@@ -105,8 +105,9 @@ always @(negedge clk_video) begin
 	end
 end
 
-reg [2:0] osd_de;
-reg       osd_pixel;
+reg [ 2:0] osd_de;
+reg        osd_pixel;
+reg [21:0] next_v_cnt;
 
 always @(posedge clk_video) begin
 	reg        deD;
@@ -141,11 +142,13 @@ always @(posedge clk_video) begin
 		// rising edge of de
 		if(de_in && !deD) begin
 			h_cnt <= 0;
-			v_cnt <= v_cnt + 1'd1;
+			v_cnt <= next_v_cnt;
+            next_v_cnt <= next_v_cnt+1'd1; 
 			h_osd_start <= info ? infox : (((dsp_width - OSD_WIDTH)>>1) + OSD_X_OFFSET - 2'd2);
 
 			if(h_cnt > {dsp_width, 2'b00}) begin
 				v_cnt <= 0;
+                next_v_cnt <= 'd1;
 
 				osd_en <= (osd_en << 1) | osd_enable;
 				if(~osd_enable) osd_en <= 0;
@@ -173,7 +176,7 @@ always @(posedge clk_video) begin
 				osd_div <= 0;
 				if(~&osd_vcnt) osd_vcnt <= osd_vcnt + 1'd1;
 			end
-			if(v_osd_start == (v_cnt+1'b1)) {osd_div, osd_vcnt} <= 0;
+			if(v_osd_start == next_v_cnt) {osd_div, osd_vcnt} <= 0;
 		end
 
 		osd_byte  <= osd_buffer[{osd_vcnt[6:3], osd_hcnt[7:0]}];
