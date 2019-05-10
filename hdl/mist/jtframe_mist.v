@@ -53,23 +53,6 @@ module jtframe_mist(
     output [1:0]    SDRAM_BA,       // SDRAM Bank Address
     output          SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
-    // SPI interface to arm io controller
-    output          SPI_DO,
-    input           SPI_DI,
-    input           SPI_SCK,
-    input           SPI_SS2,
-    input           SPI_SS3,
-    input           SPI_SS4,
-    input           CONF_DATA0,
-    // ROM
-    output [21:0]   ioctl_addr,
-    output [ 7:0]   ioctl_data,
-    output          ioctl_wr,
-    input  [21:0]   prog_addr,
-    input  [ 7:0]   prog_data,
-    input  [ 1:0]   prog_mask,
-    input           prog_we,
-    output          downloading,
     // ROM access from game
     input           sdram_req,
     output          sdram_ack,
@@ -78,6 +61,23 @@ module jtframe_mist(
     output          data_rdy,
     output          loop_rst,
     input           refresh_en,
+    // SPI interface to arm io controller
+    output          SPI_DO,
+    input           SPI_DI,
+    input           SPI_SCK,
+    input           SPI_SS2,
+    input           SPI_SS3,
+    input           SPI_SS4,
+    input           CONF_DATA0,
+    // ROM load from SPI
+    output [21:0]   ioctl_addr,
+    output [ 7:0]   ioctl_data,
+    output          ioctl_wr,
+    input  [21:0]   prog_addr,
+    input  [ 7:0]   prog_data,
+    input  [ 1:0]   prog_mask,
+    input           prog_we,
+    output          downloading,
 //////////// board
     output            rst,      // synchronous reset
     output            rst_n,    // asynchronous reset
@@ -119,17 +119,17 @@ wire          ps2_kbd_clk, ps2_kbd_data;
 
 assign AUDIO_R = AUDIO_L;
 
-jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)
+jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
+    .SIGNED_SND(SIGNED_SND)
 ) u_base(
     .rst            ( rst           ),
     .locked         ( locked        ),
     .clk_sys        ( clk_sys       ),
     .clk_vga        ( clk_vga       ),
     .clk_rom        ( clk_rom       ),
-    .SDRAM_CLK      ( SDRAM_CLK     ),
     .cen12          ( cen12         ),
     .pxl_cen        ( pxl_cen       ),
-    .sdram_req      ( sdram_req     ),
+    .SDRAM_CLK      ( SDRAM_CLK     ),
     // Base video
     .osd_rotate     ( osd_rotate    ),
     .en_mixing      ( en_mixing     ),
@@ -152,17 +152,6 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)
     .VGA_B          ( VGA_B         ),
     .VGA_HS         ( VGA_HS        ),
     .VGA_VS         ( VGA_VS        ),
-    // SDRAM interface
-    .SDRAM_DQ       ( SDRAM_DQ      ),
-    .SDRAM_A        ( SDRAM_A       ),
-    .SDRAM_DQML     ( SDRAM_DQML    ),
-    .SDRAM_DQMH     ( SDRAM_DQMH    ),
-    .SDRAM_nWE      ( SDRAM_nWE     ),
-    .SDRAM_nCAS     ( SDRAM_nCAS    ),
-    .SDRAM_nRAS     ( SDRAM_nRAS    ),
-    .SDRAM_nCS      ( SDRAM_nCS     ),
-    .SDRAM_BA       ( SDRAM_BA      ),
-    .SDRAM_CKE      ( SDRAM_CKE     ),
     // SPI interface to arm io controller
     .SPI_DO         ( SPI_DO        ),
     .SPI_DI         ( SPI_DI        ),
@@ -177,24 +166,18 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN)
     .joystick2      ( joystick2     ),
     .ps2_kbd_clk    ( ps2_kbd_clk   ),
     .ps2_kbd_data   ( ps2_kbd_data  ),
-    // ROM
+    // audio
+    .clk_dac        ( clk_sys         ),
+    .snd            ( snd             ),
+    .snd_pwm        ( AUDIO_L         ),
+    // ROM load from SPI
     .ioctl_addr     ( ioctl_addr    ),
     .ioctl_data     ( ioctl_data    ),
     .ioctl_wr       ( ioctl_wr      ),
-    .prog_addr      ( prog_addr     ),
-    .prog_data      ( prog_data     ),
-    .prog_mask      ( prog_mask     ),
-    .prog_we        ( prog_we       ),
-    .downloading    ( downloading   ),
-    .loop_rst       ( loop_rst      ),
-    .sdram_addr     ( sdram_addr    ),
-    .sdram_ack      ( sdram_ack     ),
-    .data_read      ( data_read     ),
-    .data_rdy       ( data_rdy      ),
-    .refresh_en     ( refresh_en    )
+    .downloading    ( downloading   )
 );
 
-jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS),
+jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .GAME_INPUTS_ACTIVE_HIGH(GAME_INPUTS_ACTIVE_HIGH)
 ) u_board(
     .rst            ( rst             ),
@@ -203,13 +186,9 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS),
     .dip_flip       ( dip_flip        ),
     .rst_req        ( rst_req         ),
     .downloading    ( downloading     ),
-    .loop_rst       ( loop_rst        ),
 
     .clk_sys        ( clk_sys         ),
-    .clk_dac        ( clk_sys         ),
-    // audio
-    .snd            ( snd             ),
-    .snd_pwm        ( AUDIO_L         ),
+    .clk_rom        ( clk_rom         ),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
     .ps2_kbd_data   ( ps2_kbd_data    ),
@@ -223,6 +202,29 @@ jtgng_board #(.SIGNED_SND(SIGNED_SND),.THREE_BUTTONS(THREE_BUTTONS),
 `endif
     .game_pause     ( game_pause      ),
     .game_service   ( game_service    ),
+    // SDRAM interface
+    .SDRAM_DQ       ( SDRAM_DQ        ),
+    .SDRAM_A        ( SDRAM_A         ),
+    .SDRAM_DQML     ( SDRAM_DQML      ),
+    .SDRAM_DQMH     ( SDRAM_DQMH      ),
+    .SDRAM_nWE      ( SDRAM_nWE       ),
+    .SDRAM_nCAS     ( SDRAM_nCAS      ),
+    .SDRAM_nRAS     ( SDRAM_nRAS      ),
+    .SDRAM_nCS      ( SDRAM_nCS       ),
+    .SDRAM_BA       ( SDRAM_BA        ),
+    .SDRAM_CKE      ( SDRAM_CKE       ),
+    // SDRAM controller
+    .loop_rst       ( loop_rst        ),
+    .sdram_addr     ( sdram_addr      ),
+    .sdram_req      ( sdram_req       ),
+    .sdram_ack      ( sdram_ack       ),
+    .data_read      ( data_read       ),
+    .data_rdy       ( data_rdy        ),
+    .refresh_en     ( refresh_en      ),
+    .prog_addr      ( prog_addr       ),
+    .prog_data      ( prog_data       ),
+    .prog_mask      ( prog_mask       ),
+    .prog_we        ( prog_we         ),
     // Debug
     .gfx_en         ( gfx_en          )
 );

@@ -22,16 +22,35 @@ module jtgng_board(
     output  reg       game_rst,
     // reset forcing signals:
     input             dip_flip, // A change in dip_flip implies a reset
-    input             downloading,
-    input             loop_rst,
     input             rst_req,
 
-    input             clk_dac,
     input             clk_sys,
-    //input             clk_vga,
-    //input             pxl_cen,
-    input   [15:0]    snd,
-    output            snd_pwm,
+    input             clk_rom,
+    // ROM access from game
+    input             sdram_req,
+    output            sdram_ack,
+    input             refresh_en,
+    input  [21:0]     sdram_addr,
+    output [31:0]     data_read,
+    output            data_rdy,
+    output            loop_rst,
+    // ROM programming
+    input  [21:0]     prog_addr,
+    input  [ 7:0]     prog_data,
+    input  [ 1:0]     prog_mask,
+    input             prog_we,
+    input             downloading,
+    // SDRAM interface
+    inout  [15:0]     SDRAM_DQ,       // SDRAM Data bus 16 Bits
+    output [12:0]     SDRAM_A,        // SDRAM Address bus 13 Bits
+    output            SDRAM_DQML,     // SDRAM Low-byte Data Mask
+    output            SDRAM_DQMH,     // SDRAM High-byte Data Mask
+    output            SDRAM_nWE,      // SDRAM Write Enable
+    output            SDRAM_nCAS,     // SDRAM Column Address Strobe
+    output            SDRAM_nRAS,     // SDRAM Row Address Strobe
+    output            SDRAM_nCS,      // SDRAM Chip Select
+    output [1:0]      SDRAM_BA,       // SDRAM Bank Address
+    output            SDRAM_CKE,      // SDRAM Clock Enable
     // keyboard
     input             ps2_kbd_clk,
     input             ps2_kbd_data,
@@ -49,7 +68,6 @@ module jtgng_board(
 );
 
 
-parameter SIGNED_SND=1'b0;
 parameter THREE_BUTTONS=0;
 parameter GAME_INPUTS_ACTIVE_HIGH=1'b0;
 
@@ -89,36 +107,6 @@ always @(negedge clk_sys) begin
         game_rst_cnt <= game_rst_cnt + 8'd1;
     end else game_rst <= 1'b0;
 end
-
-`ifndef SIMULATION
-`ifndef NOSOUND
-// hybrid_pwm_sd u_dac
-// (
-//     .clk    ( clk_dac   ),
-//     .n_reset( ~rst      ),
-//     .din    ( {snd[15]^SIGNED_SND, snd[14:0]}  ),
-//     .dout   ( snd_pwm   )
-// );
-
-wire [15:0] snd_in = {snd[15]^SIGNED_SND, snd[14:0]};
-wire [19:0] snd_padded = { 1'b0, snd_in, 3'd0 };
-
-
-hifi_1bit_dac u_dac
-(
-  .reset    ( rst        ),
-  .clk      ( clk_dac    ),
-  .clk_ena  ( 1'b1       ),
-  .pcm_in   ( snd_padded ),
-  .dac_out  ( snd_pwm    )
-);
-`endif
-`endif
-
-`ifdef SIMULATION
-assign snd_pwm = 1'b0;
-`endif
-
 
 // convert 5-bit colour to 6-bit colour
 // assign vga_r[0] = vga_r[5];
@@ -233,5 +221,34 @@ always @(posedge clk_sys)
         if(key_service && !last_service)  game_service <= ~game_service;
     end
 
+
+jtgng_sdram u_sdram(
+    .rst            ( rst           ),
+    .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
+    .loop_rst       ( loop_rst      ),
+    .read_req       ( sdram_req     ),
+    .data_read      ( data_read     ),
+    .data_rdy       ( data_rdy      ),
+    .refresh_en     ( refresh_en    ),
+    // ROM-load interface
+    .downloading    ( downloading   ),
+    .prog_we        ( prog_we       ),
+    .prog_addr      ( prog_addr     ),
+    .prog_data      ( prog_data     ),
+    .prog_mask      ( prog_mask     ),
+    .sdram_addr     ( sdram_addr    ),
+    .sdram_ack      ( sdram_ack     ),
+    // SDRAM interface
+    .SDRAM_DQ       ( SDRAM_DQ      ),
+    .SDRAM_A        ( SDRAM_A       ),
+    .SDRAM_DQML     ( SDRAM_DQML    ),
+    .SDRAM_DQMH     ( SDRAM_DQMH    ),
+    .SDRAM_nWE      ( SDRAM_nWE     ),
+    .SDRAM_nCAS     ( SDRAM_nCAS    ),
+    .SDRAM_nRAS     ( SDRAM_nRAS    ),
+    .SDRAM_nCS      ( SDRAM_nCS     ),
+    .SDRAM_BA       ( SDRAM_BA      ),
+    .SDRAM_CKE      ( SDRAM_CKE     )
+);
 
 endmodule // jtgng_board
