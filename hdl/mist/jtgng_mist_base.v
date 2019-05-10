@@ -26,10 +26,8 @@ module jtgng_mist_base(
     output          clk_vga,
     input           cen12,
     input           pxl_cen,
+    output          SDRAM_CLK,      // SDRAM Clock
 
-    input           sdram_req,
-    output          sdram_ack,
-    input           refresh_en,
     // Base video
     input           en_mixing,
     input   [1:0]   osd_rotate,
@@ -52,18 +50,6 @@ module jtgng_mist_base(
     output  reg [5:0]   VGA_B,
     output  reg         VGA_HS,
     output  reg         VGA_VS,
-    // SDRAM interface
-    inout  [15:0]   SDRAM_DQ,       // SDRAM Data bus 16 Bits
-    output [12:0]   SDRAM_A,        // SDRAM Address bus 13 Bits
-    output          SDRAM_DQML,     // SDRAM Low-byte Data Mask
-    output          SDRAM_DQMH,     // SDRAM High-byte Data Mask
-    output          SDRAM_nWE,      // SDRAM Write Enable
-    output          SDRAM_nCAS,     // SDRAM Column Address Strobe
-    output          SDRAM_nRAS,     // SDRAM Row Address Strobe
-    output          SDRAM_nCS,      // SDRAM Chip Select
-    output [1:0]    SDRAM_BA,       // SDRAM Bank Address
-    output          SDRAM_CLK,      // SDRAM Clock
-    output          SDRAM_CKE,      // SDRAM Clock Enable
     // SPI interface to arm io controller
     output          SPI_DO,
     input           SPI_DI,
@@ -78,27 +64,42 @@ module jtgng_mist_base(
     output [31:0]   joystick2,
     output          ps2_kbd_clk,
     output          ps2_kbd_data,
-    // ROM
+    // Sound
+    input           clk_dac,
+    input   [15:0]  snd,
+    output          snd_pwm,
+    // ROM load from SPI
     output [21:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
     output          ioctl_wr,
-    input  [21:0]   prog_addr,
-    input  [ 7:0]   prog_data,
-    input  [ 1:0]   prog_mask,
-    input           prog_we,
-    output          downloading,
-    // ROM access from game
-    input  [21:0]   sdram_addr,
-    output [31:0]   data_read,
-    output          data_rdy,
-    output          loop_rst
+    output          downloading
 );
 
 parameter CONF_STR="CORE";
 parameter CONF_STR_LEN=4;
+parameter SIGNED_SND=1'b0;
 
 wire ypbpr;
 wire scandoubler_disable;
+
+`ifndef SIMULATION
+`ifndef NOSOUND
+wire [15:0] snd_in = {snd[15]^SIGNED_SND, snd[14:0]};
+wire [19:0] snd_padded = { 1'b0, snd_in, 3'd0 };
+
+
+hifi_1bit_dac u_dac
+(
+  .reset    ( rst        ),
+  .clk      ( clk_dac    ),
+  .clk_ena  ( 1'b1       ),
+  .pcm_in   ( snd_padded ),
+  .dac_out  ( snd_pwm    )
+);
+`endif
+`else
+assign snd_pwm = 1'b0;
+`endif
 
 `ifndef SIMULATION
 user_io #(.STRLEN(CONF_STR_LEN)) u_userio(
@@ -164,35 +165,6 @@ data_io #(.aw(22)) u_datain (
     .ioctl_data         ( ioctl_data   ),
     .ioctl_wr           ( ioctl_wr     ),
     .index              ( /* unused*/  )
-);
-
-jtgng_sdram u_sdram(
-    .rst            ( rst           ),
-    .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
-    .loop_rst       ( loop_rst      ),
-    .read_req       ( sdram_req     ),
-    .data_read      ( data_read     ),
-    .data_rdy       ( data_rdy      ),
-    .refresh_en     ( refresh_en    ),
-    // ROM-load interface
-    .downloading    ( downloading   ),
-    .prog_we        ( prog_we       ),
-    .prog_addr      ( prog_addr     ),
-    .prog_data      ( prog_data     ),
-    .prog_mask      ( prog_mask     ),
-    .sdram_addr     ( sdram_addr    ),
-    .sdram_ack      ( sdram_ack     ),
-    // SDRAM interface
-    .SDRAM_DQ       ( SDRAM_DQ      ),
-    .SDRAM_A        ( SDRAM_A       ),
-    .SDRAM_DQML     ( SDRAM_DQML    ),
-    .SDRAM_DQMH     ( SDRAM_DQMH    ),
-    .SDRAM_nWE      ( SDRAM_nWE     ),
-    .SDRAM_nCAS     ( SDRAM_nCAS    ),
-    .SDRAM_nRAS     ( SDRAM_nRAS    ),
-    .SDRAM_nCS      ( SDRAM_nCS     ),
-    .SDRAM_BA       ( SDRAM_BA      ),
-    .SDRAM_CKE      ( SDRAM_CKE     )
 );
 
 // OSD will only get simulated if SIMULATE_OSD is defined
