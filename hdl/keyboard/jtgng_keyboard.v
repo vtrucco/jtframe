@@ -91,12 +91,12 @@ always @(posedge clk) begin
                     9'h0_23: key_joy2[1] <= !key_released;   // Left
                     9'h0_34: key_joy2[0] <= !key_released;   // Right
                     // coins
-                    9'h2e: key_coin[0] <= !key_released;  // 1st coin
+                    9'h2e, 9'h04 /* F3 */: key_coin[0] <= !key_released;  // 1st coin
                     9'h36: key_coin[1] <= !key_released;  // 2nd coin
-                    9'h16: key_start[0] <= !key_released; // 1P start
-                    9'h1e: key_start[1] <= !key_released; // 2P start
+                    9'h16, 9'h05 /* F1 */: key_start[0] <= !key_released; // 1P start
+                    9'h1e, 9'h06 /* F2 */: key_start[1] <= !key_released; // 2P start
                     // system control
-                    9'h4d: key_pause <= !key_released;
+                    9'h4d, 9'h0C /* F4 */: key_pause <= !key_released;
                     9'h04: key_reset <= !key_released;
                     // GFX enable
                     9'h0_83: key_gfx[0] <= !key_released; // F7: CHAR enable
