@@ -33,6 +33,9 @@ set_output_delay -clock $SDRAM_CLK \
 # This is tiH in the data sheet (hold time), 0.8ns in data sheet. Using 1.5ns for extra margin
 set_output_delay -clock $SDRAM_CLK \
     -min 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
+# the above statement generates an output delay constraint for SDRAM_CLK pin itself
+# that is not needed:
+remove_output_delay SDRAM_CLK
 
 ##################################################################
 

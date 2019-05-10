@@ -97,7 +97,7 @@ always @(posedge clk) begin
                     9'h1e, 9'h06 /* F2 */: key_start[1] <= !key_released; // 2P start
                     // system control
                     9'h4d, 9'h0C /* F4 */: key_pause <= !key_released;
-                    9'h04: key_reset <= !key_released;
+                    // 9'h04: key_reset <= !key_released;
                     // GFX enable
                     9'h0_83: key_gfx[0] <= !key_released; // F7: CHAR enable
                     9'h0_0a: key_gfx[1] <= !key_released; // F8: SCR1 enable
