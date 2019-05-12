@@ -22,7 +22,6 @@ module jtframe_mist(
     input   [1:0]   CLOCK_27,
     output          clk_sys,
     output          clk_rom,
-    input           cen12,
     input           pxl_cen,
     // interface with microcontroller
     output  [31:0]  status,
@@ -127,7 +126,6 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .clk_sys        ( clk_sys       ),
     .clk_vga        ( clk_vga       ),
     .clk_rom        ( clk_rom       ),
-    .cen12          ( cen12         ),
     .pxl_cen        ( pxl_cen       ),
     .SDRAM_CLK      ( SDRAM_CLK     ),
     // Base video

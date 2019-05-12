@@ -55,13 +55,14 @@ wire [5:0] uart_div = UART_DIVIDER;
 //-----------------------------------------------------------------
 // zero generator... this is actually a 32-module counter
 //-----------------------------------------------------------------
-reg [4:0] clk_cnt;
-reg zero = !clk_cnt;
+reg  [4:0] clk_cnt;
+reg zero;
 
 always @(posedge clk or negedge rst_n) begin : clock_divider
-    if(!rst_n)
+    if(!rst_n) begin
         clk_cnt <= clk_div - 5'b1;
-    else if(cen) begin
+        zero    <= 1'b0;
+    end else if(cen) begin
         clk_cnt <= clk_cnt - 5'd1;
         zero <= clk_cnt==5'd1;
         if(zero)

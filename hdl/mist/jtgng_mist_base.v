@@ -24,7 +24,6 @@ module jtgng_mist_base(
     output          clk_sys,
     output          clk_rom,
     output          clk_vga,
-    input           cen12,
     input           pxl_cen,
     output          SDRAM_CLK,      // SDRAM Clock
 

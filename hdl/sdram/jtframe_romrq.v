@@ -1,20 +1,20 @@
-/*  This file is part of JT_GNG.
-    JT_GNG program is free software: you can redistribute it and/or modify
+/*  This file is part of JTFRAME.
+    JTFRAME program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    JT_GNG program is distributed in the hope that it will be useful,
+    JTFRAME program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with JT_GNG.  If not, see <http://www.gnu.org/licenses/>.
+    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
-    Date: 28-2-2019 */
+    Date: 12-5-2019 */
 
 `timescale 1ns/1ps
 
@@ -52,12 +52,17 @@ always @(*) begin
     req = init || ( !(hit0 || hit1) && addr_ok && !we);
 end
 
+reg [1:0] ok_sr;
+
 always @(posedge clk or negedge rst_n)
     if( !rst_n ) begin
         init      <= 1'b1;
-        deleterus <= 1'b0;  // signals whose cached data is to be overwritten next time
-    end else if(cen) begin
-        data_ok <= !addr_ok || hit0 || hit1 || we;
+        deleterus <= 1'b0;  // signals which cached data is to be overwritten next time
+    end else begin
+        //data_ok <= !addr_ok || (addr_ok && ( hit0 || hit1 )) || we;
+        ok_sr[0] <= addr_ok && !we && ( hit0 || hit1 );
+        { data_ok, ok_sr[1] } <= ok_sr;
+        // delay by one clock cycle to catch the full data output
         if( we ) begin
             if( init ) begin
                 cached_data0 <= din;
@@ -107,4 +112,4 @@ generate
 endgenerate
 
 
-endmodule // jt1943_romrq
+endmodule
