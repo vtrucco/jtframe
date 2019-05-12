@@ -148,7 +148,7 @@ else begin
         end
         // send DOWNLOAD signal
         1: begin
-            $display("ROM loading starts");
+            $display("ROM loading starts (%d ns)",$time());
             SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX;
             send <= 1'b1;
@@ -181,7 +181,7 @@ else begin
         // finish DOWNLOAD signal
         10: SPI_SS2 <= 1'b1;
         11: begin
-            $display("ROM loading finished (%d bytes)", file_len);
+            $display("ROM loading finished (%d bytes, %d ns)", file_len, $time);
             SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX;
             send <= 1'b1;

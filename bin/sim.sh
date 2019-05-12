@@ -35,7 +35,6 @@ MACROPREFIX=-D
 EXTRA=
 SHOWCMD=
 ARGNUMBER=1
-MEM_CHECK_TIME=140_000_000
 
 rm -f test2.bin
 
@@ -92,15 +91,14 @@ case "$SYSNAME" in
         exit 1;;
     gng)    PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f)
             GAME_ROM_PATH=../../../rom/JTGNG.rom
+            MEM_CHECK_TIME=140_000_000
             ;;
     1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f)
-            GAME_ROM_PATH=../../../rom/JT1942.rom
             ;;
     popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
             EXTRA="$EXTRA ${MACROPREFIX}POPEYECEN"
             ;;
     1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
-            GAME_ROM_PATH=../../../rom/JT1943.rom
             MEM_CHECK_TIME=250_000_000
             ;;
 esac

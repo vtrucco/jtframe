@@ -96,7 +96,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm);
         end
         `endif
     end
-    `else
+    `else // LOAD ROM
         `ifdef CHECKROM
         // check contents after 140ms
         reg [15:0] mem_check[0 : mem_sizes];

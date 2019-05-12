@@ -22,19 +22,20 @@
 module jtgng_sdram(
     input               rst,
     input               clk, // same as game core
+    // Game interface
     output              loop_rst,
     input               read_req,    // read strobe
     output reg  [31:0]  data_read,
     input       [21:0]  sdram_addr,
     output reg          data_rdy,    // output data is valid
     output reg          sdram_ack,
+    input               refresh_en,    // enable refresh to happen automatically
     // ROM-load interface
     input               downloading,
     input               prog_we,    // strobe
     input       [21:0]  prog_addr,
     input       [ 7:0]  prog_data,
     input       [ 1:0]  prog_mask,
-    input               refresh_en,    // enable refresh to happen automatically
     // SDRAM interface
     inout       [15:0]  SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output reg  [12:0]  SDRAM_A,        // SDRAM Address bus 13 Bits
@@ -210,7 +211,7 @@ always @(posedge clk)
                     write_cycle       <= 1'b1;
                     {SDRAM_DQMH, SDRAM_DQML } <= prog_mask;
                 end
-                else if(read_req || refresh_ok ) begin
+                else if( (read_req || refresh_ok) && !downloading ) begin
                     SDRAM_CMD <=
                         refresh_ok ? CMD_AUTOREFRESH : CMD_ACTIVATE;
                     { SDRAM_A, col_addr } <= sdram_addr;
