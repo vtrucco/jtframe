@@ -20,10 +20,9 @@
 
 module jtgng_mist_base(
     input           rst,
-    output          locked,
     output          clk_sys,
-    output          clk_rom,
-    output          clk_vga,
+    input           clk_rom,
+    input           clk_vga,
     input           pxl_cen,
     output          SDRAM_CLK,      // SDRAM Clock
 
@@ -135,24 +134,6 @@ assign ps2_kbd_clk  = 1'b0;
 assign scandoubler_disable = 1'b0;
 assign ypbpr = 1'b0;
 `endif
-
-// 24 MHz or 12 MHz base clock
-wire clk_vga_in;
-jtgng_pll0 u_pll_game (
-    .inclk0 ( CLOCK_27[0] ),
-    .c1     ( clk_rom     ), // 48 MHz
-    .c2     ( SDRAM_CLK   ),
-    .c3     ( clk_vga_in  ),
-    .locked ( locked      )
-);
-
-// assign SDRAM_CLK = clk_rom;
-assign clk_sys   = clk_rom;
-
-jtgng_pll1 u_pll_vga (
-    .inclk0 ( clk_vga_in ),
-    .c0     ( clk_vga    ) // 25
-);
 
 data_io #(.aw(22)) u_datain (
     .sck                ( SPI_SCK      ),
