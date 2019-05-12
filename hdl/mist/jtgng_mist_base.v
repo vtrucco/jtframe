@@ -20,11 +20,11 @@
 
 module jtgng_mist_base(
     input           rst,
-    output          clk_sys,
+    input           clk_sys,
     input           clk_rom,
     input           clk_vga,
     input           pxl_cen,
-    output          SDRAM_CLK,      // SDRAM Clock
+    input           SDRAM_CLK,      // SDRAM Clock
 
     // Base video
     input           en_mixing,

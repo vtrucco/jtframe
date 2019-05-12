@@ -22,6 +22,7 @@ module jtframe_mist(
     input   [1:0]   CLOCK_27,
     input           clk_sys,
     input           clk_rom,
+    input           clk_vga,
     input           pxl_cen,
     input           pll_locked,
     // interface with microcontroller
@@ -51,7 +52,7 @@ module jtframe_mist(
     output          SDRAM_nRAS,     // SDRAM Row Address Strobe
     output          SDRAM_nCS,      // SDRAM Chip Select
     output [1:0]    SDRAM_BA,       // SDRAM Bank Address
-    output          SDRAM_CLK,      // SDRAM Clock
+    input           SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
     // ROM access from game
     input           sdram_req,
@@ -108,7 +109,7 @@ parameter GAME_INPUTS_ACTIVE_HIGH=1'b0;
 parameter CONF_STR = "";
 parameter CONF_STR_LEN = 0;
 
-wire locked, clk_vga;
+wire loclk_vga;
 
 wire   [5:0]   board_r, board_g, board_b;
 wire           board_hsync, board_vsync;
@@ -123,7 +124,6 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .SIGNED_SND(SIGNED_SND)
 ) u_base(
     .rst            ( rst           ),
-    .locked         ( pll_locked    ),
     .clk_sys        ( clk_sys       ),
     .clk_vga        ( clk_vga       ),
     .clk_rom        ( clk_rom       ),

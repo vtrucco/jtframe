@@ -48,7 +48,7 @@ create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_port
 #**************************************************************
 
 derive_pll_clocks -create_base_clocks
-# create_generated_clock -name {sdclk_pin} -source [get_pins {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] -master_clock {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2]} [get_ports {SDRAM_CLK}] 
+# create_generated_clock -name {sdclk_pin} -source [get_pins {u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] -master_clock {u_pll_game|altpll_component|auto_generated|pll1|clk[2]} [get_ports {SDRAM_CLK}] 
 
 
 
@@ -71,14 +71,14 @@ derive_clock_uncertainty
 # output pins of the SDRAM to change after a new clock edge.
 # This is used to calculate set-up time conditions in the FF
 # latching the signal inside the FPGA
-set_input_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
+set_input_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
     -max 6 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
 
 # This is tOH in the data sheet. It is the time data is hold at the
 # output pins of the SDRAM after a new clock edge.
 # This is used to calculate hold time conditions in the FF
 # latching the signal inside the FPGA (3.2)
-set_input_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
+set_input_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
     -min 3 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
 
 #**************************************************************
@@ -86,10 +86,10 @@ set_input_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generated
 #**************************************************************
 
 # This is tDS in the data sheet, setup time, spec is 1.5ns
-set_output_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
+set_output_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
     -max 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
 # This is tDH in the data sheet, hold time, spec is 0.8ns
-set_output_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
+set_output_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
     -min 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
 
 
@@ -99,7 +99,7 @@ set_output_delay -clock u_frame|u_base|u_pll_game|altpll_component|auto_generate
 #**************************************************************
 
 set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks {*|altpll_component|auto_generated|pll1|clk[*]}]
-set_clock_groups -asynchronous -group [get_clocks {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[1]}] -group [get_clocks {u_frame|u_base|u_pll_vga|altpll_component|auto_generated|pll1|clk[0]}]
+set_clock_groups -asynchronous -group [get_clocks {u_pll_game|altpll_component|auto_generated|pll1|clk[1]}] -group [get_clocks {u_pll_vga|altpll_component|auto_generated|pll1|clk[0]}]
 
 #**************************************************************
 # Set False Path
@@ -114,9 +114,9 @@ set_false_path -to [get_ports {VGA_*}]
 # Set Multicycle Path
 #**************************************************************
 
-#set_multicycle_path -from [get_clocks {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[1]}] -to [get_clocks {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] -end 2
+#set_multicycle_path -from [get_clocks {u_pll_game|altpll_component|auto_generated|pll1|clk[1]}] -to [get_clocks {u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] -end 2
 
-#set_multicycle_path -from [get_clocks {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[1]}] -to [get_clocks {u_frame|u_base|u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] -start 2
+#set_multicycle_path -from [get_clocks {u_pll_game|altpll_component|auto_generated|pll1|clk[1]}] -to [get_clocks {u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] -start 2
 
 #**************************************************************
 # Set Maximum Delay
