@@ -119,6 +119,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm);
         `else // save contents
         integer dumpcnt,f;
         initial begin
+            $display("sdram.hex will be produced at time %d", `MEM_CHECK_TIME);
             #(`MEM_CHECK_TIME);
             f=$fopen("sdram.hex","w");
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
