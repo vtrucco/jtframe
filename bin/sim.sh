@@ -35,7 +35,6 @@ MACROPREFIX=-D
 EXTRA=
 SHOWCMD=
 ARGNUMBER=1
-MEM_CHECK_TIME=140_000_000
 
 rm -f test2.bin
 
@@ -100,8 +99,6 @@ case "$SYSNAME" in
             EXTRA="$EXTRA ${MACROPREFIX}POPEYECEN"
             ;;
     1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
-            GAME_ROM_PATH=../../../rom/JT1943.rom
-            MEM_CHECK_TIME=250_000_000
             ;;
 esac
 EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"${GAME_ROM_PATH}\""

@@ -181,7 +181,7 @@ else begin
         // finish DOWNLOAD signal
         10: SPI_SS2 <= 1'b1;
         11: begin
-            $display("ROM loading finished (%d bytes)", file_len);
+            $display("ROM loading finished (%d bytes at time %d)", file_len, $time);
             SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX;
             send <= 1'b1;
