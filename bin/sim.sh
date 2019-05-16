@@ -1,14 +1,5 @@
 #!/bin/bash
 
-function zero_file {
-    rm -f $1
-    cnt=$2
-    while [ $cnt != 0 ]; do
-        echo -e "0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0\n0" >> $1
-        cnt=$((cnt-16))
-    done;
-}
-
 if [ ! -e zeros1k.bin ]; then
     dd if=/dev/zero of=zeros1k.bin count=2
 fi
