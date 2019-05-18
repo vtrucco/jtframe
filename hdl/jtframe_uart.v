@@ -50,7 +50,7 @@ parameter CLK_DIVIDER  = 5'd28;
 parameter UART_DIVIDER = 5'd30; // number of divisions of the UART bit period
 
 wire [4:0] clk_div  = CLK_DIVIDER;
-wire [5:0] uart_div = UART_DIVIDER;
+wire [4:0] uart_div = UART_DIVIDER;
 
 //-----------------------------------------------------------------
 // zero generator... this is actually a 32-module counter
@@ -89,7 +89,7 @@ reg [4:0] rx_divcnt;
 reg [3:0] rx_bitcnt;
 reg [7:0] rx_reg;
 
-always @(posedge clk or posedge rst_n) begin : rx_logic
+always @(posedge clk or negedge rst_n) begin : rx_logic
     if(!rst_n) begin
         rx_done      <= 1'b0;
         rx_busy      <= 1'b0;

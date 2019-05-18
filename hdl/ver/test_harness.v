@@ -92,14 +92,16 @@ wire spi_done;
 integer fincnt;
 
 wire clk_rom;
-jtgng_pll0 u_pll(
+pll_game_mist u_pll(
     .inclk0 ( 1'b0    ),
     .c1     ( clk     ),     // 12
-    .c2     ( clk_rom ),     // 96
+    .c2     (         ),     // 96
     // unused
     //.c3     (         ),     // 96 (shifted by -2.5ns)
     .locked (         )
 );
+
+assign clk_rom = clk;
 
 ////////////////////////////////////////////////////////////////////
 always @(posedge clk)

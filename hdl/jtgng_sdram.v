@@ -87,7 +87,7 @@ reg downloading_last;
 // top level timing
 
 reg set_burst, burst_done, burst_mode;
-reg readon, writeon;
+reg writeon;
 //wire refresh_ok = !read_req;
 reg refresh_ok;
 
@@ -95,7 +95,6 @@ always @(posedge clk or posedge rst)
     if(rst) begin
         set_burst  <= 1'b0;
     end else begin
-        readon  <= !downloading;
         writeon <= downloading && prog_we;
         downloading_last <= downloading;
         if( downloading != downloading_last) begin

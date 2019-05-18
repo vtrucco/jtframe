@@ -299,7 +299,8 @@ EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=
 # Add the PLL (MiST only)
 if [ $TOP = mist_test ]; then
     if [ $SIMULATOR = iverilog ]; then
-        MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist   $MIST_PLL)"
+        #MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist   $MIST_PLL)"
+        MIST="$MIST pll_game_mist.v"
     else
         MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
     fi
