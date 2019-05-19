@@ -207,8 +207,8 @@ wire [PXW+2:0] B_mix = {osd_pixel, osd_pixel, OSD_COLOR[2], B_in };
 always @(posedge clk_sys) begin
     if( osd_de ) begin
         R_out <= R_mix[PXW+2:3];
-        G_out <= R_mix[PXW+2:3];
-        B_out <= R_mix[PXW+2:3];
+        G_out <= G_mix[PXW+2:3];
+        B_out <= B_mix[PXW+2:3];
     end else begin
         R_out <= R_in;
         G_out <= G_in;

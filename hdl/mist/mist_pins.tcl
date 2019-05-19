@@ -74,5 +74,3 @@ set_location_assignment PIN_33 -to SDRAM_CKE
 set_location_assignment PIN_43 -to SDRAM_CLK
 set_location_assignment PIN_65 -to AUDIO_L
 set_location_assignment PIN_80 -to AUDIO_R
-
-set_global_assignment -name SDC_FILE mist_io.sdc
