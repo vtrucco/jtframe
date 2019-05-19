@@ -94,8 +94,8 @@ integer fincnt;
 wire clk_rom;
 pll_game_mist u_pll(
     .inclk0 ( 1'b0    ),
-    .c1     ( clk     ),     // 12
-    .c2     (         ),     // 96
+    .c0     ( clk     ),     // 12
+    .c1     (         ),     // 96
     // unused
     //.c3     (         ),     // 96 (shifted by -2.5ns)
     .locked (         )

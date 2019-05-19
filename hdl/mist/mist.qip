@@ -15,7 +15,7 @@ set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) ../vide
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) ../video/jtgng_vgapxl.v]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) ../ram/jtgng_dual_clk_ram.v]
 
-set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) jtgng_pll0.qip]
-set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) jtgng_pll1.qip]
+#set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) jtgng_pll0.qip]
+#set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) jtgng_pll1.qip]
 
 set_global_assignment -name SDC_FILE [file join $::quartus(qip_path) mist_io.sdc]
