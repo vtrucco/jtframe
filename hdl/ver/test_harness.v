@@ -1,13 +1,17 @@
+///////////////////////////////////////////// 
+//  This module includes the SDRAM model
+//  when used to simulate the core at the game level (instead of MiST(er) level)
+//  this module also adds the SDRAM controller
+// 
+// 
+
 `timescale 1ns/1ps
 
 module test_harness(
     output  reg      rst,
-    output  reg      clk,
     output  reg      clk27,
-    output           cen12,
-    output           cen6,
-    output           cen3,
-    output           cen1p5,
+    input            pxl_cen,
+    input            pxl_clk, 
     input   [21:0]   sdram_addr,
     output  [15:0]   data_read,
     output           loop_rst,
@@ -51,7 +55,6 @@ parameter CLK_SPEED=12;
 
 ////////////////////////////////////////////////////////////////////
 // video output dump
-wire pxl_cen;
 
 `ifdef DUMP_VIDEO
 integer fvideo;
@@ -67,7 +70,7 @@ wire [15:0] video_dump = { 2'b0,VS,HS, red, green, blue  };
 `define VIDEO_START 0
 `endif
 
-always @(posedge clk) if(pxl_cen && frame_cnt>=`VIDEO_START && !downloading) begin
+always @(posedge pxl_clk) if(pxl_cen && frame_cnt>=`VIDEO_START && !downloading) begin
     $fwrite(fvideo,"%u", video_dump);
 end
 
@@ -91,6 +94,9 @@ reg frames_done=1'b1;
 wire spi_done;
 integer fincnt;
 
+// The PLL is only added if the top level does not already include it
+`ifndef MISTER
+`ifndef MIST
 wire clk_rom;
 pll_game_mist u_pll(
     .inclk0 ( 1'b0    ),
@@ -102,75 +108,6 @@ pll_game_mist u_pll(
 );
 
 assign clk_rom = clk;
-
-////////////////////////////////////////////////////////////////////
-always @(posedge clk)
-    if( spi_done && frames_done ) begin
-        for( fincnt=0; fincnt<`SIM_MS; fincnt=fincnt+1 ) begin
-            #(1000*1000); // ms
-            $display("%d ms",fincnt+1);
-        end
-        $finish;
-    end
-
-initial begin
-    clk27 = 1'b0;
-    forever clk27 = #(37.037/2) ~clk27; // 27 MHz
-end
-
-reg [3:0] clk_cnt=3'd0;
-
-//reg clk_gen;
-//always @(clk_rom) clk_gen = #8 clk_rom;
-always @(posedge clk_rom) begin
-    clk_cnt <= clk_cnt + 4'd1;
-end
-
-reg rst_base=1'b1;
-
-initial begin
-    rst_base = 1'b1;
-    #100 rst_base = 1'b0;
-    #150 rst_base = 1'b1;
-    #2500 rst_base=1'b0;
-end
-
-integer rst_cnt;
-
-always @(negedge clk or posedge rst_base)
-    if( rst_base ) begin
-        rst <= 1'b1;
-        rst_cnt <= 2;
-    end else begin
-        if(rst_cnt) rst_cnt<=rst_cnt-1;
-        else rst<=rst_base;
-    end
-
-`ifndef POPEYECEN
-// This module is useful for jt*_game simulations when the
-// game module does not include its own cen signal generator
-jtgng_cen #(.CLK_SPEED(CLK_SPEED)) u_cen(
-    .clk    ( clk    ),
-    .cen12  ( cen12  ),
-    .cen6   ( cen6   ),
-    .cen3   ( cen3   ),
-    .cen1p5 ( cen1p5 )
-);
-assign pxl_cen = cen6;
-`else // POPEYE CEN
-jtpopeye_cen u_cen(
-    .clk        ( clk           ),  // 20 MHz
-    .H0_cen     (  ),
-    .cpu_cen    (  ),
-    .ay_cen     (  ),
-    .pxl_cen    (  ),  // TXT pixel clock
-    .pxl2_cen   ( pxl_cen      )   // OBJ pixel clock
-);
-assign cen12  = 1'b0;
-assign cen6   = 1'b0;
-assign cen3   = 1'b0;
-assign cen1p5 = 1'b0;
-`endif
 
 generate
     if (sdram_instance==1) begin
@@ -204,8 +141,43 @@ generate
         );
     end
 endgenerate
+`endif
+`endif
 
+////////////////////////////////////////////////////////////////////
+always @(posedge clk27)
+    if( spi_done && frames_done ) begin
+        for( fincnt=0; fincnt<`SIM_MS; fincnt=fincnt+1 ) begin
+            #(1000*1000); // ms
+            $display("%d ms",fincnt+1);
+        end
+        $finish;
+    end
 
+initial begin
+    clk27 = 1'b0;
+    forever clk27 = #(37.037/2) ~clk27; // 27 MHz
+end
+
+reg rst_base=1'b1;
+
+initial begin
+    rst_base = 1'b1;
+    #100 rst_base = 1'b0;
+    #150 rst_base = 1'b1;
+    #2500 rst_base=1'b0;
+end
+
+integer rst_cnt;
+
+always @(negedge clk27 or posedge rst_base)
+    if( rst_base ) begin
+        rst <= 1'b1;
+        rst_cnt <= 2;
+    end else begin
+        if(rst_cnt) rst_cnt<=rst_cnt-1;
+        else rst<=rst_base;
+    end
 
 `ifdef FASTSDRAM
 quick_sdram mist_sdram(

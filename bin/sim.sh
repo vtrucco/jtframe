@@ -127,6 +127,7 @@ case "$1" in
             MIST="-F $MODULES/jtframe/hdl/mist/mist.f"
         fi
         MIST="$MODULES/jtframe/hdl/mist/mist_test.v ../../hdl/jt${SYSNAME}_mist.v $MIST mist_dump.v"
+        MIST="$MIST ${MACROPREFIX}MIST"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mist_dump.v ]; then
             cp $MODULES/jtframe/hdl/ver/mist_dump.v .
@@ -142,6 +143,7 @@ case "$1" in
             MIST="-F $MODULES/jtframe/hdl/mister/mister.f"
         fi
         MIST="$MODULES/jtframe/hdl/mister/mister_test.v ../../hdl/jt${SYSNAME}_mister.sv $MIST mister_dump.v"
+        MIST="$MIST ${MACROPREFIX}MISTER"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mister_dump.v ]; then
             cp $MODULES/jtframe/hdl/ver/mister_dump.v .
@@ -268,6 +270,8 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
         SDRAM_DELAY=X   ns delay for SDRAM_CLK (cannot use with -slowpll)
         BASE_CLK=X      Base period for game clock (cannot use with -slowpll)
         SIM_SCANDOUBLER Simulate scan doubler
+        SIMULATE_OSD    Simulate OSD display
+        SIMINFO         Show simulation options available thorugh define commands
 EOF
         exit 0
         ;;

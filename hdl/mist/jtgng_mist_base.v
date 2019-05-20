@@ -33,12 +33,7 @@ module jtgng_mist_base(
     input   [3:0]   game_g,
     input   [3:0]   game_b,
     input           LHBL,
-    input           LVBL,    
-    input   [5:0]   board_r,
-    input   [5:0]   board_g,
-    input   [5:0]   board_b,
-    input           board_hsync,
-    input           board_vsync,
+    input           LVBL,
     input           hs,
     input           vs,
     // VGA
@@ -178,7 +173,7 @@ wire       HSync = ~hs;
 wire       VSync = ~vs;
 wire       CSync = ~(HSync ^ VSync);
 
-osd #(.OSD_X_OFFSET(10'd0),.OSD_Y_OFFSET(10'd0),.OSD_COLOR(3'd4),.PXW(4)) 
+osd #(.OSD_X_OFFSET(10'd0),.OSD_Y_OFFSET(10'd0),.OSD_COLOR(3'd4),.PXW(4))
 u_osd (
    .clk_sys    ( clk_sys      ),
    .pxl_cen    ( pxl_cen      ),
@@ -201,7 +196,7 @@ u_osd (
    .HS_out     ( osd_hs       ),
    .VS_out     ( osd_vs       )
 );
-`else 
+`else
 assign osd_r  = game_r;
 assign osd_g  = game_g;
 assign osd_b  = game_b;
@@ -264,7 +259,7 @@ rgb2ypbpr u_rgb2ypbpr
 
 always @(posedge clk_sys) begin : rgb_mux
     if( ypbpr ) begin // RGB output
-        // a minimig vga->scart cable expects a composite sync signal 
+        // a minimig vga->scart cable expects a composite sync signal
         // on the VGA_HS output and VCC on VGA_VS (to switch into rgb mode).
         VGA_R  <= Pr;
         VGA_G  <=  Y;
@@ -272,11 +267,11 @@ always @(posedge clk_sys) begin : rgb_mux
         VGA_HS <= CSync;
         VGA_VS <= 1'b1;
     end else begin // VGA output
-        VGA_R  <= vga_r;
-        VGA_G  <= vga_g;
-        VGA_B  <= vga_b;
-        VGA_HS <= vga_hsync;
-        VGA_VS <= vga_vsync;
+        VGA_R  <= scandoubler_disable ? { osd_r, osd_r[3:2] }  : vga_r;
+        VGA_G  <= scandoubler_disable ? { osd_g, osd_g[3:2] }  : vga_g;
+        VGA_B  <= scandoubler_disable ? { osd_b, osd_b[3:2] }  : vga_b;
+        VGA_HS <= scandoubler_disable ? osd_hs : vga_hsync;
+        VGA_VS <= scandoubler_disable ? osd_vs : vga_vsync;
     end
 end
 // assign VGA_R = ypbpr?Pr:osd_r;

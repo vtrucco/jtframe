@@ -11,7 +11,7 @@ wire led;
 wire            downloading;
 wire    [21:0]  ioctl_addr;
 wire    [ 7:0]  ioctl_data;
-wire cen12, cen6, cen3, cen1p5, clk, clk27, rst;
+wire clk27, rst;
 wire [21:0]  sdram_addr;
 wire [15:0]  data_read;
 wire SPI_SCK, SPI_DO, SPI_DI, SPI_SS2, SPI_SS3, CONF_DATA0;
@@ -23,6 +23,7 @@ wire SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE,  SDRAM_nCAS,
      SDRAM_nRAS, SDRAM_nCS,  SDRAM_CLK,  SDRAM_CKE;
 
 wire [5:0] VGA_R, VGA_G, VGA_B;
+wire pxl_clk, pxl_cen;
 
 mist_dump u_dump(
     .VGA_VS     ( VGA_VS    ),
@@ -33,12 +34,9 @@ mist_dump u_dump(
 test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .TX_LEN(`GAME_ROM_LEN), .CLK_SPEED(48) ) u_harness(
     .rst         ( rst           ),
-    .clk         ( clk           ),
     .clk27       ( clk27         ),
-    .cen12       ( cen12         ),
-    .cen6        ( cen6          ),
-    .cen3        ( cen3          ),
-    .cen1p5      ( cen1p5        ),
+    .pxl_clk     ( pxl_clk       ),
+    .pxl_cen     ( pxl_cen       ),
     .downloading ( downloading   ),
     .ioctl_addr  ( ioctl_addr    ),
     .ioctl_data  ( ioctl_data    ),
@@ -118,7 +116,9 @@ wire AUDIO_L, AUDIO_R;
     .AUDIO_L    ( AUDIO_L   ),
     .AUDIO_R    ( AUDIO_R   ),
     // unused
-    .LED        ( led       )
+    .LED        ( led       ),
+    .sim_pxl_cen( pxl_cen   ),
+    .sim_pxl_clk( pxl_clk   )
 );
 
 

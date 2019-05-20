@@ -111,9 +111,6 @@ parameter CONF_STR_LEN = 0;
 
 wire loclk_vga;
 
-wire   [5:0]   board_r, board_g, board_b;
-wire           board_hsync, board_vsync;
-
 // control
 wire [31:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
@@ -137,11 +134,6 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .game_b         ( game_b        ),
     .LHBL           ( LHBL          ),
     .LVBL           ( LVBL          ),
-    .board_r        ( board_r       ),
-    .board_g        ( board_g       ),
-    .board_b        ( board_b       ),
-    .board_hsync    ( board_hsync   ),
-    .board_vsync    ( board_vsync   ),
     .hs             ( hs            ),
     .vs             ( vs            ),
     // VGA
