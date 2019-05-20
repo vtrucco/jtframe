@@ -237,9 +237,9 @@ assign vga_g[0] = vga_g[5];
 assign vga_b[0] = vga_b[5];
 `else
 // simulation only
-assign vga_r = { 2'b0, osd_r };
-assign vga_g = { 2'b0, osd_g };
-assign vga_b = { 2'b0, osd_b };
+assign vga_r = { osd_r, osd_r[3:2] };
+assign vga_g = { osd_g, osd_g[3:2] };
+assign vga_b = { osd_b, osd_b[3:2] };
 assign vga_hsync  = osd_hs;
 assign vga_vsync  = osd_vs;
 `endif
@@ -264,15 +264,13 @@ always @(posedge clk_sys) begin : rgb_mux
         VGA_R  <= Pr;
         VGA_G  <=  Y;
         VGA_B  <= Pb;
-        VGA_HS <= CSync;
-        VGA_VS <= 1'b1;
     end else begin // VGA output
         VGA_R  <= scandoubler_disable ? { osd_r, osd_r[3:2] }  : vga_r;
         VGA_G  <= scandoubler_disable ? { osd_g, osd_g[3:2] }  : vga_g;
         VGA_B  <= scandoubler_disable ? { osd_b, osd_b[3:2] }  : vga_b;
-        VGA_HS <= scandoubler_disable ? osd_hs : vga_hsync;
-        VGA_VS <= scandoubler_disable ? osd_vs : vga_vsync;
     end
+    VGA_HS <= (ypbpr || scandoubler_disable) ? CSync : osd_hs; // : vga_hsync;
+    VGA_VS <= (ypbpr || scandoubler_disable) ? 1'b1  : osd_vs; // : vga_vsync;    
 end
 // assign VGA_R = ypbpr?Pr:osd_r;
 // assign VGA_G = ypbpr? Y:osd_g;
