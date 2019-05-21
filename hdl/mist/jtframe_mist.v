@@ -36,7 +36,13 @@ module jtframe_mist(
     input           LVBL,
     input           hs,
     input           vs,
-    // VGA
+    // VGA-compatible video
+    input   [5:0]   vga_r,
+    input   [5:0]   vga_g,
+    input   [5:0]   vga_b,
+    input           vga_hsync,
+    input           vga_vsync,
+    // MiST VGA pins
     output  [5:0]   VGA_R,
     output  [5:0]   VGA_G,
     output  [5:0]   VGA_B,
@@ -90,8 +96,6 @@ module jtframe_mist(
     input   [15:0]    snd,
     output            AUDIO_L,
     output            AUDIO_R,
-    // VGA
-    input             en_mixing,
     // joystick
     output     [9:0]  game_joystick1,
     output     [9:0]  game_joystick2,
@@ -128,7 +132,6 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .SDRAM_CLK      ( SDRAM_CLK     ),
     // Base video
     .osd_rotate     ( osd_rotate    ),
-    .en_mixing      ( en_mixing     ),
     .game_r         ( game_r        ),
     .game_g         ( game_g        ),
     .game_b         ( game_b        ),
@@ -136,13 +139,19 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .LVBL           ( LVBL          ),
     .hs             ( hs            ),
     .vs             ( vs            ),
-    // VGA
+    // VGA video (without OSD)
+    .vga_r          ( vga_r         ),
+    .vga_g          ( vga_g         ),
+    .vga_b          ( vga_b         ),
+    .vga_hsync      ( vga_hsync     ),
+    .vga_vsync      ( vga_vsync     ),  
+    // MiST VGA pins (includes OSD)
     .CLOCK_27       ( CLOCK_27      ),
-    .VGA_R          ( VGA_R         ),
-    .VGA_G          ( VGA_G         ),
-    .VGA_B          ( VGA_B         ),
-    .VGA_HS         ( VGA_HS        ),
-    .VGA_VS         ( VGA_VS        ),
+    .VIDEO_R        ( VGA_R         ),
+    .VIDEO_G        ( VGA_G         ),
+    .VIDEO_B        ( VGA_B         ),
+    .VIDEO_HS       ( VGA_HS        ),
+    .VIDEO_VS       ( VGA_VS        ),
     // SPI interface to arm io controller
     .SPI_DO         ( SPI_DO        ),
     .SPI_DI         ( SPI_DI        ),
@@ -158,9 +167,9 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .ps2_kbd_clk    ( ps2_kbd_clk   ),
     .ps2_kbd_data   ( ps2_kbd_data  ),
     // audio
-    .clk_dac        ( clk_sys         ),
-    .snd            ( snd             ),
-    .snd_pwm        ( AUDIO_L         ),
+    .clk_dac        ( clk_sys       ),
+    .snd            ( snd           ),
+    .snd_pwm        ( AUDIO_L       ),
     // ROM load from SPI
     .ioctl_addr     ( ioctl_addr    ),
     .ioctl_data     ( ioctl_data    ),
