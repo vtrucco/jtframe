@@ -43,11 +43,11 @@ module jtgng_mist_base(
     input           vga_vsync,    
     // Final video: VGA+OSD or base+OSD depending on configuration
     input       [1:0]   CLOCK_27,
-    output  reg [5:0]   VIDEO_R,
-    output  reg [5:0]   VIDEO_G,
-    output  reg [5:0]   VIDEO_B,
-    output  reg         VIDEO_HS,
-    output  reg         VIDEO_VS,
+    output      [5:0]   VIDEO_R,
+    output      [5:0]   VIDEO_G,
+    output      [5:0]   VIDEO_B,
+    output              VIDEO_HS,
+    output              VIDEO_VS,
     // SPI interface to arm io controller
     output          SPI_DO,
     input           SPI_DI,
@@ -171,7 +171,7 @@ wire       VSync = scandoubler_disable ? ~vs : vga_vsync;
 wire       CSync = ~(HSync ^ VSync);
 
 osd #(0,0,4) osd (
-   .clk_sys    ( scandoubler_disable ? clk_rgb : clk_vga ),
+   .clk_sys    ( scandoubler_disable ? clk_sys : clk_vga ),
 
    // spi for OSD
    .SPI_DI     ( SPI_DI       ),
