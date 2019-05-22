@@ -105,6 +105,11 @@ frame_start=0
 frame_cnt = 0
 png_width = 640
 png_height= 480
+
+frame = bytearray(png_width*png_height*3)
+for k in range(len(frame)):
+    frame[k] = 0
+        
 while frame_start < len(video_data)-2:
     while (video_data[frame_start+1]&0x20) == 0x20 and frame_start<len(video_data)-2:
         frame_start += 2
@@ -113,9 +118,6 @@ while frame_start < len(video_data)-2:
         print "Done"
         break
 
-    frame = bytearray(png_width*png_height*3)
-    for k in range(len(frame)):
-        frame[k] = 0
     dumped=frame_start
     width=0
     c=0

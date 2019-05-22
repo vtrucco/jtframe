@@ -42,6 +42,14 @@ localparam OSD_HEIGHT  = 10'd128;
 reg        osd_enable;
 (* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[2047:0];  // the OSD buffer itself
 
+`ifdef SIMULATION
+initial begin:clear_buffer
+    integer cnt;
+    for( cnt=0; cnt<2048; cnt=cnt+1 )
+        osd_buffer[cnt] = 8'hAA;
+end
+`endif
+
 // the OSD has its own SPI interface to the io controller
 always@(posedge SPI_SCK, posedge SPI_SS3) begin
 	reg  [4:0] cnt;
@@ -167,9 +175,15 @@ wire [9:0] osd_vcnt    = v_cnt - v_osd_start;
 wire [9:0] osd_hcnt_next  = osd_hcnt + 2'd1;  // one pixel offset for osd pixel
 wire [9:0] osd_hcnt_next2 = osd_hcnt + 2'd2;  // two pixel offset for osd byte address register
 
+`ifdef SIMULATE_OSD
+wire osd_de = 
+              (HSync != hs_pol) && (h_cnt >= h_osd_start) && (h_cnt < h_osd_end) &&
+              (VSync != vs_pol) && (v_cnt >= v_osd_start) && (v_cnt < v_osd_end);
+`else 
 wire osd_de = osd_enable &&
               (HSync != hs_pol) && (h_cnt >= h_osd_start) && (h_cnt < h_osd_end) &&
               (VSync != vs_pol) && (v_cnt >= v_osd_start) && (v_cnt < v_osd_end);
+`endif
 
 reg [10:0] osd_buffer_addr;
 wire [7:0] osd_byte = osd_buffer[osd_buffer_addr];

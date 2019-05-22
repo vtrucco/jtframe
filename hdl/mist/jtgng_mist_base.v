@@ -131,7 +131,10 @@ assign joystick2 = 32'd0;
 assign status    = 32'd0;
 assign ps2_kbd_data = 1'b0;
 assign ps2_kbd_clk  = 1'b0;
-assign scandoubler_disable = 1'b0;
+`ifndef SCANDOUBLER_DISABLE
+`define SCANDOUBLER_DISABLE 1'b0
+`endif
+assign scandoubler_disable = `SCANDOUBLER_DISABLE;
 assign ypbpr = 1'b0;
 `endif
 
