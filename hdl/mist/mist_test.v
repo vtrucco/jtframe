@@ -23,10 +23,12 @@ wire SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE,  SDRAM_nCAS,
      SDRAM_nRAS, SDRAM_nCS,  SDRAM_CLK,  SDRAM_CKE;
 
 wire [5:0] VGA_R, VGA_G, VGA_B;
-wire pxl_clk, pxl_cen;
+// the pxl_ wires represent the core pure output
+// regardless of the scan doubler or the composity sync
+wire pxl_clk, pxl_cen, pxl_vs, pxl_hs;
 
 mist_dump u_dump(
-    .VGA_VS     ( VGA_VS    ),
+    .VGA_VS     ( pxl_vs    ),
     .led        ( led       ),
     .frame_cnt  ( frame_cnt )
 );
@@ -37,6 +39,8 @@ test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .clk27       ( clk27         ),
     .pxl_clk     ( pxl_clk       ),
     .pxl_cen     ( pxl_cen       ),
+    .pxl_vs      ( pxl_vs        ),
+    .pxl_hs      ( pxl_hs        ),
     .downloading ( downloading   ),
     .ioctl_addr  ( ioctl_addr    ),
     .ioctl_data  ( ioctl_data    ),
@@ -118,7 +122,9 @@ wire AUDIO_L, AUDIO_R;
     // unused
     .LED        ( led       ),
     .sim_pxl_cen( pxl_cen   ),
-    .sim_pxl_clk( pxl_clk   )
+    .sim_pxl_clk( pxl_clk   ),
+    .sim_vs     ( pxl_vs    ),
+    .sim_hs     ( pxl_hs    )
 );
 
 

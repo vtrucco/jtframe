@@ -12,6 +12,8 @@ module test_harness(
     output  reg      clk27,
     input            pxl_cen,
     input            pxl_clk, 
+    input            pxl_vs,
+    input            pxl_hs,
     input   [21:0]   sdram_addr,
     output  [15:0]   data_read,
     output           loop_rst,
@@ -62,7 +64,7 @@ initial begin
     fvideo = $fopen("video.bin","wb");
 end
 
-wire [15:0] video_dump = { 2'b0,VS,HS, red, green, blue  };
+wire [15:0] video_dump = { 2'b0,pxl_vs,pxl_hs, red, green, blue  };
 
 // Define VIDEO_START with the first frame number for which
 // video will be dumped. If undefined, it will start from frame 0
@@ -78,14 +80,14 @@ end
 
 ////////////////////////////////////////////////////////////////////
 initial frame_cnt=0;
-always @(posedge VS ) begin
+always @(posedge pxl_vs ) begin
     frame_cnt<=frame_cnt+1;
     $display("New frame %d", frame_cnt);
 end
 
 `ifdef MAXFRAME
 reg frames_done=1'b0;
-always @(negedge VS)
+always @(negedge pxl_vs)
     if( frame_cnt == `MAXFRAME ) frames_done <= 1'b1;
 `else
 reg frames_done=1'b1;
