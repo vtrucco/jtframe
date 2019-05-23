@@ -20,7 +20,8 @@ SIM_MS=1
 SIMULATOR=iverilog
 TOP=game_test
 MIST=
-MIST_PLL=fast_pll.f
+MIST_PLL=
+MIST_PLL_PATH=.
 SIMFILE=sim.f
 MACROPREFIX=-D
 EXTRA=
@@ -158,6 +159,7 @@ case "$1" in
     "-slowpll")
         echo "INFO: Simulation will use the slow PLL model"
         MIST_PLL=altera_pll.f
+        MIST_PLL_PATH="../../hdl"
         EXTRA="$EXTRA ${MACROPREFIX}SLOWPLL"
         ;;
     "-nosnd")
@@ -302,12 +304,14 @@ EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=
 
 # Add the PLL (MiST only)
 if [ $TOP = mist_test ]; then
-    if [ $SIMULATOR = iverilog ]; then
-        #MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist   $MIST_PLL)"
-        MIST="$MIST pll_game_mist.v"
-    else
-        MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
+    if [ "$MIST_PLL" != "" ]; then
+        if [ $SIMULATOR = iverilog ]; then
+            MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist $MIST_PLL)"
+        else
+            MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
+        fi
     fi
+    MIST="$MIST $MIST_PLL_PATH/pll_game_mist.v"
 fi
 
 case $SIMULATOR in
