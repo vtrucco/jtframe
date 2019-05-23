@@ -21,7 +21,7 @@ SIMULATOR=iverilog
 TOP=game_test
 MIST=
 MIST_PLL=
-MIST_PLL_PATH=.
+PLL_FILE=fast_pll.f
 SIMFILE=sim.f
 MACROPREFIX=-D
 EXTRA=
@@ -159,7 +159,7 @@ case "$1" in
     "-slowpll")
         echo "INFO: Simulation will use the slow PLL model"
         MIST_PLL=altera_pll.f
-        MIST_PLL_PATH="../../hdl"
+        PLL_FILE="slow_pll.f"
         EXTRA="$EXTRA ${MACROPREFIX}SLOWPLL"
         ;;
     "-nosnd")
@@ -274,6 +274,7 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
         SIM_SCANDOUBLER Simulate scan doubler
         SIMULATE_OSD    Simulate OSD display
         SIMINFO         Show simulation options available thorugh define commands
+        SCANDOUBLER_DISABLE=1   Disables the scan doubler module
 EOF
         exit 0
         ;;
@@ -305,13 +306,19 @@ EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=
 # Add the PLL (MiST only)
 if [ $TOP = mist_test ]; then
     if [ "$MIST_PLL" != "" ]; then
+        # Adds the Altera file with the PLL models
         if [ $SIMULATOR = iverilog ]; then
             MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist $MIST_PLL)"
         else
             MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
         fi
     fi
-    MIST="$MIST $MIST_PLL_PATH/pll_game_mist.v"
+    # Adds the .f file with the PLL modules
+    if [ $SIMULATOR = iverilog ]; then
+        MIST="$MIST $(add_dir . $PLL_FILE)"
+    else
+        MIST="$MIST -F $PLL_FILE"
+    fi
 fi
 
 case $SIMULATOR in

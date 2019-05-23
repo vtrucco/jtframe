@@ -152,8 +152,10 @@ data_io #(.aw(22)) u_datain (
 
 // OSD will only get simulated if SIMULATE_OSD is defined
 `ifndef SIMULATE_OSD
+`ifndef SCANDOUBLER_DISABLE
 `ifdef SIMULATION
 `define BYPASS_OSD
+`endif
 `endif
 `endif
 
