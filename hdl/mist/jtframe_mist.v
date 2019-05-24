@@ -113,8 +113,6 @@ parameter GAME_INPUTS_ACTIVE_HIGH=1'b0;
 parameter CONF_STR = "";
 parameter CONF_STR_LEN = 0;
 
-wire loclk_vga;
-
 // control
 wire [31:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
