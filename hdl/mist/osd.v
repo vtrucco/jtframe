@@ -23,7 +23,9 @@ module osd (
 	// VGA signals going to video connector
 	output [5:0] R_out,
 	output [5:0] G_out,
-	output [5:0] B_out
+	output [5:0] B_out,
+
+	output reg	 osd_shown
 );
 
 parameter OSD_X_OFFSET = 10'd0;
@@ -39,8 +41,10 @@ localparam OSD_HEIGHT  = 10'd128;
 
 // this core supports only the display related OSD commands
 // of the minimig
-reg        osd_enable;
+reg        osd_enable=1'b0;
 (* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[2047:0];  // the OSD buffer itself
+always @(posedge clk_sys)
+	osd_shown <= osd_enable;
 
 `ifdef SIMULATION
 initial begin:clear_buffer

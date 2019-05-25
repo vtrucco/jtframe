@@ -19,7 +19,6 @@
 `timescale 1ns/1ps
 
 module jtframe_mist(
-    input   [1:0]   CLOCK_27,
     input           clk_sys,
     input           clk_rom,
     input           clk_vga,
@@ -104,6 +103,7 @@ module jtframe_mist(
     output            game_pause,
     output            game_service,
     // Debug
+    output            LED,
     output     [3:0]  gfx_en
 );
 
@@ -116,8 +116,13 @@ parameter CONF_STR_LEN = 0;
 // control
 wire [31:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
+wire          osd_shown;
 
 assign AUDIO_R = AUDIO_L;
+
+///////////////// LED is on while
+// downloading, PLL lock lost, OSD is shown or in reset state
+assign LED = ~( downloading | ~pll_locked | osd_shown | rst );
 
 jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .SIGNED_SND(SIGNED_SND)
@@ -128,6 +133,7 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .clk_rom        ( clk_rom       ),
     .pxl_cen        ( pxl_cen       ),
     .SDRAM_CLK      ( SDRAM_CLK     ),
+    .osd_shown      ( osd_shown     ),
     // Base video
     .osd_rotate     ( osd_rotate    ),
     .game_r         ( game_r        ),
@@ -144,7 +150,6 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
     .vga_hsync      ( vga_hsync     ),
     .vga_vsync      ( vga_vsync     ),  
     // MiST VGA pins (includes OSD)
-    .CLOCK_27       ( CLOCK_27      ),
     .VIDEO_R        ( VGA_R         ),
     .VIDEO_G        ( VGA_G         ),
     .VIDEO_B        ( VGA_B         ),

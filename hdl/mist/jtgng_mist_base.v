@@ -25,6 +25,7 @@ module jtgng_mist_base(
     input           clk_vga,
     input           pxl_cen,
     input           SDRAM_CLK,      // SDRAM Clock
+    output          osd_shown,
 
     // Base video
     input   [1:0]   osd_rotate,
@@ -42,7 +43,6 @@ module jtgng_mist_base(
     input           vga_hsync,
     input           vga_vsync,    
     // Final video: VGA+OSD or base+OSD depending on configuration
-    input       [1:0]   CLOCK_27,
     output      [5:0]   VIDEO_R,
     output      [5:0]   VIDEO_G,
     output      [5:0]   VIDEO_B,
@@ -193,7 +193,9 @@ osd #(0,0,4) osd (
 
    .R_out      ( osd_r_o      ),
    .G_out      ( osd_g_o      ),
-   .B_out      ( osd_b_o      )
+   .B_out      ( osd_b_o      ),
+
+   .osd_shown  ( osd_shown    )
 );
 
 wire [5:0] Y, Pb, Pr;
