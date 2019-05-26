@@ -374,6 +374,7 @@ wire         vbuf_read;
 wire [127:0] vbuf_writedata;
 wire  [15:0] vbuf_byteenable;
 wire         vbuf_write;
+wire		 field;
 
 ascal 
 #(
@@ -394,7 +395,7 @@ ascal
 	.i_b    (hb_out),
 	.i_hs   (hhs),
 	.i_vs   (hvs),
-	.i_fl   (0),
+	.i_fl   (field),
 	.i_de   (hde),
 	.iauto  (1),
 	.himin  (0),
@@ -839,6 +840,7 @@ emu emu
 	.VGA_HS(hs_emu),
 	.VGA_VS(vs_emu),
 	.VGA_DE(de),
+	.VGA_F1(field),
 
 	.HDMI_CLK(clk_ihdmi),
 	.HDMI_CE(ce_hpix),
