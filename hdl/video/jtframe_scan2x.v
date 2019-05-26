@@ -6,7 +6,10 @@ module jtframe_scan2x #(parameter DW=12, HLEN=256)(
     input       base_cen,
     input       basex2_cen,
     input       [DW-1:0]    base_pxl,
-    output  reg [DW-1:0]    x2_pxl
+    input       HS,
+
+    output  reg [DW-1:0]    x2_pxl,
+    output  reg x2_HS
 );
 
 localparam AW=HLEN<=256 ? 8 : (HLEN<=512 ? 9:10 );
@@ -14,7 +17,10 @@ localparam AW=HLEN<=256 ? 8 : (HLEN<=512 ? 9:10 );
 reg [DW-1:0] mem0[0:HLEN-1];
 reg [DW-1:0] mem1[0:HLEN-1];
 reg oddline;
-reg [AW-1:0] wraddr, rdaddr;
+reg [AW-1:0] wraddr, rdaddr, hscnt0, hscnt1;
+reg last_HS;
+
+always @(posedge clk) last_HS <= HS;
 
 always@(posedge clk or negedge rst_n)
     if( !rst_n ) begin
@@ -33,6 +39,16 @@ always@(posedge clk or negedge rst_n)
             else
                 mem0[wraddr] <= base_pxl;
         end 
+    end
+
+always @(posedge clk or negedge rst_n)
+    if( !rst_n ) begin
+        x2_HS <= 1'b0;
+    end else begin
+        if( HS  && !last_HS ) hscnt1 <= wraddr;
+        if( !HS &&  last_HS ) hscnt0 <= wraddr;
+        if( rdaddr == hscnt0 ) x2_HS <= 1'b0;
+        if( rdaddr == hscnt1 ) x2_HS <= 1'b1;
     end
 
 endmodule // jtframe_scan2x
