@@ -80,7 +80,8 @@ T80s u_cpu(
     .BUSRQ_n    ( busrq_n     ),
     .BUSAK_n    ( busak_n     ),
     .RFSH_n     ( rfsh_n      ),
-    .out0       ( 1'b0        )
+    .out0       ( 1'b0        ),
+    .HALT_n     ( halt_n      )
 );
 `endif
 
@@ -104,8 +105,7 @@ tv80s #(.Mode(0)) u_cpu (
     .busrq_n( busrq_n    ),
     .busak_n( busak_n    ),
     .rfsh_n ( rfsh_n     ),
-    // unused
-    .halt_n ()
+    .halt_n ( halt_n     )
 );
 `endif
 
