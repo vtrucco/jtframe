@@ -326,7 +326,7 @@ iverilog)
     $SHOWCMD iverilog -g2005-sv $MIST \
         -f game.f $PERCORE \
         $(add_dir $MODULES/jtframe/hdl/ver $SIMFILE ) \
-        $MODULES/tv80/*.v  \
+        $MODULES/jtframe/hdl/cpu/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
         $MAXFRAME -DIVERILOG $EXTRA \
@@ -339,8 +339,8 @@ ncverilog)
         $DUMP $LOADROM \
         $MAXFRAME \
         -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
-        $MODULES/tv80/*.v \
         $EXTRA;;
+        # $MODULES/jtframe/hdl/cpu/tv80/*.v \
 verilator)
     $SHOWCMD verilator -I../../hdl \
         -f game.f $PERCORE \
