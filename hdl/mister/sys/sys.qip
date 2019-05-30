@@ -1,6 +1,5 @@
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) sys_top.v ]
 set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) sys_top.sdc ]
-set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) pll.qip ]
 set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) pll_hdmi.qip ]
 set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) pll_hdmi_cfg.qip ]
 set_global_assignment -name VHDL_FILE          [file join $::quartus(qip_path) ascal.vhd ]
