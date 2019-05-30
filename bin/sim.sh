@@ -304,7 +304,7 @@ fi
 EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=jt${SYSNAME}_mist"
 
 # Add the PLL (MiST only)
-if [ $TOP = mist_test ]; then
+if [[ $TOP = mist_test || $TOP = mister_test ]]; then
     if [ "$MIST_PLL" != "" ]; then
         # Adds the Altera file with the PLL models
         if [ $SIMULATOR = iverilog ]; then
@@ -339,8 +339,8 @@ ncverilog)
         $DUMP $LOADROM \
         $MAXFRAME \
         -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
+        $MODULES/jtframe/hdl/cpu/tv80/*.v \
         $EXTRA;;
-        # $MODULES/jtframe/hdl/cpu/tv80/*.v \
 verilator)
     $SHOWCMD verilator -I../../hdl \
         -f game.f $PERCORE \

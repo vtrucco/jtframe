@@ -30,7 +30,6 @@ module mister_harness(
 
 parameter sdram_instance = 1, GAME_ROMNAME="_PASS ROM NAME to mister_harness_";
 parameter TX_LEN = 207;
-parameter CLK_SPEED=24;
 ////////////////////////////////////////////////////////////////////
 initial frame_cnt=0;
 always @(posedge VS ) begin

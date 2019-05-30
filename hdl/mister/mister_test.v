@@ -50,7 +50,10 @@ wire  [1:0] HDMI_SL;
 wire  [7:0] HDMI_ARX;
 wire  [7:0] HDMI_ARY;
 
-parameter CLK_SPEED=24;
+// the pxl_ wires represent the core pure output
+// regardless of the scan doubler or the composity sync
+wire pxl_clk, pxl_cen, pxl_vs, pxl_hs;
+
 
 mister_dump u_dump(
     .VGA_VS     ( VGA_VS    ),
@@ -59,7 +62,7 @@ mister_dump u_dump(
 );
 
 mister_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
-    .TX_LEN(887808), .CLK_SPEED(CLK_SPEED) ) u_harness(
+    .TX_LEN(887808) ) u_harness(
     .rst         ( rst       ),
     .clk50       ( clk50     ),
     .frame_cnt   ( frame_cnt ),
@@ -91,6 +94,8 @@ wire UART_RX, UART_TX;
 assign UART_RX = UART_TX; // make a loop!
 `endif
 
+wire VGA_F1;
+
 emu UUT(
     .CLK_50M    (  clk50        ),
     .RESET      (  rst          ),
@@ -104,6 +109,7 @@ emu UUT(
     .VGA_HS     (  VGA_HS       ),
     .VGA_VS     (  VGA_VS       ),
     .VGA_DE     (  VGA_DE       ),
+    .VGA_F1     (  VGA_F1       ),
     // HDMI -- all ignored --
     .HDMI_CLK   (  HDMI_CLK     ),
     .HDMI_CE    (  HDMI_CE      ),
@@ -135,7 +141,12 @@ emu UUT(
     .SDRAM_nCS  (  SDRAM_nCS    ),
     .SDRAM_nCAS (  SDRAM_nCAS   ),
     .SDRAM_nRAS (  SDRAM_nRAS   ),
-    .SDRAM_nWE  (  SDRAM_nWE    )
+    .SDRAM_nWE  (  SDRAM_nWE    ),
+    // Video output for simulation
+    .sim_pxl_cen( pxl_cen       ),
+    .sim_pxl_clk( pxl_clk       ),
+    .sim_vs     ( pxl_vs        ),
+    .sim_hs     ( pxl_hs        )    
 );
 
 endmodule
