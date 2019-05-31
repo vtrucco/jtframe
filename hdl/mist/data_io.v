@@ -31,6 +31,7 @@ module data_io #(parameter aw=22)(
     output reg [4:0]  index,     // menu index used to upload the file
 
     // external ram interface
+    input               rst,
     input               clk_sdram,
     output reg          downloading_sdram,   // signal indicating an active download
     output reg [aw-1:0] ioctl_addr,
@@ -47,7 +48,7 @@ module data_io #(parameter aw=22)(
 reg [6:0]      sbuf;
 reg [7:0]      cmd;
 reg [4:0]      cnt=5'd0;
-reg rclk;
+reg rclk=1'b0;
 reg [7:0]       data;
 
 localparam UIO_FILE_TX      = 8'h53;
@@ -104,8 +105,12 @@ end
 reg rclkD, rclkD2;
 reg sync_aux;
 
-always@(posedge clk_sdram)
-    begin
+always@(posedge clk_sdram or posedge rst)
+    if( rst ) begin
+        ioctl_addr <= {aw{1'b1}};
+        ioctl_wr   <= 1'b0;
+        ioctl_data <= 8'h0;
+    end else begin
         { downloading_sdram, sync_aux } <= { sync_aux, downloading_reg };
         if ({ downloading_sdram, sync_aux } == 2'b01) begin
             ioctl_addr <= ~{aw{1'b0}};
