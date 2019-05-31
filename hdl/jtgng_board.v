@@ -20,6 +20,7 @@ module jtgng_board(
     output  reg       rst,      // use as synchrnous reset
     output  reg       rst_n,    // use as asynchronous reset
     output  reg       game_rst,
+    output  reg       game_rst_n,
     // reset forcing signals:
     input             dip_flip, // A change in dip_flip implies a reset
     input             rst_req,
@@ -107,6 +108,17 @@ always @(negedge clk_sys) begin
         game_rst_cnt <= game_rst_cnt + 8'd1;
     end else game_rst <= 1'b0;
 end
+
+// convert game_rst to game_rst_n
+reg pre_game_rst_n;
+always @(posedge clk_sys)
+    if( game_rst ) begin
+        pre_game_rst_n <= 1'b0;
+        game_rst_n <= 1'b0;
+    end else begin
+        pre_game_rst_n <= 1'b1;
+        game_rst_n <= pre_game_rst_n;
+    end
 
 // convert 5-bit colour to 6-bit colour
 // assign vga_r[0] = vga_r[5];
@@ -218,7 +230,7 @@ always @(posedge clk_sys)
         // state variables:
         if( (key_pause && !last_pause) || (!joy_pause_b && last_joypause_b) )
             game_pause   <= ~game_pause;
-        if(key_service && !last_service)  game_service <= ~game_service;
+        game_service <= key_service ^ invert_inputs;
     end
 
 
