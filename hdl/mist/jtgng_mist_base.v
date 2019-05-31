@@ -141,6 +141,8 @@ data_io #(.aw(22)) u_datain (
     .sck                ( SPI_SCK      ),
     .ss                 ( SPI_SS2      ),
     .sdi                ( SPI_DI       ),
+    
+    .rst                ( rst          ),
     .clk_sdram          ( clk_rom      ),
     .downloading_sdram  ( downloading  ),
     .ioctl_addr         ( ioctl_addr   ),
