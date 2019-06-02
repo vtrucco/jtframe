@@ -27,7 +27,7 @@ module jtgng_ram #(parameter dw=8, aw=10, simfile="", synfile="",cen_rd=0)(
     output reg [dw-1:0] q
 );
 
-reg [dw-1:0] mem[0:(2**aw)-1];
+(* ramstyle = "no_rw_check" *) reg [dw-1:0] mem[0:(2**aw)-1];
 
 `ifdef SIMULATION
 integer f, readcnt;
