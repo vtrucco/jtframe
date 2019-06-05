@@ -174,12 +174,13 @@ jtgng_keyboard u_keyboard(
     .key_gfx     ( key_gfx       )
 );
 `else
-assign key_joy2  = 6'h0;
-assign key_joy1  = 6'h0;
-assign key_start = 2'd0;
-assign key_coin  = 2'd0;
-assign key_reset = 1'b0;
-assign key_pause = 1'b0;
+assign key_joy2    = 6'h0;
+assign key_joy1    = 6'h0;
+assign key_start   = 2'd0;
+assign key_coin    = 2'd0;
+assign key_reset   = 1'b0;
+assign key_pause   = 1'b0;
+assign key_service = 1'b0;
 `endif
 
 reg [9:0] joy1_sync, joy2_sync;
@@ -202,7 +203,7 @@ integer cnt;
 always @(posedge clk_sys)
     if(rst ) begin
         game_pause   <= 1'b0;
-        game_service <= 1'b1 ^ invert_inputs;
+        game_service <= 1'b0 ^ invert_inputs;
         soft_rst     <= 1'b0;
         gfx_en       <= 4'hf;
     end else begin
