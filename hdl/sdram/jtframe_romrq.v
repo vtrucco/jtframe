@@ -59,7 +59,7 @@ always @(posedge clk)
         init      <= 1'b1;
         deleterus <= 1'b0;  // signals which cached data is to be overwritten next time
     end else begin
-        data_ok <= hit0 || hit1 || (din_ok&&we);
+        data_ok <= addr_ok && ( hit0 || hit1 || (din_ok&&we));
         if( we && din_ok ) begin
             if( init ) begin
                 cached_data0 <= din;

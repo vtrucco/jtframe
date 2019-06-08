@@ -18,35 +18,50 @@ reg [DW-1:0] mem0[0:HLEN-1];
 reg [DW-1:0] mem1[0:HLEN-1];
 reg oddline;
 reg [AW-1:0] wraddr, rdaddr, hscnt0, hscnt1;
-reg last_HS;
+reg last_HS, last_HS_base;
 
-always @(posedge clk) last_HS <= HS;
+reg waitHS;
+
+always @(posedge clk) if(base_cen)   last_HS_base <= HS;
+always @(posedge clk) if(basex2_cen) last_HS <= HS;
+
+wire HS_posedge =  HS && !last_HS;
+wire HSbase_posedge =  HS && !last_HS_base;
+wire HS_negedge = !HS &&  last_HS;
+
+always@(posedge clk or negedge rst_n)
+    if( !rst_n )
+        waitHS  <= 1'b1;
+    else begin
+        if(HS_posedge ) waitHS  <= 1'b0;
+    end
 
 always@(posedge clk or negedge rst_n)
     if( !rst_n ) begin
         wraddr  <= {AW{1'b0}};
         rdaddr  <= {AW{1'b0}};
         oddline <= 1'b0;
-    end else
-    if( basex2_cen ) begin
+    end else if(basex2_cen) begin
+    if( !waitHS ) begin
         rdaddr <= rdaddr < (HLEN-1) ? (rdaddr+1) : 0;
         x2_pxl <= oddline ? mem0[rdaddr] : mem1[rdaddr];
         if( base_cen ) begin
-            if( wraddr==HLEN-1 ) oddline <= ~oddline;
-            wraddr <= wraddr < (HLEN-1) ? (wraddr+1) : 0;
+            if( HSbase_posedge ) oddline <= ~oddline;
+            wraddr <= HSbase_posedge ? 0 : (wraddr+1);
             if( oddline )
                 mem1[wraddr] <= base_pxl;
             else
                 mem0[wraddr] <= base_pxl;
         end 
     end
+    end
 
 always @(posedge clk or negedge rst_n)
     if( !rst_n ) begin
         x2_HS <= 1'b0;
     end else begin
-        if( HS  && !last_HS ) hscnt1 <= wraddr;
-        if( !HS &&  last_HS ) hscnt0 <= wraddr;
+        if( HS_posedge ) hscnt1 <= wraddr;
+        if( HS_negedge ) hscnt0 <= wraddr;
         if( rdaddr == hscnt0 ) x2_HS <= 1'b0;
         if( rdaddr == hscnt1 ) x2_HS <= 1'b1;
     end
