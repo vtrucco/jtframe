@@ -1,17 +1,19 @@
-module jt7400(
-    input       in1,
-    input       in2,
-    output      out3,
-    input       in4,
-    input       in5,
-    output      out6,
-    input       in9,
-    input       in10,
-    output      out8,
-    input       in12,
-    input       in13,
-    output      out11
-);
+module jt7400( // ref: 74??00
+    input       in1,  // pin: 1   
+    input       in2,  // pin: 2   
+    output      out3, // pin: 3   
+    input       in4,  // pin: 4   
+    input       in5,  // pin: 5   
+    output      out6, // pin: 6   
+    input       in9,  // pin: 9   
+    input       in10, // pin: 10  
+    output      out8, // pin: 8   
+    input       in12, // pin: 12  
+    input       in13, // pin: 13  
+    output      out11, // pin: 11
+    inout       VDD,   // pin: 14
+    inout       VSS    // pin: 7
+    );
 
 assign out3  = ~(in1 &in2 );
 assign out6  = ~(in4 &in5 );
@@ -20,9 +22,35 @@ assign out11 = ~(in12&in13);
 
 endmodule
 
+module jt7404( // ref: 74??04
+    input       in1,   // pin: 1   
+    input       out2,  // pin: 2   
+    output      in3,   // pin: 3   
+    input       out4,  // pin: 4   
+    input       in5,   // pin: 5   
+    output      out6,  // pin: 6   
+    input       in9,   // pin: 9   
+    input       out8,  // pin: 8  
+    output      in11,  // pin: 11   
+    input       out10, // pin: 10  
+    input       in13,  // pin: 13  
+    output      out12  // pin: 12
+    inout       VDD,   // pin: 14
+    inout       VSS    // pin: 7
+    );
+
+assign out2  = ~in1;
+assign out4  = ~in3;
+assign out6  = ~in5;
+assign out8  = ~in9;
+assign out10 = ~in11;
+assign out12 = ~in13;
+
+endmodule
+
 
 // synchronous presettable 4-bit binary counter, asynchronous clear
-module jt74161(
+module jt74161( // ref: 74??161
     input cet,
     input cep,
     input ld_b,
@@ -74,24 +102,39 @@ module jt74163(
 endmodule // jt74163
 
 // Dual D-type flip-flop with set and reset; positive edge-trigger
-module jt7474(
-    input      d,
-    input      pr_b,
-    input      cl_b,
-    input      clk,
-    output reg q,
-    output     q_b
+module jt7474(  // ref: 74??74
+    // first FF
+    input      d1,      // pin: 2
+    input      pr1_b,   // pin: 4
+    input      cl1_b,   // pin: 1
+    input      clk1,    // pin: 3
+    output reg q1,      // pin: 5
+    output     q1_b,    // pin: 6
+    // second FF
+    input      d2,      // pin: 12
+    input      pr2_b,   // pin: 10
+    input      cl2_b,   // pin: 13
+    input      clk2,    // pin: 11
+    output reg q2,      // pin: 9
+    output     q2_b,    // pin: 8
+    inout       VDD,   // pin: 14
+    inout       VSS    // pin: 7    
 );
 
-    assign q_b = ~q;
+    assign q1_b = ~q1;
+    assign q2_b = ~q2;
 
-    initial q=1'b0;
+    initial q1=1'b0, q2=1'b0;
 
-    always @( posedge clk or negedge cl_b or negedge pr_b )
-        if( !pr_b ) q <= 1'b1;
-        else if(!cl_b) q <= 1'b0;
-        else if( clk ) q <= d;
+    always @( posedge clk1 or negedge cl1_b or negedge pr1_b )
+        if( !pr1_b ) q1<= 1'b1;
+        else if(!cl1_b) q1 <= 1'b0;
+        else q1 <= d1;
 
+    always @( posedge clk2 or negedge cl2_b or negedge pr2_b )
+        if( !pr2_b ) q2<= 1'b1;
+        else if(!cl2_b) q2 <= 1'b0;
+        else q2 <= d2;
 endmodule
 
 // 3-to-8 line decoder/demultiplexer; inverting
