@@ -54,7 +54,7 @@ void Component::set_pin(int k, const string& val ) {
 }
 
 void dump(Component& c) {
-    cout << c.type << " " << c.instance << "(\n";
+    cout << c.alt_names->type << " " << c.instance << "(\n";
     int count = c.pin_count();
     typedef map<int,string> BusIndex;
     typedef map<string, BusIndex *> BusMap;
@@ -129,12 +129,15 @@ void dump_wires( ComponentMap& comps ) {
         for( auto& p : pins ) wires.insert( p.second );
     }
     // now dump the wires
-    for( auto& w : wires )
-        cout << "wire " << w << ";\n";
+    for( auto& w : wires ) {
+        if( w[0] != '1' )
+            cout << "wire " << w << ";\n";
+    }
 }
 
 int main(int argc, char *argv[]) {
     string fname;
+    bool do_wires=false;
     if( argc>1 ) {
         fname = argv[1];
         if( !ifstream(fname).good() ) {
@@ -155,7 +158,7 @@ int main(int argc, char *argv[]) {
         if( match_parts( comps, mods ) != 0 ) {
             throw 3;
         };
-        dump_wires( comps );
+        if( do_wires ) dump_wires( comps );
         for( auto& k : comps ) {
             dump(*k.second);
         }        
@@ -163,7 +166,6 @@ int main(int argc, char *argv[]) {
     catch(int code ) {
         cout << "ERROR " << code << "\n";
     }
-    cout << "============================\n";
     // delete the maps
     delete_map( comps );
     delete_map( mods  );
@@ -232,7 +234,7 @@ void parse_library( const char *fname, ComponentMap& comps ) {
             pos2+=7;
             if( line[pos2]==' ' ) pos2++;
             string ref_name = line.substr(pos2);
-            Component *p = new Component( ref_name, ref_name );
+            Component *p = new Component( ref_name, module_name );
             // add ports
             while(!fin.eof()) { // search for all ports
                 getline( fin, line );
@@ -355,6 +357,8 @@ void parse_netlist( const string& fname, ComponentMap& comps ) {
             if( netname[0]=='/' ) netname=netname.substr(1);
             while( (pos=netname.find_first_of("-()")) != string::npos )
                 netname[pos]='_';
+            if( netname== "VCC" || netname=="VDD" ) netname = "1'b1";
+            if( netname== "GND" || netname=="VSS" ) netname = "1'b0";
             // cout << netname << '\n';
             // find nodes
             while(!fin.eof() ) {

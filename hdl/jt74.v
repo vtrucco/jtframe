@@ -11,8 +11,8 @@ module jt7400( // ref: 74??00
     input       in12, // pin: 12  
     input       in13, // pin: 13  
     output      out11, // pin: 11
-    inout       VDD,   // pin: 14
-    inout       VSS    // pin: 7
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
     );
 
 assign out3  = ~(in1 &in2 );
@@ -35,8 +35,8 @@ module jt7437( // ref: 74??37
     input       in12, // pin: 12  
     input       in13, // pin: 13  
     output      out11, // pin: 11
-    inout       VDD,   // pin: 14
-    inout       VSS    // pin: 7
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
     );
 
 assign out3  = ~(in1 &in2 );
@@ -47,44 +47,44 @@ assign out11 = ~(in12&in13);
 endmodule
 
 module jt7402( // ref: 74??02
-    input       out1  // pin: 1   
+    output      out1, // pin: 1   
     input       in2,  // pin: 2   
-    output      in3,  // pin: 3   
-    input       out4, // pin: 4   
+    input       in3,  // pin: 3   
+    output      out4, // pin: 4   
     input       in5,  // pin: 5   
-    output      in6,  // pin: 6   
+    input       in6,  // pin: 6   
     input       in9,  // pin: 9   
     input       in8,  // pin: 10  
     output      out10,// pin: 8   
     input       in12, // pin: 12  
     input       in11, // pin: 13  
     output      out13, // pin: 11
-    inout       VDD,   // pin: 14
-    inout       VSS    // pin: 7
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
     );
 
-assign out1 = ~( in2, in3 );
-assign out4 = ~( in5, in6 );
-assign out10= ~( in9, in8 );
-assign out13= ~(in12, in11);
+assign out1 = ~( in2| in3 );
+assign out4 = ~( in5| in6 );
+assign out10= ~( in9| in8 );
+assign out13= ~(in12| in11);
 
 endmodule
 
 module jt7404( // ref: 74??04
     input       in1,   // pin: 1   
-    input       out2,  // pin: 2   
-    output      in3,   // pin: 3   
-    input       out4,  // pin: 4   
+    output      out2,  // pin: 2   
+    input       in3,   // pin: 3   
+    output      out4,  // pin: 4   
     input       in5,   // pin: 5   
     output      out6,  // pin: 6   
     input       in9,   // pin: 9   
-    input       out8,  // pin: 8  
-    output      in11,  // pin: 11   
-    input       out10, // pin: 10  
+    output      out8,  // pin: 8  
+    input       in11,  // pin: 11   
+    output      out10, // pin: 10  
     input       in13,  // pin: 13  
-    output      out12  // pin: 12
-    inout       VDD,   // pin: 14
-    inout       VSS    // pin: 7
+    output      out12, // pin: 12
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
     );
 
 assign out2  = ~in1;
@@ -106,9 +106,9 @@ module jt74161( // ref: 74??161
     input            cl_b,  // pin: 1
     input      [3:0] d,     // pin: 6,5,4,3 
     output reg [3:0] q,     // pin: 11,12,13,14
-    output           ca     // pin: 15
-    inout            VDD,   // pin: 16
-    inout            VSS    // pin: 8    
+    output           ca,    // pin: 15
+    input            VDD,   // pin: 16
+    input            VSS    // pin: 8    
  );
 
     assign ca = &{q, cet};
@@ -167,14 +167,17 @@ module jt7474(  // ref: 74??74
     input      clk2,    // pin: 11
     output reg q2,      // pin: 9
     output     q2_b,    // pin: 8
-    inout       VDD,   // pin: 14
-    inout       VSS    // pin: 7    
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7    
 );
 
     assign q1_b = ~q1;
     assign q2_b = ~q2;
 
-    initial q1=1'b0, q2=1'b0;
+    initial begin
+        q1=1'b0;
+        q2=1'b0;
+    end
 
     always @( posedge clk1 or negedge cl1_b or negedge pr1_b )
         if( !pr1_b ) q1<= 1'b1;
@@ -194,8 +197,8 @@ module jt74138( // ref: 74??138
     input        e3,    // pin: 6  
     input  [2:0] a,     // pin: 3,2,1
     output [7:0] y_b,   // pin: 7,9,10,11,12,13,14,15
-    inout        VDD,   // pin: 16
-    inout        VSS    // pin: 8    
+    input        VDD,   // pin: 16
+    input        VSS    // pin: 8    
 );
     reg [7:0] yb_nodly;
     always @(*)
@@ -290,10 +293,10 @@ module jt74365( // ref: 74??365
     output [5:0] Y,     // pin: 3,5,7,13,11,9
     input        oe1_b, // pin: 1
     input        oe2_b, // pin: 15
-    inout        VDD,   // pin: 16
-    inout        VSS    // pin: 8   
+    input        VDD,   // pin: 16
+    input        VSS    // pin: 8   
 );
-    assign #2 Y = (!oe1_b && !!oe2_b) ? A : 6'bzz_zzzz;
+    assign #2 Y = (!oe1_b && !oe2_b) ? A : 6'bzz_zzzz;
 endmodule
 
 module jt74367( // ref: 74??367
@@ -301,8 +304,8 @@ module jt74367( // ref: 74??367
     output [5:0] Y,     // pin: 13,11, 9,7,5,3
     input        oe1_b, // pin: 1
     input        oe2_b, // pin: 15
-    inout        VDD,   // pin: 16
-    inout        VSS    // pin: 8   
+    input        VDD,   // pin: 16
+    input        VSS    // pin: 8   
 );
     assign #2 Y[3:0] = !oe1_b ? A[3:0] : 4'hz;
     assign #2 Y[5:4] = !oe2_b ? A[5:4] : 2'hz;
