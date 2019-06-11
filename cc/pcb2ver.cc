@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <sstream>
+#include <set>
 
 using namespace std;
 typedef map<int,string> Pins;
@@ -19,6 +20,7 @@ class Component{
         }
         const string& get_name() { return instance; }
         const string& get_type() { return type; }
+        const Pins& get_pins() { return pins; }
         int pin_count() { return pins.size(); }
         void set_pin(int k, const string& val);
         void set_ref( Component *alt ) { 
@@ -120,6 +122,17 @@ void delete_map( ComponentMap& m ) {
 
 int match_parts( ComponentMap& comps, ComponentMap& mods );
 
+void dump_wires( ComponentMap& comps ) {
+    set<string> wires;
+    for( auto& k : comps ) {
+        const Pins& pins = k.second->get_pins();
+        for( auto& p : pins ) wires.insert( p.second );
+    }
+    // now dump the wires
+    for( auto& w : wires )
+        cout << "wire " << w << ";\n";
+}
+
 int main(int argc, char *argv[]) {
     string fname;
     if( argc>1 ) {
@@ -142,6 +155,7 @@ int main(int argc, char *argv[]) {
         if( match_parts( comps, mods ) != 0 ) {
             throw 3;
         };
+        dump_wires( comps );
         for( auto& k : comps ) {
             dump(*k.second);
         }        
