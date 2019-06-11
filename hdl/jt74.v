@@ -22,6 +22,54 @@ assign out11 = ~(in12&in13);
 
 endmodule
 
+module jt7437( // ref: 74??37
+    input       in1,  // pin: 1   
+    input       in2,  // pin: 2   
+    output      out3, // pin: 3   
+    input       in4,  // pin: 4   
+    input       in5,  // pin: 5   
+    output      out6, // pin: 6   
+    input       in9,  // pin: 9   
+    input       in10, // pin: 10  
+    output      out8, // pin: 8   
+    input       in12, // pin: 12  
+    input       in13, // pin: 13  
+    output      out11, // pin: 11
+    inout       VDD,   // pin: 14
+    inout       VSS    // pin: 7
+    );
+
+assign out3  = ~(in1 &in2 );
+assign out6  = ~(in4 &in5 );
+assign out8  = ~(in10&in9 );
+assign out11 = ~(in12&in13);
+
+endmodule
+
+module jt7402( // ref: 74??02
+    input       out1  // pin: 1   
+    input       in2,  // pin: 2   
+    output      in3,  // pin: 3   
+    input       out4, // pin: 4   
+    input       in5,  // pin: 5   
+    output      in6,  // pin: 6   
+    input       in9,  // pin: 9   
+    input       in8,  // pin: 10  
+    output      out10,// pin: 8   
+    input       in12, // pin: 12  
+    input       in11, // pin: 13  
+    output      out13, // pin: 11
+    inout       VDD,   // pin: 14
+    inout       VSS    // pin: 7
+    );
+
+assign out1 = ~( in2, in3 );
+assign out4 = ~( in5, in6 );
+assign out10= ~( in9, in8 );
+assign out13= ~(in12, in11);
+
+endmodule
+
 module jt7404( // ref: 74??04
     input       in1,   // pin: 1   
     input       out2,  // pin: 2   
@@ -51,14 +99,16 @@ endmodule
 
 // synchronous presettable 4-bit binary counter, asynchronous clear
 module jt74161( // ref: 74??161
-    input cet,
-    input cep,
-    input ld_b,
-    input clk,
-    input cl_b,
-    input [3:0] d,
-    output reg [3:0] q,
-    output ca
+    input            cet,   // pin: 10
+    input            cep,   // pin: 7
+    input            ld_b,  // pin: 9
+    input            clk,   // pin: 2
+    input            cl_b,  // pin: 1
+    input      [3:0] d,     // pin: 6,5,4,3 
+    output reg [3:0] q,     // pin: 11,12,13,14
+    output           ca     // pin: 15
+    inout            VDD,   // pin: 16
+    inout            VSS    // pin: 8    
  );
 
     assign ca = &{q, cet};
@@ -138,12 +188,14 @@ module jt7474(  // ref: 74??74
 endmodule
 
 // 3-to-8 line decoder/demultiplexer; inverting
-module jt74138(
-    input e1_b,
-    input e2_b,
-    input e3,
-    input [2:0] a,
-    output [7:0] y_b
+module jt74138( // ref: 74??138
+    input        e1_b,  // pin: 4
+    input        e2_b,	// pin: 5
+    input        e3,    // pin: 6  
+    input  [2:0] a,     // pin: 3,2,1
+    output [7:0] y_b,   // pin: 7,9,10,11,12,13,14,15
+    inout        VDD,   // pin: 16
+    inout        VSS    // pin: 8    
 );
     reg [7:0] yb_nodly;
     always @(*)
@@ -233,14 +285,27 @@ module jt74174(
 
 endmodule
 
-module jt74367(
-    input [5:0] A,
-    output [5:0] Y,
-    input en4_b,
-    input en6_b
+module jt74365( // ref: 74??365
+    input  [5:0] A,     // pin: 2,4,6,14,12,10
+    output [5:0] Y,     // pin: 3,5,7,13,11,9
+    input        oe1_b, // pin: 1
+    input        oe2_b, // pin: 15
+    inout        VDD,   // pin: 16
+    inout        VSS    // pin: 8   
 );
-    assign #2 Y[3:0] = !en4_b ? A[3:0] : 4'hz;
-    assign #2 Y[5:4] = !en6_b ? A[5:4] : 2'hz;
+    assign #2 Y = (!oe1_b && !!oe2_b) ? A : 6'bzz_zzzz;
+endmodule
+
+module jt74367( // ref: 74??367
+    input  [5:0] A,     // pin: 14,12,10,6,4,2
+    output [5:0] Y,     // pin: 13,11, 9,7,5,3
+    input        oe1_b, // pin: 1
+    input        oe2_b, // pin: 15
+    inout        VDD,   // pin: 16
+    inout        VSS    // pin: 8   
+);
+    assign #2 Y[3:0] = !oe1_b ? A[3:0] : 4'hz;
+    assign #2 Y[5:4] = !oe2_b ? A[5:4] : 2'hz;
 endmodule
 
 // 4-bit bidirectional universal shift register

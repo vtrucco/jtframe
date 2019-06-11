@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <iomanip>
+#include <sstream>
 
 using namespace std;
 typedef map<int,string> Pins;
@@ -53,13 +54,56 @@ void Component::set_pin(int k, const string& val ) {
 void dump(Component& c) {
     cout << c.type << " " << c.instance << "(\n";
     int count = c.pin_count();
+    typedef map<int,string> BusIndex;
+    typedef map<string, BusIndex *> BusMap;
+    BusMap buses;
+    
+    // first dump all pins which are not buses
     for( auto k : c.pins ) {
-        cout << "    ." << setiosflags(ios_base::left) << setw(10) << c.get_alt_name(k.first)
+        string pin_name = c.get_alt_name(k.first);
+        size_t pos;
+        if( (pos=pin_name.find("[")) != string::npos ) {
+            // this is part of a bus
+            string bus = pin_name.substr(0,pos);
+            BusMap::iterator this_bus = buses.find(bus);
+            BusIndex* bi=NULL;
+            if( this_bus == buses.end() ) { // first element of this bus
+                bi = new BusIndex;              
+                buses[bus] = bi;
+            } else {
+                bi = this_bus->second;
+            }
+            pos++;
+            // cout << pin_name << "\n\t";
+            int bus_pin = atoi( pin_name.substr(pos).c_str() );
+//            cout << "bus pin: " << bus_pin << " -> " << k.second << '\n';
+            (*bi)[bus_pin] = k.second;
+            continue;
+        }
+        cout << "    ." << setiosflags(ios_base::left) << setw(10) << pin_name
              << "( " << setw(24) << k.second << " )";
         if( --count ) cout << ',';
         cout << '\n';
     }
-    cout << ");\n\n";
+    // Now the buses
+    count = buses.size();
+    for( auto k : buses ) {
+        BusIndex *bi = k.second;
+        cout << setw(0) << "    ." << setiosflags(ios_base::left) << setw(10) << k.first;
+//        cout << "bus: " << k.first << " of size " << bi->size() << '\n';     
+        cout << "({ ";
+        for( int i= bi->size()-1;  i>=0; i-- ) {
+            cout << bi->at(i);
+            if(i) cout << ",\n                  "; else cout << "})";
+        }
+        if( --count ) cout << ',';
+        cout << '\n';
+    }
+    cout << ");\n\n";    
+    // free memory
+    for( auto k : buses ) {
+        delete k.second;
+    }
 };
 
 typedef map<string,Component*> ComponentMap;
@@ -74,7 +118,7 @@ void delete_map( ComponentMap& m ) {
     }
 }
 
-void match_parts( ComponentMap& comps, ComponentMap& mods );
+int match_parts( ComponentMap& comps, ComponentMap& mods );
 
 int main(int argc, char *argv[]) {
     string fname;
@@ -95,13 +139,15 @@ int main(int argc, char *argv[]) {
     try {
         parse_netlist( fname, comps );
         parse_library("../hdl/jt74.v", mods);
-        match_parts( comps, mods );
+        if( match_parts( comps, mods ) != 0 ) {
+            throw 3;
+        };
+        for( auto& k : comps ) {
+            dump(*k.second);
+        }        
     }
     catch(int code ) {
         cout << "ERROR " << code << "\n";
-    }
-    for( auto& k : comps ) {
-        dump(*k.second);
     }
     cout << "============================\n";
     // delete the maps
@@ -109,7 +155,8 @@ int main(int argc, char *argv[]) {
     delete_map( mods  );
 }
 
-void match_parts( ComponentMap& comps, ComponentMap& mods ) {
+int match_parts( ComponentMap& comps, ComponentMap& mods ) {
+    int unmatched=0;
     for( auto& k : comps ) {
         Component *ref = NULL;
         const string& type = k.second->get_type();
@@ -126,8 +173,10 @@ void match_parts( ComponentMap& comps, ComponentMap& mods ) {
             nope:
             continue;
         }
+        if( ref==NULL ) unmatched++;
         k.second->set_ref(ref);
     }
+    return unmatched;
 }
 
 void strip_blanks(string &s ) {
@@ -171,13 +220,24 @@ void parse_library( const char *fname, ComponentMap& comps ) {
             string ref_name = line.substr(pos2);
             Component *p = new Component( ref_name, ref_name );
             // add ports
-            while(!fin.eof()) {
+            while(!fin.eof()) { // search for all ports
                 getline( fin, line );
                 strip_blanks( line );
                 if( line.find(")")!=string::npos ) break; // end of module
+                // is it a bus?
+                int bus=-1;
+                pos = line.substr(0, line.find("//")).find( "[" );
+                if( pos != string::npos ) {
+                    pos++;
+                    pos2 = line.find(":",pos);
+                    string bus_def = line.substr(pos, pos2-pos);
+                    // cout << "bus def=" << bus_def << endl;
+                    bus = atoi( bus_def.c_str() );
+                    // cout << "Found bus of size " << bus << ":0\n";
+                }
                 pos = line.find( "// pin:" );
                 if( pos!=string::npos ) { // found pin!
-                    int pin = atoi( line.substr(pos+7).c_str() );
+                    // find pin name
                     string name = line.substr(0,pos);
                     pos = name.find_last_of(",");
                     if( pos == string::npos ) {
@@ -185,7 +245,7 @@ void parse_library( const char *fname, ComponentMap& comps ) {
                         if( pos == string::npos ) {
                             cout << "Warning: // pin: statement found on an incomplete line.\n";
                             cout << line << '\n';
-                            continue;
+                            continue;   // this port will be ignored
                         }
                     }
                     name = name.substr(0,pos); // remove comma
@@ -196,7 +256,29 @@ void parse_library( const char *fname, ComponentMap& comps ) {
                         continue;
                     }
                     name = name.substr(pos2+1);
-                    p->set_pin( pin, name );
+                    string pin_str = line.substr( line.find("// pin:")+7 );
+                    pos=0;
+                    do{
+                        string pin_alpha;
+                        size_t pin_next = pin_str.find(",",pos);                        
+                        if(pin_next==string::npos) {
+                            pin_next=0;
+                            pin_alpha = pin_str;
+                        } else {
+                            pin_alpha = pin_str.substr(pos,pin_next-pos);
+                        }
+                        int pin = atoi( pin_alpha.c_str() );
+                        if(bus>=0 ) {
+                            // cout << "Bus proc: " << pin_str << '\n';
+                            stringstream aux;
+                            aux << bus;                            
+                            string bus_name=name+"["+aux.str()+"]";
+                            p->set_pin( pin, bus_name );
+                            pin_str=pin_str.substr(pin_next);
+                            if( pin_str.size() > 0 && pin_str[0]==',' ) pin_str=pin_str.substr(1);
+                        }
+                        else p->set_pin( pin, name );
+                    }while( --bus>=0 );
                 }
             }
             // cout << "Module " << p->get_name() << " with " << p->pin_count() << " pins.\n";
