@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <cstring>
 #include <iomanip>
 #include <sstream>
 #include <set>
@@ -136,10 +137,52 @@ void dump_wires( ComponentMap& comps ) {
 }
 
 int main(int argc, char *argv[]) {
-    string fname;
+    string fname, libname="../hdl/jt74.v";
     bool do_wires=false;
-    if( argc>1 ) {
-        fname = argv[1];
+    // parse command line
+    for(int k=1; k<argc; k++ ) {
+        if( strcmp(argv[k],"--wires")==0 || strcmp(argv[k],"-w")==0 ) {
+            do_wires=true;
+            continue;
+        }
+        if( strncmp(argv[k],"--lib",5)==0 || strcmp(argv[k],"-l")==0 ) {            
+            if( argv[k][1]=='l' ) {
+                if( ++k == argc ) {
+                    cout << "ERROR: expecting path to library file after -l argument.\n";
+                    return 1;
+                }
+                libname = argv[k];
+            }
+            else {
+                libname = string(argv[k]).substr(6);
+            }
+            if( !ifstream(libname).good() ) {
+                cout << "ERROR: cannot open library file: " << libname << '\n';
+                return 1;
+            }
+            continue;
+        }                 
+        if( strcmp(argv[k],"--help")==0 || strcmp(argv[k],"-h")==0 ) {
+            cout << "pcb2ver, part of JTFRAME open source hardware development framework.\n";
+            cout << "KiCAD netlist to verilog converter.\n";
+            cout << "(c) Jose Tejada Gomez (aka jotego) 2019\n";
+            cout << "Contact twitter: @topapate\n\n";
+            cout << "Usage: pcb2ver netlist-file [--wires|-w] [--lib=|-l path-to-library]\n";
+            cout << "\t\t--wires or -w: add wire definition for signals at top of the file.\n";
+            cout << "\t\t--lib or -l  : set path to library file.\n";
+            cout << "\t\t               The libray file must contain a list of verilog modules,\n";
+            cout << "\t\t               after the module name there must be a comment and a ref\n";
+            cout << "\t\t               statement. After each port there must be a comment and a\n";
+            cout << "\t\t               pin statement. Check out hdl/jt74.v in jtframe for several\n";
+            cout << "\t\t               examples.\n";
+            cout << "\tpcb2ver -h|--help\n\t\tDisplays this help message.\n";
+            return 0;
+        }
+        if( fname.size()!=0 ) {
+            cout << "ERROR: input file was already assigned to " << fname << ".\n";
+            return 1;
+        }
+        fname = argv[k];
         if( !ifstream(fname).good() ) {
             cout << "ERROR: Cannot find file " << fname << '\n';
             return 1;
@@ -154,7 +197,7 @@ int main(int argc, char *argv[]) {
     ComponentMap comps, mods;
     try {
         parse_netlist( fname, comps );
-        parse_library("../hdl/jt74.v", mods);
+        parse_library(libname.c_str(), mods);
         if( match_parts( comps, mods ) != 0 ) {
             throw 3;
         };
@@ -214,7 +257,8 @@ void strip_blanks(string &s ) {
 void parse_library( const char *fname, ComponentMap& comps ) {
     ifstream fin(fname);
     if( !fin.good() ) {
-        cout << "ERROR: problem with library file\n";
+        cout << "ERROR: problem with library file " << fname << '\n';
+        cout << "provide a valid library file path via --lib command.\n";
         throw 2;
     }
     while( !fin.eof() ) {
