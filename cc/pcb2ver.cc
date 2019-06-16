@@ -188,6 +188,11 @@ int main(int argc, char *argv[]) {
             cout << "\tpcb2ver -h|--help\n\t\tDisplays this help message.\n";
             return 0;
         }
+        if( argv[k][0]=='-' ) {
+            cout << "ERROR: unknown option: " << argv[k];
+            cout << "\n\tUse --help to obtain a list of valid options\n";
+            return 1;
+        }
         if( fname.size()!=0 ) {
             cout << "ERROR: input file was already assigned to " << fname << ".\n";
             return 1;
