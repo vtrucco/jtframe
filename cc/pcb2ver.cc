@@ -55,7 +55,11 @@ void Component::set_pin(int k, const string& val ) {
 }
 
 void dump(Component& c) {
-    cout << c.alt_names->type << " " << c.instance << "(\n";
+    // module instantiation
+    cout << c.alt_names->type << " ";
+    if( c.instance[0]>='0' && c.instance[0]<='9')
+        cout << "u_";   // if the instance names starts with a number, add "u_"
+     cout << c.instance << "(\n";
     int count = c.pin_count();
     typedef map<int,string> BusIndex;
     typedef map<string, BusIndex *> BusMap;
@@ -93,7 +97,7 @@ void dump(Component& c) {
     for( auto k : buses ) {
         BusIndex *bi = k.second;
         cout << setw(0) << "    ." << setiosflags(ios_base::left) << setw(10) << k.first;
-//        cout << "bus: " << k.first << " of size " << bi->size() << '\n';     
+        // cout << "// bus: " << k.first << " of size " << bi->size() << '\n';     
         cout << "({ ";
         for( int i= bi->size()-1;  i>=0; i-- ) {
             cout << bi->at(i);
@@ -139,10 +143,15 @@ void dump_wires( ComponentMap& comps ) {
 int main(int argc, char *argv[]) {
     string fname, libname="../hdl/jt74.v";
     bool do_wires=false;
+    bool parselib_only=false;
     // parse command line
     for(int k=1; k<argc; k++ ) {
         if( strcmp(argv[k],"--wires")==0 || strcmp(argv[k],"-w")==0 ) {
             do_wires=true;
+            continue;
+        }
+        if( strcmp(argv[k],"--parselib")==0 ) {
+            parselib_only=true;
             continue;
         }
         if( strncmp(argv[k],"--lib",5)==0 || strcmp(argv[k],"-l")==0 ) {            
@@ -175,6 +184,7 @@ int main(int argc, char *argv[]) {
             cout << "\t\t               statement. After each port there must be a comment and a\n";
             cout << "\t\t               pin statement. Check out hdl/jt74.v in jtframe for several\n";
             cout << "\t\t               examples.\n";
+            cout << "\t\t--parselib   : exit after parsing the lib.\n";
             cout << "\tpcb2ver -h|--help\n\t\tDisplays this help message.\n";
             return 0;
         }
@@ -188,7 +198,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-    if( fname=="" ) {
+    if( fname=="" && !parselib_only) {
         cout << "ERROR: must provide a KiCAD netlist file name\n";
         cout << "\tpcb2ver netlist\n";
         return 1;
@@ -196,15 +206,18 @@ int main(int argc, char *argv[]) {
 
     ComponentMap comps, mods;
     try {
-        parse_netlist( fname, comps );
         parse_library(libname.c_str(), mods);
-        if( match_parts( comps, mods ) != 0 ) {
-            throw 3;
-        };
-        if( do_wires ) dump_wires( comps );
-        for( auto& k : comps ) {
-            dump(*k.second);
-        }        
+        if( !parselib_only ) {
+            // process netlist
+            parse_netlist( fname, comps );
+            if( match_parts( comps, mods ) != 0 ) {
+                throw 3;
+            };
+            if( do_wires ) dump_wires( comps );
+            for( auto& k : comps ) {
+                dump(*k.second);
+            }
+        }  
     }
     catch(int code ) {
         cout << "ERROR " << code << "\n";
@@ -279,6 +292,7 @@ void parse_library( const char *fname, ComponentMap& comps ) {
             if( line[pos2]==' ' ) pos2++;
             string ref_name = line.substr(pos2);
             Component *p = new Component( ref_name, module_name );
+            // cout << "reference " << ref_name << '\n';
             // add ports
             while(!fin.eof()) { // search for all ports
                 getline( fin, line );
@@ -399,10 +413,16 @@ void parse_netlist( const string& fname, ComponentMap& comps ) {
             string netname = line.substr(pos,pos2-pos);
             // adjust the name
             if( netname[0]=='/' ) netname=netname.substr(1);
-            while( (pos=netname.find_first_of("-()")) != string::npos )
+            // replace supplies with 1 or 0 assignments
+            // taking care of hierarchy in the name:
+            pos=netname.find_last_of("/");
+            if( pos==string::npos ) pos=-1;
+            string localname=netname.substr(++pos);
+            if( localname== "VCC" || localname=="VDD" ) netname = "1'b1";
+            if( localname== "GND" || localname=="VSS" ) netname = "1'b0";
+            // remove illegal characters:
+            while( (pos=netname.find_first_of("-()/")) != string::npos )
                 netname[pos]='_';
-            if( netname== "VCC" || netname=="VDD" ) netname = "1'b1";
-            if( netname== "GND" || netname=="VSS" ) netname = "1'b0";
             // cout << netname << '\n';
             // find nodes
             while(!fin.eof() ) {

@@ -47,6 +47,83 @@ assign out11 = in12|in13;
 
 endmodule
 
+//////// Quad xor gate
+module jt7486( // ref: 74??86
+    input       in1,  // pin: 1
+    input       in2,  // pin: 2
+    output      out3, // pin: 3
+    input       in4,  // pin: 4
+    input       in5,  // pin: 5
+    output      out6, // pin: 6
+    input       in9,  // pin: 9
+    input       in10, // pin: 10
+    output      out8, // pin: 8
+    input       in12, // pin: 12
+    input       in13, // pin: 13
+    output      out11, // pin: 11
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
+    );
+
+assign out3  = in1 ^in2;
+assign out6  = in4 ^in5;
+assign out8  = in10^in9;
+assign out11 = in12^in13;
+
+endmodule
+
+//////// Quad and gate
+module jt7408( // ref: 74??08
+    input       in1,  // pin: 1
+    input       in2,  // pin: 2
+    output      out3, // pin: 3
+    input       in4,  // pin: 4
+    input       in5,  // pin: 5
+    output      out6, // pin: 6
+    input       in9,  // pin: 9
+    input       in10, // pin: 10
+    output      out8, // pin: 8
+    input       in12, // pin: 12
+    input       in13, // pin: 13
+    output      out11, // pin: 11
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
+    );
+
+assign out3  = in1 &in2;
+assign out6  = in4 &in5;
+assign out8  = in10&in9;
+assign out11 = in12&in13;
+
+endmodule
+
+//////// trip 3-input and gate
+module jt7411( // ref: 74??11
+    input       in1,  // pin: 1
+    input       in2,  // pin: 2
+    input       in13, // pin: 13
+    output      out12,// pin: 12
+
+    input       in3,  // pin: 3
+    input       in4,  // pin: 4
+    input       in5,  // pin: 5
+    output      out6, // pin: 6
+
+    input       in11, // pin: 11
+    input       in10, // pin: 10
+    input       in9,  // pin: 9
+    output      out8, // pin: 8
+
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
+    );
+
+assign out12 = in1 & in2 & in13;
+assign out6  = in3 & in4 & in5;
+assign out8  = in11& in10& in9;
+
+endmodule
+
 module jt7437( // ref: 74??37
     input       in1,  // pin: 1
     input       in2,  // pin: 2
@@ -149,6 +226,17 @@ module jt74161( // ref: 74??161
         end
 
 endmodule // jt74161
+
+/////////////////////////////
+module jt74157( // ref: 74??157
+    input      S,    // pin: 1
+    input      Gn,   // pin: 15
+    input   [3:0] A, // pin: 14,11,5,2
+    input   [3:0] B, // pin: 13,10,6,3
+    output  [3:0] Y  // pin: 12,9,7,4
+);
+assign Y = Gn ? 4'h0 : (S ? B : A); 
+endmodule
 
 // synchronous presettable 4-bit binary counter, synchronous clear
 module jt74163(
@@ -300,7 +388,7 @@ module jt74233(
 endmodule
 
 // Hex D-type flip-flop with reset; positive-edge trigger
-module jt74174( // ref: 74xx174
+module jt74174( // ref: 74??174
     input      [5:0] d,  // pin: 14,13,11,6,4,3
     output reg [5:0] q,  // pin: 15,12,10,7,5,2
     input         cl_b,  // pin: 9
@@ -360,21 +448,6 @@ module jt74194(
         endcase
 endmodule
 
-module jt74157(
-    input   sel,
-    input   st_l,
-    input   [3:0] A,
-    input   [3:0] B,
-    output  [3:0] Y
-);
-    reg [3:0] y_nodly;
-    assign #2 Y = y_nodly;
-    always @(*)
-        if( st_l ) y_nodly = 4'd0;
-        else y_nodly = sel ? B : A;
-
-endmodule
-
 // Octal D-type flip-flop with reset; positive-edge trigger
 module jt74273(
     input   [7:0] d,
@@ -391,12 +464,12 @@ module jt74273(
 endmodule
 
 // 4-bit binary full adder with fast carry
-module jt74283(
-    input [3:0] a,
-    input [3:0] b,
-    input       cin,
-    output  [3:0] s,
-    output  cout
+module jt74283( // ref: 74??283
+    input [3:0] a,   // pin: 12,14,3,5
+    input [3:0] b,   // pin: 11,15,2,6
+    input       cin, // pin: 7
+    output  [3:0] s, // pin: 10,13,1,4
+    output  cout     // pin: 9
 );
     assign #2 {cout,s} = a+b+cin;
 
