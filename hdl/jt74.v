@@ -449,11 +449,11 @@ module jt74194(
 endmodule
 
 // Octal D-type flip-flop with reset; positive-edge trigger
-module jt74273(
-    input   [7:0] d,
-    input   clk,
-    input   cl_b,
-    output  reg [7:0] q
+module jt74273(            // ref: 74??273
+    input      [7:0] d,    // pin: 18,17,14,13,8,7,4,3
+    input            clk,  // pin: 11
+    input            cl_b, // pin: 1
+    output reg [7:0] q     // pin: 19,16,15,12,9,6,5,2
 );
 
     always @(posedge clk or negedge cl_b)
@@ -476,12 +476,12 @@ module jt74283( // ref: 74??283
 endmodule
 
 // Quad 2-input multiplexer; 3-state
-module jt74257(
-    input sel,
-    input en_b,
-    input [3:0] a,
-    input [3:0] b,
-    output [3:0] y
+module jt74257(     // ref: 74??257
+    input sel,      // pin: 1
+    input en_b,     // pin: 15
+    input [3:0] a,  // pin: 14,11,5,2
+    input [3:0] b,  // pin: 13,10,6,3
+    output [3:0] y  // pin: 12,9,7,4
 );
 
 reg [3:0] y_nodly;
@@ -534,7 +534,7 @@ always @(A,WEn) begin
 end
 
 endmodule
-/////////////////
+////////////////////////////////////////////////////////////////////
 module RAM_7063( // ref: RAM_7063
     input [5:0] A, // pin: 3,2,1,27,26,25
     input [8:0] I, // pin: 12,11,10,9,8,7,6,5,4,3,2,1,0
@@ -552,6 +552,30 @@ always @(nedgedge WEn) mem[A] <= I;
 always @(A,WEn) pre <= mem[A];
 
 endmodule
+
+////////////////////////////////////////////////////////////////////
+module RAM_2016( // ref: RAM_2016
+    input [10:0] A,   // pin: 19,22,23,1,2,3,4,5,6,7,8
+    inout [ 7:0] D,   // pin: 17,16,15,14,13,11,10,9
+    input        WEn, // pin: 21
+    input        CEn  // pin: 18
+);
+
+reg [8:0] pre;
+reg [8:0] mem[0:2047];
+
+assign D = CEn ? 8'hzz : pre;
+
+always @(nedgedge WEn) mem[A] <= D;
+always @(A,WEn) pre <= mem[A];
+
+endmodule
+
+////////////////////////////////////////////////////////////////////
+module rpullup( // ref: rpullup
+    inout x // pin: 1
+);
+
 /////////////////
 module rpullup( // ref: rpullup
     inout x // pin: 1
