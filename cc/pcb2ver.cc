@@ -64,10 +64,17 @@ void dump(Component& c) {
     typedef map<int,string> BusIndex;
     typedef map<string, BusIndex *> BusMap;
     BusMap buses;
+    set<string> ignores;
+    // ignore pins with these names
+    ignores.insert("VDD");
+    ignores.insert("VCC");
+    ignores.insert("VSS");
+    ignores.insert("GND");    
     
     // first dump all pins which are not buses
     for( auto k : c.pins ) {
         string pin_name = c.get_alt_name(k.first);
+        if( ignores.count(k.second)!=0 ) continue; // this is power pin
         size_t pos;
         if( (pos=pin_name.find("[")) != string::npos ) {
             // this is part of a bus
@@ -89,6 +96,7 @@ void dump(Component& c) {
         }
         cout << "    ." << setiosflags(ios_base::left) << setw(10) << pin_name
              << "( " << setw(24) << k.second << " )";
+        cout << " /* pin " << k.first << "*/ ";
         if( --count ) cout << ',';
         cout << '\n';
     }
@@ -129,9 +137,32 @@ int match_parts( ComponentMap& comps, ComponentMap& mods );
 
 void dump_wires( ComponentMap& comps ) {
     set<string> wires;
+    // collect buses
+    map<string,int> buses;
     for( auto& k : comps ) {
         const Pins& pins = k.second->get_pins();
-        for( auto& p : pins ) wires.insert( p.second );
+        for( auto& p : pins ) {
+            string full_name = p.second;
+            size_t pos = full_name.find('[');
+            if( pos != string::npos ) {
+                // found a bus!
+                string bus_name = full_name.substr(0,pos);
+                size_t pos2=full_name.find(']');
+                pos++;
+                int v = atol( full_name.substr( pos, pos2-pos ).c_str() );  
+                auto m = buses.find(bus_name);
+                if( m==buses.end() ) {
+                    buses[bus_name] = v;
+                } else {
+                    if( m->second < v ) m->second = v;
+                }
+            }            
+            else wires.insert( p.second ); // regular wire
+        }
+    }
+    // dump the buses
+    for( auto& m : buses ) {
+        cout << "wire [" << m.second << ":0] " << m.first << ";\n";
     }
     // now dump the wires
     for( auto& w : wires ) {

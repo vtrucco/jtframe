@@ -233,7 +233,10 @@ module jt74157( // ref: 74??157
     input      Gn,   // pin: 15
     input   [3:0] A, // pin: 14,11,5,2
     input   [3:0] B, // pin: 13,10,6,3
-    output  [3:0] Y  // pin: 12,9,7,4
+    output  [3:0] Y, // pin: 12,9,7,4
+    input       VDD, // pin: 16
+    input       VSS  // pin: 8
+    
 );
 assign Y = Gn ? 4'h0 : (S ? B : A); 
 endmodule
@@ -392,7 +395,9 @@ module jt74174( // ref: 74??174
     input      [5:0] d,  // pin: 14,13,11,6,4,3
     output reg [5:0] q,  // pin: 15,12,10,7,5,2
     input         cl_b,  // pin: 9
-    input         clk    // pin: 1
+    input         clk,   // pin: 1
+    input         VDD,   // pin: 16
+    input         VSS    // pin: 8    
 );
     initial q=6'd0;
     always @(posedge clk or negedge cl_b)
@@ -453,7 +458,10 @@ module jt74273(            // ref: 74??273
     input      [7:0] d,    // pin: 18,17,14,13,8,7,4,3
     input            clk,  // pin: 11
     input            cl_b, // pin: 1
-    output reg [7:0] q     // pin: 19,16,15,12,9,6,5,2
+    output reg [7:0] q,    // pin: 19,16,15,12,9,6,5,2
+    input     VDD,   // pin: 20
+    input     VSS    // pin: 10
+    
 );
 
     always @(posedge clk or negedge cl_b)
@@ -469,19 +477,23 @@ module jt74283( // ref: 74??283
     input [3:0] b,   // pin: 11,15,2,6
     input       cin, // pin: 7
     output  [3:0] s, // pin: 10,13,1,4
-    output  cout     // pin: 9
+    output  cout,    // pin: 9
+    input     VDD,   // pin: 16
+    input     VSS    // pin: 8    
 );
     assign #2 {cout,s} = a+b+cin;
 
 endmodule
 
 // Quad 2-input multiplexer; 3-state
-module jt74257(     // ref: 74??257
-    input sel,      // pin: 1
-    input en_b,     // pin: 15
-    input [3:0] a,  // pin: 14,11,5,2
-    input [3:0] b,  // pin: 13,10,6,3
-    output [3:0] y  // pin: 12,9,7,4
+module jt74257(      // ref: 74??257
+    input  sel,      // pin: 1
+    input  en_b,     // pin: 15
+    input  [3:0] a,  // pin: 14,11,5,2
+    input  [3:0] b,  // pin: 13,10,6,3
+    output [3:0] y,  // pin: 12,9,7,4
+    input     VDD,   // pin: 16
+    input     VSS    // pin: 8
 );
 
 reg [3:0] y_nodly;
@@ -519,7 +531,7 @@ endmodule
 module RAM_5501( // ref: RAM_5501
     input  [7:0] A, // pin: 7,6,5,21,1,2,3,4
     input  [3:0] D, // pin: 15,13,11,9
-    output [3:0] Q, // pin: 16,14,12,10
+    output reg [3:0] Q, // pin: 16,14,12,10
     input      WEn  // pin: 20
 );
 
@@ -529,7 +541,7 @@ always @(negedge WEn) begin
     mem[A] <= D;
 end
 
-always @(A,WEn) begin
+always @(*) begin
     Q <= mem[A];
 end
 
@@ -548,8 +560,8 @@ reg [8:0] mem[0:63];
 
 assign O = CEn ? 9'hzzz : pre;
 
-always @(nedgedge WEn) mem[A] <= I;
-always @(A,WEn) pre <= mem[A];
+always @(negedge WEn) mem[A] <= I;
+always @(*) pre <= mem[A];
 
 endmodule
 
@@ -566,15 +578,10 @@ reg [8:0] mem[0:2047];
 
 assign D = CEn ? 8'hzz : pre;
 
-always @(nedgedge WEn) mem[A] <= D;
-always @(A,WEn) pre <= mem[A];
+always @(negedge WEn) mem[A] <= D;
+always @(*) pre <= mem[A];
 
 endmodule
-
-////////////////////////////////////////////////////////////////////
-module rpullup( // ref: rpullup
-    inout x // pin: 1
-);
 
 /////////////////
 module rpullup( // ref: rpullup
