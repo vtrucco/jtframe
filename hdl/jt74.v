@@ -537,6 +537,11 @@ module RAM_5501( // ref: RAM_5501
 
 reg [3:0] mem [0:255];
 
+initial begin : clr_mem
+    integer cnt;
+    for( cnt=0; cnt<256; cnt=cnt+1 ) mem[cnt] = 4'd0;
+end
+
 always @(negedge WEn) begin
     mem[A] <= D;
 end
@@ -558,6 +563,11 @@ module RAM_7063( // ref: RAM_7063
 reg [8:0] pre;
 reg [8:0] mem[0:63];
 
+initial begin : clr_mem
+    integer cnt;
+    for( cnt=0; cnt<54; cnt=cnt+1 ) mem[cnt] = 9'd0;
+end
+
 assign O = CEn ? 9'hzzz : pre;
 
 always @(negedge WEn) mem[A] <= I;
@@ -577,6 +587,11 @@ reg [8:0] pre;
 reg [8:0] mem[0:2047];
 
 assign D = CEn ? 8'hzz : pre;
+
+initial begin : clr_mem
+    integer cnt;
+    for( cnt=0; cnt<2048; cnt=cnt+1 ) mem[cnt] = 8'd0;
+end
 
 always @(negedge WEn) mem[A] <= D;
 always @(*) pre <= mem[A];
