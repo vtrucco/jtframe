@@ -15,10 +15,10 @@ module jt7400( // ref: 74??00
     input       VSS    // pin: 7
     );
 
-assign out3  = ~(in1 &in2 );
-assign out6  = ~(in4 &in5 );
-assign out8  = ~(in10&in9 );
-assign out11 = ~(in12&in13);
+assign #10 out3  = ~(in1 &in2 );
+assign #10 out6  = ~(in4 &in5 );
+assign #10 out8  = ~(in10&in9 );
+assign #10 out11 = ~(in12&in13);
 
 endmodule
 
@@ -40,10 +40,10 @@ module jt7432( // ref: 74??32
     input       VSS    // pin: 7
     );
 
-assign out3  = in1 |in2;
-assign out6  = in4 |in5;
-assign out8  = in10|in9;
-assign out11 = in12|in13;
+assign #10 out3  = in1 |in2;
+assign #10 out6  = in4 |in5;
+assign #10 out8  = in10|in9;
+assign #10 out11 = in12|in13;
 
 endmodule
 
@@ -65,10 +65,10 @@ module jt7486( // ref: 74??86
     input       VSS    // pin: 7
     );
 
-assign out3  = in1 ^in2;
-assign out6  = in4 ^in5;
-assign out8  = in10^in9;
-assign out11 = in12^in13;
+assign #10 out3  = in1 ^in2;
+assign #10 out6  = in4 ^in5;
+assign #10 out8  = in10^in9;
+assign #10 out11 = in12^in13;
 
 endmodule
 
@@ -90,10 +90,10 @@ module jt7408( // ref: 74??08
     input       VSS    // pin: 7
     );
 
-assign out3  = in1 &in2;
-assign out6  = in4 &in5;
-assign out8  = in10&in9;
-assign out11 = in12&in13;
+assign #10 out3  = in1 &in2;
+assign #10 out6  = in4 &in5;
+assign #10 out8  = in10&in9;
+assign #10 out11 = in12&in13;
 
 endmodule
 
@@ -118,9 +118,9 @@ module jt7411( // ref: 74??11
     input       VSS    // pin: 7
     );
 
-assign out12 = in1 & in2 & in13;
-assign out6  = in3 & in4 & in5;
-assign out8  = in11& in10& in9;
+assign #10 out12 = in1 & in2 & in13;
+assign #10 out6  = in3 & in4 & in5;
+assign #10 out8  = in11& in10& in9;
 
 endmodule
 
@@ -141,10 +141,10 @@ module jt7437( // ref: 74??37
     input       VSS    // pin: 7
     );
 
-assign out3  = ~(in1 &in2 );
-assign out6  = ~(in4 &in5 );
-assign out8  = ~(in10&in9 );
-assign out11 = ~(in12&in13);
+assign #10 out3  = ~(in1 &in2 );
+assign #10 out6  = ~(in4 &in5 );
+assign #10 out8  = ~(in10&in9 );
+assign #10 out11 = ~(in12&in13);
 
 endmodule
 
@@ -165,10 +165,10 @@ module jt7402( // ref: 74??02
     input       VSS    // pin: 7
     );
 
-assign out1 = ~( in2| in3 );
-assign out4 = ~( in5| in6 );
-assign out10= ~( in9| in8 );
-assign out13= ~(in12| in11);
+assign #10 out1 = ~( in2| in3 );
+assign #10 out4 = ~( in5| in6 );
+assign #10 out10= ~( in9| in8 );
+assign #10 out13= ~(in12| in11);
 
 endmodule
 
@@ -189,12 +189,12 @@ module jt7404( // ref: 74??04
     input       VSS    // pin: 7
     );
 
-assign out2  = ~in1;
-assign out4  = ~in3;
-assign out6  = ~in5;
-assign out8  = ~in9;
-assign out10 = ~in11;
-assign out12 = ~in13;
+assign #10 out2  = ~in1;
+assign #10 out4  = ~in3;
+assign #10 out6  = ~in5;
+assign #10 out8  = ~in9;
+assign #10 out10 = ~in11;
+assign #10 out12 = ~in13;
 
 endmodule
 
@@ -207,7 +207,7 @@ module jt74161( // ref: 74??161
     input            clk,   // pin: 2
     input            cl_b,  // pin: 1
     input      [3:0] d,     // pin: 6,5,4,3
-    output reg [3:0] q,     // pin: 11,12,13,14
+    output     [3:0] q,     // pin: 11,12,13,14
     output           ca,    // pin: 15
     input            VDD,   // pin: 16
     input            VSS    // pin: 8
@@ -215,14 +215,15 @@ module jt74161( // ref: 74??161
 
     assign ca = &{q, cet};
 
-    initial q=4'd0;
-
+    initial qq=4'd0;
+    reg [3:0] qq;
+    assign #30 q = qq;
     always @(posedge clk or negedge cl_b)
         if( !cl_b )
-            q <= 4'd0;
+            qq <= 4'd0;
         else begin
-            if(!ld_b) q <= d;
-            else if( cep&&cet ) q <= q+4'd1;
+            if(!ld_b) qq <= d;
+            else if( cep&&cet ) qq <= qq+4'd1;
         end
 
 endmodule // jt74161
@@ -238,7 +239,7 @@ module jt74157( // ref: 74??157
     input       VSS  // pin: 8
     
 );
-assign Y = Gn ? 4'h0 : (S ? B : A); 
+assign #20 Y = Gn ? 4'h0 : (S ? B : A); 
 endmodule
 
 // synchronous presettable 4-bit binary counter, synchronous clear
@@ -274,36 +275,39 @@ module jt7474(  // ref: 74??74
     input      pr1_b,   // pin: 4
     input      cl1_b,   // pin: 1
     input      clk1,    // pin: 3
-    output reg q1,      // pin: 5
+    output     q1,      // pin: 5
     output     q1_b,    // pin: 6
     // second FF
     input      d2,      // pin: 12
     input      pr2_b,   // pin: 10
     input      cl2_b,   // pin: 13
     input      clk2,    // pin: 11
-    output reg q2,      // pin: 9
+    output     q2,      // pin: 9
     output     q2_b,    // pin: 8
     input       VDD,   // pin: 14
     input       VSS    // pin: 7
 );
+    reg qq1, qq2;
 
-    assign q1_b = ~q1;
-    assign q2_b = ~q2;
+    assign #25 q1   =  qq1;
+    assign #25 q2   =  qq2;
+    assign #25 q1_b = ~qq1;
+    assign #25 q2_b = ~qq2;
 
     initial begin
-        q1=1'b0;
-        q2=1'b0;
+        qq1=1'b0;
+        qq2=1'b0;
     end
 
     always @( posedge clk1 or negedge cl1_b or negedge pr1_b )
-        if( !pr1_b ) q1<= 1'b1;
-        else if(!cl1_b) q1 <= 1'b0;
-        else q1 <= d1;
+        if( !pr1_b ) qq1<= 1'b1;
+        else if(!cl1_b) qq1 <= 1'b0;
+        else qq1 <= d1;
 
     always @( posedge clk2 or negedge cl2_b or negedge pr2_b )
-        if( !pr2_b ) q2<= 1'b1;
-        else if(!cl2_b) q2 <= 1'b0;
-        else q2 <= d2;
+        if( !pr2_b ) qq2<= 1'b1;
+        else if(!cl2_b) qq2 <= 1'b0;
+        else qq2 <= d2;
 endmodule
 
 // 3-to-8 line decoder/demultiplexer; inverting
@@ -321,7 +325,7 @@ module jt74138( // ref: 74??138
         if( e1_b || e2_b || !e3 )
             yb_nodly <= 8'hff;
         else yb_nodly = ~ ( 8'b1 << a );
-    assign #2 y_b = yb_nodly;
+    assign #30 y_b = yb_nodly;
 endmodule
 
 // Dual 2-to-4 line decoder/demultiplexer
@@ -333,8 +337,8 @@ module jt74139(
     input       [1:0]       a2,
     output      [3:0]       y2_b
 );
-    assign #2 y1_b = en1_b ? 4'hf : ~( (4'b1)<<a1 );
-    assign #2 y2_b = en2_b ? 4'hf : ~( (4'b1)<<a2 );
+    assign #20 y1_b = en1_b ? 4'hf : ~( (4'b1)<<a1 );
+    assign #20 y2_b = en2_b ? 4'hf : ~( (4'b1)<<a2 );
 endmodule
 
 module jt74112(
@@ -393,16 +397,18 @@ endmodule
 // Hex D-type flip-flop with reset; positive-edge trigger
 module jt74174( // ref: 74??174
     input      [5:0] d,  // pin: 14,13,11,6,4,3
-    output reg [5:0] q,  // pin: 15,12,10,7,5,2
+    output     [5:0] q,  // pin: 15,12,10,7,5,2
     input         cl_b,  // pin: 9
     input         clk,   // pin: 1
     input         VDD,   // pin: 16
     input         VSS    // pin: 8    
 );
-    initial q=6'd0;
+    reg [5:0] qq;
+    assign #20 q=qq;
+    initial qq=6'd0;
     always @(posedge clk or negedge cl_b)
-        if( !cl_b ) q<=6'h0;
-        else q<= d;
+        if( !cl_b ) qq<=6'h0;
+        else qq<= d;
 
 endmodule
 
@@ -414,7 +420,7 @@ module jt74365( // ref: 74??365
     input        VDD,   // pin: 16
     input        VSS    // pin: 8
 );
-    assign #2 Y = (!oe1_b && !oe2_b) ? A : 6'bzz_zzzz;
+    assign #25 Y = (!oe1_b && !oe2_b) ? A : 6'bzz_zzzz;
 endmodule
 
 module jt74367( // ref: 74??367
@@ -425,8 +431,8 @@ module jt74367( // ref: 74??367
     input        VDD,   // pin: 16
     input        VSS    // pin: 8
 );
-    assign #2 Y[3:0] = !oe1_b ? A[3:0] : 4'hz;
-    assign #2 Y[5:4] = !oe2_b ? A[5:4] : 2'hz;
+    assign #25 Y[3:0] = !oe1_b ? A[3:0] : 4'hz;
+    assign #25 Y[5:4] = !oe2_b ? A[5:4] : 2'hz;
 endmodule
 
 // 4-bit bidirectional universal shift register
@@ -471,20 +477,6 @@ module jt74273(            // ref: 74??273
 
 endmodule
 
-// 4-bit binary full adder with fast carry
-module jt74283( // ref: 74??283
-    input [3:0] a,   // pin: 12,14,3,5
-    input [3:0] b,   // pin: 11,15,2,6
-    input       cin, // pin: 7
-    output  [3:0] s, // pin: 10,13,1,4
-    output  cout,    // pin: 9
-    input     VDD,   // pin: 16
-    input     VSS    // pin: 8    
-);
-    assign #2 {cout,s} = a+b+cin;
-
-endmodule
-
 // Quad 2-input multiplexer; 3-state
 module jt74257(      // ref: 74??257
     input  sel,      // pin: 1
@@ -497,7 +489,7 @@ module jt74257(      // ref: 74??257
 );
 
 reg [3:0] y_nodly;
-assign #2 y = y_nodly;
+assign #20 y = y_nodly;
 
 always @(*)
     if( !en_b )
@@ -513,17 +505,32 @@ module jt74259(
     input [2:0] A,
     input       LE_b,
     input       MR_b,
-    output reg [7:0]    Q
+    output     [7:0]    Q
 );
 
-initial Q=8'd0;
+reg [7:0] qq;
+assign #20 Q = qq;
+initial qq=8'd0;
 
 always @(*)
-    if(!MR_b) Q=8'd0;
-        else if(!LE_b) Q[A] <= D;
+    if(!MR_b) qq=8'd0;
+        else if(!LE_b) qq[A] <= D;
 
 endmodule
 
+// 4-bit binary full adder with fast carry
+module jt74283( // ref: 74??283
+    input [3:0] a,   // pin: 12,14,3,5
+    input [3:0] b,   // pin: 11,15,2,6
+    input       cin, // pin: 7
+    output  [3:0] s, // pin: 10,13,1,4
+    output  cout,    // pin: 9
+    input     VDD,   // pin: 16
+    input     VSS    // pin: 8    
+);
+    assign #20 {cout,s} = a+b+cin;
+
+endmodule
 ///////////////////////////////////////////////////////7
 // Non 74-series cells
 
@@ -568,7 +575,7 @@ initial begin : clr_mem
     for( cnt=0; cnt<54; cnt=cnt+1 ) mem[cnt] = 9'd0;
 end
 
-assign O = CEn ? 9'hzzz : pre;
+assign #100 O = CEn ? 9'hzzz : pre;
 
 always @(negedge WEn) mem[A] <= I;
 always @(*) pre <= mem[A];
@@ -586,7 +593,7 @@ module RAM_2016( // ref: RAM_2016
 reg [8:0] pre;
 reg [8:0] mem[0:2047];
 
-assign D = CEn ? 8'hzz : pre;
+assign #100 D = CEn ? 8'hzz : pre;
 
 initial begin : clr_mem
     integer cnt;
