@@ -45,7 +45,7 @@ always @(*) begin
     case(DW)
         8:  addr_req = {addr[AW-1:2],2'b0};
         16: addr_req = {addr[AW-1:1],1'b0};
-        32: addr_req = addr;
+        default: addr_req = addr;
     endcase
     hit0 = addr_req === cached_addr0;
     hit1 = addr_req === cached_addr1;
@@ -109,7 +109,7 @@ generate
                 1'd0: dout = data_mux[15:0];
                 1'd1: dout = data_mux[31:16];
         endcase
-    end else always @(*) dout = data_mux;
+    end else always @(posedge clk) if(!req) dout <= data_mux;
 endgenerate
 
 

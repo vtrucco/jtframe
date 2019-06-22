@@ -185,16 +185,21 @@ int main(int argc, char *argv[]) {
             parselib_only=true;
             continue;
         }
-        if( strncmp(argv[k],"--lib",5)==0 || strcmp(argv[k],"-l")==0 ) {            
-            if( argv[k][1]=='l' ) {
-                if( ++k == argc ) {
+        if( strncmp(argv[k],"--lib",5)==0 || strcmp(argv[k],"-l")==0 ) {  
+            ++k;          
+            if( k >= argc) {
+                cout << "ERROR: expecting path to library after -l/--lib argument\n";
+                return 1;
+            }
+            if( argv[k-1][1]=='l' ) {
+                if( k == argc ) {
                     cout << "ERROR: expecting path to library file after -l argument.\n";
                     return 1;
                 }
                 libname = argv[k];
             }
             else {
-                libname = string(argv[k]).substr(6);
+                libname = string(argv[k]);
             }
             if( !ifstream(libname).good() ) {
                 cout << "ERROR: cannot open library file: " << libname << '\n';
