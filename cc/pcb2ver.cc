@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
+#include <list>
 #include <set>
 
 using namespace std;
@@ -17,6 +18,7 @@ class Component{
         Component *alt_names;
     public:
         Component( string _inst, string _type ) : instance(_inst), type(_type) {
+            //cout << "Component " << instance << " of type " << type << '\n';
             alt_names=NULL;
         }
         const string& get_name() { return instance; }
@@ -54,77 +56,7 @@ void Component::set_pin(int k, const string& val ) {
     pins[k]=val;
 }
 
-void dump(Component& c) {
-    // module instantiation
-    cout << c.alt_names->type << " ";
-    if( c.instance[0]>='0' && c.instance[0]<='9')
-        cout << "u_";   // if the instance names starts with a number, add "u_"
-     cout << c.instance << "(\n";
-    int count = c.pin_count();
-    typedef map<int,string> BusIndex;
-    typedef map<string, BusIndex *> BusMap;
-    BusMap buses;
-    set<string> ignores;
-    // ignore pins with these names
-    ignores.insert("VDD");
-    ignores.insert("VCC");
-    ignores.insert("VSS");
-    ignores.insert("GND");    
-    
-    // first dump all pins which are not buses
-    for( auto k : c.pins ) {
-        string pin_name = c.get_alt_name(k.first);
-        if( ignores.count(k.second)!=0 ) continue; // this is power pin
-        size_t pos;
-        if( (pos=pin_name.find("[")) != string::npos ) {
-            // this is part of a bus
-            string bus = pin_name.substr(0,pos);
-            BusMap::iterator this_bus = buses.find(bus);
-            BusIndex* bi=NULL;
-            if( this_bus == buses.end() ) { // first element of this bus
-                bi = new BusIndex;              
-                buses[bus] = bi;
-            } else {
-                bi = this_bus->second;
-            }
-            pos++;
-            // cout << pin_name << "\n\t";
-            int bus_pin = atoi( pin_name.substr(pos).c_str() );
-//            cout << "bus pin: " << bus_pin << " -> " << k.second << '\n';
-            (*bi)[bus_pin] = k.second;
-            continue;
-        }
-        cout << "    ." << setiosflags(ios_base::left) << setw(10) << pin_name
-             << "( " << setw(24) << k.second << " )";
-        cout << " /* pin " << k.first << "*/ ";
-        if( --count ) cout << ',';
-        cout << '\n';
-    }
-    // Now the buses
-    count = buses.size();
-    for( auto k : buses ) {
-        BusIndex *bi = k.second;
-        cout << setw(0) << "    ." << setiosflags(ios_base::left) << setw(10) << k.first;
-        // cout << "// bus: " << k.first << " of size " << bi->size() << '\n';     
-        cout << "({ ";
-        for( int i= bi->size()-1;  i>=0; i-- ) {
-            cout << bi->at(i);
-            if(i) cout << ",\n                  "; else cout << "})";
-        }
-        if( --count ) cout << ',';
-        cout << '\n';
-    }
-    cout << ");\n\n";    
-    // free memory
-    for( auto k : buses ) {
-        delete k.second;
-    }
-};
-
 typedef map<string,Component*> ComponentMap;
-
-void parse_netlist( const string& fname, ComponentMap& comps );
-void parse_library( const char *fname, ComponentMap& comps );
 
 void delete_map( ComponentMap& m ) {
     while( m.size() ) {
@@ -133,41 +65,135 @@ void delete_map( ComponentMap& m ) {
     }
 }
 
-int match_parts( ComponentMap& comps, ComponentMap& mods );
+typedef list<class Element*> Elements;
 
-void dump_wires( ComponentMap& comps ) {
-    set<string> wires;
-    // collect buses
-    map<string,int> buses;
-    for( auto& k : comps ) {
-        const Pins& pins = k.second->get_pins();
-        for( auto& p : pins ) {
-            string full_name = p.second;
-            size_t pos = full_name.find('[');
-            if( pos != string::npos ) {
-                // found a bus!
-                string bus_name = full_name.substr(0,pos);
-                size_t pos2=full_name.find(']');
-                pos++;
-                int v = atol( full_name.substr( pos, pos2-pos ).c_str() );  
-                auto m = buses.find(bus_name);
-                if( m==buses.end() ) {
-                    buses[bus_name] = v;
-                } else {
-                    if( m->second < v ) m->second = v;
-                }
-            }            
-            else wires.insert( p.second ); // regular wire
+class Element {
+    string name;
+    Elements values;
+    Element *parent;
+    string scalar;
+public:
+    Element( const string _name, Element *_parent ) : name(_name), parent(_parent) {
+    }
+    const Element* find_child( const string& ref ) const;
+    void add_child(Element *c) { values.push_back(c); }
+    void set_scalar( const string& s) { scalar=s; }
+    void dump(int indent=0);
+    const Elements& get_elements() const { return values; }
+    const string& operator[](const string&);
+    const string& get_name() const { return name; }
+    virtual ~Element();
+};
+
+Element::~Element() {
+    for( auto& k : values ) {
+        delete k;
+        k = NULL;
+    }
+    values.clear();
+}
+
+void Element::dump( int indent ) {
+    for(int k=indent; k--; ) cout << ' ';
+    cout << name << "*" << scalar << "\n";
+    for( auto k:values ) {
+        k->dump(indent+2);
+    }
+}
+
+const string& Element::operator[](const string& ref) {
+    for( auto k : values ) {
+        if( k->name == ref ) return k->scalar;
+    }
+    cout << "Error: Element " << ref << " not found\n";
+    throw 5;
+}
+
+void flatten( ifstream& f, string& s ) {
+    f.seekg(0, ios_base::end);
+    int len = f.tellg();
+    f.seekg(0, ios_base::beg);
+    char *all = new char[len+1];
+    int k=0;
+    bool blank=false;
+    while(k<len && !f.eof()) {
+        char c;
+        f.get(c);
+        if( c==' ' || c=='\t' || c=='\n' ) {
+            if(!blank) all[k++]=' ';
+            blank = true;
+        } else {
+            all[k++]=c;
+            blank = false;
         }
     }
-    // dump the buses
-    for( auto& m : buses ) {
-        cout << "wire [" << m.second << ":0] " << m.first << ";\n";
+    all[k]=0;
+    s = all;
+    delete all;
+}
+
+ifstream open_file(const string& name ) {
+    ifstream f(name);
+    if( !f.good() ) {
+        cout << "Error: cannot open file " << name << '\n';
+        throw 1;
     }
-    // now dump the wires
-    for( auto& w : wires ) {
-        if( w[0] != '1' )
-            cout << "wire " << w << ";\n";
+    return f;
+}
+
+int parse_netlist( const char* s, int k, int len, Element *parent );
+void parse_library( const char *fname, ComponentMap& comps );
+int match_parts( ComponentMap& comps, ComponentMap& mods );
+void dump_wires( ComponentMap& comps );
+void dump(Component& c);
+
+const Element* Element::find_child( const string& ref ) const {
+    if( name == ref ) {
+        return this;
+    } else {
+        for( auto k : values ) {
+            const Element *e = k->find_child(ref);
+            if( e!=NULL ) return e;
+        }
+    }
+    return NULL;
+}
+
+void make_comp_map( const Element *root, ComponentMap& comps ) {
+    const Element* e = root->find_child("components");
+    if( e == NULL ) return;
+    for( auto k: e->get_elements() ) {
+        if( k->get_name() == "comp" ) {
+            const string& ref = (*k)["ref"];
+            comps[ ref ] = new Component( ref, (*k)["value"] );
+            // cout << ref << "->" << (*k)["value"]  << '\n';
+        }
+    }
+    // now fill nets
+    e = root->find_child("nets");
+    if( e==NULL ) return;
+    for( auto k : e->get_elements() ) {
+        if( k->get_name()=="net" ) {
+            string net_name = (*k)["name"];
+            
+            if( net_name.size()>4 && net_name.substr( net_name.size()-4)=="/VDD" ) {
+                net_name="1'b1";
+            }
+            if( net_name.size()>4 && net_name.substr( net_name.size()-4)=="/VSS" ) {
+                net_name="1'b0";
+            }
+            for( int c=0; c<net_name.size(); c++ ) {
+                const char cc = net_name[c];
+                if(cc=='/' || cc=='(' || cc==')' || cc=='-') net_name[c]='_';
+            }
+            for( auto refs : k->get_elements() ) {
+                if( refs->get_name()!="node" ) continue;
+                string ref = (*refs)["ref"];
+                string pin_str = (*refs)["pin"];
+                int pin = atoi(pin_str.c_str());
+                comps[ref]->set_pin( pin, net_name );
+            }
+        }
     }
 }
 
@@ -245,27 +271,190 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    Element root("root", NULL);
     ComponentMap comps, mods;
-    try {
+    try{
         parse_library(libname.c_str(), mods);
         if( !parselib_only ) {
-            // process netlist
-            parse_netlist( fname, comps );
+            ifstream f = open_file(fname);
+            string netlist;
+            flatten(f, netlist);
+            f.close();
+            parse_netlist( netlist.c_str(), 0, netlist.size(), &root );
+            make_comp_map( &root, comps );
+
             if( match_parts( comps, mods ) != 0 ) {
                 throw 3;
             };
             if( do_wires ) dump_wires( comps );
             for( auto& k : comps ) {
                 dump(*k.second);
+            }            
+            // root.dump();
+        }
+    }
+    catch( int e ) {
+        cout << "Error code " << e << '\n';
+        return e;
+    }
+    return 0;
+}
+
+int parse_netlist( const char* s, int k, int len, Element *parent ) {
+    Element *new_element = NULL;
+    enum {init=0, name=1, body=2} state;
+    state = init;
+
+    string new_name;
+    while( k<len ) {
+        switch( state ) {
+            case init: 
+                while( s[k]==' ') k++;
+                if( s[k]=='(' ) {
+                    k++;
+                    state = name;
+                    continue;
+                }
+                cout << "Error: syntax error in netlist file\n";
+                throw 3;
+            case name:
+                if( s[k]=='(') {
+                    cout << "ERROR: unexpected (\n";
+                    throw 2;
+                }
+                while( s[k]==' ') k++;
+                do{
+                    new_name.push_back(s[k++]);
+                }while( s[k]!=' ' && s[k]!='(' && s[k]!=')' && k<len);
+                new_element = new Element( new_name, parent );
+                parent->add_child( new_element );
+                state=body;
+                continue;
+            case body: {
+                string new_value;
+                while( s[k]==' ') ++k;
+                if( s[k]==')' ) return k+1;
+                if( s[k]=='(') {
+                    k = parse_netlist( s, k, len, new_element );
+                    continue;
+                }
+                if( s[k]=='"' ) {
+                    while( s[++k] != '"' && k<len) new_value.push_back(s[k]);
+                    ++k; // skip the "
+                }
+                else do{new_value.push_back(s[k++]);}while( s[k] != ')' && k<len);
+                new_element->set_scalar( new_value );
+                continue;
             }
-        }  
+            default:
+                cout << "ERROR: parsing problem. state= " << state << "\n";
+                throw 3;
+        }
     }
-    catch(int code ) {
-        cout << "ERROR " << code << "\n";
+    return k;
+}
+
+void dump(Component& c) {
+    // module instantiation
+    cout << c.alt_names->type << " ";
+    if( c.instance[0]>='0' && c.instance[0]<='9')
+        cout << "u_";   // if the instance names starts with a number, add "u_"
+     cout << c.instance << "(\n";
+    int count = c.pin_count();
+    typedef map<int,string> BusIndex;
+    typedef map<string, BusIndex *> BusMap;
+    BusMap buses;
+    set<string> ignores;
+    // ignore pins with these names
+    ignores.insert("VDD");
+    ignores.insert("VCC");
+    ignores.insert("VSS");
+    ignores.insert("GND");    
+    
+    // first dump all pins which are not buses
+    for( auto k : c.pins ) {
+        string pin_name = c.get_alt_name(k.first);
+        if( ignores.count(k.second)!=0 ) continue; // this is power pin
+        size_t pos;
+        if( (pos=pin_name.find("[")) != string::npos ) {
+            // this is part of a bus
+            string bus = pin_name.substr(0,pos);
+            BusMap::iterator this_bus = buses.find(bus);
+            BusIndex* bi=NULL;
+            if( this_bus == buses.end() ) { // first element of this bus
+                bi = new BusIndex;              
+                buses[bus] = bi;
+            } else {
+                bi = this_bus->second;
+            }
+            pos++;
+            // cout << pin_name << "\n\t";
+            int bus_pin = atoi( pin_name.substr(pos).c_str() );
+//            cout << "bus pin: " << bus_pin << " -> " << k.second << '\n';
+            (*bi)[bus_pin] = k.second;
+            continue;
+        }
+        cout << "    ." << setiosflags(ios_base::left) << setw(10) << pin_name
+             << "( " << setw(24) << k.second << " )";
+        cout << " /* pin " << k.first << "*/ ";
+        if( --count ) cout << ',';
+        cout << '\n';
     }
-    // delete the maps
-    delete_map( comps );
-    delete_map( mods  );
+    // Now the buses
+    count = buses.size();
+    for( auto k : buses ) {
+        BusIndex *bi = k.second;
+        cout << setw(0) << "    ." << setiosflags(ios_base::left) << setw(10) << k.first;
+        // cout << "// bus: " << k.first << " of size " << bi->size() << '\n';     
+        cout << "({ ";
+        for( int i= bi->size()-1;  i>=0; i-- ) {
+            cout << bi->at(i);
+            if(i) cout << ",\n                  "; else cout << "})";
+        }
+        if( --count ) cout << ',';
+        cout << '\n';
+    }
+    cout << ");\n\n";    
+    // free memory
+    for( auto k : buses ) {
+        delete k.second;
+    }
+};
+
+void dump_wires( ComponentMap& comps ) {
+    set<string> wires;
+    // collect buses
+    map<string,int> buses;
+    for( auto& k : comps ) {
+        const Pins& pins = k.second->get_pins();
+        for( auto& p : pins ) {
+            string full_name = p.second;
+            size_t pos = full_name.find('[');
+            if( pos != string::npos ) {
+                // found a bus!
+                string bus_name = full_name.substr(0,pos);
+                size_t pos2=full_name.find(']');
+                pos++;
+                int v = atol( full_name.substr( pos, pos2-pos ).c_str() );  
+                auto m = buses.find(bus_name);
+                if( m==buses.end() ) {
+                    buses[bus_name] = v;
+                } else {
+                    if( m->second < v ) m->second = v;
+                }
+            }            
+            else wires.insert( p.second ); // regular wire
+        }
+    }
+    // dump the buses
+    for( auto& m : buses ) {
+        cout << "wire [" << m.second << ":0] " << m.first << ";\n";
+    }
+    // now dump the wires
+    for( auto& w : wires ) {
+        if( w[0] != '1' )
+            cout << "wire " << w << ";\n";
+    }
 }
 
 int match_parts( ComponentMap& comps, ComponentMap& mods ) {
@@ -402,103 +591,3 @@ void parse_library( const char *fname, ComponentMap& comps ) {
     }
     // cout << comps.size() << " library modules added.\n";
 }
-
-
-void parse_netlist( const string& fname, ComponentMap& comps ) {
-    ifstream fin(fname);
-    if( !fin.good() ) return;
-    while( !fin.eof() ) {
-        // components
-        const string comp_tag("(comp (ref ");
-        string line;
-        getline( fin, line );
-        size_t pos = line.find(comp_tag);
-        if( pos!=string::npos ) {
-            pos+=comp_tag.size();
-            size_t pos2=line.find(")",pos);
-            string inst_name = line.substr(pos,pos2-pos);
-            // search for module type
-            pos = string::npos;
-            while(!fin.eof() ) {
-                const string value_tag("(value ");
-                getline( fin, line );
-                pos = line.find( value_tag );
-                if( pos!=string::npos ) { pos+=value_tag.size(); break; }
-            }
-            if( pos == string::npos ) {
-                cout << "Syntax error in netlist\n";
-                throw 1;
-            }
-            pos2=line.find(")",pos);
-            string type_name = line.substr(pos,pos2-pos);
-            // cout << type_name << " " << inst_name << '\n';
-            Component *newcomp = new Component( inst_name, type_name );
-            comps.insert( pair<string,Component*>(inst_name, newcomp) );
-        }
-        if( line.find("(nets")!=string::npos ) break;
-    }
-    // nets
-    while( !fin.eof() ) {
-        const string net_tag("(net (code ");
-        string line;
-        getline( fin, line );
-        size_t pos = line.find(net_tag);
-        if( pos!=string::npos ) {
-            const string netname_tag("(name ");
-            pos = line.find( netname_tag )+netname_tag.size();
-            if( line[pos]=='\"' ) pos++;
-            size_t pos2 = line.find("\")",pos);
-            if( pos2 == string::npos ) {
-                pos2=line.find(")",pos );
-            }
-            string netname = line.substr(pos,pos2-pos);
-            // adjust the name
-            if( netname[0]=='/' ) netname=netname.substr(1);
-            // replace supplies with 1 or 0 assignments
-            // taking care of hierarchy in the name:
-            pos=netname.find_last_of("/");
-            if( pos==string::npos ) pos=-1;
-            string localname=netname.substr(++pos);
-            if( localname== "VCC" || localname=="VDD" ) netname = "1'b1";
-            if( localname== "GND" || localname=="VSS" ) netname = "1'b0";
-            // remove illegal characters:
-            while( (pos=netname.find_first_of("-()/")) != string::npos )
-                netname[pos]='_';
-            // cout << netname << '\n';
-            // find nodes
-            while(!fin.eof() ) {
-                const string noderef_tag("node (ref ");
-                getline( fin, line );
-                pos=line.find(noderef_tag)+noderef_tag.size();
-                pos2=line.find(")",pos);
-                string ref_name = line.substr(pos,pos2-pos);
-                pos=line.find("(pin ")+5;
-                pos2=line.find(")",pos);
-                string pin_number = line.substr(pos,pos2-pos);
-                // cout << "\t" << ref_name << " -> " << pin_number << '\n';
-                comps[ref_name]->set_pin( atoi(pin_number.c_str()), netname );
-                if( line.find(")))") != string::npos ) break; // end of net
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

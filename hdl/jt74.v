@@ -22,6 +22,24 @@ assign #10 out11 = ~(in12&in13);
 
 endmodule
 
+/////////////////////////////////////
+// triple 3-input positive-nand gates
+module jt7410( // ref: 74??10
+    input   [2:0] A,    // pin: 1,2,13
+    input   [2:0] B,    // pin: 3,4,5
+    input   [2:0] C,    // pin: 11,10,9
+    output       Ya,    // pin: 12
+    output       Yb,    // pin: 6
+    output       Yc     // pin: 8
+);
+
+assign #15 Ya = ~&A;
+assign #15 Yb = ~&B;
+assign #15 Yc = ~&C;
+
+endmodule
+
+/////////////////////
 //////// Quad or gate
 module jt7432( // ref: 74??32
     input       in1,  // pin: 1
@@ -199,6 +217,22 @@ assign #10 out12 = ~in13;
 endmodule
 
 
+/////////////////////////////
+module jt74157( // ref: 74??157
+    input      S,    // pin: 1
+    input      Gn,   // pin: 15
+    input   [3:0] A, // pin: 14,11,5,2
+    input   [3:0] B, // pin: 13,10,6,3
+    output  [3:0] Y, // pin: 12,9,7,4
+    input       VDD, // pin: 16
+    input       VSS  // pin: 8
+    
+);
+wire #11 Sdly = S;
+wire #6  Gndly = Gn;
+assign #14 Y = Gndly ? 4'h0 : (Sdly ? B : A); 
+endmodule
+
 // synchronous presettable 4-bit binary counter, asynchronous clear
 module jt74161( // ref: 74??161
     input            cet,   // pin: 10
@@ -227,20 +261,6 @@ module jt74161( // ref: 74??161
         end
 
 endmodule // jt74161
-
-/////////////////////////////
-module jt74157( // ref: 74??157
-    input      S,    // pin: 1
-    input      Gn,   // pin: 15
-    input   [3:0] A, // pin: 14,11,5,2
-    input   [3:0] B, // pin: 13,10,6,3
-    output  [3:0] Y, // pin: 12,9,7,4
-    input       VDD, // pin: 16
-    input       VSS  // pin: 8
-    
-);
-assign #20 Y = Gn ? 4'h0 : (S ? B : A); 
-endmodule
 
 // synchronous presettable 4-bit binary counter, synchronous clear
 module jt74163(
@@ -367,6 +387,29 @@ module jt74112(
 
 endmodule
 
+// 4-bit bidirectional universal shift register
+module jt74194(     // ref: 74??194
+    input [3:0] D,  // pin: 6,5,4,3
+    input [1:0] S,  // pin: 10,9
+    input clk,      // pin: 11
+    input cl_b,     // pin: 1
+    input R,        // pin: 2
+    input L,        // pin: 7
+    output[3:0] Q   // pin: 12,13,14,15
+);
+    reg [3:0] qq;
+    assign #26 Q = qq;
+    wire #4 clb_dly = cl_b;
+    always @(posedge clk or negedge clb_dly)
+        if( !clb_dly )
+            qq <= 4'd0;
+        else case( S )
+            2'b10: qq <= { L, qq[3:1] };
+            2'b01: qq <= { qq[2:0], R };
+            2'b11: qq <= D;
+        endcase
+endmodule
+
 // Octal bus transceiver; 3-state
 module jt74245(
     inout [7:0] a,
@@ -398,20 +441,42 @@ endmodule
 module jt74174( // ref: 74??174
     input      [5:0] d,  // pin: 14,13,11,6,4,3
     output     [5:0] q,  // pin: 15,12,10,7,5,2
-    input         cl_b,  // pin: 9
-    input         clk,   // pin: 1
+    input         cl_b,  // pin: 1
+    input         clk,   // pin: 9
     input         VDD,   // pin: 16
     input         VSS    // pin: 8    
 );
     reg [5:0] qq;
-    assign #20 q=qq;
+    assign #30 q=qq;
     initial qq=6'd0;
-    always @(posedge clk or negedge cl_b)
-        if( !cl_b ) qq<=6'h0;
+    wire #5 clb_dly = cl_b;
+    always @(posedge clk or negedge clb_dly)
+        if( !clb_dly ) qq<=6'h0;
         else qq<= d;
 
 endmodule
 
+//////////////////////////////////////////
+// quadruple d-type flip-flops with clear
+module jt74175( // ref: 74??175
+    input      [3:0] d,  // pin: 13,12,5,4
+    output     [3:0] q,  // pin: 15,10,7,2
+    output     [3:0] qn, // pin: 14,11,6,3
+    input         cl_b,  // pin: 1
+    input         clk,   // pin: 9
+    input         VDD,   // pin: 16
+    input         VSS    // pin: 8    
+);
+    reg [3:0] qq;
+    assign #25 q=qq;
+    initial qq=4'd0;
+    wire #5 clb_dly = cl_b;
+    always @(posedge clk or negedge clb_dly)
+        if( !clb_dly ) qq<=4'h0;
+        else qq<= d;
+endmodule
+
+////////////////////////////////
 module jt74365( // ref: 74??365
     input  [5:0] A,     // pin: 2,4,6,14,12,10
     output [5:0] Y,     // pin: 3,5,7,13,11,9
@@ -435,28 +500,22 @@ module jt74367( // ref: 74??367
     assign #25 Y[5:4] = !oe2_b ? A[5:4] : 2'hz;
 endmodule
 
-// 4-bit bidirectional universal shift register
-module jt74194(
-    input [3:0] D,
-    input [1:0] S,
-    input clk,
-    input cl_b,
-    input R,    // right
-    input L,    // left
-    output reg [3:0] Q
+///////////////////////////////////////////////////////////////
+// hex inverting buffers and line drivers with 3-state outputs
+module jt74368(        // ref: 74??368
+    input   oe_n1,     // pin: 1
+    input   oe_n2,     // pin: 15
+    input   [3:0] A,   // pin: 10,6,4,2
+    input   [1:0] B,   // pin: 14,12
+    output  [3:0] Ya,  // pin: 9,7,5,3
+    output  [1:0] Yb   // pin: 13,11
 );
-    // reg clk2;
-    // always @(clk)
-    //  clk2 = #1 clk;
+wire #20 oen1_dly = oe_n1;
+wire #20 oen2_dly = oe_n2;
 
-    always @(posedge clk)
-        if( !cl_b )
-            Q <= 4'd0;
-        else case( S )
-            2'b10: Q <= { L, Q[3:1] };
-            2'b01: Q <= { Q[2:0], R };
-            2'b11: Q <= D;
-        endcase
+assign #16 Ya = oen1_dly ? Ya : 4'hz;
+assign #16 Yb = oen2_dly ? Yb : 2'bzz;
+
 endmodule
 
 // Octal D-type flip-flop with reset; positive-edge trigger
@@ -528,9 +587,31 @@ module jt74283( // ref: 74??283
     input     VDD,   // pin: 16
     input     VSS    // pin: 8    
 );
-    assign #20 {cout,s} = a+b+cin;
+    wire [4:0] pre = a+b+cin;
+    assign #24    s = pre[3:0];
+    assign #17 cout = pre[4];
 
 endmodule
+
+// octal d-type flip-flops with clock enable
+module jt74377(  // ref: 74??377
+    input   [7:0]   D, // pin: 18,17,14,13, 8,7,4,3
+    output  [7:0]   Q, // pin: 19,16,15,12, 9,6,5,2
+    input       cen_b, // pin: 1
+    input         clk  // pin: 11
+);
+    reg [7:0] qq;
+
+    assign #27 Q = qq;
+
+    initial begin
+        qq=8'b0;
+    end
+
+    always @( posedge clk )
+        qq <= D;
+endmodule
+
 ///////////////////////////////////////////////////////7
 // Non 74-series cells
 
@@ -575,7 +656,8 @@ initial begin : clr_mem
     for( cnt=0; cnt<54; cnt=cnt+1 ) mem[cnt] = 9'd0;
 end
 
-assign #100 O = CEn ? 9'hzzz : pre;
+// output is all 1's (open collector -> Z)
+assign #100 O = (CEn||!WEn) ? 9'hzzz : pre;
 
 always @(negedge WEn) mem[A] <= I;
 always @(*) pre <= mem[A];
@@ -602,6 +684,36 @@ end
 
 always @(negedge WEn) mem[A] <= D;
 always @(*) pre <= mem[A];
+
+endmodule
+
+///////////////////////////////////////////////////////////////////
+module ROM_2764( // ref: ROM_2764
+    input [12:0] A, // pin: 2,23,21,24,25,3,4,5,6,7,8,9,10
+    output [7:0] D, // pin: 19,18,17,16,15,13,12,11
+    input      OEn, // pin: 22
+    input      CEn, // pin: 20
+    input        P  // pin: 27
+);
+// P input is ignored
+parameter simfile="blank_filename";
+
+reg [7:0] mem[0:2**12-1];
+
+initial begin : rom_load
+    integer f,c;
+    f=$fopen(simfile,"rb");
+    if( f!=0 ) begin
+        c=$fread( mem, f );
+        $fclose(f);
+    end
+    else begin
+        $display("ERROR: cannot load file %s of ROM %m", simfile);
+        $finish;
+    end
+end
+
+assign #50 D = !OEn && !CEn ? mem[A] : 8'hZZ;
 
 endmodule
 
