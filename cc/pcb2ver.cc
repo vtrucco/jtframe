@@ -144,7 +144,7 @@ ifstream open_file(const string& name ) {
 int parse_netlist( const char* s, int k, int len, Element *parent );
 void parse_library( const char *fname, ComponentMap& comps );
 int match_parts( ComponentMap& comps, ComponentMap& mods );
-void dump_wires( ComponentMap& comps );
+void dump_wires( ComponentMap& comps, set<string>& ports );
 void dump(Component& c);
 
 const Element* Element::find_child( const string& ref ) const {
@@ -197,13 +197,14 @@ void make_comp_map( const Element *root, ComponentMap& comps ) {
     }
 }
 
-char *flatten_verilog( ifstream&f ) {
+void flatten_verilog( ifstream&f, string& flat ) {
     f.seekg(0, ios_base::end);
     int len = f.tellg();
     f.seekg(0, ios_base::beg);
-    char *b = new char[len];
-    int k=0;
-    while( k<len && !f.eof() ) {
+    flat.clear();
+    flat.reserve(len);
+    int last=0;
+    while( !f.eof() ) {
         char c,d;
         f.get(c);
         if( c=='/' ) {
@@ -224,19 +225,50 @@ char *flatten_verilog( ifstream&f ) {
                 }
             }
         }
-        b[++k] = c;
+        if( c=='\t' ) c=' ';    // no tabs
+        if( !(last==' ' && c==' ') ) flat.push_back(c); // no more than one space
+        last=c;
     }
-    b[++k]=0;
-    return b;
 }
 
 void parse_ports( const string& ports_name, set<string>& ports ) {
     ifstream f(ports_name);
-    char *flat, *aux;
-    flat = flatten_verilog( f );
-    aux = flat;
-
-    delete[] flat;
+    string flat;
+    flatten_verilog( f, flat );
+    stringstream ss(flat);
+    //cout << flat;    
+    while( !ss.eof() ) {
+        string line;
+        getline( ss, line );
+        // cout << line << '\n';
+        size_t p = line.find("input");
+        if( p==string::npos ) p = line.find("output");
+        if( p==string::npos ) p = line.find("inout");
+        if( p!=string::npos ) {
+            // cout << '*';
+            p = line.find_first_of(' ',p)+1;
+            size_t p2 = line.find_first_of(" ,;\n",p);
+            if( p2 == string::npos ) {
+                cout << "ERROR: Syntax error in port verilog file\n";
+                cout << '\t' << line << '\n';
+                throw 6;
+            }
+            string new_port = line.substr(p,p2-p);
+            if( new_port[0]=='[' ) {
+                p2 = line.find_first_of(']');
+                if( p2==string::npos ) {
+                    cout << "ERROR: Syntax error in port verilog file. Expecting ']'\n";
+                    cout << '\t' << line << '\n';
+                    throw 6;
+                }
+                p=p2+2;
+                p2 = line.find_first_of(" ,;\n",p);
+                new_port = line.substr(p,p2-p);
+            }
+            ports.insert(new_port);
+        }
+    }
+//    for( auto k : ports ) cout << k << '\n';
 }
 
 int main(int argc, char *argv[]) {
@@ -347,7 +379,7 @@ int main(int argc, char *argv[]) {
             if( ports_name.size() ) {
                 parse_ports( ports_name, ports );
             }
-            if( do_wires ) dump_wires( comps );
+            if( do_wires ) dump_wires( comps, ports );
             for( auto& k : comps ) {
                 dump(*k.second);
             }            
@@ -488,7 +520,7 @@ void dump(Component& c) {
     }
 };
 
-void dump_wires( ComponentMap& comps ) {
+void dump_wires( ComponentMap& comps, set<string>& ports ) {
     set<string> wires;
     // collect buses
     map<string,int> buses;
@@ -515,12 +547,20 @@ void dump_wires( ComponentMap& comps ) {
     }
     // dump the buses
     for( auto& m : buses ) {
-        cout << "wire [" << m.second << ":0] " << m.first << ";\n";
+        if( ports.count(m.first)==0 ) // skip ports
+            cout << "wire [" << m.second << ":0] " << m.first << ";\n";
     }
     // now dump the wires
     for( auto& w : wires ) {
-        if( w[0] != '1' )
+        if( w[0] != '1' && ports.count(w)==0 ) 
             cout << "wire " << w << ";\n";
+    }
+    // check for unused ports:
+    for( auto& p : ports ) {
+        int found= buses.count(p) + wires.count(p);
+        if(found==0) {
+            cerr << "Warning: port " << p << " is not used\n";
+        }
     }
 }
 
