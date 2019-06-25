@@ -22,6 +22,81 @@ assign #10 out11 = ~(in12&in13);
 
 endmodule
 
+module jt7402( // ref: 74??02
+    output      out1, // pin: 1
+    input       in2,  // pin: 2
+    input       in3,  // pin: 3
+    output      out4, // pin: 4
+    input       in5,  // pin: 5
+    input       in6,  // pin: 6
+    input       in9,  // pin: 9
+    input       in8,  // pin: 10
+    output      out10,// pin: 8
+    input       in12, // pin: 12
+    input       in11, // pin: 13
+    output      out13, // pin: 11
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
+    );
+
+assign #10 out1 = ~( in2| in3 );
+assign #10 out4 = ~( in5| in6 );
+assign #10 out10= ~( in9| in8 );
+assign #10 out13= ~(in12| in11);
+
+endmodule
+
+module jt7404( // ref: 74??04
+    input       in1,   // pin: 1
+    output      out2,  // pin: 2
+    input       in3,   // pin: 3
+    output      out4,  // pin: 4
+    input       in5,   // pin: 5
+    output      out6,  // pin: 6
+    input       in9,   // pin: 9
+    output      out8,  // pin: 8
+    input       in11,  // pin: 11
+    output      out10, // pin: 10
+    input       in13,  // pin: 13
+    output      out12, // pin: 12
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
+    );
+
+assign #10 out2  = ~in1;
+assign #10 out4  = ~in3;
+assign #10 out6  = ~in5;
+assign #10 out8  = ~in9;
+assign #10 out10 = ~in11;
+assign #10 out12 = ~in13;
+
+endmodule
+
+//////// Quad and gate
+module jt7408( // ref: 74??08
+    input       in1,  // pin: 1
+    input       in2,  // pin: 2
+    output      out3, // pin: 3
+    input       in4,  // pin: 4
+    input       in5,  // pin: 5
+    output      out6, // pin: 6
+    input       in9,  // pin: 9
+    input       in10, // pin: 10
+    output      out8, // pin: 8
+    input       in12, // pin: 12
+    input       in13, // pin: 13
+    output      out11, // pin: 11
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
+    );
+
+assign #10 out3  = in1 &in2;
+assign #10 out6  = in4 &in5;
+assign #10 out8  = in10&in9;
+assign #10 out11 = in12&in13;
+
+endmodule
+
 /////////////////////////////////////
 // triple 3-input positive-nand gates
 module jt7410( // ref: 74??10
@@ -36,6 +111,33 @@ module jt7410( // ref: 74??10
 assign #15 Ya = ~&A;
 assign #15 Yb = ~&B;
 assign #15 Yc = ~&C;
+
+endmodule
+
+//////// trip 3-input and gate
+module jt7411( // ref: 74??11
+    input       in1,  // pin: 1
+    input       in2,  // pin: 2
+    input       in13, // pin: 13
+    output      out12,// pin: 12
+
+    input       in3,  // pin: 3
+    input       in4,  // pin: 4
+    input       in5,  // pin: 5
+    output      out6, // pin: 6
+
+    input       in11, // pin: 11
+    input       in10, // pin: 10
+    input       in9,  // pin: 9
+    output      out8, // pin: 8
+
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
+    );
+
+assign #10 out12 = in1 & in2 & in13;
+assign #10 out6  = in3 & in4 & in5;
+assign #10 out8  = in11& in10& in9;
 
 endmodule
 
@@ -89,133 +191,6 @@ assign #10 out8  = in10^in9;
 assign #10 out11 = in12^in13;
 
 endmodule
-
-//////// Quad and gate
-module jt7408( // ref: 74??08
-    input       in1,  // pin: 1
-    input       in2,  // pin: 2
-    output      out3, // pin: 3
-    input       in4,  // pin: 4
-    input       in5,  // pin: 5
-    output      out6, // pin: 6
-    input       in9,  // pin: 9
-    input       in10, // pin: 10
-    output      out8, // pin: 8
-    input       in12, // pin: 12
-    input       in13, // pin: 13
-    output      out11, // pin: 11
-    input       VDD,   // pin: 14
-    input       VSS    // pin: 7
-    );
-
-assign #10 out3  = in1 &in2;
-assign #10 out6  = in4 &in5;
-assign #10 out8  = in10&in9;
-assign #10 out11 = in12&in13;
-
-endmodule
-
-//////// trip 3-input and gate
-module jt7411( // ref: 74??11
-    input       in1,  // pin: 1
-    input       in2,  // pin: 2
-    input       in13, // pin: 13
-    output      out12,// pin: 12
-
-    input       in3,  // pin: 3
-    input       in4,  // pin: 4
-    input       in5,  // pin: 5
-    output      out6, // pin: 6
-
-    input       in11, // pin: 11
-    input       in10, // pin: 10
-    input       in9,  // pin: 9
-    output      out8, // pin: 8
-
-    input       VDD,   // pin: 14
-    input       VSS    // pin: 7
-    );
-
-assign #10 out12 = in1 & in2 & in13;
-assign #10 out6  = in3 & in4 & in5;
-assign #10 out8  = in11& in10& in9;
-
-endmodule
-
-module jt7437( // ref: 74??37
-    input       in1,  // pin: 1
-    input       in2,  // pin: 2
-    output      out3, // pin: 3
-    input       in4,  // pin: 4
-    input       in5,  // pin: 5
-    output      out6, // pin: 6
-    input       in9,  // pin: 9
-    input       in10, // pin: 10
-    output      out8, // pin: 8
-    input       in12, // pin: 12
-    input       in13, // pin: 13
-    output      out11, // pin: 11
-    input       VDD,   // pin: 14
-    input       VSS    // pin: 7
-    );
-
-assign #10 out3  = ~(in1 &in2 );
-assign #10 out6  = ~(in4 &in5 );
-assign #10 out8  = ~(in10&in9 );
-assign #10 out11 = ~(in12&in13);
-
-endmodule
-
-module jt7402( // ref: 74??02
-    output      out1, // pin: 1
-    input       in2,  // pin: 2
-    input       in3,  // pin: 3
-    output      out4, // pin: 4
-    input       in5,  // pin: 5
-    input       in6,  // pin: 6
-    input       in9,  // pin: 9
-    input       in8,  // pin: 10
-    output      out10,// pin: 8
-    input       in12, // pin: 12
-    input       in11, // pin: 13
-    output      out13, // pin: 11
-    input       VDD,   // pin: 14
-    input       VSS    // pin: 7
-    );
-
-assign #10 out1 = ~( in2| in3 );
-assign #10 out4 = ~( in5| in6 );
-assign #10 out10= ~( in9| in8 );
-assign #10 out13= ~(in12| in11);
-
-endmodule
-
-module jt7404( // ref: 74??04
-    input       in1,   // pin: 1
-    output      out2,  // pin: 2
-    input       in3,   // pin: 3
-    output      out4,  // pin: 4
-    input       in5,   // pin: 5
-    output      out6,  // pin: 6
-    input       in9,   // pin: 9
-    output      out8,  // pin: 8
-    input       in11,  // pin: 11
-    output      out10, // pin: 10
-    input       in13,  // pin: 13
-    output      out12, // pin: 12
-    input       VDD,   // pin: 14
-    input       VSS    // pin: 7
-    );
-
-assign #10 out2  = ~in1;
-assign #10 out4  = ~in3;
-assign #10 out6  = ~in5;
-assign #10 out8  = ~in9;
-assign #10 out10 = ~in11;
-assign #10 out12 = ~in13;
-
-endmodule
-
 
 /////////////////////////////
 module jt74157( // ref: 74??157
@@ -287,6 +262,30 @@ module jt74163(
         end
 
 endmodule // jt74163
+
+module jt7437( // ref: 74??37
+    input       in1,  // pin: 1
+    input       in2,  // pin: 2
+    output      out3, // pin: 3
+    input       in4,  // pin: 4
+    input       in5,  // pin: 5
+    output      out6, // pin: 6
+    input       in9,  // pin: 9
+    input       in10, // pin: 10
+    output      out8, // pin: 8
+    input       in12, // pin: 12
+    input       in13, // pin: 13
+    output      out11, // pin: 11
+    input       VDD,   // pin: 14
+    input       VSS    // pin: 7
+    );
+
+assign #10 out3  = ~(in1 &in2 );
+assign #10 out6  = ~(in4 &in5 );
+assign #10 out8  = ~(in10&in9 );
+assign #10 out11 = ~(in12&in13);
+
+endmodule
 
 // Dual D-type flip-flop with set and reset; positive edge-trigger
 module jt7474(  // ref: 74??74

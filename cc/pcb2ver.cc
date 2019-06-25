@@ -197,8 +197,50 @@ void make_comp_map( const Element *root, ComponentMap& comps ) {
     }
 }
 
+char *flatten_verilog( ifstream&f ) {
+    f.seekg(0, ios_base::end);
+    int len = f.tellg();
+    f.seekg(0, ios_base::beg);
+    char *b = new char[len];
+    int k=0;
+    while( k<len && !f.eof() ) {
+        char c,d;
+        f.get(c);
+        if( c=='/' ) {
+            f.get(d);
+            if( d=='/' ) {
+                // ignore rest of the line
+                do{ f.get(c); } while( c!='\n' && !f.eof() );
+            }
+            if( d=='*' ) {
+                // ignore until end of comment
+                bool end=false;
+                while( !f.eof() ) {
+                    f.get(c);
+                    if( c=='*' ) {
+                        f.get(c);
+                        if(c=='/') { f.get(c); break; }
+                    }
+                }
+            }
+        }
+        b[++k] = c;
+    }
+    b[++k]=0;
+    return b;
+}
+
+void parse_ports( const string& ports_name, set<string>& ports ) {
+    ifstream f(ports_name);
+    char *flat, *aux;
+    flat = flatten_verilog( f );
+    aux = flat;
+
+    delete[] flat;
+}
+
 int main(int argc, char *argv[]) {
-    string fname, libname="../hdl/jt74.v";
+    string fname, libname="../hdl/jt74.v", ports_name;
     bool do_wires=false;
     bool parselib_only=false;
     // parse command line
@@ -232,7 +274,20 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
             continue;
-        }                 
+        }         
+        if( strncmp(argv[k],"--ports",5)==0 || strcmp(argv[k],"-p")==0 ) {  
+            ++k;          
+            if( k >= argc) {
+                cout << "ERROR: expecting path to verilog file after " << argv[k-1] << " argument\n";
+                return 1;
+            }
+            ports_name = string(argv[k]);
+            if( !ifstream(ports_name).good() ) {
+                cout << "ERROR: cannot open verilog file: " << ports_name << '\n';
+                return 1;
+            }
+            continue;
+        }  
         if( strcmp(argv[k],"--help")==0 || strcmp(argv[k],"-h")==0 ) {
             cout << "pcb2ver, part of JTFRAME open source hardware development framework.\n";
             cout << "KiCAD netlist to verilog converter.\n";
@@ -247,6 +302,8 @@ int main(int argc, char *argv[]) {
             cout << "\t\t               pin statement. Check out hdl/jt74.v in jtframe for several\n";
             cout << "\t\t               examples.\n";
             cout << "\t\t--parselib   : exit after parsing the lib.\n";
+            cout << "\t\t--ports or -p: the ports listed in the verilog file given after --ports\n";
+            cout << "\t\t               will be excluded from the wire dump.\n";
             cout << "\tpcb2ver -h|--help\n\t\tDisplays this help message.\n";
             return 0;
         }
@@ -273,6 +330,7 @@ int main(int argc, char *argv[]) {
 
     Element root("root", NULL);
     ComponentMap comps, mods;
+    set<string> ports;
     try{
         parse_library(libname.c_str(), mods);
         if( !parselib_only ) {
@@ -286,6 +344,9 @@ int main(int argc, char *argv[]) {
             if( match_parts( comps, mods ) != 0 ) {
                 throw 3;
             };
+            if( ports_name.size() ) {
+                parse_ports( ports_name, ports );
+            }
             if( do_wires ) dump_wires( comps );
             for( auto& k : comps ) {
                 dump(*k.second);
@@ -370,11 +431,14 @@ void dump(Component& c) {
     ignores.insert("VCC");
     ignores.insert("VSS");
     ignores.insert("GND");    
-    
+    bool first=true;
     // first dump all pins which are not buses
     for( auto k : c.pins ) {
         string pin_name = c.get_alt_name(k.first);
-        if( ignores.count(k.second)!=0 ) continue; // this is power pin
+        if( ignores.count(k.second)!=0 ) {
+            count--;
+            continue; // this is power pin
+        }
         size_t pos;
         if( (pos=pin_name.find("[")) != string::npos ) {
             // this is part of a bus
@@ -394,16 +458,19 @@ void dump(Component& c) {
             (*bi)[bus_pin] = k.second;
             continue;
         }
+        if( !first ) cout << ",\n";
         cout << "    ." << setiosflags(ios_base::left) << setw(10) << pin_name
              << "( " << setw(24) << k.second << " )";
         cout << " /* pin " << k.first << "*/ ";
-        if( --count ) cout << ',';
-        cout << '\n';
+        first = false;
+        //if( --count ) cout << ',';
+        //cout << '\n';
     }
     // Now the buses
     count = buses.size();
     for( auto k : buses ) {
         BusIndex *bi = k.second;
+        if( !first ) cout << ",\n";
         cout << setw(0) << "    ." << setiosflags(ios_base::left) << setw(10) << k.first;
         // cout << "// bus: " << k.first << " of size " << bi->size() << '\n';     
         cout << "({ ";
@@ -411,10 +478,10 @@ void dump(Component& c) {
             cout << bi->at(i);
             if(i) cout << ",\n                  "; else cout << "})";
         }
-        if( --count ) cout << ',';
-        cout << '\n';
+        // if( --count ) cout << ',';
+        // cout << '\n';
     }
-    cout << ");\n\n";    
+    cout << "\n);\n\n";    
     // free memory
     for( auto k : buses ) {
         delete k.second;
