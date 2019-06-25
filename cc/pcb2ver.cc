@@ -11,11 +11,13 @@
 
 using namespace std;
 typedef map<int,string> Pins;
+typedef map<string,string> Parameters;
 
 class Component{
         Pins pins;
         string instance, type;
         Component *alt_names;
+        Parameters params;
     public:
         Component( string _inst, string _type ) : instance(_inst), type(_type) {
             //cout << "Component " << instance << " of type " << type << '\n';
@@ -36,6 +38,9 @@ class Component{
         }
         string get_alt_name( int k); // Get alternative name for pin k from reference
         string get_pinname(int k);
+        void add_parameter( const string& name, const string& value ) {
+            params[name] = value;
+        }
         friend void dump(Component& c);
 };
 
@@ -78,6 +83,7 @@ public:
     const Element* find_child( const string& ref ) const;
     void add_child(Element *c) { values.push_back(c); }
     void set_scalar( const string& s) { scalar=s; }
+    const string& get_scalar() const { return scalar; }
     void dump(int indent=0);
     const Elements& get_elements() const { return values; }
     const string& operator[](const string&);
@@ -165,8 +171,17 @@ void make_comp_map( const Element *root, ComponentMap& comps ) {
     for( auto k: e->get_elements() ) {
         if( k->get_name() == "comp" ) {
             const string& ref = (*k)["ref"];
-            comps[ ref ] = new Component( ref, (*k)["value"] );
+            Component *new_component = new Component( ref, (*k)["value"] );
+            comps[ ref ] = new_component;
             // cout << ref << "->" << (*k)["value"]  << '\n';
+            const Element *fields = k->find_child("fields");
+            if( fields != NULL ) {
+                for( auto f : fields->get_elements() ) {
+                    if( f->get_name()!="field" ) continue;
+                    string field_name = (*f)["name"];
+                    new_component->add_parameter( field_name, f->get_scalar() );
+                }
+            }
         }
     }
     // now fill nets
@@ -450,9 +465,20 @@ int parse_netlist( const char* s, int k, int len, Element *parent ) {
 void dump(Component& c) {
     // module instantiation
     cout << c.alt_names->type << " ";
+    if( c.params.size()>0 ) {
+        cout << "#(";
+        bool first = true;
+        for( auto k : c.params ) {
+            if( !first ) cout << ",\n    ";
+            cout << "." << k.first << "(\"" << k.second << "\""") ";
+            first = false;
+        }
+        cout << "\n) ";
+    }
     if( c.instance[0]>='0' && c.instance[0]<='9')
         cout << "u_";   // if the instance names starts with a number, add "u_"
-     cout << c.instance << "(\n";
+    cout << c.instance;
+    cout << "(\n";
     int count = c.pin_count();
     typedef map<int,string> BusIndex;
     typedef map<string, BusIndex *> BusMap;

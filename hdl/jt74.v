@@ -697,7 +697,7 @@ module ROM_2764( // ref: ROM_2764
 // P input is ignored
 parameter simfile="blank_filename";
 
-reg [7:0] mem[0:2**12-1];
+reg [7:0] mem[0:2**13-1];
 
 initial begin : rom_load
     integer f,c;
@@ -705,6 +705,7 @@ initial begin : rom_load
     if( f!=0 ) begin
         c=$fread( mem, f );
         $fclose(f);
+        $display("INFO: %m %s (%d bytes)", simfile, c);
     end
     else begin
         $display("ERROR: cannot load file %s of ROM %m", simfile);
