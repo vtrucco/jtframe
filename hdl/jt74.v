@@ -628,12 +628,14 @@ endmodule
 module RAM_5501( // ref: RAM_5501
     input  [7:0] A, // pin: 7,6,5,21,1,2,3,4
     input  [3:0] D, // pin: 15,13,11,9
-    output reg [3:0] Q, // pin: 16,14,12,10
+    output [3:0] Q, // pin: 16,14,12,10
     input      WEn  // pin: 20
 );
 
 reg [3:0] mem [0:255];
+reg [3:0] QQ;
 
+assign #300 Q = QQ;     // speed used on Popeye PCB
 initial begin : clr_mem
     integer cnt;
     for( cnt=0; cnt<256; cnt=cnt+1 ) mem[cnt] = 4'd0;
@@ -644,7 +646,7 @@ always @(negedge WEn) begin
 end
 
 always @(*) begin
-    Q <= mem[A];
+    QQ <= mem[A];
 end
 
 endmodule
@@ -723,7 +725,9 @@ initial begin : rom_load
     end
 end
 
-assign #50 D = !OEn && !CEn ? mem[A] : 8'hZZ;
+wire [12:0] AA;
+assign #300 AA = A;
+assign #150 D = !OEn && !CEn ? mem[AA] : 8'hZZ;
 
 endmodule
 
