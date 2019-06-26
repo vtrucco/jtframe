@@ -495,8 +495,14 @@ module jt74367( // ref: 74??367
     input        VDD,   // pin: 16
     input        VSS    // pin: 8
 );
-    assign #25 Y[3:0] = !oe1_b ? A[3:0] : 4'hz;
-    assign #25 Y[5:4] = !oe2_b ? A[5:4] : 2'hz;
+    // a line per signal, do not use a bus assignment
+    // or the delay will apply to the bus as a whole
+    assign #25 Y[0] = !oe1_b ? A[0] : 1'bz;
+    assign #25 Y[1] = !oe1_b ? A[1] : 1'bz;
+    assign #25 Y[2] = !oe1_b ? A[2] : 1'bz;
+    assign #25 Y[3] = !oe1_b ? A[3] : 1'bz;
+    assign #25 Y[4] = !oe2_b ? A[4] : 1'bz;
+    assign #25 Y[5] = !oe2_b ? A[5] : 1'bz;
 endmodule
 
 ///////////////////////////////////////////////////////////////
@@ -512,8 +518,12 @@ module jt74368(        // ref: 74??368
 wire #20 oen1_dly = oe_n1;
 wire #20 oen2_dly = oe_n2;
 
-assign #16 Ya = oen1_dly ? Ya : 4'hz;
-assign #16 Yb = oen2_dly ? Yb : 2'bzz;
+assign #16 Ya[0] = !oen1_dly ? A[0] : 1'bz;
+assign #16 Ya[1] = !oen1_dly ? A[1] : 1'bz;
+assign #16 Ya[2] = !oen1_dly ? A[2] : 1'bz;
+assign #16 Ya[3] = !oen1_dly ? A[3] : 1'bz;
+assign #16 Yb[0] = !oen2_dly ? B[0] : 1'bz;
+assign #16 Yb[1] = !oen2_dly ? B[1] : 1'bz;
 
 endmodule
 
