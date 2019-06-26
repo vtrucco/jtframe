@@ -447,7 +447,12 @@ int parse_netlist( const char* s, int k, int len, Element *parent ) {
                     continue;
                 }
                 if( s[k]=='"' ) {
-                    while( s[++k] != '"' && k<len) new_value.push_back(s[k]);
+                    while( s[++k] != '"' && k<len) {
+                        if( s[k]=='\\' && s[k+1]=='\"' ) {
+                            k++;
+                        }
+                        new_value.push_back(s[k]);
+                    }
                     ++k; // skip the "
                 }
                 else do{new_value.push_back(s[k++]);}while( s[k] != ')' && k<len);
@@ -469,8 +474,8 @@ void dump(Component& c) {
         cout << "#(";
         bool first = true;
         for( auto k : c.params ) {
-            if( !first ) cout << ",\n    ";
-            cout << "." << k.first << "(\"" << k.second << "\""") ";
+            if( !first ) cout << ",\n    ";            
+            cout << "." << k.first << "(" << k.second << """) ";
             first = false;
         }
         cout << "\n) ";

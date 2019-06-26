@@ -735,3 +735,14 @@ module rpullup( // ref: rpullup
 pullup pu(x);
 
 endmodule
+
+////////////////////////////////////////
+module delay( // ref: delay
+    input a, // pin: 1
+    output y // pin: 2
+);
+
+parameter delay_time=10;
+assign #delay_time y=a;
+
+endmodule
