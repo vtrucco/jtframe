@@ -227,7 +227,7 @@ module jt74161( // ref: 74??161
     initial qq=4'd0;
     reg [3:0] qq;
     assign #30 q = qq;
-    always @(posedge clk or negedge cl_b)
+    always @(posedge clk or negedge cl_b or negedge ld_b)
         if( !cl_b )
             qq <= 4'd0;
         else begin
@@ -467,7 +467,8 @@ module jt74175( // ref: 74??175
     input         VSS    // pin: 8    
 );
     reg [3:0] qq;
-    assign #25 q=qq;
+    assign #25 q =qq;
+    assign #25 qn=~qq;
     initial qq=4'd0;
     wire #5 clb_dly = cl_b;
     always @(posedge clk or negedge clb_dly)
