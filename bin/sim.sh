@@ -81,9 +81,7 @@ case "$SYSNAME" in
     "")
         echo "ERROR: Needs system name. Use -sysname"
         exit 1;;
-    gng)    PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f)
-            GAME_ROM_PATH=../../../rom/JTGNG.rom
-            MEM_CHECK_TIME=140_000_000
+    commando|gng) PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f)
             ;;
     1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f)
             ;;
@@ -127,7 +125,8 @@ case "$1" in
         else
             MIST="-F $MODULES/jtframe/hdl/mist/mist.f"
         fi
-        MIST="$MODULES/jtframe/hdl/mist/mist_test.v ../../hdl/jt${SYSNAME}_mist.v $MIST mist_dump.v"
+        MIST="$MODULES/jtframe/hdl/mist/mist_test.v ../../hdl/jt${SYSNAME}_mist.sv $MIST mist_dump.v"
+
         MIST="$MIST ${MACROPREFIX}MIST"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mist_dump.v ]; then

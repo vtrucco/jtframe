@@ -229,8 +229,12 @@ always @(posedge clk_sys)
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
         // state variables:
+        `ifndef ALWAYS_PAUSE
         if( (key_pause && !last_pause) || (joy_pause && !last_joypause) )
             game_pause   <= ~game_pause;
+        `else 
+        game_pause <= 1'b1;
+        `endif
         game_service <= key_service ^ invert_inputs;
     end
 
