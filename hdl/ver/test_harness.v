@@ -202,7 +202,8 @@ mt48lc16m16a2 #(.filename(GAME_ROMNAME)) mist_sdram (
     .Ras_n      ( SDRAM_nRAS    ),
     .Cas_n      ( SDRAM_nCAS    ),
     .We_n       ( SDRAM_nWE     ),
-    .Dqm        ( {SDRAM_DQMH,SDRAM_DQML}   )
+    .Dqm        ( {SDRAM_DQMH,SDRAM_DQML}   ),
+    .downloading( downloading   )
 );
 `endif
 

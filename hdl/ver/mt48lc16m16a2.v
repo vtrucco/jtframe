@@ -39,7 +39,7 @@
 
 `timescale 1ns / 1ps
 
-module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm);
+module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, downloading);
 
     parameter addr_bits =      13;
     parameter data_bits =      16;
@@ -58,6 +58,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm);
     input                         Cas_n;
     input                         We_n;
     input                 [1 : 0] Dqm;
+    input                         downloading;
 
     reg       [data_bits - 1 : 0] Bank0 [0 : mem_sizes];
     reg       [data_bits - 1 : 0] Bank1 [0 : mem_sizes];
@@ -117,15 +118,13 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm);
             end
         end
         `else // save contents
-        integer dumpcnt,f;
-        initial begin
-            $display("sdram.hex will be produced at time %d", `MEM_CHECK_TIME);
-            #(`MEM_CHECK_TIME);
+        always @(negedge downloading) begin : dump_contents
+            integer dumpcnt,f;
             f=$fopen("sdram.hex","w");
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
                 $fwrite(f,"%h\n",Bank0[dumpcnt]);
             $fclose(f);
-            $display("INFO: SDRAM memory content dumped to sdram.hex");
+            $display("INFO: SDRAM memory content dumped to sdram.hex at %t",$time);
         end
         `endif
     `endif

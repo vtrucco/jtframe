@@ -83,7 +83,11 @@ initial begin
         $finish;
     end
     file_len=$fread( rom_buffer, file );
-    $display("INFO: Read %s for SPI transmission.",filename);
+    $display("INFO: Read %s for SPI transmission (%d bytes).",filename, file_len);
+    if( file_len == 0 ) begin
+        $display("ERROR: ROM file is empty.");
+        $finish;
+    end
     $fclose(file);
 end
 
