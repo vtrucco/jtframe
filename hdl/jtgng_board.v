@@ -194,7 +194,7 @@ localparam PAUSE_BIT = 8+THREE_BUTTONS;
 localparam START_BIT = 7+THREE_BUTTONS;
 localparam COIN_BIT  = 6+THREE_BUTTONS;
 
-reg last_pause, last_joypause, last_reset, last_service;
+reg last_pause, last_joypause, last_reset;
 reg [3:0] last_gfx;
 wire joy_pause = joy1_sync[PAUSE_BIT] | joy2_sync[PAUSE_BIT];
 
@@ -208,7 +208,6 @@ always @(posedge clk_sys)
         gfx_en       <= 4'hf;
     end else begin
         last_pause   <= key_pause;
-        last_service <= key_service;
         last_reset   <= key_reset;
         last_joypause <= joy_pause; // joy is active low!
         last_gfx     <= key_gfx;
