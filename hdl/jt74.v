@@ -141,6 +141,17 @@ assign #10 out8  = in11& in10& in9;
 
 endmodule
 
+///////////////////////////////////
+/////// 8-INPUT POSITIVE-NAND GATES
+module jt7430( // ref: 74??30
+    input [7:0] in, // pin: 1,2,3,4,5,6,11,12
+    output Y        // pin: 8
+);
+
+assign #(15,20) Y = ~&in;
+
+endmodule
+
 /////////////////////
 //////// Quad or gate
 module jt7432( // ref: 74??32
@@ -227,7 +238,7 @@ module jt74161( // ref: 74??161
     initial qq=4'd0;
     reg [3:0] qq;
     assign #30 q = qq;
-    always @(posedge clk or negedge cl_b or negedge ld_b)
+    always @(posedge clk or negedge cl_b)
         if( !cl_b )
             qq <= 4'd0;
         else begin
@@ -360,29 +371,53 @@ module jt74139(
     assign #20 y2_b = en2_b ? 4'hf : ~( (4'b1)<<a2 );
 endmodule
 
-module jt74112(
-    input  pr_b,
-    input  cl_b,
-    input  clk_b,
-    input  j,
-    input  k,
-    output reg q,
-    output q_b
+////////////////////////////////////////////////////////////////////
+// dual j-k negative-edge-triggered flip-flops with clear and preset
+module jt74112( // ref: 74??112
+    input  pr1_b,   // pin: 4
+    input  cl1_b,   // pin: 15
+    input  clk1_b,  // pin: 1
+    input  j1,      // pin: 3
+    input  k1,      // pin: 2
+    output q1,      // pin: 5
+    output q1_b,    // pin: 6
+
+    input  pr2_b,   // pin: 10
+    input  cl2_b,   // pin: 14
+    input  clk2_b,  // pin: 13
+    input  j2,      // pin: 11
+    input  k2,      // pin: 12
+    output q2,      // pin: 9
+    output q2_b     // pin: 7
 );
+    reg qq1=1'b0;
+    reg qq2=1'b0;
 
-    assign q_b = ~q;
+    assign #20 q1   =  qq1;
+    assign #20 q1_b = ~qq1;
 
-    initial q=1'b0;
+    always @( negedge clk1_b or negedge pr1_b or negedge cl1_b )
+        if( !pr1_b ) qq1 <= 1'b1;
+        else if( !cl1_b ) qq1 <= 1'b0;
+        else if( !clk1_b )
+            case( {j1,k1} )
+                2'b01: qq1<=1'b0;
+                2'b10: qq1<=1'b1;
+                2'b11: qq1<=~qq1;
+            endcase
 
-    always @( negedge clk_b or negedge pr_b or negedge cl_b )
-        if( !pr_b ) q <= 1'b1;
-        else if( !cl_b ) q <= 1'b0;
-        else if( !clk_b )
-            case( {j,k} )
-                2'b01: q<=1'b0;
-                2'b10: q<=1'b1;
-                2'b11: q<=~q;
-            endcase // {j,k}
+    assign #20 q2   =  qq2;
+    assign #20 q2_b = ~qq2;
+
+    always @( negedge clk2_b or negedge pr2_b or negedge cl2_b )
+        if( !pr2_b ) qq2 <= 1'b1;
+        else if( !cl2_b ) qq2 <= 1'b0;
+        else if( !clk2_b )
+            case( {j2,k2} )
+                2'b01: qq2<=1'b0;
+                2'b10: qq2<=1'b1;
+                2'b11: qq2<=~qq2;
+            endcase
 
 endmodule
 
@@ -755,6 +790,15 @@ module rpullup( // ref: rpullup
 );
 
 pullup pu(x);
+
+endmodule
+
+/////////////////
+module rpulldown( // ref: rpulldown
+    inout x // pin: 1
+);
+
+pulldown pd(x);
 
 endmodule
 

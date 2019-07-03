@@ -264,9 +264,11 @@ void parse_ports( const string& ports_name, set<string>& ports ) {
             p = line.find_first_of(' ',p)+1;
             size_t p2 = line.find_first_of(" ,;\n",p);
             if( p2 == string::npos ) {
-                cout << "ERROR: Syntax error in port verilog file\n";
-                cout << '\t' << line << '\n';
-                throw 6;
+                //cout << "ERROR: Syntax error in port verilog file\n";
+                //cout << '\t' << line << '\n';
+                //cout << line.substr(p) << '\n';
+                //throw 6;
+                p2 = line.size();
             }
             string new_port = line.substr(p,p2-p);
             if( new_port[0]=='[' ) {
