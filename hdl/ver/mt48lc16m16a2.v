@@ -83,16 +83,15 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, dow
         // end
         $readmemh("sdram.hex",  Bank0 );
         `ifdef TESTROM
-        $display("test.bin read into first bytes of SDRAM");
         file=$fopen("test.bin", "rb");
         romfilecnt=$fread( Bank0, file );
-        $display("Read %d bytes of test code", romfilecnt);
+        $display("INFO: Read %d bytes of test code from test.bin", romfilecnt);
         $fclose(file);
         // Try to open test2.bin too
         file=$fopen("test2.bin", "rb");
         if( file != 0 ) begin
             romfilecnt=$fread( Bank0, file, test2_offset );
-            $display("Read %d bytes of test code for second CPU", romfilecnt);
+            $display("INFO: Read %d bytes of test code for second CPU", romfilecnt);
             $fclose(file);
         end
         `endif

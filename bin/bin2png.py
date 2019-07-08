@@ -85,18 +85,21 @@ def makeColourPNG(data, width = 640, height = 480):
     return png
 
 fin=open("video.bin","rb")
-aux = bytearray( fin.read() )
-print("Len = %d" % len(aux))
-video_data = bytearray( len(aux)/2 )
+fin.seek(0,2)
+file_len = fin.tell()/2
+fin.seek(0,0)
+# aux = bytearray( fin.read() )
+print("Len = %d" % file_len)
+#video_data = bytearray( len(aux)/2 )
 c=0
 # verilog outputs 32 bits per pixel
 # drops each second word:
-for k in range(0,len(aux),4):
-    video_data[c]   = aux[k]
-    video_data[c+1] = aux[k+1]
-    c+=2
+# for k in range(0,len(aux),4):
+#     video_data[c]   = aux[k]
+#     video_data[c+1] = aux[k+1]
+#     c+=2
 
-fin.close()
+# fin.close()
 
 pxl=0
 
@@ -110,11 +113,12 @@ frame = bytearray(png_width*png_height*3)
 for k in range(len(frame)):
     frame[k] = 0
         
-while frame_start < len(video_data)-2:
-    while (video_data[frame_start+1]&0x20) == 0x20 and frame_start<len(video_data)-2:
-        frame_start += 2
+while frame_start < file_len-2: # len(video_data)-2:
+    video_data = bytearray( fin.read(4) )
+    while (video_data[1]&0x20) == 0x20 and frame_start<len(video_data)-2:
+        video_data = bytearray( fin.read(4) )
 
-    if frame_start>=len(video_data)-2:
+    if frame_start>=file_len-2: #len(video_data)-2:
         print "Done"
         break
 
@@ -122,12 +126,13 @@ while frame_start < len(video_data)-2:
     width=0
     c=0
     lines=0
-
-    for k in range(frame_start,len(video_data),2):
-        sync = (video_data[k+1]>>4)
+    k=frame_start
+    while len(video_data)==4:
+    # for k in range(frame_start,len(video_data),2):
+        sync = (video_data[1]>>4)
 
         if (sync&2) == 2: # VSYNC
-            #print("Vsync after %d lines" % lines) # 356x259
+            print("Vsync after %d lines" % lines) # 356x259
             dumped = k
             break
         if (sync&1) == 1: # Hsync
@@ -136,10 +141,11 @@ while frame_start < len(video_data)-2:
                 lines +=1
                 c = lines*png_width*3
             width = 0
+            video_data = bytearray( fin.read(4) )
             continue
-        red  = video_data[k+1]&0xf
-        green= (video_data[k]>>4)&0xf
-        blue = video_data[k]&0xf
+        red  = video_data[1]&0xf
+        green= (video_data[0]>>4)&0xf
+        blue = video_data[0]&0xf
         try:
             frame[c  ] = red   * 17
             frame[c+1] = green * 17
@@ -149,13 +155,14 @@ while frame_start < len(video_data)-2:
             raise
         c+=3
         width+=1
-    if dumped == frame_start:
-        break
+        video_data = bytearray( fin.read(4) )
+    # if dumped == frame_start:
+    #     break
 
-    print("Frame extended over %d pixels" % ((dumped-frame_start)/2))
+    # print("Frame extended over %d pixels" % ((dumped-frame_start)/2))
     frame_start = k    
     # save PNG
     with open("img%03d.png"%frame_cnt,"wb") as fout:
-        png_data = makeColourPNG(frame, png_width, png_height)
+        png_data = makeColourPNG(frame, png_width, lines) #png_height)
         fout.write(png_data)
     frame_cnt += 1
