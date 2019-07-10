@@ -265,6 +265,7 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
     -showcmd  Display the simulation command only. Do not run any simulation.
     -d        Add specific Verilog macros for the simulation. Common options
         VIDEO_START=X   video output will start on frame X
+        DUMP_START=X    waveform dump will start on frame X
         TESTSCR1        disable scroll control by the CPU and scroll the
                         background automatically. It can be used together with
                         NOMAIN macro
@@ -352,5 +353,5 @@ verilator)
 esac
 
 if [ "$VIDEO_DUMP" = TRUE ]; then
-    $MODULES/jtframe/bin/bin2png.py
+    $MODULES/jtframe/bin/bin2png.py $BIN2PNG_OPTIONS
 fi
