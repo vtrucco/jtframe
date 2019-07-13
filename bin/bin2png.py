@@ -117,10 +117,13 @@ for k in range(len(frame)):
 
 rotate=0
 scale_up=0
+overwrite=0
 
 for a in sys.argv:
     if a=="-r" or a =="--rotate":
         rotate=1
+    if a=="-o" or a =="--overwrite":
+        overwrite=1
     if a=="-s" or a =="--scale":
         scale_up=1
         
@@ -178,11 +181,12 @@ while 1: # len(video_data)-2:
     # save PNG
     try:
         skip=0
-        with open(filename,"rb") as fout:
-            fout.seek(0,2)
-            if fout.tell()>0:
-                skip=1
-                print ".",
+        if overwrite==0:
+            with open(filename,"rb") as fout:
+                fout.seek(0,2)
+                if fout.tell()>0:
+                    skip=1
+                    print ".",
     except:
         skip=0
         print "*",
@@ -198,11 +202,11 @@ while 1: # len(video_data)-2:
                         for color in range(0,3):
                             rotated_buffer[color+l*3+r*(lines*3)] = frame[(frame_width*3)*(l+1)-((frame_width-width)*3+color+3*r)]
             else:
-                png_width = width
+                png_width = frame_width
                 png_height = lines                
                 rotated_buffer = frame
             if scale_up:
-                scaled = bytearray(width*lines*(3*3)*3)
+                scaled = bytearray(png_width*png_height*(3*3)*3)
                 cnt=0
                 for h in range(0,png_height):
                     for hr in range(0,3):

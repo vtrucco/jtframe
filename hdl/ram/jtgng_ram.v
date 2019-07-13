@@ -1,20 +1,29 @@
-/*  This file is part of JT_GNG.
-    JT_GNG program is free software: you can redistribute it and/or modify
+/*  This file is part of JTFRAME.
+    JTFRAME program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    JT_GNG program is distributed in the hope that it will be useful,
+    JTFRAME program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with JT_GNG.  If not, see <http://www.gnu.org/licenses/>.
+    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
     Date: 27-10-2017 */
+
+// Generic RAM with clock enable
+// parameters:
+//      dw      => Data bit width, 8 for byte-based memories
+//      aw      => Address bit width, 10 for 1kB
+//      simfile => binary file to load during simulation
+//      synfile => hexadecimal file to load for synthesis or simulation
+//      cen_rd  => Use clock enable for reading too, by default it is used
+//                 only for writting.
 
 `timescale 1ns/1ps
 
@@ -44,6 +53,7 @@ if( simfile != "" ) begin
 else begin
     if( synfile!= "" ) begin
         $readmemh(synfile,mem);
+        $display("INFO: %m file %s loaded", synfile);
     end else
         for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
             mem[readcnt] = {dw{1'b0}};
