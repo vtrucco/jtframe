@@ -32,7 +32,7 @@ wire anydev_req = |dev_req;
 always @(posedge clk or negedge rst_n)
     if( !rst_n ) begin
         wait_n   <= 1'b1;
-        dev_free <=  'b0;
+        dev_free <= {devcnt{1'b0}};
         rom_free <= 1'b0;
     end else begin
         last_rom_cs <= rom_cs;
