@@ -176,7 +176,7 @@ wire       HSync = scandoubler_disable ? ~hs : vga_hsync;
 wire       VSync = scandoubler_disable ? ~vs : vga_vsync;
 wire       CSync = ~(HSync ^ VSync);
 
-osd #(0,0,4) osd (
+osd #(0,0,3'b110) osd (
    .clk_sys    ( scandoubler_disable ? clk_sys : clk_vga ),
 
    // spi for OSD

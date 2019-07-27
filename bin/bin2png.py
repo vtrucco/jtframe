@@ -107,8 +107,8 @@ pxl=0
 #look for start
 frame_start=0
 frame_cnt = 0
-frame_width = 640
-frame_height= 480
+frame_width = 1024
+frame_height= 768
 last_lines=0
 
 frame = bytearray(frame_width*frame_height*3)

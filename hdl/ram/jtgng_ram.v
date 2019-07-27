@@ -21,13 +21,14 @@
 //      dw      => Data bit width, 8 for byte-based memories
 //      aw      => Address bit width, 10 for 1kB
 //      simfile => binary file to load during simulation
-//      synfile => hexadecimal file to load for synthesis or simulation
+//      simhexfile => hexadecimal file to load during simulation
+//      synfile => hexadecimal file to load for synthesis
 //      cen_rd  => Use clock enable for reading too, by default it is used
 //                 only for writting.
 
 `timescale 1ns/1ps
 
-module jtgng_ram #(parameter dw=8, aw=10, simfile="", synfile="",cen_rd=0)(
+module jtgng_ram #(parameter dw=8, aw=10, simfile="", simhexfile="", synfile="",cen_rd=0)(
     input   clk,
     input   cen,
     input   [dw-1:0] data,
@@ -51,12 +52,17 @@ if( simfile != "" ) begin
     end
     end
 else begin
-    if( synfile!= "" ) begin
-        $readmemh(synfile,mem);
-        $display("INFO: %m file %s loaded", synfile);
-    end else
-        for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
-            mem[readcnt] = {dw{1'b0}};
+    if( simhexfile != "" ) begin
+        $readmemh(simhexfile,mem);
+        $display("INFO: %m file %s loaded", simhexfile);
+    end else begin
+        if( synfile!= "" ) begin
+            $readmemh(synfile,mem);
+            $display("INFO: %m file %s loaded", synfile);
+        end else
+            for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
+                mem[readcnt] = {dw{1'b0}};
+    end
 end
 `else
 // file for synthesis:
