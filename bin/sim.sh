@@ -150,6 +150,7 @@ case "$1" in
             git add -v mister_dump.v
         fi
         SIMFILE=sim_mister.f
+        PLL_FILE=fast_pll_mister.f
         # Generate a fake build_id.v file
         echo "\`define BUILD_DATE \"190311\"" > build_id.v
         echo "\`define BUILD_TIME \"190311\"" >> build_id.v

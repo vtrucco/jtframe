@@ -110,4 +110,6 @@ assign ioctl_wr = 1'b0;
 assign status = 32'd0;
 assign forced_scandoubler = 1'b0;
 
+assign buttons = 2'b0;
+
 endmodule // hps_io

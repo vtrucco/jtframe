@@ -193,9 +193,13 @@ reg [10:0] osd_buffer_addr;
 wire [7:0] osd_byte = osd_buffer[osd_buffer_addr];
 reg        osd_pixel;
 
+`ifndef OSD_NOBCK
 reg [7:0]  back_buffer[0:8*256-1];
 wire [7:0] back_byte = back_buffer[osd_buffer_addr];
 reg        back_pixel;
+`else 
+wire	   back_pixel = 1'b1;
+`endif
 
 always @(posedge clk_sys) begin
     if(ce_pix) begin
@@ -207,16 +211,19 @@ always @(posedge clk_sys) begin
 
 		osd_pixel <= rotate[0]  ? osd_byte[rotate[1] ? osd_hcnt_next[4:2] : ~osd_hcnt_next[4:2]] :
 		                          osd_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
+		`ifndef OSD_NOBCK
 		back_pixel <= rotate[0]  ? 
                                   back_byte[rotate[1] ? osd_hcnt_next[4:2] : ~osd_hcnt_next[4:2]] :
                                   // no rotation:
                                   back_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
+        `endif
         R_out <= !osd_de ? R_in : { {2{osd_pixel}}, {2{OSD_COLOR[2]&back_pixel}}, R_in[5:4]};
         G_out <= !osd_de ? G_in : { {2{osd_pixel}}, {2{OSD_COLOR[1]&back_pixel}}, G_in[5:4]};
         B_out <= !osd_de ? B_in : { {2{osd_pixel}}, {2{OSD_COLOR[0]&back_pixel}}, B_in[5:4]};
 	end
 end
 
+`ifndef OSD_NOBCK
 initial begin
 back_buffer = '{ 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 
 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 
@@ -348,5 +355,5 @@ back_buffer = '{ 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00,
 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 
 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00 };
 end
-
+`endif
 endmodule
