@@ -193,6 +193,11 @@ reg [10:0] osd_buffer_addr;
 wire [7:0] osd_byte = osd_buffer[osd_buffer_addr];
 reg        osd_pixel;
 
+`ifdef SIMULATION
+// Disable OSD background for simulation
+`define OSD_NOBCK
+`endif
+
 `ifndef OSD_NOBCK
 reg [7:0]  back_buffer[0:8*256-1];
 wire [7:0] back_byte = back_buffer[osd_buffer_addr];

@@ -9,4 +9,4 @@ data_io.v
 ../video/jtgng_vgapxl.v
 ../ram/jtgng_dual_clk_ram.v
 -sv rgb2ypbpr.sv
-osd.v
+osd.sv
