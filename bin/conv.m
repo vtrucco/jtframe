@@ -1,20 +1,19 @@
 # Converts logo128.png to a 1-bit hex file
 # to be used with osd.v
 
-I=imread("logo128.png")
-[r c] = size(I)
+I=imread("logo128.png");
+[r c] = size(I);
 # bit conversion
 f=fopen("osdback.hex","w");
 f2=fopen("osdback.v","w")
-fprintf(f2,"{ ")
+fprintf(f2,"initial begin\n")
+global cnt
+cnt=0
 for j=1:8:r/2
     # fill to make width = 256
     for k=c+1:256
         fprintf(f,"0\n")
-        fprintf(f2,"8'h00, ")
-        if mod(k,16)==0
-            fprintf(f2,"\n")
-        endif
+        dump(f2,0)
     endfor
     for k=1:c
         val=0;
@@ -27,12 +26,10 @@ for j=1:8:r/2
             endif
         endfor
         fprintf(f,"%X\n",val)
-        if mod(k,16)==0
-            fprintf(f2,"\n")
-        endif
-        fprintf(f2,"8'h%02X, ", val)
+        dump(f2,1)
     endfor
     printf("\n")
 endfor
+fprintf(f2, "\nend");
 fclose(f)
 fclose(f2)
