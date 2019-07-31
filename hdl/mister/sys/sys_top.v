@@ -602,7 +602,7 @@ osd hdmi_osd
     .io_strobe( io_strobe   ),
     .io_din   ( io_din      ),
 
-    .rotate   ( rotate      )
+    .rotate   ( rotate      ),
 
     .clk_video( clk_hdmi    ),
     .din      ( hdmi_data_sl),
@@ -638,7 +638,7 @@ osd vga_osd
     .io_strobe( io_strobe   ),
     .io_din   ( io_din      ),
 
-    .rotate   ( rotate      )
+    .rotate   ( rotate      ),
 
     .clk_video( clk_vid     ),
     .din      ( vga_data_sl ),
