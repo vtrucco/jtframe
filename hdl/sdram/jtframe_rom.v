@@ -50,6 +50,7 @@ module jtframe_rom #(parameter
     
     output              main_ok,
     output              snd_ok,
+    output              char_ok,
 
     input  [MAIN_AW-1:0]  main_addr,
     input  [ SND_AW-1:0]  snd_addr,
@@ -91,7 +92,7 @@ wire [SCR1_AW-1:0] scr1_addr_req;
 wire [SCR2_AW-1:0] scr2_addr_req;
 wire [ OBJ_AW-1:0] obj_addr_req;
 
-wire char_ok, scr1_ok, scr2_ok, obj_ok;
+wire scr1_ok, scr2_ok, obj_ok;
 
 always @(posedge clk)
     refresh_en <= &{ main_ok&main_cs, snd_ok&snd_cs, char_ok, scr1_ok, scr2_ok, obj_ok };
