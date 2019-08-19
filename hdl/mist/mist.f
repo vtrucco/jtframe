@@ -1,4 +1,4 @@
-jtframe_mist.v
+jtframe_mist.sv
 jtgng_mist_base.v
 ../jtgng_board.v
 ../sound/hybrid_pwm_sd.v

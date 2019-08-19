@@ -84,34 +84,33 @@ module jtframe_mist(
     input           prog_we,
     output          downloading,
 //////////// board
-    output            rst,      // synchronous reset
-    output            rst_n,    // asynchronous reset
-    output            game_rst,
-    output            game_rst_n,
+    output          rst,      // synchronous reset
+    output          rst_n,    // asynchronous reset
+    output          game_rst,
+    output          game_rst_n,
     // reset forcing signals:
-    input             dip_flip, // A change in dip_flip implies a reset
-    input             rst_req,
+    input           dip_flip, // A change in dip_flip implies a reset
+    input           rst_req,
     // Sound
-    input   [15:0]    snd,
-    output            AUDIO_L,
-    output            AUDIO_R,
+    input   [15:0]  snd,
+    output          AUDIO_L,
+    output          AUDIO_R,
     // joystick
-    output     [9:0]  game_joystick1,
-    output     [9:0]  game_joystick2,
-    output     [1:0]  game_coin,
-    output     [1:0]  game_start,
-    output            game_pause,
-    output            game_service,
+    output   [9:0]  game_joystick1,
+    output   [9:0]  game_joystick2,
+    output   [1:0]  game_coin,
+    output   [1:0]  game_start,
+    output          game_pause,
+    output          game_service,
     // Debug
-    output            LED,
-    output     [3:0]  gfx_en
+    output          LED,
+    output   [3:0]  gfx_en
 );
 
 parameter SIGNED_SND=1'b0;
 parameter THREE_BUTTONS=1'b0;
 parameter GAME_INPUTS_ACTIVE_LOW=1'b1;
 parameter CONF_STR = "";
-parameter CONF_STR_LEN = 0;
 
 // control
 wire [31:0]   joystick1, joystick2;
@@ -124,7 +123,7 @@ assign AUDIO_R = AUDIO_L;
 // downloading, PLL lock lost, OSD is shown or in reset state
 assign LED = ~( downloading | ~pll_locked | osd_shown | rst );
 
-jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN(CONF_STR_LEN),
+jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .SIGNED_SND(SIGNED_SND)
 ) u_base(
     .rst            ( rst           ),
