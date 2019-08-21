@@ -22,7 +22,6 @@ module jtgng_board(
     output  reg       game_rst,
     output  reg       game_rst_n,
     // reset forcing signals:
-    input             dip_flip, // A change in dip_flip implies a reset
     input             rst_req,
 
     input             clk_sys,
@@ -62,8 +61,24 @@ module jtgng_board(
     output reg [9:0]  game_joystick2,
     output reg [1:0]  game_coin,
     output reg [1:0]  game_start,
-    output reg        game_pause,
     output reg        game_service,
+    // DIP and OSD settings
+    input     [31:0]  status,
+    output    [ 7:0]  hdmi_arx,
+    output    [ 7:0]  hdmi_ary,
+    output            vertical_n,
+    output    [ 1:0]  rotate,
+    output            en_mixing,
+    output    [ 1:0]  scanlines,
+
+    output            enable_fm,
+    output            enable_psg,
+
+    output            dip_test,
+    // non standard:
+    output            dip_pause,
+    output            dip_flip,     // A change in dip_flip implies a reset
+    output    [ 1:0]  dip_fxlevel,
     // GFX enable
     output reg [3:0]  gfx_en
 );
@@ -75,6 +90,7 @@ parameter GAME_INPUTS_ACTIVE_LOW=1'b1;
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
 wire key_reset, key_pause;
 reg [7:0] rst_cnt=8'd0;
+reg       game_pause;
 
 always @(posedge clk_sys)
     if( rst_cnt != ~8'b0 ) begin
@@ -237,6 +253,23 @@ always @(posedge clk_sys)
         game_service <= key_service ^ invert_inputs;
     end
 
+jtframe_dip u_dip(
+    .clk        ( clk_sys       ),
+    .status     ( status        ),
+    .game_pause ( game_pause    ),
+    .hdmi_arx   ( hdmi_arx      ),
+    .hdmi_ary   ( hdmi_ary      ),
+    .vertical_n ( vertical_n    ),
+    .rotate     ( rotate        ),
+    .en_mixing  ( en_mixing     ),
+    .scanlines  ( scanlines     ),
+    .enable_fm  ( enable_fm     ),
+    .enable_psg ( enable_psg    ),
+    .dip_test   ( dip_test      ),
+    .dip_pause  ( dip_pause     ),
+    .dip_flip   ( dip_flip      ),
+    .dip_fxlevel( dip_fxlevel   )
+);
 
 jtgng_sdram u_sdram(
     .rst            ( rst           ),

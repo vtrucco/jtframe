@@ -26,7 +26,6 @@ module jtframe_mist(
     // interface with microcontroller
     output  [31:0]  status,
     // Base video
-    input   [1:0]   osd_rotate,
     input   [3:0]   game_r,
     input   [3:0]   game_g,
     input   [3:0]   game_b,
@@ -89,7 +88,6 @@ module jtframe_mist(
     output          game_rst,
     output          game_rst_n,
     // reset forcing signals:
-    input           dip_flip, // A change in dip_flip implies a reset
     input           rst_req,
     // Sound
     input   [15:0]  snd,
@@ -102,6 +100,22 @@ module jtframe_mist(
     output   [1:0]  game_start,
     output          game_pause,
     output          game_service,
+    // DIP and OSD settings
+    output  [ 7:0]  hdmi_arx,
+    output  [ 7:0]  hdmi_ary,
+    output          vertical_n,
+    output  [ 1:0]  rotate,
+    output          en_mixing,
+    output  [ 1:0]  scanlines,
+
+    output          enable_fm,
+    output          enable_psg,
+
+    output          dip_test,
+    // non standard:
+    output          dip_pause,
+    output          dip_flip,     // A change in dip_flip implies a reset
+    output  [ 1:0]  dip_fxlevel,
     // Debug
     output          LED,
     output   [3:0]  gfx_en
@@ -133,7 +147,7 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .SDRAM_CLK      ( SDRAM_CLK     ),
     .osd_shown      ( osd_shown     ),
     // Base video
-    .osd_rotate     ( osd_rotate    ),
+    .osd_rotate     ( rotate        ),
     .game_r         ( game_r        ),
     .game_g         ( game_g        ),
     .game_b         ( game_b        ),
@@ -185,7 +199,6 @@ jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .rst_n          ( rst_n           ),
     .game_rst       ( game_rst        ),
     .game_rst_n     ( game_rst_n      ),
-    .dip_flip       ( dip_flip        ),
     .rst_req        ( rst_req         ),
     .downloading    ( downloading     ),
 
@@ -202,8 +215,19 @@ jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .game_coin      ( game_coin       ),
     .game_start     ( game_start      ),
 `endif
-    .game_pause     ( game_pause      ),
     .game_service   ( game_service    ),
+    // DIP and OSD settings
+    .status         ( status          ),
+    .enable_fm      ( enable_fm       ),
+    .enable_psg     ( enable_psg      ),
+    .dip_test       ( dip_test        ),
+    .dip_pause      ( dip_pause       ),
+    .dip_flip       ( dip_flip        ),
+    .dip_fxlevel    ( dip_fxlevel     ),
+    // screen
+    .rotate         ( rotate          ),
+    .en_mixing      ( en_mixing       ),
+    .scanlines      ( scanlines       ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ        ),
     .SDRAM_A        ( SDRAM_A         ),
