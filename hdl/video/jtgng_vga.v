@@ -84,6 +84,8 @@ end
 reg LHBL_vga, last_LHBL_vga;
 
 // wr_sel is gated with LBHL just to prevent overwritting the address zero
+reg wr_vga;
+
 jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram0 (
     .addr_a  ( wr_addr            ),
     .addr_b  ( rd_addr            ),
@@ -93,7 +95,7 @@ jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram0 (
     .clkb_en ( 1'b1               ),
     .data_a  ( {red,green,blue}   ),
     .data_b  ( 12'd0              ), // unused
-    .we_a    ( wr_sel&&LHBL_vga   ),
+    .we_a    ( wr_vga&&LHBL_vga   ),
     .we_b    ( 1'b0               ),
     .q_b     ( buf0_rgb           ),
     .q_a     (                    )
@@ -108,7 +110,7 @@ jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram1 (
     .clkb_en ( 1'b1               ),
     .data_a  ( {red,green,blue}   ),
     .data_b  ( 12'd0              ), // unused
-    .we_a    ( !wr_sel && LHBL_vga),
+    .we_a    ( !wr_vga && LHBL_vga),
     .we_b    ( 1'b0               ),
     .q_b     ( buf1_rgb           ),
     .q_a     (                    )
@@ -140,6 +142,8 @@ always @(posedge clk_vga) begin
 
     LVBL_vga <= LVBL;
     last_LVBL_vga <= LVBL_vga;
+
+    wr_vga <= wr_sel;
 
     vsync_req <= !vga_vsync ? 1'b0 : vsync_req || (!LVBL_vga && last_LVBL_vga);
 end
