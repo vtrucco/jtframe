@@ -62,11 +62,6 @@ parameter CONF_STR = "";
 
 assign LED  = downloading;
 
-wire orientation = status[20];
-
-assign HDMI_ARX = status[1] ? 8'd16 : orientation ? 8'd4 : 8'd3;
-assign HDMI_ARY = status[1] ? 8'd9  : orientation ? 8'd3 : 8'd4;
-
 wire        forced_scandoubler;
 // control
 wire [15:0]   joystick1, joystick2;
