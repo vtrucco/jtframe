@@ -26,7 +26,6 @@ module jtframe_dip(
     //Video aspect ratio for HDMI. Most retro systems have ratio 4:3.
     output reg [ 7:0]  hdmi_arx,
     output reg [ 7:0]  hdmi_ary,
-    output reg         vertical_n,
     output reg [ 1:0]  rotate,
     output reg         en_mixing,
     output     [ 1:0]  scanlines,
@@ -59,11 +58,11 @@ assign dip_flip    = status[12];
 
 wire   widescreen  = status[2];
 assign scanlines   = status[4:3];
+wire   vertical_n  = ~status[5];
 
 
 // all signals that are not direct re-wirings are latched
 always @(posedge clk) begin
-    vertical_n  <= ~status[5];
     rotate      <= { dip_flip, ~vertical_n };
     dip_fxlevel <= 2'b10 ^ status[11:10];
     en_mixing   <= ~status[9];

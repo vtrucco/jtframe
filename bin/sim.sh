@@ -125,8 +125,13 @@ case "$1" in
         else
             MIST="-F $MODULES/jtframe/hdl/mist/mist.f"
         fi
-        MIST="$MODULES/jtframe/hdl/mist/mist_test.v ../../hdl/jt${SYSNAME}_mist.sv $MIST mist_dump.v"
-
+        if [ -e $MODULES/jtgng_mist.sv ]; then
+            # jtgng cores share a common MiST top file
+            MISTTOP=$MODULES/jtgng_mist.sv
+        else
+            MISTTOP=../../hdl/jt${SYSNAME}_mist.sv
+        fi
+        MIST="$MODULES/jtframe/hdl/mist/mist_test.v $MISTTOP $MIST mist_dump.v"
         MIST="$MIST ${MACROPREFIX}MIST"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mist_dump.v ]; then
@@ -303,6 +308,8 @@ if [ "$EXTRA" != "" ]; then
 fi
 
 EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=jt${SYSNAME}_mist"
+# macros for MiST
+EXTRA="$EXTRA ${MACROPREFIX}GAMETOP=jt${SYSNAME}_game ${MACROPREFIX}MISTTOP=jt${SYSNAME}_mist"
 
 # Add the PLL (MiST only)
 if [[ $TOP = mist_test || $TOP = mister_test ]]; then

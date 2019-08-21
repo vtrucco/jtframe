@@ -51,7 +51,6 @@ module jtframe_mister(
     // DIP and OSD settings
     output  [ 7:0]  hdmi_arx,
     output  [ 7:0]  hdmi_ary,
-    output          vertical_n,
     output  [ 1:0]  rotate,
     output          en_mixing,
     output  [ 1:0]  scanlines,
