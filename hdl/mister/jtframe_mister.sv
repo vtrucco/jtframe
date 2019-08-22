@@ -138,6 +138,8 @@ jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .dip_flip       ( dip_flip        ),
     .dip_fxlevel    ( dip_fxlevel     ),
     // screen
+    .hdmi_arx       ( hdmi_arx        ),
+    .hdmi_ary       ( hdmi_ary        ),
     .rotate         ( rotate          ),
     .en_mixing      ( en_mixing       ),
     .scanlines      ( scanlines       ),

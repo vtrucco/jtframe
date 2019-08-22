@@ -58,7 +58,7 @@ assign dip_flip    = status[12];
 
 wire   widescreen  = status[2];
 assign scanlines   = status[4:3];
-wire   vertical_n  = ~status[5];
+wire   vertical_n  = status[5];
 
 
 // all signals that are not direct re-wirings are latched
