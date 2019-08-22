@@ -147,7 +147,20 @@ case "$1" in
         else
             MIST="-F $MODULES/jtframe/hdl/mister/mister.f"
         fi
-        MIST="$MODULES/jtframe/hdl/mister/mister_test.v ../../hdl/jt${SYSNAME}_mister.sv $MIST mister_dump.v"
+        if [ -e $MODULES/jtgng_mister.sv ]; then
+            # jtgng cores share a common MiST top file
+            MISTTOP=$MODULES/jtgng_mister.sv
+            # Check if the conf_str.v file is present
+            # and try to link to it if it is not here
+            if [ ! -e conf_str.v ]; then
+                if [ -e ../../mist/conf_str.v ]; then
+                    ln -s ../../mist/conf_str.v
+                fi
+            fi
+        else
+            MISTTOP=../../hdl/jt${SYSNAME}_mister.sv
+        fi
+        MIST="$MODULES/jtframe/hdl/mister/mister_test.v $MISTTOP $MIST mister_dump.v"
         MIST="$MIST ${MACROPREFIX}MISTER"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mister_dump.v ]; then
