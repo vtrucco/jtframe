@@ -27,6 +27,7 @@ module jtframe_dip(
     output reg [ 7:0]  hdmi_arx,
     output reg [ 7:0]  hdmi_ary,
     output reg [ 1:0]  rotate,
+    output             rot_control,
     output reg         en_mixing,
     output     [ 2:0]  scanlines,
 
@@ -58,12 +59,23 @@ assign dip_flip    = status[12];
 
 wire   widescreen  = status[2];
 assign scanlines   = status[5:3];
-wire   horiz_n     = status[13];
 
+`ifdef VERTICAL_SCREEN
+    `ifdef MISTER
+    wire   horiz_n     = status[13];
+    assign rot_control = 1'b0;
+    `else
+    wire   horiz_n     = 1'b1;      // MiST cannot rotate the video
+    assign rot_control = status[13];
+    `endif
+`else
+    wire   horiz_n     = 1'b0;
+    assign rot_control = 1'b0;
+`endif
 
 // all signals that are not direct re-wirings are latched
 always @(posedge clk) begin
-    rotate      <= { dip_flip, horiz_n };
+    rotate      <= { dip_flip, horiz_n && !rot_control };
     dip_fxlevel <= 2'b10 ^ status[11:10];
     en_mixing   <= ~status[9];
     enable_fm   <= ~status[8];

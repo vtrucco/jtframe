@@ -68,7 +68,7 @@ module jtgng_board(
     output    [ 7:0]  hdmi_ary,
     output    [ 1:0]  rotate,
     output            en_mixing,
-    output    [ 1:0]  scanlines,
+    output    [ 2:0]  scanlines,
 
     output            enable_fm,
     output            enable_psg,
@@ -87,7 +87,7 @@ parameter THREE_BUTTONS=0;
 parameter GAME_INPUTS_ACTIVE_LOW=1'b1;
 
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
-wire key_reset, key_pause;
+wire key_reset, key_pause, rot_control;
 reg [7:0] rst_cnt=8'd0;
 reg       game_pause;
 
@@ -215,6 +215,16 @@ wire joy_pause = joy1_sync[PAUSE_BIT] | joy2_sync[PAUSE_BIT];
 
 integer cnt;
 
+function [9:0] apply_rotation;
+    input [9:0] joy_in;
+    input       rot;
+    input       invert;
+    begin
+    apply_rotation = {10{invert}} ^ 
+        (!rot ? joy_in : { joy_in[9:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
+    end
+endfunction
+
 always @(posedge clk_sys)
     if(rst ) begin
         game_pause   <= 1'b0;
@@ -229,8 +239,8 @@ always @(posedge clk_sys)
 
         // joystick, coin, start and service inputs are inverted
         // as indicated in the instance parameter
-        game_joystick1 <= {10{invert_inputs}} ^ (joy1_sync | key_joy1);
-        game_joystick2 <= {10{invert_inputs}} ^ (joy2_sync | key_joy2);
+        game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, invert_inputs);
+        game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, invert_inputs);
         
         game_coin      <= {2{invert_inputs}} ^ 
             ({joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
@@ -259,6 +269,7 @@ jtframe_dip u_dip(
     .hdmi_arx   ( hdmi_arx      ),
     .hdmi_ary   ( hdmi_ary      ),
     .rotate     ( rotate        ),
+    .rot_control( rot_control   ),
     .en_mixing  ( en_mixing     ),
     .scanlines  ( scanlines     ),
     .enable_fm  ( enable_fm     ),
