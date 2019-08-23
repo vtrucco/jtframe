@@ -30,7 +30,7 @@ parameter  OSD_Y_OFFSET = 12'd0;
 parameter  OSD_COLOR    =  3'd4;
 
 localparam OSD_WIDTH    = 12'd256;
-localparam OSD_HEIGHT   = 12'd128;
+localparam OSD_HEIGHT   = 12'd256;
 
 reg        osd_enable;
 (* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[4096];
@@ -148,8 +148,7 @@ reg [11:0] osd_buffer_addr;
 reg [10:0] back_buffer_addr;
 
 `ifndef OSD_NOBCK
-reg [7:0] back_buffer[8*256];
-
+reg  [7:0] back_buffer[8*256];
 wire [7:0] back_byte = back_buffer[ back_buffer_addr ];
 reg        back_pixel;
 `else 
@@ -180,6 +179,10 @@ always @(posedge clk_video) begin : GEOMETRY
     reg [21:0] osd_hcnt;
     reg        osd_de1,osd_de2;
     reg  [1:0] osd_en;
+    reg  [2:0] osd_idx;
+    `ifndef OSD_NOBCK
+    reg  [2:0] back_idx;
+    `endif
 
     if(ce_pix) begin
 
@@ -241,20 +244,22 @@ always @(posedge clk_video) begin : GEOMETRY
                     ({ osd_hcnt[7:4], osd_vcnt[7:0] } ^ { {4{~rotate[1]}}, {8{rotate[1]}} }) :
                     // no rotation
                     {osd_vcnt[6:3], osd_hcnt[7:0]};
+        osd_byte  <= osd_buffer[osd_buffer_addr];
+        osd_idx   <= rotate[0] ?
+                    ( osd_hcnt[3:1] ^ {3{~rotate[1]}} )
+                    // no rotation
+                    : osd_vcnt[2:0];
+        osd_pixel <= osd_byte[ osd_idx ];
+        `ifndef OSD_NOBCK
         back_buffer_addr <= rotate[0] ?
-                    ({ osd_hcnt[7:4], osd_vcnt[7:0] } ^ { {4{~rotate[1]}}, {8{rotate[1]}} }) :
+                    ({ osd_hcnt[7:5], osd_vcnt[7:0] } ^ { {3{~rotate[1]}}, {8{rotate[1]}} }) :
                     // no rotation
                     {osd_vcnt[6:4], osd_hcnt[7:0]};
-        osd_byte  <= osd_buffer[osd_buffer_addr];
-        osd_pixel <= osd_byte[ rotate[0] ?
-                    ( osd_hcnt[3:1] ^ {4{~rotate[1]}} )
-                    // no rotation
-                    : osd_vcnt[2:0] ];
-        `ifndef OSD_NOBCK
-        back_pixel <= back_byte[ rotate[0]  ? 
+        back_idx   <= rotate[0]  ? 
                     (osd_hcnt[4:2] ^{3{~rotate[1]}}) :
                     // no rotation:
-                    osd_vcnt[3:1]];
+                    osd_vcnt[3:1];
+        back_pixel <= back_byte[ back_idx ];
         `endif
 
         osd_de[2:1] <= osd_de[1:0];

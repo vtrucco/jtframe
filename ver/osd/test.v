@@ -11,9 +11,14 @@ end
 
 `ifdef ROTATE
 wire [1:0] rotate = 2'b01;
-`else 
+`else
+`ifdef FLIP
+wire [1:0] rotate = 2'b11;
+`else
 wire [1:0] rotate = 2'b00;
 `endif
+`endif
+
 wire [7:0] r,g,b;
 wire de_out, osd_status;
 
