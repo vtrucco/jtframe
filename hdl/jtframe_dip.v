@@ -28,7 +28,7 @@ module jtframe_dip(
     output reg [ 7:0]  hdmi_ary,
     output reg [ 1:0]  rotate,
     output reg         en_mixing,
-    output     [ 1:0]  scanlines,
+    output     [ 2:0]  scanlines,
 
     output reg         enable_fm,
     output reg         enable_psg,
@@ -45,8 +45,8 @@ module jtframe_dip(
 // "-;",
 // "F,rom;",
 // "O2,Aspect Ratio,Original,Wide;",
-// "O5,Orientation,Vert,Horz;",
-// "O34,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+// "OD,Orientation,Vert,Horz;",
+// "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 // "O6,Test mode,OFF,ON;",
 // "O7,PSG,ON,OFF;",
 // "O8,FM ,ON,OFF;",
@@ -57,20 +57,20 @@ module jtframe_dip(
 assign dip_flip    = status[12];
 
 wire   widescreen  = status[2];
-assign scanlines   = status[4:3];
-wire   vertical_n  = status[5];
+assign scanlines   = status[5:3];
+wire   horiz_n     = status[13];
 
 
 // all signals that are not direct re-wirings are latched
 always @(posedge clk) begin
-    rotate      <= { dip_flip, ~vertical_n };
+    rotate      <= { dip_flip, horiz_n };
     dip_fxlevel <= 2'b10 ^ status[11:10];
     en_mixing   <= ~status[9];
     enable_fm   <= ~status[8];
     enable_psg  <= ~status[7];
     // only for MiSTer
-    hdmi_arx    <= widescreen ? 8'd16 : vertical_n ? 8'd4 : 8'd3;
-    hdmi_ary    <= widescreen ? 8'd9  : vertical_n ? 8'd3 : 8'd4;
+    hdmi_arx    <= widescreen ? 8'd16 : horiz_n ? 8'd4 : 8'd3;
+    hdmi_ary    <= widescreen ? 8'd9  : horiz_n ? 8'd3 : 8'd4;
 
 
     `ifdef SIMULATION

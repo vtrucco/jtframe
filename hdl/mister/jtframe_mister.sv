@@ -53,7 +53,7 @@ module jtframe_mister(
     output  [ 7:0]  hdmi_ary,
     output  [ 1:0]  rotate,
     output          en_mixing,
-    output  [ 1:0]  scanlines,
+    output  [ 2:0]  scanlines,
 
     output          enable_fm,
     output          enable_psg,

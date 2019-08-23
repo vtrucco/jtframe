@@ -106,7 +106,7 @@ module jtframe_mist(
     output          vertical_n,
     output  [ 1:0]  rotate,
     output          en_mixing,
-    output  [ 1:0]  scanlines,
+    output  [ 2:0]  scanlines,
 
     output          enable_fm,
     output          enable_psg,
