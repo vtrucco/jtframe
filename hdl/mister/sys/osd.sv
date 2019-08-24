@@ -15,7 +15,7 @@ module osd(
     input         io_strobe,
     input  [15:0] io_din,
 
-    input  [1:0]  rotate, //[0] - rotate [1] - left or right
+    input  [1:0]  rotate, //[0] - rot [1] - left or right
 
     input         clk_video,
     input  [23:0] din,
@@ -25,12 +25,24 @@ module osd(
     output reg    osd_status
 );
 
-parameter  OSD_X_OFFSET = 12'd0;
-parameter  OSD_Y_OFFSET = 12'd0;
-parameter  OSD_COLOR    =  3'd4;
+wire [1:0] rot = 2'b00; // rotation is not ready yet
 
-localparam OSD_WIDTH    = 12'd256;
+parameter [11:0] OSD_X_OFFSET = 12'd0;
+parameter [11:0] OSD_Y_OFFSET = 12'd0;
+parameter [ 2:0] OSD_COLOR    = 3'b111;
+
+localparam OSD_WIDTH    = 12'd256; //256
 localparam OSD_HEIGHT   = 12'd64;
+
+// wire [11:0] osd_width  = OSD_WIDTH;
+// wire [11:0] osd_height = OSD_HEIGHT;
+
+reg [11:0] osd_width, osd_height;
+
+always @(posedge clk_sys) begin
+    osd_width  <= rot[0] ? 12'd128 : 12'd256;
+    osd_height <= rot[0] ? 12'd96 : 12'd64;
+end
 
 reg        osd_enable;
 (* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[4096];
@@ -58,7 +70,7 @@ always@(posedge clk_sys) begin : SPIRX
     reg        has_cmd;
     reg        old_strobe;
 
-    hrheight <= info ? infoh : (OSD_HEIGHT<<highres);
+    hrheight <= info ? infoh : (osd_height<<highres);
 
     old_strobe <= io_strobe;
 
@@ -194,7 +206,7 @@ always @(posedge clk_video) begin : GEOMETRY
             osd_de[0] <= osd_en[1] && hrheight && (osd_vcnt < hrheight);
             osd_hcnt <= 0;
         end
-        if (osd_hcnt+1 == (info ? infow : OSD_WIDTH)) osd_de[0] <= 0;
+        if (osd_hcnt+1 == (info ? infow : osd_width)) osd_de[0] <= 0;
 
         // falling edge of de
         if(!de_in && deD) dsp_width <= h_cnt[21:0];
@@ -204,7 +216,7 @@ always @(posedge clk_video) begin : GEOMETRY
             h_cnt <= 0;
             v_cnt <= next_v_cnt;
             next_v_cnt <= next_v_cnt+1'd1; 
-            h_osd_start <= info ? infox : (((dsp_width - OSD_WIDTH)>>1) + OSD_X_OFFSET - 2'd2);
+            h_osd_start <= info ? infox : (((dsp_width - osd_width)>>1) + OSD_X_OFFSET - 2'd2);
 
             if(h_cnt > {dsp_width, 2'b00}) begin
                 v_cnt <= 0;
@@ -240,23 +252,23 @@ always @(posedge clk_video) begin : GEOMETRY
         end
 
         // pixels
-        osd_buffer_addr <= rotate[0] ?
-                    ({ osd_hcnt[7:4], osd_vcnt[7:0] } ^ { {4{~rotate[1]}}, {8{rotate[1]}} }) :
+        osd_buffer_addr <= rot[0] ?
+                    ({ osd_hcnt[7:4], osd_vcnt[7:0] } ^ { {4{~rot[1]}}, {8{rot[1]}} }) :
                     // no rotation
                     {osd_vcnt[6:3], osd_hcnt[7:0]};
         osd_byte  <= osd_buffer[osd_buffer_addr];
-        osd_idx   <= rotate[0] ?
-                    ( osd_hcnt[3:1] ^ {3{~rotate[1]}} )
+        osd_idx   <= rot[0] ?
+                    ( osd_hcnt[2:0] ^ {3{~rot[1]}} )
                     // no rotation
                     : osd_vcnt[2:0];
         osd_pixel <= osd_byte[ osd_idx ];
         `ifndef OSD_NOBCK
-        back_buffer_addr <= rotate[0] ?
-                    ({ osd_hcnt[7:5], osd_vcnt[7:0] } ^ { {3{~rotate[1]}}, {8{rotate[1]}} }) :
+        back_buffer_addr <= rot[0] ?
+                    ({ osd_hcnt[6:4], osd_vcnt[7:0] } ^ { {3{~rot[1]}}, {8{rot[1]}} }) :
                     // no rotation
                     {osd_vcnt[6:4], osd_hcnt[7:0]};
-        back_idx   <= rotate[0]  ? 
-                    (osd_hcnt[4:2] ^{3{~rotate[1]}}) :
+        back_idx   <= rot[0]  ? 
+                    (osd_hcnt[4:2] ^{3{~rot[1]}}) :
                     // no rotation:
                     osd_vcnt[3:1];
         back_pixel <= info ? 1'b0 : back_byte[ back_idx ]; // do not use background for the info box
@@ -276,9 +288,9 @@ reg de_dly;
 
 always @(posedge clk_video) begin
     normal_rdout <= din;
-    osd_rdout <= {{ {2{osd_pixel}}, {2{OSD_COLOR[2]&back_pixel}}, din[23:20]},// 23:16
-                  { {2{osd_pixel}}, {2{OSD_COLOR[1]&back_pixel}}, din[15:10]},// 15:8
-                  { {2{osd_pixel}}, {2{OSD_COLOR[0]&back_pixel}}, din[7:4]}}; //  7:0
+    osd_rdout <= {{ {1{osd_pixel}}, {2{OSD_COLOR[2]&~back_pixel}}, din[23:19]},// 23:16
+                  { {1{osd_pixel}}, {2{OSD_COLOR[1]&~back_pixel}}, din[15:11]},// 15:8
+                  { {1{osd_pixel}}, {2{OSD_COLOR[0]&~back_pixel}}, din[7:3]}}; //  7:0
     osd_mux <= ~osd_de[2];
     rdout  <= osd_mux ? normal_rdout : osd_rdout;
     de_dly <= de_in;
