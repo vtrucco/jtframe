@@ -30,7 +30,7 @@ parameter  OSD_Y_OFFSET = 12'd0;
 parameter  OSD_COLOR    =  3'd4;
 
 localparam OSD_WIDTH    = 12'd256;
-localparam OSD_HEIGHT   = 12'd256;
+localparam OSD_HEIGHT   = 12'd64;
 
 reg        osd_enable;
 (* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[4096];
@@ -259,7 +259,7 @@ always @(posedge clk_video) begin : GEOMETRY
                     (osd_hcnt[4:2] ^{3{~rotate[1]}}) :
                     // no rotation:
                     osd_vcnt[3:1];
-        back_pixel <= back_byte[ back_idx ];
+        back_pixel <= info ? 1'b0 : back_byte[ back_idx ]; // do not use background for the info box
         `endif
 
         osd_de[2:1] <= osd_de[1:0];

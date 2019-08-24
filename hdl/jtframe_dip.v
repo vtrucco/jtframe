@@ -46,7 +46,7 @@ module jtframe_dip(
 // "-;",
 // "F,rom;",
 // "O2,Aspect Ratio,Original,Wide;",
-// "OD,Orientation,Vert,Horz;",
+// "OD,Original screen,No,Yes;",
 // "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 // "O6,Test mode,OFF,ON;",
 // "O7,PSG,ON,OFF;",
@@ -62,27 +62,27 @@ assign scanlines   = status[5:3];
 
 `ifdef VERTICAL_SCREEN
     `ifdef MISTER
-    wire   horiz_n     = status[13];
+    wire   tate   = status[13]; // 1 if screen is vertical (tate in Japanese)
     assign rot_control = 1'b0;
     `else
-    wire   horiz_n     = 1'b1;      // MiST cannot rotate the video
+    wire   tate   = 1'b1;      // MiST is always vertical
     assign rot_control = status[13];
     `endif
 `else
-    wire   horiz_n     = 1'b0;
+    wire   tate   = 1'b0;
     assign rot_control = 1'b0;
 `endif
 
 // all signals that are not direct re-wirings are latched
 always @(posedge clk) begin
-    rotate      <= { dip_flip, horiz_n && !rot_control };
+    rotate      <= { dip_flip, tate && !rot_control };
     dip_fxlevel <= 2'b10 ^ status[11:10];
     en_mixing   <= ~status[9];
     enable_fm   <= ~status[8];
     enable_psg  <= ~status[7];
     // only for MiSTer
-    hdmi_arx    <= widescreen ? 8'd16 : horiz_n ? 8'd4 : 8'd3;
-    hdmi_ary    <= widescreen ? 8'd9  : horiz_n ? 8'd3 : 8'd4;
+    hdmi_arx    <= widescreen ? 8'd16 : tate ? 8'd4 : 8'd3;
+    hdmi_ary    <= widescreen ? 8'd9  : tate ? 8'd3 : 8'd4;
 
 
     `ifdef SIMULATION

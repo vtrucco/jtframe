@@ -54,6 +54,7 @@ module jtframe_mister(
     output  [ 1:0]  rotate,
     output          en_mixing,
     output  [ 2:0]  scanlines,
+    output          force_scan2x,
 
     output          enable_fm,
     output          enable_psg,
@@ -75,7 +76,6 @@ parameter CONF_STR = "";
 
 assign LED  = downloading;
 
-wire        forced_scandoubler;
 // control
 wire [15:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
@@ -90,7 +90,7 @@ hps_io #(.STRLEN($size(CONF_STR)/8)) u_hps_io
 
     .buttons         ( buttons      ),
     .status          ( status       ),
-    .forced_scandoubler(forced_scandoubler),
+    .forced_scandoubler(force_scan2x),
 
     .ioctl_download  ( downloading  ),
     .ioctl_wr        ( ioctl_wr     ),
