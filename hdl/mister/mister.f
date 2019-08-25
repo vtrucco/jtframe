@@ -3,3 +3,7 @@ hps_io.v
 ../ver/altera_mf.v
 ../jtgng_board.v
 ../jtframe_dip.v
+sys/arcade_video.v
+sys/video_mixer.sv
+sys/scandoubler.v
+hq2x_dummy.sv

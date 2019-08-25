@@ -68,9 +68,11 @@ assign scanlines   = status[5:3];
     wire   tate   = 1'b1;      // MiST is always vertical
     assign rot_control = status[13];
     `endif
+    wire   swap_ar = tate;
 `else
     wire   tate   = 1'b0;
     assign rot_control = 1'b0;
+    wire   swap_ar = 1'b1;
 `endif
 
 // all signals that are not direct re-wirings are latched
@@ -81,8 +83,8 @@ always @(posedge clk) begin
     enable_fm   <= ~status[8];
     enable_psg  <= ~status[7];
     // only for MiSTer
-    hdmi_arx    <= widescreen ? 8'd16 : tate ? 8'd4 : 8'd3;
-    hdmi_ary    <= widescreen ? 8'd9  : tate ? 8'd3 : 8'd4;
+    hdmi_arx    <= widescreen ? 8'd16 : swap_ar ? 8'd4 : 8'd3;
+    hdmi_ary    <= widescreen ? 8'd9  : swap_ar ? 8'd3 : 8'd4;
 
 
     `ifdef SIMULATION

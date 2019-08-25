@@ -86,6 +86,11 @@ reg LHBL_vga, last_LHBL_vga;
 // wr_sel is gated with LBHL just to prevent overwritting the address zero
 reg wr_vga;
 
+// reg [11:0] rgb_dly;
+// always @(posedge clk_rgb)
+//     rgb_dly <= {red,green,blue};
+wire [11:0] rgb_dly = {red,green,blue};
+
 jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram0 (
     .addr_a  ( wr_addr            ),
     .addr_b  ( rd_addr            ),
@@ -93,7 +98,7 @@ jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram0 (
     .clka_en ( cen6               ),
     .clkb    ( clk_vga            ),
     .clkb_en ( 1'b1               ),
-    .data_a  ( {red,green,blue}   ),
+    .data_a  ( rgb_dly            ),
     .data_b  ( 12'd0              ), // unused
     .we_a    ( wr_vga&&LHBL_vga   ),
     .we_b    ( 1'b0               ),
@@ -108,7 +113,7 @@ jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram1 (
     .clka_en ( cen6               ),
     .clkb    ( clk_vga            ),
     .clkb_en ( 1'b1               ),
-    .data_a  ( {red,green,blue}   ),
+    .data_a  ( rgb_dly            ),
     .data_b  ( 12'd0              ), // unused
     .we_a    ( !wr_vga && LHBL_vga),
     .we_b    ( 1'b0               ),
