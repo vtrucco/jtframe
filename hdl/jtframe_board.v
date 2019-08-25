@@ -1,4 +1,4 @@
-/*  This file is part of JT_GNG.
+/*  This file is part of JT_FRAME.
     JT_GNG program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -14,9 +14,9 @@
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
-    Date: 8-2-2019 */
+    Date: 25-9-2019 */
 
-module jtgng_board(
+module jtframe_board(
     output  reg       rst,      // use as synchrnous reset
     output  reg       rst_n,    // use as asynchronous reset
     output  reg       game_rst,
@@ -26,6 +26,7 @@ module jtgng_board(
 
     input             clk_sys,
     input             clk_rom,
+    input             clk_vga,
     // ROM access from game
     input             sdram_req,
     output            sdram_ack,
@@ -67,8 +68,6 @@ module jtgng_board(
     output    [ 7:0]  hdmi_arx,
     output    [ 7:0]  hdmi_ary,
     output    [ 1:0]  rotate,
-    output            en_mixing,
-    output    [ 2:0]  scanlines,
 
     output            enable_fm,
     output            enable_psg,
@@ -78,6 +77,24 @@ module jtgng_board(
     output            dip_pause,
     output            dip_flip,     // A change in dip_flip implies a reset
     output    [ 1:0]  dip_fxlevel,
+    // Base video
+    input     [ 1:0]  osd_rotate,
+    input     [ 3:0]  game_r,
+    input     [ 3:0]  game_g,
+    input     [ 3:0]  game_b,
+    input             LHBL,
+    input             LVBL,
+    input             hs,
+    input             vs, 
+    input             pxl_cen,
+    input             pxl2_cen,
+    // scan doubler
+    input             scan2x_enb,
+    output    [7:0]   scan2x_r,
+    output    [7:0]   scan2x_g,
+    output    [7:0]   scan2x_b,
+    output            scan2x_hsync,
+    output            scan2x_vsync,
     // GFX enable
     output reg [3:0]  gfx_en
 );
@@ -85,6 +102,9 @@ module jtgng_board(
 
 parameter THREE_BUTTONS=0;
 parameter GAME_INPUTS_ACTIVE_LOW=1'b1;
+
+wire  [ 2:0]  scanlines;
+wire          en_mixing;
 
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
 wire key_reset, key_pause, rot_control;
@@ -134,37 +154,6 @@ always @(posedge clk_sys)
         pre_game_rst_n <= 1'b1;
         game_rst_n <= pre_game_rst_n;
     end
-
-// convert 5-bit colour to 6-bit colour
-// assign vga_r[0] = vga_r[5];
-// assign vga_g[0] = vga_g[5];
-// assign vga_b[0] = vga_b[5];
-
-// `ifndef NOSCANDOUBLER
-// jtgng_vga u_scandoubler (
-//     .clk_sys    ( clk_sys       ), // 24 MHz
-//     .cen6       ( pxl_cen       ), //  6 MHz
-//     .clk_vga    ( clk_vga       ), // 25 MHz
-//     .rst        ( rst           ),
-//     .red        ( game_r        ),
-//     .green      ( game_g        ),
-//     .blue       ( game_b        ),
-//     .LHBL       ( LHBL          ),
-//     .LVBL       ( LVBL          ),
-//     .en_mixing  ( en_mixing     ),
-//     .vga_red    ( vga_r[5:1]    ),
-//     .vga_green  ( vga_g[5:1]    ),
-//     .vga_blue   ( vga_b[5:1]    ),
-//     .vga_hsync  ( vga_hsync     ),
-//     .vga_vsync  ( vga_vsync     )
-// );
-// `else
-// assign vga_r[5:1] = 4'd0;
-// assign vga_g[5:1] = 4'd0;
-// assign vga_b[5:1] = 4'd0;
-// assign vga_hsync  = 1'b0;
-// assign vga_vsync  = 1'b0;
-// `endif
 
 wire [9:0] key_joy1, key_joy2;
 wire [1:0] key_start, key_coin;
@@ -308,5 +297,92 @@ jtgng_sdram u_sdram(
     .SDRAM_BA       ( SDRAM_BA      ),
     .SDRAM_CKE      ( SDRAM_CKE     )
 );
+
+
+/////////// Scan doubler
+`define DEFAULT_SCAN2X
+
+`ifdef MISTER_VIDEO_MIXER
+    `undef DEFAULT_SCAN2X
+    wire hq2x_en = scanlines==3'd1;
+    reg [1:0] sl;
+    always @(posedge clk_sys)
+        case( scanlines )
+            default: sl <= 2'd0;
+            3'd2:    sl <= 2'd1;
+            3'd3:    sl <= 2'd2;
+            3'd4:    sl <= 2'd3;
+        endcase // scanlines
+    wire [1:0] nc_r, nc_g, nc_b;
+    video_mixer #(.LINE_LENGTH(256), .HALF_DEPTH(1)) u_video_mixer
+    (
+        .clk_sys        ( clk_sys       ),
+        .ce_pix         ( pxl_cen       ),
+        .ce_pix_out     (               ),
+        .scandoubler    ( ~scan2x_enb   ),        
+        .scanlines      ( sl            ),
+        .hq2x           ( hq2x_en       ),
+        .R              ( game_r        ),
+        .G              ( game_g        ),
+        .B              ( game_b        ),
+        .mono           ( 1'b0          ),
+        .HSync          ( hs            ),
+        .VSync          ( vs            ),
+        .HBlank         ( ~LHBL         ),
+        .VBlank         ( ~LVBL         ),
+        .VGA_R          ( scan2x_r      ),
+        .VGA_G          ( scan2x_g      ),
+        .VGA_B          ( scan2x_b      ),
+        .VGA_HS         ( scan2x_hsync  ),
+        .VGA_VS         ( scan2x_vsync  ),
+        .VGA_DE         (               )
+    );
+`endif
+
+`ifdef JTFRAME_VGA
+    `undef DEFAULT_SCAN2X
+    jtgng_vga u_scandoubler (
+        .clk_rgb    ( clk_sys       ),
+        .cen6       ( pxl_cen       ), //  6 MHz
+        .clk_vga    ( clk_vga       ), // 25 MHz
+        .rst        ( rst           ),
+        .red        ( game_r        ),
+        .green      ( game_g        ),
+        .blue       ( game_b        ),
+        .LHBL       ( LHBL          ),
+        .LVBL       ( LVBL          ),
+        .en_mixing  ( en_mixing     ),
+        .vga_red    ( scan2x_r[7:3] ),
+        .vga_green  ( scan2x_g[7:3] ),
+        .vga_blue   ( scan2x_b[7:3] ),
+        .vga_hsync  ( scan2x_hsync  ),
+        .vga_vsync  ( scan2x_vsync  )
+    );
+
+    // convert 5-bit colour to 6-bit colour
+    assign scan2x_r[2:0] = scan2x_r[7:5];
+    assign scan2x_g[2:0] = scan2x_g[7:5];
+    assign scan2x_b[2:0] = scan2x_b[7:5];
+`endif
+
+`ifdef DEFAULT_SCAN2X
+    wire [11:0] rgbx2;
+    wire [11:0] game_rgb = {game_r, game_g, game_b };
+
+    jtframe_scan2x #(.DW(12), .HLEN(9'd384)) u_scan2x(
+        .rst_n      ( rst_n        ),
+        .clk        ( clk_sys      ),
+        .base_cen   ( pxl_cen      ),
+        .basex2_cen ( pxl2_cen     ),
+        .base_pxl   ( game_rgb     ),
+        .x2_pxl     ( rgbx2        ),
+        .HS         ( hs           ),
+        .x2_HS      ( scan2x_hsync )
+    );
+    assign scan2x_vsync = vs;
+    assign scan2x_r     = {2{rgbx2[11:8]} };
+    assign scan2x_g     = {2{rgbx2[ 7:4]} };
+    assign scan2x_b     = {2{rgbx2[ 3:0]} };
+`endif
 
 endmodule // jtgng_board

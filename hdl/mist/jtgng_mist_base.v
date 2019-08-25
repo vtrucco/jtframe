@@ -34,19 +34,21 @@ module jtgng_mist_base(
     input           LHBL,
     input           LVBL,
     input           hs,
-    input           vs,
-    // vga video
-    input   [5:0]   vga_r,
-    input   [5:0]   vga_g,
-    input   [5:0]   vga_b,
-    input           vga_hsync,
-    input           vga_vsync,    
+    input           vs, 
+    input           pxl_cen,
+    // Scan-doubler video
+    input   [5:0]   scan2x_r,
+    input   [5:0]   scan2x_g,
+    input   [5:0]   scan2x_b,
+    input           scan2x_hsync,
+    input           scan2x_vsync,
+    output          scan2x_enb, // scan doubler enable bar = scan doubler disable.
     // Final video: VGA+OSD or base+OSD depending on configuration
-    output      [5:0]   VIDEO_R,
-    output      [5:0]   VIDEO_G,
-    output      [5:0]   VIDEO_B,
-    output              VIDEO_HS,
-    output              VIDEO_VS,
+    output  [5:0]   VIDEO_R,
+    output  [5:0]   VIDEO_G,
+    output  [5:0]   VIDEO_B,
+    output          VIDEO_HS,
+    output          VIDEO_VS,
     // SPI interface to arm io controller
     output          SPI_DO,
     input           SPI_DI,
@@ -77,7 +79,14 @@ parameter CONF_STR_LEN=4;
 parameter SIGNED_SND=1'b0;
 
 wire ypbpr;
-wire scandoubler_disable;
+
+// vga video
+wire [5:0]  vga_r;
+wire [5:0]  vga_g;
+wire [5:0]  vga_b;
+wire        vga_hsync;
+wire        vga_vsync;
+
 
 `ifndef SIMULATION
 `ifndef NOSOUND
@@ -110,7 +119,7 @@ user_io #(.STRLEN(CONF_STR_LEN)) u_userio(
     .joystick_1     ( joystick1 ),
     .status         ( status    ),
     .ypbpr          ( ypbpr     ),
-    .scandoubler_disable ( scandoubler_disable ),
+    .scandoubler_disable ( scan2x_enb ),
     // keyboard
     .ps2_kbd_clk    ( ps2_kbd_clk  ),
     .ps2_kbd_data   ( ps2_kbd_data ),
@@ -130,6 +139,7 @@ assign joystick2 = 32'd0;
 assign status    = 32'd0;
 assign ps2_kbd_data = 1'b0;
 assign ps2_kbd_clk  = 1'b0;
+assign scan2x_enb   = 1'b0;
 `ifndef SCANDOUBLER_DISABLE
 `define SCANDOUBLER_DISABLE 1'b0
 `endif
@@ -172,12 +182,12 @@ end
 wire [5:0] osd_r_o;
 wire [5:0] osd_g_o;
 wire [5:0] osd_b_o;
-wire       HSync = scandoubler_disable ? ~hs : vga_hsync;
-wire       VSync = scandoubler_disable ? ~vs : vga_vsync;
+wire       HSync = scan2x_enb ? ~hs : scan2x_hsync;
+wire       VSync = scan2x_enb ? ~vs : scan2x_vsync;
 wire       CSync = ~(HSync ^ VSync);
 
 osd #(0,0,3'b110) osd (
-   .clk_sys    ( scandoubler_disable ? clk_sys : clk_vga ),
+   .clk_sys    ( scan2x_enb ? clk_sys : clk_vga ),
 
    // spi for OSD
    .SPI_DI     ( SPI_DI       ),
@@ -186,9 +196,9 @@ osd #(0,0,3'b110) osd (
 
    .rotate     ( osd_rotate   ),
 
-   .R_in       ( scandoubler_disable ? { game_r, game_r[3:2] } : vga_r ),
-   .G_in       ( scandoubler_disable ? { game_g, game_g[3:2] } : vga_g ),
-   .B_in       ( scandoubler_disable ? { game_b, game_b[3:2] } : vga_b ),
+   .R_in       ( scan2x_enb ? { game_r, game_r[3:2] } : scan2x_r ),
+   .G_in       ( scan2x_enb ? { game_g, game_g[3:2] } : scan2x_g ),
+   .B_in       ( scan2x_enb ? { game_b, game_b[3:2] } : scan2x_b ),
    .HSync      ( HSync        ),
    .VSync      ( VSync        ),
 
@@ -216,8 +226,8 @@ assign VIDEO_G  = ypbpr? Y:osd_g_o;
 assign VIDEO_B  = ypbpr?Pb:osd_b_o;
 // a minimig vga->scart cable expects a composite sync signal on the VIDEO_HS output.
 // and VCC on VIDEO_VS (to switch into rgb mode)
-assign VIDEO_HS = (scandoubler_disable | ypbpr) ? CSync : HSync;
-assign VIDEO_VS = (scandoubler_disable | ypbpr) ? 1'b1 : VSync;
+assign VIDEO_HS = (scan2x_enb | ypbpr) ? CSync : HSync;
+assign VIDEO_VS = (scan2x_enb | ypbpr) ? 1'b1 : VSync;
 `else
 assign VIDEO_R  = game_r;// { game_r, game_r[3:2] };
 assign VIDEO_G  = game_g;// { game_g, game_g[3:2] };

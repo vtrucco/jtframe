@@ -33,12 +33,8 @@ module jtframe_mist(
     input           LVBL,
     input           hs,
     input           vs,
-    // VGA-compatible video
-    input   [5:0]   vga_r,
-    input   [5:0]   vga_g,
-    input   [5:0]   vga_b,
-    input           vga_hsync,
-    input           vga_vsync,
+    input           pxl_cen,
+    input           pxl2_cen,
     // MiST VGA pins
     output  [5:0]   VGA_R,
     output  [5:0]   VGA_G,
@@ -104,9 +100,6 @@ module jtframe_mist(
     output  [ 7:0]  hdmi_arx,
     output  [ 7:0]  hdmi_ary,
     output          vertical_n,
-    output  [ 1:0]  rotate,
-    output          en_mixing,
-    output  [ 2:0]  scanlines,
 
     output          enable_fm,
     output          enable_psg,
@@ -131,11 +124,17 @@ wire [31:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire          osd_shown;
 
+wire [7:0]    scan2x_r, scan2x_g, scan2x_b;
+wire          scan2x_hsync, scan2x_vsync;
+wire          scan2x_enb;
+
 assign AUDIO_R = AUDIO_L;
 
 ///////////////// LED is on while
 // downloading, PLL lock lost, OSD is shown or in reset state
 assign LED = ~( downloading | ~pll_locked | osd_shown | rst );
+wire  [ 1:0]  rotate;
+
 
 jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .SIGNED_SND(SIGNED_SND)
@@ -154,13 +153,15 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .LHBL           ( LHBL          ),
     .LVBL           ( LVBL          ),
     .hs             ( hs            ),
-    .vs             ( vs            ),
-    // VGA video (without OSD)
-    .vga_r          ( vga_r         ),
-    .vga_g          ( vga_g         ),
-    .vga_b          ( vga_b         ),
-    .vga_hsync      ( vga_hsync     ),
-    .vga_vsync      ( vga_vsync     ),  
+    .vs             ( vs            ), 
+    .pxl_cen        ( pxl_cen       ),
+    // Scan-doubler video
+    .scan2x_r       ( scan2x_r[7:2] ),
+    .scan2x_g       ( scan2x_g[7:2] ),
+    .scan2x_b       ( scan2x_b[7:2] ),
+    .scan2x_hsync   ( scan2x_hsync  ),
+    .scan2x_vsync   ( scan2x_vsync  ),
+    .scan2x_enb     ( scan2x_enb    ),
     // MiST VGA pins (includes OSD)
     .VIDEO_R        ( VGA_R         ),
     .VIDEO_G        ( VGA_G         ),
@@ -192,7 +193,7 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .downloading    ( downloading   )
 );
 
-jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
+jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW)
 ) u_board(
     .rst            ( rst             ),
@@ -204,6 +205,7 @@ jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
+    .clk_vga        ( clk_vga         ),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
     .ps2_kbd_data   ( ps2_kbd_data    ),
@@ -226,8 +228,6 @@ jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .dip_fxlevel    ( dip_fxlevel     ),
     // screen
     .rotate         ( rotate          ),
-    .en_mixing      ( en_mixing       ),
-    .scanlines      ( scanlines       ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ        ),
     .SDRAM_A        ( SDRAM_A         ),
@@ -251,6 +251,24 @@ jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .prog_data      ( prog_data       ),
     .prog_mask      ( prog_mask       ),
     .prog_we        ( prog_we         ),
+    // Base video
+    .osd_rotate     ( rotate          ),
+    .game_r         ( game_r          ),
+    .game_g         ( game_g          ),
+    .game_b         ( game_b          ),
+    .LHBL           ( LHBL            ),
+    .LVBL           ( LVBL            ),
+    .hs             ( hs              ),
+    .vs             ( vs              ), 
+    .pxl_cen        ( pxl_cen         ),
+    .pxl2_cen       ( pxl2_cen        ),
+    // Scan-doubler video
+    .scan2x_r       ( scan2x_r        ),
+    .scan2x_g       ( scan2x_g        ),
+    .scan2x_b       ( scan2x_b        ),
+    .scan2x_hsync   ( scan2x_hsync    ),
+    .scan2x_vsync   ( scan2x_vsync    ),
+    .scan2x_enb     ( scan2x_enb      ),
     // Debug
     .gfx_en         ( gfx_en          )
 );

@@ -105,7 +105,7 @@ hps_io #(.STRLEN($size(CONF_STR)/8)) u_hps_io
 );
 
 
-jtgng_board #(.THREE_BUTTONS(THREE_BUTTONS),
+jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW)
 ) u_board(
     .rst            ( rst             ),
