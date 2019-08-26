@@ -72,12 +72,16 @@ function [4:0] avg; // Average of two 5-bit numbers
 endfunction
 
 always @(posedge clk_vga) begin
-    if( !scanline || !en_mixing)
-        {vga_red, vga_green,vga_blue} <= !rd_sel ? dbl1_rgb : dbl0_rgb;
-    else begin // mix the two lines
-        vga_red  <= avg( dbl1_rgb[14:10], dbl0_rgb[14:10]);
-        vga_green<= avg( dbl1_rgb[ 9:5 ], dbl0_rgb[ 9:5 ]);
-        vga_blue <= avg( dbl1_rgb[ 4:0 ], dbl0_rgb[ 4:0 ]);
+    if( state == LINE ) begin
+        if( !scanline || !en_mixing)
+            {vga_red, vga_green,vga_blue} <= !rd_sel ? dbl1_rgb : dbl0_rgb;
+        else begin // mix the two lines
+            vga_red  <= avg( dbl1_rgb[14:10], dbl0_rgb[14:10]);
+            vga_green<= avg( dbl1_rgb[ 9:5 ], dbl0_rgb[ 9:5 ]);
+            vga_blue <= avg( dbl1_rgb[ 4:0 ], dbl0_rgb[ 4:0 ]);
+        end
+    end else begin
+        {vga_red, vga_green,vga_blue} <= 15'd0; // low during blanking
     end
 end
 
