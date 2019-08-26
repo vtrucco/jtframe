@@ -40,8 +40,8 @@ module jtgng_mist_base(
     input   [5:0]   scan2x_r,
     input   [5:0]   scan2x_g,
     input   [5:0]   scan2x_b,
-    input           scan2x_hsync,
-    input           scan2x_vsync,
+    input           scan2x_hs,
+    input           scan2x_vs,
     output          scan2x_enb, // scan doubler enable bar = scan doubler disable.
     // Final video: VGA+OSD or base+OSD depending on configuration
     output  [5:0]   VIDEO_R,
@@ -182,8 +182,8 @@ end
 wire [5:0] osd_r_o;
 wire [5:0] osd_g_o;
 wire [5:0] osd_b_o;
-wire       HSync = scan2x_enb ? ~hs : scan2x_hsync;
-wire       VSync = scan2x_enb ? ~vs : scan2x_vsync;
+wire       HSync = scan2x_enb ? ~hs : scan2x_hs;
+wire       VSync = scan2x_enb ? ~vs : scan2x_vs;
 wire       CSync = ~(HSync ^ VSync);
 
 osd #(0,0,3'b110) osd (

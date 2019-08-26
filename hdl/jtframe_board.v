@@ -88,13 +88,26 @@ module jtframe_board(
     input             vs, 
     input             pxl_cen,
     input             pxl2_cen,
+    // HDMI outputs (only for MiSTer)
+    output            hdmi_clk,
+    output            hdmi_cen,
+    output    [ 7:0]  hdmi_r,
+    output    [ 7:0]  hdmi_g,
+    output    [ 7:0]  hdmi_b,
+    output            hdmi_hs,
+    output            hdmi_vs,
+    output            hdmi_de,   // = ~(VBlank | HBlank)
+    output    [ 1:0]  hdmi_sl,   // scanlines fx    
     // scan doubler
     input             scan2x_enb,
     output    [7:0]   scan2x_r,
     output    [7:0]   scan2x_g,
     output    [7:0]   scan2x_b,
-    output            scan2x_hsync,
-    output            scan2x_vsync,
+    output            scan2x_hs,
+    output            scan2x_vs,
+    output            scan2x_clk,
+    output            scan2x_cen,
+    output            scan2x_de,
     // GFX enable
     output reg [3:0]  gfx_en
 );
@@ -300,89 +313,184 @@ jtgng_sdram u_sdram(
 
 
 /////////// Scan doubler
-`define DEFAULT_SCAN2X
+// There are several scan doublers available
+// the best quality one for CAPCOM CPS0 games is jtgng_vga
+// the best one for vertical games on MiSTer is arcade_rotate_fx, which
+// is selected automatically in that case
+// For horizontal games, the scaler can be chosen with the SCAN2X_TYPE macro
+// and overridden with a parameter.
 
-`ifdef MISTER_VIDEO_MIXER
-    `undef DEFAULT_SCAN2X
-    wire hq2x_en = scanlines==3'd1;
-    reg [1:0] sl;
-    always @(posedge clk_sys)
-        case( scanlines )
-            default: sl <= 2'd0;
-            3'd2:    sl <= 2'd1;
-            3'd3:    sl <= 2'd2;
-            3'd4:    sl <= 2'd3;
-        endcase // scanlines
-    wire [1:0] nc_r, nc_g, nc_b;
-    video_mixer #(.LINE_LENGTH(256), .HALF_DEPTH(1)) u_video_mixer
-    (
-        .clk_sys        ( clk_sys       ),
-        .ce_pix         ( pxl_cen       ),
-        .ce_pix_out     (               ),
-        .scandoubler    ( ~scan2x_enb   ),        
-        .scanlines      ( sl            ),
-        .hq2x           ( hq2x_en       ),
-        .R              ( game_r        ),
-        .G              ( game_g        ),
-        .B              ( game_b        ),
-        .mono           ( 1'b0          ),
-        .HSync          ( hs            ),
-        .VSync          ( vs            ),
-        .HBlank         ( ~LHBL         ),
-        .VBlank         ( ~LVBL         ),
-        .VGA_R          ( scan2x_r      ),
-        .VGA_G          ( scan2x_g      ),
-        .VGA_B          ( scan2x_b      ),
-        .VGA_HS         ( scan2x_hsync  ),
-        .VGA_VS         ( scan2x_vsync  ),
-        .VGA_DE         (               )
-    );
+`ifdef VERTICAL_SCREEN
+    `ifdef MISTER
+    localparam ROTATE_FX=1;
+    `else
+    localparam ROTATE_FX=0;
+    `endif
+`else
+localparam ROTATE_FX=0;
 `endif
 
-`ifdef JTFRAME_VGA
-    `undef DEFAULT_SCAN2X
-    jtgng_vga u_scandoubler (
-        .clk_rgb    ( clk_sys       ),
-        .cen6       ( pxl_cen       ), //  6 MHz
-        .clk_vga    ( clk_vga       ), // 25 MHz
-        .rst        ( rst           ),
-        .red        ( game_r        ),
-        .green      ( game_g        ),
-        .blue       ( game_b        ),
-        .LHBL       ( LHBL          ),
-        .LVBL       ( LVBL          ),
-        .en_mixing  ( en_mixing     ),
-        .vga_red    ( scan2x_r[7:3] ),
-        .vga_green  ( scan2x_g[7:3] ),
-        .vga_blue   ( scan2x_b[7:3] ),
-        .vga_hsync  ( scan2x_hsync  ),
-        .vga_vsync  ( scan2x_vsync  )
-    );
-
-    // convert 5-bit colour to 6-bit colour
-    assign scan2x_r[2:0] = scan2x_r[7:5];
-    assign scan2x_g[2:0] = scan2x_g[7:5];
-    assign scan2x_b[2:0] = scan2x_b[7:5];
+`ifndef SCAN2X_TYPE
+`define SCAN2X_TYPE 0
 `endif
 
-`ifdef DEFAULT_SCAN2X
-    wire [11:0] rgbx2;
-    wire [11:0] game_rgb = {game_r, game_g, game_b };
+parameter SCAN2X_TYPE=`SCAN2X_TYPE;
 
-    jtframe_scan2x #(.DW(12), .HLEN(9'd384)) u_scan2x(
-        .rst_n      ( rst_n        ),
-        .clk        ( clk_sys      ),
-        .base_cen   ( pxl_cen      ),
-        .basex2_cen ( pxl2_cen     ),
-        .base_pxl   ( game_rgb     ),
-        .x2_pxl     ( rgbx2        ),
-        .HS         ( hs           ),
-        .x2_HS      ( scan2x_hsync )
+wire [11:0] game_rgb = {game_r, game_g, game_b };
+wire hblank = ~LHBL;
+wire vblank = ~LVBL;
+
+if( ROTATE_FX ) begin
+    arcade_rotate_fx #(.WIDTH(256),.HEIGHT(224),.DW(12),.CCW(1)) 
+    u_rotate_fx(
+        .clk_video  ( clk_sys       ),
+        .ce_pix     ( pxl_cen       ),
+    
+        .RGB_in     ( game_rgb      ),
+        .HBlank     ( hblank        ),
+        .VBlank     ( vblank        ),
+        .HSync      ( hs            ),
+        .VSync      ( vs            ),
+    
+        .VGA_CLK    (  scan2x_clk   ),
+        .VGA_CE     (  scan2x_cen   ),
+        .VGA_R      (  scan2x_r     ),
+        .VGA_G      (  scan2x_g     ),
+        .VGA_B      (  scan2x_b     ),
+        .VGA_HS     (  scan2x_hs    ),
+        .VGA_VS     (  scan2x_vs    ),
+        .VGA_DE     (  scan2x_de    ),
+    
+        .HDMI_CLK   (  hdmi_clk     ),
+        .HDMI_CE    (  hdmi_cen     ),
+        .HDMI_R     (  hdmi_r       ),
+        .HDMI_G     (  hdmi_g       ),
+        .HDMI_B     (  hdmi_b       ),
+        .HDMI_HS    (  hdmi_hs      ),
+        .HDMI_VS    (  hdmi_vs      ),
+        .HDMI_DE    (  hdmi_de      ),
+        .HDMI_SL    (  hdmi_sl      ),
+    
+        .fx                ( scanlines   ),
+        .forced_scandoubler( ~scan2x_enb ),
+        .no_rotate         ( rotate[0]   ) // the no_rotate name
+            // is misleading. A low value in no_rotate will actually
+            // rotate the game video. If the game is vertical, a low value
+            // presents the game correctly on a horizontal screen
     );
-    assign scan2x_vsync = vs;
-    assign scan2x_r     = {2{rgbx2[11:8]} };
-    assign scan2x_g     = {2{rgbx2[ 7:4]} };
-    assign scan2x_b     = {2{rgbx2[ 3:0]} };
-`endif
+end
+else case( SCAN2X_TYPE )
+    default: begin // JTFRAME easy going scaler
+        wire [11:0] rgbx2;
+
+        jtframe_scan2x #(.DW(12), .HLEN(9'd384)) u_scan2x(
+            .rst_n      ( rst_n        ),
+            .clk        ( clk_sys      ),
+            .base_cen   ( pxl_cen      ),
+            .basex2_cen ( pxl2_cen     ),
+            .base_pxl   ( game_rgb     ),
+            .x2_pxl     ( rgbx2        ),
+            .HS         ( hs           ),
+            .x2_HS      ( scan2x_hs )
+        );
+        assign scan2x_vs = vs;
+        assign scan2x_r     = {2{rgbx2[11:8]} };
+        assign scan2x_g     = {2{rgbx2[ 7:4]} };
+        assign scan2x_b     = {2{rgbx2[ 3:0]} };
+        assign scan2x_de    = ~(scan2x_vs | scan2x_hs);
+        assign scan2x_cen   = pxl2_cen;
+        assign scan2x_clk   = clk_sys;
+        assign hdmi_clk     = scan2x_clk;
+        assign hdmi_cen     = scan2x_cen;
+        assign hdmi_r       = scan2x_r;
+        assign hdmi_g       = scan2x_g;
+        assign hdmi_b       = scan2x_b;
+        assign hdmi_de      = scan2x_de;
+        assign hdmi_hs      = scan2x_hs;
+        assign hdmi_vs      = scan2x_vs;
+        assign hdmi_sl      = 2'b0;
+    end
+    1: begin // JTGNG_VGA, nicely scales up to 640x480
+        jtgng_vga u_gngvga (
+            .clk_rgb    ( clk_sys       ),
+            .cen6       ( pxl_cen       ), //  6 MHz
+            .clk_vga    ( clk_vga       ), // 25 MHz
+            .rst        ( rst           ),
+            .red        ( game_r        ),
+            .green      ( game_g        ),
+            .blue       ( game_b        ),
+            .LHBL       ( LHBL          ),
+            .LVBL       ( LVBL          ),
+            .en_mixing  ( en_mixing     ),
+            .vga_red    ( scan2x_r[7:3] ),
+            .vga_green  ( scan2x_g[7:3] ),
+            .vga_blue   ( scan2x_b[7:3] ),
+            .vga_hsync  ( scan2x_hs  ),
+            .vga_vsync  ( scan2x_vs  )
+        );
+
+        // convert 5-bit colour to 6-bit colour
+        assign scan2x_r[2:0] = scan2x_r[7:5];
+        assign scan2x_g[2:0] = scan2x_g[7:5];
+        assign scan2x_b[2:0] = scan2x_b[7:5];
+        assign scan2x_de     = ~(scan2x_vs | scan2x_hs);
+        assign scan2x_cen    = 1'b1;
+        assign scan2x_clk    = clk_vga;
+        assign hdmi_clk      = scan2x_clk;
+        assign hdmi_cen      = scan2x_cen;
+        assign hdmi_r        = scan2x_r;
+        assign hdmi_g        = scan2x_g;
+        assign hdmi_b        = scan2x_b;
+        assign hdmi_de       = scan2x_de;
+        assign hdmi_hs       = scan2x_hs;
+        assign hdmi_vs       = scan2x_vs;
+        assign hdmi_sl       = 2'b0;
+    end
+    2: begin // MiSTer mixer
+        wire hq2x_en = scanlines==3'd1;
+        reg [1:0] sl;
+        always @(posedge clk_sys)
+            case( scanlines )
+                default: sl <= 2'd0;
+                3'd2:    sl <= 2'd1;
+                3'd3:    sl <= 2'd2;
+                3'd4:    sl <= 2'd3;
+            endcase // scanlines
+        wire [1:0] nc_r, nc_g, nc_b;
+        video_mixer #(.LINE_LENGTH(256), .HALF_DEPTH(1)) u_video_mixer
+        (
+            .clk_sys        ( clk_sys       ),
+            .ce_pix         ( pxl_cen       ),
+            .ce_pix_out     ( scan2x_cen    ),
+            .scandoubler    ( ~scan2x_enb   ),        
+            .scanlines      ( sl            ),
+            .hq2x           ( hq2x_en       ),
+            .R              ( game_r        ),
+            .G              ( game_g        ),
+            .B              ( game_b        ),
+            .mono           ( 1'b0          ),
+            .HSync          ( hs            ),
+            .VSync          ( vs            ),
+            .HBlank         ( ~LHBL         ),
+            .VBlank         ( ~LVBL         ),
+            .VGA_R          ( scan2x_r      ),
+            .VGA_G          ( scan2x_g      ),
+            .VGA_B          ( scan2x_b      ),
+            .VGA_HS         ( scan2x_hs     ),
+            .VGA_VS         ( scan2x_vs     ),
+            .VGA_DE         ( scan2x_de     )
+        );
+        assign scan2x_clk = clk_sys;
+        assign hdmi_clk   = scan2x_clk;
+        assign hdmi_cen   = scan2x_cen;
+        assign hdmi_r     = scan2x_r;
+        assign hdmi_g     = scan2x_g;
+        assign hdmi_b     = scan2x_b;
+        assign hdmi_de    = scan2x_de;
+        assign hdmi_hs    = scan2x_hs;
+        assign hdmi_vs    = scan2x_vs;
+        assign hdmi_sl    = sl[1:0];
+    end
+endcase
 
 endmodule // jtgng_board

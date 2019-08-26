@@ -1,11 +1,28 @@
 module jtframe_mister(
     input           clk_sys,
     input           clk_rom,
+    input           clk_vga,
     input           pll_locked,
     // interface with microcontroller
     output [31:0]   status,
     inout  [44:0]   HPS_BUS,
     output [ 1:0]   buttons,
+    // Base video
+    input   [3:0]   game_r,
+    input   [3:0]   game_g,
+    input   [3:0]   game_b,
+    input           LHBL,
+    input           LVBL,
+    input           hs,
+    input           vs,
+    input           pxl_cen,
+    input           pxl2_cen,
+    // MiST VGA pins
+    output  [5:0]   VGA_R,
+    output  [5:0]   VGA_G,
+    output  [5:0]   VGA_B,
+    output          VGA_HS,
+    output          VGA_VS,
     // SDRAM interface
     inout  [15:0]   SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output [12:0]   SDRAM_A,        // SDRAM Address bus 13 Bits
@@ -52,14 +69,30 @@ module jtframe_mister(
     output  [ 7:0]  hdmi_arx,
     output  [ 7:0]  hdmi_ary,
     output  [ 1:0]  rotate,
-    output          en_mixing,
-    output  [ 2:0]  scanlines,
-    output          force_scan2x,
 
     output          enable_fm,
     output          enable_psg,
 
     output          dip_test,
+    // scan doubler
+    output    [7:0]   scan2x_r,
+    output    [7:0]   scan2x_g,
+    output    [7:0]   scan2x_b,
+    output            scan2x_hs,
+    output            scan2x_vs,
+    output            scan2x_clk,
+    output            scan2x_cen,
+    output            scan2x_de,
+    // HDMI outputs
+    output            hdmi_cen,
+    output    [ 7:0]  hdmi_r,
+    output    [ 7:0]  hdmi_g,
+    output    [ 7:0]  hdmi_b,
+    output            hdmi_hs,
+    output            hdmi_vs,
+    output            hdmi_clk,
+    output            hdmi_de,   // = ~(VBlank | HBlank)
+    output    [ 1:0]  hdmi_sl,   // scanlines fx   
     // non standard:
     output          dip_pause,
     output          dip_flip,     // A change in dip_flip implies a reset
@@ -80,6 +113,7 @@ assign LED  = downloading;
 wire [15:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire [2:0]    hpsio_nc; // top 3 bits of ioctl_addr are ignored
+wire          force_scan2x;
 
 
 hps_io #(.STRLEN($size(CONF_STR)/8)) u_hps_io
@@ -117,6 +151,7 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
+    .clk_vga        ( clk_vga         ),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
     .ps2_kbd_data   ( ps2_kbd_data    ),
@@ -138,11 +173,28 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .dip_flip       ( dip_flip        ),
     .dip_fxlevel    ( dip_fxlevel     ),
     // screen
+    .hdmi_r         ( hdmi_r          ),
+    .hdmi_g         ( hdmi_g          ),
+    .hdmi_b         ( hdmi_b          ),
+    .hdmi_hs        ( hdmi_hs         ),
+    .hdmi_vs        ( hdmi_vs         ),
+    .hdmi_clk       ( hdmi_clk        ),
+    .hdmi_cen       ( hdmi_cen        ),
+    .hdmi_de        ( hdmi_de         ),
+    .hdmi_sl        ( hdmi_sl         ),
     .hdmi_arx       ( hdmi_arx        ),
     .hdmi_ary       ( hdmi_ary        ),
     .rotate         ( rotate          ),
-    .en_mixing      ( en_mixing       ),
-    .scanlines      ( scanlines       ),
+    // Scan doubler output
+    .scan2x_r       ( scan2x_r        ),
+    .scan2x_g       ( scan2x_g        ),
+    .scan2x_b       ( scan2x_b        ),
+    .scan2x_hs      ( scan2x_hs       ),
+    .scan2x_vs      ( scan2x_vs       ),
+    .scan2x_clk     ( scan2x_clk      ),
+    .scan2x_cen     ( scan2x_cen      ),
+    .scan2x_de      ( scan2x_de       ),
+    .scan2x_enb     ( ~force_scan2x   ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ        ),
     .SDRAM_A        ( SDRAM_A         ),
@@ -166,6 +218,17 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .prog_data      ( prog_data       ),
     .prog_mask      ( prog_mask       ),
     .prog_we        ( prog_we         ),
+    // Base video
+    .osd_rotate     ( rotate          ),
+    .game_r         ( game_r          ),
+    .game_g         ( game_g          ),
+    .game_b         ( game_b          ),
+    .LHBL           ( LHBL            ),
+    .LVBL           ( LVBL            ),
+    .hs             ( hs              ),
+    .vs             ( vs              ), 
+    .pxl_cen        ( pxl_cen         ),
+    .pxl2_cen       ( pxl2_cen        ),
     // Debug
     .gfx_en         ( gfx_en          )
 );

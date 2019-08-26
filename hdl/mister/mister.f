@@ -6,4 +6,7 @@ hps_io.v
 sys/arcade_video.v
 sys/video_mixer.sv
 sys/scandoubler.v
+../video/jtgng_vga.v
+../video/jtgng_vgapxl.v
+../video/jtframe_scan2x.v
 hq2x_dummy.sv

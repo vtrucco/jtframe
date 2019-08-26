@@ -125,7 +125,7 @@ wire          ps2_kbd_clk, ps2_kbd_data;
 wire          osd_shown;
 
 wire [7:0]    scan2x_r, scan2x_g, scan2x_b;
-wire          scan2x_hsync, scan2x_vsync;
+wire          scan2x_hs, scan2x_vs;
 wire          scan2x_enb;
 
 assign AUDIO_R = AUDIO_L;
@@ -159,8 +159,8 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .scan2x_r       ( scan2x_r[7:2] ),
     .scan2x_g       ( scan2x_g[7:2] ),
     .scan2x_b       ( scan2x_b[7:2] ),
-    .scan2x_hsync   ( scan2x_hsync  ),
-    .scan2x_vsync   ( scan2x_vsync  ),
+    .scan2x_hs      ( scan2x_hs     ),
+    .scan2x_vs      ( scan2x_vs     ),
     .scan2x_enb     ( scan2x_enb    ),
     // MiST VGA pins (includes OSD)
     .VIDEO_R        ( VGA_R         ),
@@ -266,8 +266,8 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .scan2x_r       ( scan2x_r        ),
     .scan2x_g       ( scan2x_g        ),
     .scan2x_b       ( scan2x_b        ),
-    .scan2x_hsync   ( scan2x_hsync    ),
-    .scan2x_vsync   ( scan2x_vsync    ),
+    .scan2x_hs      ( scan2x_hs       ),
+    .scan2x_vs      ( scan2x_vs       ),
     .scan2x_enb     ( scan2x_enb      ),
     // Debug
     .gfx_en         ( gfx_en          )
