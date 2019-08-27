@@ -71,8 +71,10 @@ function [4:0] avg; // Average of two 5-bit numbers
     end
 endfunction
 
+reg blank; // 1 if the VGA output should be zero
+
 always @(posedge clk_vga) begin
-    if( state == LINE ) begin
+    if( !blank ) begin
         if( !scanline || !en_mixing)
             {vga_red, vga_green,vga_blue} <= !rd_sel ? dbl1_rgb : dbl0_rgb;
         else begin // mix the two lines
@@ -180,65 +182,69 @@ always @(posedge clk_vga) begin
         rd_sel      <= 1'b0;
         scanline    <= 1'b0;
     end
-    else
-    case( state )
-        SYNC: begin
-            rd_addr <= 8'd0;
-            vga_hsync <= 1'b0;
-            if( vsync_req ) begin
-                vga_vsync <= 1'b0;
-                vsync_cnt <= 1'b0;
-            end
-            cnt <= cnt - 1'b1;
-            if( wait_hsync && (LHBL_vga && !last_LHBL_vga) ||
-               !wait_hsync && cnt==7'd0 ) begin
-                state<=FRONT;
-                cnt  <=7'd16;
-                wait_hsync <= ~wait_hsync;
-                rd_sel_aux <= ~rd_sel_aux;
-                if( rd_sel_aux ) rd_sel <= ~rd_sel;
-            end
-        end
-        FRONT: begin
-            rd_addr <= 8'd0;
-            vga_hsync <= 1'b1;
-            cnt <= cnt - 1'b1;
-            if( cnt==7'd0 ) begin
-                state       <=LINE;
-                double      <=1'b0;
-                finish      <=1'b0;
-                cnt         <=7'd63;
-                centre_done <= 1'b0;
-                scanline    <= ~scanline;
-            end
-        end
-        LINE: begin
-            case( {finish, centre_done})
-                2'b00:
-                    if(cnt!=7'd0)
-                        cnt<=cnt-1'b1; // blank space on left
-                    else
-                        {centre_done,rd_addr,double}<={rd_addr,double}+1'b1;
-                2'b01: begin
-                    finish <= cnt==7'd60;
-                    cnt <= cnt+1'b1;
+    else begin
+    blank <= 1'b1;
+        case( state )
+            SYNC: begin
+                rd_addr <= 8'd0;
+                vga_hsync <= 1'b0;
+                if( vsync_req ) begin
+                    vga_vsync <= 1'b0;
+                    vsync_cnt <= 1'b0;
                 end
-                2'b11: begin
-                    state <= BACK;
-                    cnt   <= 7'd48;
+                cnt <= cnt - 1'b1;
+                if( wait_hsync && (LHBL_vga && !last_LHBL_vga) ||
+                   !wait_hsync && cnt==7'd0 ) begin
+                    state<=FRONT;
+                    cnt  <=7'd16;
+                    wait_hsync <= ~wait_hsync;
+                    rd_sel_aux <= ~rd_sel_aux;
+                    if( rd_sel_aux ) rd_sel <= ~rd_sel;
                 end
-                default:;
-            endcase
-        end
-        BACK: begin
-            if( cnt==7'd0 ) begin
-                state<=SYNC;
-                cnt <= 7'd96;
-                {vga_vsync, vsync_cnt} <= {vsync_cnt, 1'b1};
             end
-            else cnt <= cnt - 1'b1;
-        end
-    endcase
+            FRONT: begin
+                rd_addr <= 8'd0;
+                vga_hsync <= 1'b1;
+                cnt <= cnt - 1'b1;
+                if( cnt==7'd0 ) begin
+                    state       <=LINE;
+                    double      <=1'b0;
+                    finish      <=1'b0;
+                    cnt         <=7'd63;
+                    centre_done <= 1'b0;
+                    scanline    <= ~scanline;
+                end
+            end
+            LINE: begin
+                case( {finish, centre_done})
+                    2'b00:
+                        if(cnt!=7'd0) begin
+                            cnt<=cnt-1'b1; // blank space on left
+                        end else begin
+                            blank <= 1'b0;
+                            {centre_done,rd_addr,double}<={rd_addr,double}+1'b1;
+                        end
+                    2'b01: begin
+                        finish <= cnt==7'd60;
+                        cnt <= cnt+1'b1;
+                    end
+                    2'b11: begin
+                        state <= BACK;
+                        cnt   <= 7'd48;
+                    end
+                    default:;
+                endcase
+            end
+            BACK: begin
+                if( cnt==7'd0 ) begin
+                    state<=SYNC;
+                    cnt <= 7'd96;
+                    {vga_vsync, vsync_cnt} <= {vsync_cnt, 1'b1};
+                end
+                else cnt <= cnt - 1'b1;
+            end
+        endcase
+    end
 end
 
 endmodule // jtgng_vga
