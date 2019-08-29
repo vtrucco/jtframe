@@ -73,8 +73,11 @@ endfunction
 
 reg blank; // 1 if the VGA output should be zero
 
-always @(posedge clk_vga) begin
-    if( !blank ) begin
+always @(posedge clk_vga) begin : pixel_mux
+    reg last_blank;
+    last_blank <= blank;
+    
+    if( !last_blank ) begin
         if( !scanline || !en_mixing)
             {vga_red, vga_green,vga_blue} <= !rd_sel ? dbl1_rgb : dbl0_rgb;
         else begin // mix the two lines
