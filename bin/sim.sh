@@ -375,7 +375,7 @@ esac
 
 if [ "$VIDEO_DUMP" = TRUE ]; then
     #$MODULES/jtframe/bin/bin2png.py $BIN2PNG_OPTIONS
-    rm video*.raw
+    rm -f video*.raw
     $MODULES/jtframe/bin/bin2raw
     for i in video*.raw; do
         convert $CONVERT_OPTIONS -size 256x224 \
