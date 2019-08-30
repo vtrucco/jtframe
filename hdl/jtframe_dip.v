@@ -89,11 +89,16 @@ always @(posedge clk) begin
 
     `ifdef SIMULATION
         `ifdef DIP_TEST
-        dip_test  <= 1'b0;
+            dip_test  <= 1'b0;
         `else
-        dip_test  <= 1'b1;
+            dip_test  <= 1'b1;
         `endif
-        dip_pause <= 1'b1; // avoid having the main CPU halted in simulation
+
+        `ifdef ALWAYS_PAUSE
+            dip_pause <= 1'b0; // use to simulate pause screen
+        `else
+            dip_pause <= 1'b1; // avoid having the main CPU halted in simulation
+        `endif
     `else
         dip_test  <= ~status[6];
         dip_pause <= ~status[1] & ~game_pause;

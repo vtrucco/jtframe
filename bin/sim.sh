@@ -374,5 +374,11 @@ verilator)
 esac
 
 if [ "$VIDEO_DUMP" = TRUE ]; then
-    $MODULES/jtframe/bin/bin2png.py $BIN2PNG_OPTIONS
+    #$MODULES/jtframe/bin/bin2png.py $BIN2PNG_OPTIONS
+    rm video*.raw
+    $MODULES/jtframe/bin/bin2raw
+    for i in video*.raw; do
+        convert $CONVERT_OPTIONS -size 256x224 \
+            -depth 8 RGBA:$i $(basename $i .raw).png && rm $i
+    done
 fi

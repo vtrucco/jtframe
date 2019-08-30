@@ -80,14 +80,6 @@ parameter SIGNED_SND=1'b0;
 
 wire ypbpr;
 
-// vga video
-wire [5:0]  vga_r;
-wire [5:0]  vga_g;
-wire [5:0]  vga_b;
-wire        vga_hsync;
-wire        vga_vsync;
-
-
 `ifndef SIMULATION
 `ifndef NOSOUND
 wire [15:0] snd_in = {snd[15]^SIGNED_SND, snd[14:0]};
@@ -139,11 +131,12 @@ assign joystick2 = 32'd0;
 assign status    = 32'd0;
 assign ps2_kbd_data = 1'b0;
 assign ps2_kbd_clk  = 1'b0;
-assign scan2x_enb   = 1'b0;
 `ifndef SCANDOUBLER_DISABLE
+assign scan2x_enb   = 1'b0;
 `define SCANDOUBLER_DISABLE 1'b0
+initial $display("INFO: Use -d SCANDOUBLER_DISABLE=1 if you want video output.");
 `endif
-assign scandoubler_disable = `SCANDOUBLER_DISABLE;
+assign scan2x_enb = `SCANDOUBLER_DISABLE;
 assign ypbpr = 1'b0;
 `endif
 
