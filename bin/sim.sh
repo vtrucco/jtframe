@@ -77,18 +77,20 @@ if which ncverilog; then
     MACROPREFIX="+define+"
 fi
 
+if [ "$YM2203" = 1 ]; then
+    PERCORE="$PERCORE $(add_dir $MODULES/jt12/hdl jt03.f)"
+fi
+
+if [ "$YM2149" = 1 ]; then
+    PERCORE="$PERCORE $(add_dir $MODULES/jt12/jt49/hdl jt49.f)"
+fi
+
 case "$SYSNAME" in
     "")
         echo "ERROR: Needs system name. Use -sysname"
         exit 1;;
-    commando|gng) PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f)
-            ;;
-    1942)   PERCORE=$(add_dir $MODULES/jt12/jt49/hdl jt49.f)
-            ;;
     popeye) PERCORE=$(add_dir $MODULES/jt49/hdl jt49.f)
             EXTRA="$EXTRA ${MACROPREFIX}POPEYECEN"
-            ;;
-    1943)   PERCORE=$(add_dir $MODULES/jt12/hdl jt03.f);
             ;;
 esac
 EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"${GAME_ROM_PATH}\""
