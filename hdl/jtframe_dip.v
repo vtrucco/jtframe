@@ -101,7 +101,7 @@ always @(posedge clk) begin
         `endif
     `else
         dip_test  <= ~status[6];
-        dip_pause <= ~status[1] & ~game_pause;
+        dip_pause <= ~(status[1] | game_pause); // all dips are active low
     `endif
 end
 

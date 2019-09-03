@@ -207,9 +207,10 @@ always @(posedge clk_sys) begin
     joy2_sync <= board_joystick2;
 end
 
-localparam PAUSE_BIT = 8+THREE_BUTTONS;
-localparam START_BIT = 7+THREE_BUTTONS;
-localparam COIN_BIT  = 6+THREE_BUTTONS;
+localparam PAUSE_BIT  = 9+THREE_BUTTONS;
+localparam START2_BIT = 8+THREE_BUTTONS;
+localparam START1_BIT = 7+THREE_BUTTONS;
+localparam COIN_BIT   = 6+THREE_BUTTONS;
 
 reg last_pause, last_joypause, last_reset;
 reg [3:0] last_gfx;
@@ -248,7 +249,8 @@ always @(posedge clk_sys)
             ({joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
         
         game_start     <= {2{invert_inputs}} ^ 
-            ({joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start);
+            ({joy1_sync[START2_BIT],joy1_sync[START1_BIT]} |
+             {joy2_sync[START2_BIT],joy2_sync[START1_BIT]} | key_start);
         
         soft_rst <= key_reset && !last_reset;
 
