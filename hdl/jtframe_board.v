@@ -56,8 +56,8 @@ module jtframe_board(
     input             ps2_kbd_clk,
     input             ps2_kbd_data,
     // joystick
-    input      [9:0]  board_joystick1,
-    input      [9:0]  board_joystick2,
+    input     [15:0]  board_joystick1,
+    input     [15:0]  board_joystick2,
     output reg [9:0]  game_joystick1,
     output reg [9:0]  game_joystick2,
     output reg [1:0]  game_coin,
@@ -200,17 +200,17 @@ assign key_pause   = 1'b0;
 assign key_service = 1'b0;
 `endif
 
-reg [9:0] joy1_sync, joy2_sync;
+reg [15:0] joy1_sync, joy2_sync;
 
 always @(posedge clk_sys) begin
     joy1_sync <= board_joystick1;
     joy2_sync <= board_joystick2;
 end
 
+localparam START1_BIT = 6+THREE_BUTTONS;
+localparam START2_BIT = 7+THREE_BUTTONS;
+localparam COIN_BIT   = 8+THREE_BUTTONS;
 localparam PAUSE_BIT  = 9+THREE_BUTTONS;
-localparam START2_BIT = 8+THREE_BUTTONS;
-localparam START1_BIT = 7+THREE_BUTTONS;
-localparam COIN_BIT   = 6+THREE_BUTTONS;
 
 reg last_pause, last_joypause, last_reset;
 reg [3:0] last_gfx;
@@ -218,13 +218,13 @@ wire joy_pause = joy1_sync[PAUSE_BIT] | joy2_sync[PAUSE_BIT];
 
 integer cnt;
 
-function [9:0] apply_rotation;
-    input [9:0] joy_in;
+function [10:0] apply_rotation;
+    input [10:0] joy_in;
     input       rot;
     input       invert;
     begin
-    apply_rotation = {10{invert}} ^ 
-        (!rot ? joy_in : { joy_in[9:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
+    apply_rotation = {11{invert}} ^ 
+        (!rot ? joy_in : { joy_in[10:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
     end
 endfunction
 

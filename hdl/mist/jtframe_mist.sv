@@ -209,8 +209,8 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
     .ps2_kbd_data   ( ps2_kbd_data    ),
-    .board_joystick1( joystick1[9:0]  ),
-    .board_joystick2( joystick2[9:0]  ),
+    .board_joystick1( joystick1[15:0] ),
+    .board_joystick2( joystick2[15:0] ),
 `ifndef SIM_INPUTS
     .game_joystick1 ( game_joystick1  ),
     .game_joystick2 ( game_joystick2  ),
