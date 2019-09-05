@@ -418,7 +418,7 @@ generate
                 .clk_rgb    ( clk_sys       ),
                 .cen6       ( pxl_cen       ), //  6 MHz
                 .clk_vga    ( clk_vga       ), // 25 MHz
-                .rst        ( rst           ),
+                .rst        ( game_rst      ), // synchronize with game
                 .red        ( game_r        ),
                 .green      ( game_g        ),
                 .blue       ( game_b        ),

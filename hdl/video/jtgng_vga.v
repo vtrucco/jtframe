@@ -133,7 +133,7 @@ jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram1 (
 
 reg last_LHBL;
 
-always @(posedge clk_rgb)
+always @(posedge clk_rgb, posedge rst)
     if( rst ) begin
         wr_addr <= 8'd0;
         wr_sel <= 1'b0;
@@ -171,7 +171,7 @@ reg rd_sel_aux;
 
 localparam SYNC=2'd0, FRONT=2'd1, LINE=2'd2, BACK=2'd3;
 
-always @(posedge clk_vga) begin
+always @(posedge clk_vga, posedge rst) begin
     if( rst ) begin
         rd_addr <= 8'd0;
         state <= SYNC;
