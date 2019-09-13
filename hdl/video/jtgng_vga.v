@@ -33,7 +33,9 @@ module jtgng_vga(
     output  reg [4:0]   vga_green,
     output  reg [4:0]   vga_blue,
     output  reg         vga_hsync,
-    output  reg         vga_vsync
+    output  reg         vga_vsync,
+    output  reg         vga_hb,
+    output  reg         vga_vb
 );
 
 reg [7:0] wr_addr, rd_addr;
@@ -160,6 +162,7 @@ always @(posedge clk_vga) begin
     wr_vga <= wr_sel;
 
     vsync_req <= !vga_vsync ? 1'b0 : vsync_req || (!LVBL_vga && last_LVBL_vga);
+    vga_vb    <= !LVBL_vga;
 end
 
 reg [6:0] cnt;
@@ -184,6 +187,7 @@ always @(posedge clk_vga, posedge rst) begin
         rd_sel_aux  <= 1'b0;
         rd_sel      <= 1'b0;
         scanline    <= 1'b0;
+        vga_hb      <= 1'b1;
     end
     else begin
     blank <= 1'b1;
@@ -219,6 +223,7 @@ always @(posedge clk_vga, posedge rst) begin
                 end
             end
             LINE: begin
+                vga_hb <= 1'b0;
                 case( {finish, centre_done})
                     2'b00:
                         if(cnt!=7'd0) begin
@@ -245,6 +250,7 @@ always @(posedge clk_vga, posedge rst) begin
                     {vga_vsync, vsync_cnt} <= {vsync_cnt, 1'b1};
                 end
                 else cnt <= cnt - 1'b1;
+                vga_hb <= 1'b1;
             end
         endcase
     end

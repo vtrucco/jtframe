@@ -15,6 +15,7 @@ set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) .
 
 # Scan doubler from MiSTer
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/sys/video_mixer.sv ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/sys/video_cleaner.sv ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/sys/hq2x.sv        ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../mister/sys/scandoubler.v  ]
 

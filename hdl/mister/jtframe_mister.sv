@@ -17,12 +17,6 @@ module jtframe_mister(
     input           vs,
     input           pxl_cen,
     input           pxl2_cen,
-    // MiST VGA pins
-    output  [5:0]   VGA_R,
-    output  [5:0]   VGA_G,
-    output  [5:0]   VGA_B,
-    output          VGA_HS,
-    output          VGA_VS,
     // SDRAM interface
     inout  [15:0]   SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output [12:0]   SDRAM_A,        // SDRAM Address bus 13 Bits

@@ -37,8 +37,8 @@ module video_cleaner
 );
 
 wire hs, vs;
-s_fix sync_v(clk_vid, HSync, hs);
-s_fix sync_h(clk_vid, VSync, vs);
+s_fix sync_h(clk_vid, HSync, hs);
+s_fix sync_v(clk_vid, VSync, vs);
 
 wire hbl = hs | HBlank;
 wire vbl = vs | VBlank;

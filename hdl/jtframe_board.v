@@ -409,11 +409,13 @@ generate
             assign hdmi_g       = scan2x_g;
             assign hdmi_b       = scan2x_b;
             assign hdmi_de      = scan2x_de;
-            assign hdmi_hs      = scan2x_hs;
-            assign hdmi_vs      = scan2x_vs;
+            assign hdmi_hs      = ~scan2x_hs;
+            assign hdmi_vs      = ~scan2x_vs;
             assign hdmi_sl      = 2'b0;
         end
         1: begin // JTGNG_VGA, nicely scales up to 640x480
+            wire [4:0] pre_r, pre_g, pre_b;
+            wire pre_hs, pre_vs, pre_hb, pre_vb;
             jtgng_vga u_gngvga (
                 .clk_rgb    ( clk_sys       ),
                 .cen6       ( pxl_cen       ), //  6 MHz
@@ -425,18 +427,41 @@ generate
                 .LHBL       ( LHBL          ),
                 .LVBL       ( LVBL          ),
                 .en_mixing  ( en_mixing     ),
-                .vga_red    ( scan2x_r[7:3] ),
-                .vga_green  ( scan2x_g[7:3] ),
-                .vga_blue   ( scan2x_b[7:3] ),
-                .vga_hsync  ( scan2x_hs  ),
-                .vga_vsync  ( scan2x_vs  )
+                .vga_red    ( pre_r         ),
+                .vga_green  ( pre_g         ),
+                .vga_blue   ( pre_b         ),
+                .vga_hsync  ( pre_hs        ),
+                .vga_vsync  ( pre_vs        ),
+                .vga_vb     ( pre_vb        ),
+                .vga_hb     ( pre_hb        )
             );
 
-            // convert 5-bit colour to 6-bit colour
-            assign scan2x_r[2:0] = scan2x_r[7:5];
-            assign scan2x_g[2:0] = scan2x_g[7:5];
-            assign scan2x_b[2:0] = scan2x_b[7:5];
-            assign scan2x_de     = ~(scan2x_vs | scan2x_hs);
+            video_cleaner u_cleaner (
+                .clk_vid    ( clk_vga    ),
+                .ce_pix     ( 1'b1       ),
+
+                .R          ( { pre_r, pre_r[4:2] } ),
+                .G          ( { pre_g, pre_g[4:2] } ),
+                .B          ( { pre_b, pre_b[4:2] } ),
+
+                .HSync      ( pre_hs     ),
+                .VSync      ( pre_vs     ),
+                .HBlank     ( pre_hb     ),
+                .VBlank     ( pre_vb     ),
+
+                // video output signals
+                .VGA_R      ( scan2x_r   ),
+                .VGA_G      ( scan2x_g   ),
+                .VGA_B      ( scan2x_b   ),
+                .VGA_VS     ( scan2x_vs  ),
+                .VGA_HS     ( scan2x_hs  ),
+                .VGA_DE     ( scan2x_de  ),
+                
+                // optional aligned blank
+                .HBlank_out (          ),
+                .VBlank_out (          )
+            );
+
             assign scan2x_cen    = 1'b1;
             assign scan2x_clk    = clk_vga;
             assign hdmi_clk      = scan2x_clk;

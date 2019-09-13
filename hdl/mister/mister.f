@@ -5,6 +5,7 @@ hps_io.v
 ../jtframe_dip.v
 sys/arcade_video.v
 sys/video_mixer.sv
+sys/video_cleaner.sv
 sys/scandoubler.v
 ../video/jtgng_vga.v
 ../video/jtgng_vgapxl.v
