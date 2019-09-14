@@ -75,20 +75,27 @@ endfunction
 
 reg blank; // 1 if the VGA output should be zero
 
-always @(posedge clk_vga) begin : pixel_mux
+always @(posedge clk_vga, posedge rst) begin : pixel_mux
     reg last_blank;
-    last_blank <= blank;
-    
-    if( !last_blank ) begin
-        if( !scanline || !en_mixing)
-            {vga_red, vga_green,vga_blue} <= !rd_sel ? dbl1_rgb : dbl0_rgb;
-        else begin // mix the two lines
-            vga_red  <= avg( dbl1_rgb[14:10], dbl0_rgb[14:10]);
-            vga_green<= avg( dbl1_rgb[ 9:5 ], dbl0_rgb[ 9:5 ]);
-            vga_blue <= avg( dbl1_rgb[ 4:0 ], dbl0_rgb[ 4:0 ]);
-        end
+    if( rst ) begin
+        last_blank <= 1'b0;
+        vga_red    <= 5'd0;
+        vga_green  <= 5'd0;
+        vga_blue   <= 5'd0;
     end else begin
-        {vga_red, vga_green,vga_blue} <= 15'd0; // low during blanking
+        last_blank <= blank;
+        
+        if( !last_blank ) begin
+            if( !scanline || !en_mixing)
+                {vga_red, vga_green,vga_blue} <= !rd_sel ? dbl1_rgb : dbl0_rgb;
+            else begin // mix the two lines
+                vga_red  <= avg( dbl1_rgb[14:10], dbl0_rgb[14:10]);
+                vga_green<= avg( dbl1_rgb[ 9:5 ], dbl0_rgb[ 9:5 ]);
+                vga_blue <= avg( dbl1_rgb[ 4:0 ], dbl0_rgb[ 4:0 ]);
+            end
+        end else begin
+            {vga_red, vga_green,vga_blue} <= 15'd0; // low during blanking
+        end
     end
 end
 
@@ -152,18 +159,27 @@ reg LVBL_vga, last_LVBL_vga;
 reg vsync_req;
 reg wait_hsync;
 
-always @(posedge clk_vga) begin
-    LHBL_vga <= LHBL;
-    last_LHBL_vga <= LHBL_vga;
+always @(posedge clk_vga, posedge rst) 
+    if( rst ) begin
+        LHBL_vga      <= 1'b0;
+        last_LVBL_vga <= 1'b0;
+        LVBL_vga      <= 1'b0;
+        last_LVBL_vga <= 1'b0;
+        wr_vga        <= 1'b0;
+        vsync_req     <= 1'b0;
+        vga_vb        <= 1'b1;
+    end else begin
+        LHBL_vga <= LHBL;
+        last_LHBL_vga <= LHBL_vga;
 
-    LVBL_vga <= LVBL;
-    last_LVBL_vga <= LVBL_vga;
+        LVBL_vga <= LVBL;
+        last_LVBL_vga <= LVBL_vga;
 
-    wr_vga <= wr_sel;
+        wr_vga <= wr_sel;
 
-    vsync_req <= !vga_vsync ? 1'b0 : vsync_req || (!LVBL_vga && last_LVBL_vga);
-    vga_vb    <= !LVBL_vga;
-end
+        vsync_req <= !vga_vsync ? 1'b0 : vsync_req || (!LVBL_vga && last_LVBL_vga);
+        vga_vb    <= !LVBL_vga;
+    end
 
 reg [6:0] cnt;
 reg [1:0] state;
@@ -180,7 +196,7 @@ always @(posedge clk_vga, posedge rst) begin
         state <= SYNC;
         cnt <= 7'd96;
         centre_done <= 1'b0;
-        wait_hsync  <= 1'b0;
+        wait_hsync  <= 1'b1;
         vsync_cnt   <= 1'b0;
         vga_vsync   <= 1'b1;
         vga_hsync   <= 1'b1;
@@ -190,7 +206,7 @@ always @(posedge clk_vga, posedge rst) begin
         vga_hb      <= 1'b1;
     end
     else begin
-    blank <= 1'b1;
+        blank <= 1'b1;
         case( state )
             SYNC: begin
                 rd_addr <= 8'd0;
@@ -199,9 +215,9 @@ always @(posedge clk_vga, posedge rst) begin
                     vga_vsync <= 1'b0;
                     vsync_cnt <= 1'b0;
                 end
-                cnt <= cnt - 1'b1;
-                if( wait_hsync && (LHBL_vga && !last_LHBL_vga) ||
-                   !wait_hsync && cnt==7'd0 ) begin
+                if( cnt != 8'd0 ) cnt <= cnt - 8'b1;
+                if( ( wait_hsync && (!LHBL_vga && last_LHBL_vga)) ||
+                    (!wait_hsync && cnt==7'd0) ) begin
                     state<=FRONT;
                     cnt  <=7'd16;
                     wait_hsync <= ~wait_hsync;
