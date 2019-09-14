@@ -222,7 +222,9 @@ always @(posedge clk_vga, posedge rst) begin
                     cnt  <=7'd16;
                     wait_hsync <= ~wait_hsync;
                     rd_sel_aux <= ~rd_sel_aux;
-                    if( rd_sel_aux ) rd_sel <= ~rd_sel;
+                    if( rd_sel_aux ) begin
+                        rd_sel <= ~wr_sel;
+                    end
                 end
             end
             FRONT: begin

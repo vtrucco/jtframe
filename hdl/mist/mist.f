@@ -10,6 +10,7 @@ data_io.v
 ../video/jtgng_vgapxl.v
 ../video/jtframe_scan2x.v
 ../mister/sys/video_mixer.sv
+../mister/sys/video_cleaner.sv
 ../mister/sys/scandoubler.v
 ../mister/hq2x_dummy.sv
 ../ram/jtgng_dual_clk_ram.v
