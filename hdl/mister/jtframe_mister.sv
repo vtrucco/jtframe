@@ -69,14 +69,14 @@ module jtframe_mister(
 
     output          dip_test,
     // scan doubler
-    output    [7:0]   scan2x_r,
-    output    [7:0]   scan2x_g,
-    output    [7:0]   scan2x_b,
-    output            scan2x_hs,
-    output            scan2x_vs,
-    output            scan2x_clk,
-    output            scan2x_cen,
-    output            scan2x_de,
+    output reg [7:0]  scan2x_r,
+    output reg [7:0]  scan2x_g,
+    output reg [7:0]  scan2x_b,
+    output reg        scan2x_hs,
+    output reg        scan2x_vs,
+    output reg        scan2x_clk,
+    output reg        scan2x_cen,
+    output reg        scan2x_de,
     // HDMI outputs
     output            hdmi_cen,
     output    [ 7:0]  hdmi_r,
@@ -108,6 +108,39 @@ wire [15:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire [2:0]    hpsio_nc; // top 3 bits of ioctl_addr are ignored
 wire          force_scan2x;
+
+wire [7:0]    pre_scan2x_r;
+wire [7:0]    pre_scan2x_g;
+wire [7:0]    pre_scan2x_b;
+wire          pre_scan2x_hs;
+wire          pre_scan2x_vs;
+wire          pre_scan2x_clk;
+wire          pre_scan2x_cen;
+wire          pre_scan2x_de;
+
+// This slows down synthesis on MiSTer a lot
+// if pre_scan signals come from a 25MHz clock domain
+always @(*) begin
+    if( force_scan2x ) begin
+        scan2x_r    = pre_scan2x_r;
+        scan2x_g    = pre_scan2x_g;
+        scan2x_b    = pre_scan2x_b;
+        scan2x_hs   = pre_scan2x_hs;
+        scan2x_vs   = pre_scan2x_vs;
+        scan2x_clk  = pre_scan2x_clk;
+        scan2x_cen  = pre_scan2x_cen;
+        scan2x_de   = pre_scan2x_de;
+    end else begin
+        scan2x_r    = {2{game_r}};
+        scan2x_g    = {2{game_g}};
+        scan2x_b    = {2{game_b}};
+        scan2x_hs   = hs;
+        scan2x_vs   = vs;
+        scan2x_clk  = clk_sys;
+        scan2x_cen  = pxl_cen;
+        scan2x_de   = LVBL & LHBL; 
+    end
+end
 
 
 hps_io #(.STRLEN($size(CONF_STR)/8)) u_hps_io
@@ -180,14 +213,14 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .hdmi_ary       ( hdmi_ary        ),
     .rotate         ( rotate          ),
     // Scan doubler output
-    .scan2x_r       ( scan2x_r        ),
-    .scan2x_g       ( scan2x_g        ),
-    .scan2x_b       ( scan2x_b        ),
-    .scan2x_hs      ( scan2x_hs       ),
-    .scan2x_vs      ( scan2x_vs       ),
-    .scan2x_clk     ( scan2x_clk      ),
-    .scan2x_cen     ( scan2x_cen      ),
-    .scan2x_de      ( scan2x_de       ),
+    .scan2x_r       ( pre_scan2x_r    ),
+    .scan2x_g       ( pre_scan2x_g    ),
+    .scan2x_b       ( pre_scan2x_b    ),
+    .scan2x_hs      ( pre_scan2x_hs   ),
+    .scan2x_vs      ( pre_scan2x_vs   ),
+    .scan2x_clk     ( pre_scan2x_clk  ),
+    .scan2x_cen     ( pre_scan2x_cen  ),
+    .scan2x_de      ( pre_scan2x_de   ),
     .scan2x_enb     ( ~force_scan2x   ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ        ),
