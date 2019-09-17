@@ -18,14 +18,16 @@ derive_clock_uncertainty
 
 #############################################################
 ### SDRAM  AS4C16M16SA
-###
-#set SDRAM_CLK emu|pll|pll_inst|altera_pll_i|outclk_wire[1]~CLKENA0|outclk
-set SDRAM_CLK {emu|pll|pll_inst|altera_pll_i|general[1].gpll~PLL_OUTPUT_COUNTER|divclk}
+### Pins:
+### SDRAM_A, SDRAM_DQ, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, 
+### SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS, SDRAM_BA, SDRAM_CLK, SDRAM_CKE,
 
-# This is tAC in the data sheet
-set_input_delay -clock $SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
-# this is tOH in the data sheet
-set_input_delay -clock $SDRAM_CLK -min 2.5 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
+#set SDRAM_CLK emu|pll|pll_inst|altera_pll_i|outclk_wire[1]~CLKENA0|outclk
+#set SDRAM_CLK {emu|pll|pll_inst|altera_pll_i|general[1].gpll~PLL_OUTPUT_COUNTER|divclk}
+# if there is no phase shift, then output 1 gets deleted and
+# SDRAM is output 0
+set SDRAM_CLK {emu|pll|pll_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}
+
 
 # This is tHS in the data sheet (setup time)
 set_output_delay -clock $SDRAM_CLK \
@@ -36,6 +38,11 @@ set_output_delay -clock $SDRAM_CLK \
 # the above statement generates an output delay constraint for SDRAM_CLK pin itself
 # that is not needed:
 remove_output_delay SDRAM_CLK
+
+# This is tAC in the data sheet
+set_input_delay -clock $SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
+# this is tOH in the data sheet
+set_input_delay -clock $SDRAM_CLK -min 2.5 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
 
 ##################################################################
 
