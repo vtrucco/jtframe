@@ -416,24 +416,6 @@ generate
         1: begin // JTGNG_VGA, nicely scales up to 640x480
             wire [4:0] pre_r, pre_g, pre_b;
             wire pre_hs, pre_vs, pre_hb, pre_vb;
-            //reg [9:0] wait_vs;
-//            //reg       vga2x_rst;
-//            //always @(negedge clk_sys, posedge rst) begin : syncBL
-//            //    reg last;
-//
-            //    if( rst ) begin
-            //        wait_vs   <= 10'd1;
-            //        vga2x_rst <= 1'b1;
-            //        last <= 1'b0;
-            //    end else begin
-            //        last <= LHBL;
-            //        if( ~&wait_vs ) begin
-            //            if( !LHBL && last ) wait_vs <= wait_vs + 10'd1;
-            //        end else begin
-            //            vga2x_rst <= 1'b0;
-            //        end
-            //    end
-            //end
 
             jtgng_vga u_gngvga (
                 .clk_rgb    ( clk_sys       ),
