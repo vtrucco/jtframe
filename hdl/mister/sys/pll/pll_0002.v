@@ -1,4 +1,9 @@
 `timescale 1ns/10ps
+
+`ifndef SDRAM_SHIFT
+`define SDRAM_SHIFT "2994 ps"
+`endif
+
 module  pll_0002(
 
 	// interface 'refclk'
@@ -26,7 +31,7 @@ module  pll_0002(
 		.phase_shift0("0 ps"),
 		.duty_cycle0(50),
 		.output_clock_frequency1("48.000000 MHz"),
-		.phase_shift1("2994 ps"),
+		.phase_shift1(`SDRAM_SHIFT),
 		.duty_cycle1(50),
 		.output_clock_frequency2("0 MHz"),
 		.phase_shift2("0 ps"),
