@@ -67,14 +67,14 @@
 // synopsys translate_on
 
 
-module oc8051_wb_iinterface(rst, clk, 
+module oc8051_wb_iinterface(rst, clk, cen,
                   adr_i, dat_o, cyc_i, stb_i, ack_o,
 		  adr_o, dat_i, cyc_o, stb_o, ack_i
 		  );
 //
 // rst           (in)  reset - pin
 // clk           (in)  clock - pini
-input rst, clk;
+input rst, clk, cen;
 
 //
 // interface to oc8051 cpu
@@ -120,12 +120,14 @@ always @(posedge clk or posedge rst)
   if (rst) begin
     stb_o <= #1 1'b0;
     adr_o <= #1 16'h0000;
-  end else if (ack_i) begin
-    stb_o <= #1 stb_i;
-    adr_o <= #1 adr_i;
-  end else if (!stb_o & stb_i) begin
-    stb_o <= #1 1'b1;
-    adr_o <= #1 adr_i;
+  end else if(cen) begin
+    if (ack_i) begin
+      stb_o <= #1 stb_i;
+      adr_o <= #1 adr_i;
+    end else if (!stb_o & stb_i) begin
+      stb_o <= #1 1'b1;
+      adr_o <= #1 adr_i;
+    end
   end
-
+  
 endmodule

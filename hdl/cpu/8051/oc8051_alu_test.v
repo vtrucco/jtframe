@@ -361,26 +361,26 @@ end
 
 always @(posedge clk or posedge rst)
   if (rst) begin
-    ides1_r <= #1 8'h0;
-  end else begin
-    ides1_r <= #1 ides1;
+    ides1_r <= 8'h0;
+  end else if(cen) begin
+    ides1_r <= ides1;
   end
 
 always @(posedge clk or posedge rst)
   if (rst) begin
-    desCy <= #1 1'b0;
-    desAc <= #1 1'b0;
-    desOv <= #1 1'b0;
-    des1 <= #1 8'h00;
-    des2 <= #1 1'h00;
-    des1_r <= #1 1'h00;
-  end else begin
-    desCy <= #1 idesCy;
-    desAc <= #1 idesAc;
-    desOv <= #1 idesOv;
-    des1 <= #1 ides1;
-    des2 <= #1 ides2;
-    des1_r <= #1 ides1_r;
+    desCy  <= 1'b0;
+    desAc  <= 1'b0;
+    desOv  <= 1'b0;
+    des1   <= 8'h00;
+    des2   <= 1'h00;
+    des1_r <= 1'h00;
+  end else if(cen) begin
+    desCy  <= idesCy;
+    desAc  <= idesAc;
+    desOv  <= idesOv;
+    des1   <= ides1;
+    des2   <= ides2;
+    des1_r <= ides1_r;
   end
 
 

@@ -63,7 +63,7 @@
 `include "oc8051_defines.v"
 
 
-module oc8051_alu_src_sel (clk, rst, rd, sel1, sel2, sel3,
+module oc8051_alu_src_sel (clk, rst, cen, rd, sel1, sel2, sel3,
                      acc, ram, pc, dptr,
 
                      op1, op2, op3,
@@ -71,7 +71,7 @@ module oc8051_alu_src_sel (clk, rst, rd, sel1, sel2, sel3,
                      src1, src2, src3);
 
 
-input clk, rst, rd, sel3;
+input clk, rst, cen, rd, sel3;
 input [1:0] sel2;
 input [2:0] sel1;
 input [7:0] acc, ram;
@@ -143,7 +143,7 @@ always @(posedge clk or posedge rst)
     op1_r <= #1 8'h00;
     op2_r <= #1 8'h00;
     op3_r <= #1 8'h00;
-  end else begin
+  end else if(cen) begin
     op1_r <= #1 op1;
     op2_r <= #1 op2;
     op3_r <= #1 op3;

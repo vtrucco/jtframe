@@ -62,7 +62,7 @@
 // synopsys translate_on
 
 
-module oc8051_multiply (clk, rst, enable, src1, src2, des1, des2, desOv);
+module oc8051_multiply (clk, rst, cen, enable, src1, src2, des1, des2, desOv);
 //
 // this module is part of alu
 // clk          (in)
@@ -75,7 +75,7 @@ module oc8051_multiply (clk, rst, enable, src1, src2, des1, des2, desOv);
 // desOv        (out) Overflow output
 //
 
-input clk, rst, enable;
+input clk, rst, cen, enable;
 input [7:0] src1, src2;
 output desOv;
 output [7:0] des1, des2;
@@ -101,11 +101,11 @@ assign desOv = | des1;
 always @(posedge clk or posedge rst)
 begin
   if (rst) begin
-    cycle <= #1 2'b0;
-    tmp_mul <= #1 16'b0;
-  end else begin
-    if (enable) cycle <= #1 cycle + 2'b1;
-    tmp_mul <= #1 mul_result;
+    cycle   <= 2'b0;
+    tmp_mul <= 16'b0;
+  end else if(cen) begin
+    if (enable) cycle <= cycle + 2'b1;
+    tmp_mul <= mul_result;
   end
 end
 

@@ -13,6 +13,7 @@
 ////                                                              ////
 ////  Author(s):                                                  ////
 ////      - Simon Teran, simont@opencores.org                     ////
+////      - Jose Tejada, added clock enable signals               ////
 ////                                                              ////
 //////////////////////////////////////////////////////////////////////
 ////                                                              ////
@@ -44,6 +45,9 @@
 // CVS Revision History
 //
 // $Log: not supported by cvs2svn $
+// 1.33 2019/9/25 jotego
+// clock enable added
+//
 // Revision 1.32  2003/06/20 13:36:37  simont
 // ram modules added.
 //
@@ -112,7 +116,10 @@
 
 `include "oc8051_defines.v"
 
-module oc8051_top (wb_rst_i, wb_clk_i,
+module oc8051_top (
+        wb_rst_i,
+        wb_clk_i,
+        cen,            // clock enable, added by jotego
 //interface to instruction rom
 		wbi_adr_o, 
 		wbi_dat_i, 
@@ -189,6 +196,7 @@ module oc8051_top (wb_rst_i, wb_clk_i,
 
 input         wb_rst_i,		// reset input
               wb_clk_i,		// clock input
+              cen,          // clock enable
               int0_i,		// interrupt 0
               int1_i,		// interrupt 1
               ea_in,		// external access
@@ -744,7 +752,10 @@ oc8051_sfr oc8051_sfr1(.rst(wb_rst_i),
 
   `ifdef OC8051_WB
 
-    oc8051_wb_iinterface oc8051_wb_iinterface(.rst(wb_rst_i), .clk(wb_clk_i),
+    oc8051_wb_iinterface oc8051_wb_iinterface(
+        .rst(wb_rst_i),
+        .clk(wb_clk_i),
+        .cen( cen    ),
     // cpu
         .adr_i(iadr_o),
 	.dat_o(idat_i),

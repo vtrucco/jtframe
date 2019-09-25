@@ -74,14 +74,14 @@
 `include "oc8051_defines.v"
 
 
-module oc8051_acc (clk, rst, 
+module oc8051_acc (clk, rst, cen,
                  bit_in, data_in, data2_in, 
 		 data_out,
 		 wr, wr_bit, wr_addr,
 		 p, wr_sfr);
 
 
-input clk, rst, wr, wr_bit, bit_in;
+input clk, rst, cen, wr, wr_bit, bit_in;
 input [1:0] wr_sfr;
 input [7:0] wr_addr, data_in, data2_in;
 
@@ -126,7 +126,7 @@ always @(posedge clk or posedge rst)
 begin
   if (rst)
     data_out <= #1 `OC8051_RST_ACC;
-  else
+  else if(cen)
     data_out <= #1 acc;
 end
 
