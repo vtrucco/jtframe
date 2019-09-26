@@ -57,16 +57,17 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 
-module oc8051_indi_addr (clk, rst, wr_addr, data_in, wr, wr_bit, ri_out, sel, bank);
+module oc8051_indi_addr (clk, rst, cen, wr_addr, data_in, wr, wr_bit, ri_out, sel, bank);
 //
 
 
 input        clk,	// clock
              rst,	// reset
+             cen,
 	     wr,	// write
              sel,	// select register
 	     wr_bit;	// write bit addressable
@@ -95,7 +96,7 @@ begin
     buff[3'b101] <= #1 8'h00;
     buff[3'b110] <= #1 8'h00;
     buff[3'b111] <= #1 8'h00;
-  end else begin
+  end else if(cen) begin
     if ((wr) & !(wr_bit_r)) begin
       case (wr_addr) /* synopsys full_case parallel_case */
         8'h00: buff[3'b000] <= #1 data_in;
@@ -122,7 +123,7 @@ assign ri_out = (({3'b000, bank, 2'b00, sel}==wr_addr) & (wr) & !wr_bit_r) ?
 always @(posedge clk or posedge rst)
   if (rst) begin
     wr_bit_r <= #1 1'b0;
-  end else begin
+  end else if(cen) begin
     wr_bit_r <= #1 wr_bit;
   end
 

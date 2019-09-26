@@ -53,13 +53,13 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
 
 
-module oc8051_dptr(clk, rst, addr, data_in, data2_in, wr, wr_sfr, wr_bit, data_hi, data_lo);
+module oc8051_dptr(clk, rst, cen, addr, data_in, data2_in, wr, wr_sfr, wr_bit, data_hi, data_lo);
 //
 // clk          (in)  clock
 // rst          (in)  reset
@@ -74,7 +74,7 @@ module oc8051_dptr(clk, rst, addr, data_in, data2_in, wr, wr_sfr, wr_bit, data_h
 //
 
 
-input clk, rst, wr, wr_bit;
+input clk, rst, cen, wr, wr_bit;
 input [1:0] wr_sfr;
 input [7:0] addr, data_in, data2_in;
 
@@ -83,11 +83,11 @@ output [7:0] data_hi, data_lo;
 reg [7:0] data_hi, data_lo;
 
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
     data_hi <= #1 `OC8051_RST_DPH;
     data_lo <= #1 `OC8051_RST_DPL;
-  end else if (wr_sfr==`OC8051_WRS_DPTR) begin
+  end else if(cen) begin
+    if (wr_sfr==`OC8051_WRS_DPTR) begin
 //
 //write from destination 2 and 1
     data_hi <= #1 data2_in;

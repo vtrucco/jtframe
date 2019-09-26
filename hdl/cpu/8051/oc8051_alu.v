@@ -79,14 +79,14 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
 
 
 
-module oc8051_alu (clk, rst, op_code, src1, src2, src3, srcCy, srcAc, bit_in, 
+module oc8051_alu (clk, rst, cen, op_code, src1, src2, src3, srcCy, srcAc, bit_in, 
                   des1, des2, des_acc, desCy, desAc, desOv, sub_result);
 //
 // op_code      (in)  operation code [oc8051_decoder.alu_op -r]
@@ -103,7 +103,7 @@ module oc8051_alu (clk, rst, op_code, src1, src2, src3, srcCy, srcAc, bit_in,
 // desOv        (out) Overflow output [oc8051_psw.ov_in]
 //
 
-input        srcCy, srcAc, bit_in, clk, rst;
+input        srcCy, srcAc, bit_in, clk, rst, cen;
 input  [3:0] op_code;
 input  [7:0] src1, src2, src3;
 output       desCy, desAc, desOv;
@@ -153,8 +153,8 @@ reg da_tmp, da_tmp1;
 //
 wire [15:0] inc, dec;
 
-oc8051_multiply oc8051_mul1(.clk(clk), .rst(rst), .enable(enable_mul), .src1(src1), .src2(src2), .des1(mulsrc1), .des2(mulsrc2), .desOv(mulOv));
-oc8051_divide oc8051_div1(.clk(clk), .rst(rst), .enable(enable_div), .src1(src1), .src2(src2), .des1(divsrc1), .des2(divsrc2), .desOv(divOv));
+oc8051_multiply oc8051_mul1(.clk(clk), .rst(rst), .cen(cen), .enable(enable_mul), .src1(src1), .src2(src2), .des1(mulsrc1), .des2(mulsrc2), .desOv(mulOv));
+oc8051_divide oc8051_div1(.clk(clk), .rst(rst), .cen(cen), .enable(enable_div), .src1(src1), .src2(src2), .des1(divsrc1), .des2(divsrc2), .desOv(divOv));
 
 /* Add */
 assign add1 = {1'b0,src1[3:0]};

@@ -68,14 +68,15 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
 
 
 module oc8051_ram_top (clk, 
-                       rst, 
+                       rst,
+                       cen,
 		       rd_addr, 
 		       rd_data, 
 		       wr_addr, 
@@ -110,7 +111,7 @@ parameter ram_aw = 8; // default 256 bytes
 // bit_data_out (out)  bit data output [oc8051_ram_sel.bit_in]
 //
 
-input clk, wr, bit_addr, bit_data_in, rst;
+input clk, wr, cen, bit_addr, bit_data_in, rst;
 input [7:0] wr_data;
 input [7:0] rd_addr, wr_addr;
 output bit_data_out;
@@ -147,6 +148,7 @@ assign rd_en   = (rd_addr_m == wr_addr_m) & wr;
 oc8051_ram_256x8_two_bist oc8051_idata(
                            .clk     ( clk        ),
                            .rst     ( rst        ),
+                           .cen     ( cen        ),
 			   .rd_addr ( rd_addr_m  ),
 			   .rd_data ( rd_data_m  ),
 			   .rd_en   ( !rd_en     ),
@@ -168,7 +170,7 @@ always @(posedge clk or posedge rst)
   if (rst) begin
     bit_addr_r <= #1 1'b0;
     bit_select <= #1 3'b0;
-  end else begin
+  end else if(cen) begin
     bit_addr_r <= #1 bit_addr;
     bit_select <= #1 rd_addr[2:0];
   end
@@ -178,7 +180,7 @@ always @(posedge clk or posedge rst)
   if (rst) begin
     rd_en_r    <= #1 1'b0;
     wr_data_r  <= #1 8'h0;
-  end else begin
+  end else if(cen) begin
     rd_en_r    <= #1 rd_en;
     wr_data_r  <= #1 wr_data_m;
   end

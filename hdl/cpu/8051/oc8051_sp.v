@@ -56,17 +56,17 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
 
 
 
-module oc8051_sp (clk, rst, ram_rd_sel, ram_wr_sel, wr_addr, wr, wr_bit, data_in, sp_out, sp_w);
+module oc8051_sp (clk, rst, cen, ram_rd_sel, ram_wr_sel, wr_addr, wr, wr_bit, data_in, sp_out, sp_w);
 
 
-input clk, rst, wr, wr_bit;
+input clk, rst, cen, wr, wr_bit;
 input [2:0] ram_rd_sel, ram_wr_sel;
 input [7:0] data_in, wr_addr;
 output [7:0] sp_out, sp_w;
@@ -85,13 +85,13 @@ assign sp_t= write ? data_in : sp;
 
 
 always @(posedge clk or posedge rst)
-begin
   if (rst)
-    sp <= #1 `OC8051_RST_SP;
-  else if (write)
-    sp <= #1 data_in;
+    sp <= `OC8051_RST_SP;
+  else if(cen) begin
+  if (write)
+    sp <= data_in;
   else
-    sp <= #1 sp_out;
+    sp <= sp_out;
 end
 
 
@@ -117,11 +117,11 @@ end
 
 
 always @(posedge clk or posedge rst)
-begin
   if (rst)
-    pop <= #1 1'b0;
-  else if (ram_rd_sel==`OC8051_RRS_SP) pop <= #1 1'b1;
-  else pop <= #1 1'b0;
+    pop <= 1'b0;
+  else if(cen) begin
+  if (ram_rd_sel==`OC8051_RRS_SP) pop <= 1'b1;
+    else pop <= 1'b0;
 end
 
 endmodule

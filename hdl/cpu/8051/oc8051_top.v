@@ -111,7 +111,7 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
@@ -180,14 +180,6 @@ module oc8051_top (
 		t2_i, t2ex_i,
 	`endif
 
-// BIST
-`ifdef OC8051_BIST
-         scanb_rst,
-         scanb_clk,
-         scanb_si,
-         scanb_so,
-         scanb_en,
-`endif
 // external access (active low)
 		ea_in
 		);
@@ -261,15 +253,6 @@ input         t0_i,		// counter 0 input
 `ifdef OC8051_TC2
 input         t2_i,		// counter 2 input
               t2ex_i;		//
-`endif
-
-`ifdef OC8051_BIST
-input   scanb_rst;
-input   scanb_clk;
-input   scanb_si;
-output  scanb_so;
-input   scanb_en;
-wire    scanb_soi;
 `endif
 
 wire [7:0]  dptr_hi,
@@ -374,6 +357,7 @@ wire [15:0] iadr_o;
 // decoder
 oc8051_decoder oc8051_decoder1(.clk(wb_clk_i), 
                                .rst(wb_rst_i), 
+                               .cen(cen     ),
 			       .op_in(op1_n), 
 			       .op1_c(op1_cur),
 			       .ram_rd_sel_o(ram_rd_sel), 
@@ -406,6 +390,7 @@ wire [7:0] sub_result;
 //alu
 oc8051_alu oc8051_alu1(.rst(wb_rst_i),
                        .clk(wb_clk_i),
+                       .cen(cen     ),
 		       .op_code(alu_op),
 		       .src1(src1),
 		       .src2(src2),
@@ -423,30 +408,23 @@ oc8051_alu oc8051_alu1(.rst(wb_rst_i),
 
 //
 //data ram
-oc8051_ram_top oc8051_ram_top1(.clk(wb_clk_i),
-                               .rst(wb_rst_i),
-			       .rd_addr(rd_addr),
-			       .rd_data(ram_data),
-			       .wr_addr(wr_addr),
-			       .bit_addr(bit_addr_o),
-			       .wr_data(wr_dat),
-			       .wr(wr_o && (!wr_addr[7] || wr_ind)),
-			       .bit_data_in(desCy),
-			       .bit_data_out(bit_data)
-`ifdef OC8051_BIST
-         ,
-         .scanb_rst(scanb_rst),
-         .scanb_clk(scanb_clk),
-         .scanb_si(scanb_soi),
-         .scanb_so(scanb_so),
-         .scanb_en(scanb_en)
-`endif
-			       );
-
+// oc8051_ram_top oc8051_ram_top1(.clk(wb_clk_i),
+//                                .rst(wb_rst_i),
+// 			       .rd_addr(rd_addr),
+// 			       .rd_data(ram_data),
+// 			       .wr_addr(wr_addr),
+// 			       .bit_addr(bit_addr_o),
+// 			       .wr_data(wr_dat),
+// 			       .wr(wr_o && (!wr_addr[7] || wr_ind)),
+// 			       .bit_data_in(desCy),
+// 			       .bit_data_out(bit_data)
+// 			       );
+// 
 //
 
 oc8051_alu_src_sel oc8051_alu_src_sel1(.clk(wb_clk_i),
                                        .rst(wb_rst_i),
+                                       .cen( cen    ),
 				       .rd(rd),
 
 				       .sel1(src_sel1),
@@ -478,30 +456,9 @@ oc8051_comp oc8051_comp1(.sel(comp_sel),
 
 
 //
-//program rom
-`ifdef OC8051_ROM
-  oc8051_rom oc8051_rom1(.rst(wb_rst_i),
-                       .clk(wb_clk_i),
-		       .ea_int(ea_int),
-		       .addr(iadr_o),
-		       .data_o(idat_onchip)
-		       );
-`else
-  assign ea_int = 1'b0;
-  assign idat_onchip = 32'h0;
-  
-  `ifdef OC8051_SIMULATION
-
-    initial
-    begin
-      $display("\t * ");
-      $display("\t * Internal rom disabled!!!");
-      $display("\t * ");
-    end
-
-  `endif
-
-`endif
+// program rom is external
+assign ea_int = 1'b0;
+assign idat_onchip = 32'h0;
 
 //
 //
@@ -513,6 +470,7 @@ oc8051_cy_select oc8051_cy_select1(.cy_sel(cy_sel),
 //
 oc8051_indi_addr oc8051_indi_addr1 (.clk(wb_clk_i), 
                                     .rst(wb_rst_i), 
+                                    .cen(cen     ),
 				    .wr_addr(wr_addr),
 				    .data_in(wr_dat),
 				    .wr(wr_o),
@@ -528,6 +486,7 @@ assign icyc_o = istb_o;
 //
 oc8051_memory_interface oc8051_memory_interface1(.clk(wb_clk_i), 
                        .rst(wb_rst_i),
+                       .cen(cen     ),
 // internal ram
                        .wr_i(wr), 
 		       .wr_o(wr_o), 
@@ -608,6 +567,7 @@ oc8051_memory_interface oc8051_memory_interface1(.clk(wb_clk_i),
 
 oc8051_sfr oc8051_sfr1(.rst(wb_rst_i), 
                        .clk(wb_clk_i), 
+                       .cen(cen     ),
 		       .adr0(rd_addr[7:0]), 
 		       .adr1(wr_addr[7:0]),
 		       .dat0(sfr_out),
@@ -694,118 +654,12 @@ oc8051_sfr oc8051_sfr1(.rst(wb_rst_i),
 
 
 
-`ifdef OC8051_CACHE
-
-
-  oc8051_icache oc8051_icache1(.rst(wb_rst_i), .clk(wb_clk_i),
-  // cpu
-        .adr_i(iadr_o),
-	.dat_o(idat_i),
-	.stb_i(istb_o),
-	.ack_o(iack_i),
-        .cyc_i(icyc_o),
-  // pins
-        .dat_i(wbi_dat_i),
-	.stb_o(wbi_stb_o),
-	.adr_o(wbi_adr_o),
-	.ack_i(wbi_ack_i),
-        .cyc_o(wbi_cyc_o)
-`ifdef OC8051_BIST
-         ,
-         .scanb_rst(scanb_rst),
-         .scanb_clk(scanb_clk),
-         .scanb_si(scanb_si),
-         .scanb_so(scanb_soi),
-         .scanb_en(scanb_en)
-`endif
-	);
-
-  defparam oc8051_icache1.ADR_WIDTH = 6;  // cache address wihth
-  defparam oc8051_icache1.LINE_WIDTH = 2; // line address width (2 => 4x32)
-  defparam oc8051_icache1.BL_NUM = 15; // number of blocks (2^BL_WIDTH-1); BL_WIDTH = ADR_WIDTH - LINE_WIDTH
-  defparam oc8051_icache1.CACHE_RAM = 64; // cache ram x 32 (2^ADR_WIDTH)
-
-  
-
-  `ifdef OC8051_SIMULATION
-
-    initial
-    begin
-      #1
-      $display("\t * ");
-      $display("\t * External rom interface: cache");
-      $display("\t * ");
-    end
-
-  `endif
-
-
-
-//
-//    no cache
-//
-`else
-
-  `ifdef OC8051_BIST
-       assign scanb_soi=scanb_si;
-  `endif
-
-  `ifdef OC8051_WB
-
-    oc8051_wb_iinterface oc8051_wb_iinterface(
-        .rst(wb_rst_i),
-        .clk(wb_clk_i),
-        .cen( cen    ),
-    // cpu
-        .adr_i(iadr_o),
-	.dat_o(idat_i),
-	.stb_i(istb_o),
-	.ack_o(iack_i),
-        .cyc_i(icyc_o),
-    // external rom
-        .dat_i(wbi_dat_i),
-	.stb_o(wbi_stb_o),
-	.adr_o(wbi_adr_o),
-	.ack_i(wbi_ack_i),
-        .cyc_o(wbi_cyc_o));
-
-  `ifdef OC8051_SIMULATION
-
-    initial
-    begin
-      #1
-      $display("\t * ");
-      $display("\t * External rom interface: WB interface");
-      $display("\t * ");
-    end
-
-  `endif
-
-  `else
-
-    assign wbi_adr_o = iadr_o    ;
-    assign idat_i    = wbi_dat_i ;
-    assign wbi_stb_o = 1'b1      ;
-    assign iack_i    = wbi_ack_i ;
-    assign wbi_cyc_o = 1'b1      ;
-
-  `ifdef OC8051_SIMULATION
-
-    initial
-    begin
-      #1
-      $display("\t * ");
-      $display("\t * External rom interface: Pipelined interface");
-      $display("\t * ");
-    end
-
-  `endif
-
-
-  `endif
-
-`endif
-
+// No WB interface
+assign wbi_adr_o = iadr_o    ;
+assign idat_i    = wbi_dat_i ;
+assign wbi_stb_o = 1'b1      ;
+assign iack_i    = wbi_ack_i ;
+assign wbi_cyc_o = 1'b1      ;
 
 
 endmodule

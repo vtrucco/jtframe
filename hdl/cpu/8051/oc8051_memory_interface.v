@@ -83,13 +83,13 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
 
 
-module oc8051_memory_interface (clk, rst,
+module oc8051_memory_interface (clk, rst, cen,
 
 //decoder
      wr_i,
@@ -167,6 +167,7 @@ module oc8051_memory_interface (clk, rst,
 
 input         clk,
               rst,
+              cen,
 	      wr_i,
 	      wr_bit_i;
 
@@ -436,11 +437,13 @@ end
 
 always @(posedge clk or posedge rst)
   if (rst)
-    rd_ind <= #1 1'b0;
-  else if ((rd_sel==`OC8051_RRS_I) || (rd_sel==`OC8051_RRS_SP))
-    rd_ind <= #1 1'b1;
-  else
-    rd_ind <= #1 1'b0;
+    rd_ind <= 1'b0;
+  else if(cen) begin
+      if ((rd_sel==`OC8051_RRS_I) || (rd_sel==`OC8051_RRS_SP))
+        rd_ind <= 1'b1;
+      else
+        rd_ind <= 1'b0;
+  end
 
 always @(wr_sel)
   if ((wr_sel==`OC8051_RWS_I) || (wr_sel==`OC8051_RWS_SP))
@@ -463,23 +466,23 @@ assign iadr_o = (istb_t) ? iadr_t : pc_out;
 
 
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
-    iadr_t <= #1 23'h0;
-    istb_t <= #1 1'b0;
-    imem_wait <= #1 1'b0;
-    idat_ir <= #1 24'h0;
-  end else if (mem_act==`OC8051_MAS_CODE) begin
-    iadr_t <= #1 alu;
-    istb_t <= #1 1'b1;
-    imem_wait <= #1 1'b1;
+    iadr_t <= 23'h0;
+    istb_t <= 1'b0;
+    imem_wait <= 1'b0;
+    idat_ir <= 24'h0;
+  end else if(cen) begin
+  if (mem_act==`OC8051_MAS_CODE) begin
+    iadr_t <= alu;
+    istb_t <= 1'b1;
+    imem_wait <= 1'b1;
   end else if (ea_rom_sel && imem_wait) begin
-    imem_wait <= #1 1'b0;
+    imem_wait <= 1'b0;
   end else if (!imem_wait && istb_t) begin
-    istb_t <= #1 1'b0;
+    istb_t <= 1'b0;
   end else if (iack_i) begin
-    imem_wait <= #1 1'b0;
-    idat_ir <= #1 idat_i [23:0];
+    imem_wait <= 1'b0;
+    idat_ir <= idat_i [23:0];
   end
 end
 
@@ -492,50 +495,49 @@ end
 assign dadr_o = dadr_ot;
 
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
-    dwe_o <= #1 1'b0;
-    dmem_wait <= #1 1'b0;
-    dstb_o <= #1 1'b0;
-    ddat_o <= #1 8'h00;
-    dadr_ot <= #1 23'h0;
-  end else if (dack_i) begin
-    dwe_o <= #1 1'b0;
-    dstb_o <= #1 1'b0;
-    dmem_wait <= #1 1'b0;
+    dwe_o <= 1'b0;
+    dmem_wait <= 1'b0;
+    dstb_o <= 1'b0;
+    ddat_o <= 8'h00;
+    dadr_ot <= 23'h0;
+  end else if(cen)
+  if (dack_i) begin
+    dwe_o <= 1'b0;
+    dstb_o <= 1'b0;
+    dmem_wait <= 1'b0;
   end else begin
     case (mem_act) /* synopsys full_case parallel_case */
       `OC8051_MAS_DPTR_R: begin  // read from external rom: acc=(dptr)
-        dwe_o <= #1 1'b0;
-        dstb_o <= #1 1'b1;
-        ddat_o <= #1 8'h00;
-        dadr_ot <= #1 {7'h0, dptr};
-        dmem_wait <= #1 1'b1;
+        dwe_o <= 1'b0;
+        dstb_o <= 1'b1;
+        ddat_o <= 8'h00;
+        dadr_ot <= {7'h0, dptr};
+        dmem_wait <= 1'b1;
       end
       `OC8051_MAS_DPTR_W: begin  // write to external rom: (dptr)=acc
-        dwe_o <= #1 1'b1;
-        dstb_o <= #1 1'b1;
-        ddat_o <= #1 acc;
-        dadr_ot <= #1 {7'h0, dptr};
-        dmem_wait <= #1 1'b1;
+        dwe_o <= 1'b1;
+        dstb_o <= 1'b1;
+        ddat_o <= acc;
+        dadr_ot <= {7'h0, dptr};
+        dmem_wait <= 1'b1;
       end
       `OC8051_MAS_RI_R:   begin  // read from external rom: acc=(Ri)
-        dwe_o <= #1 1'b0;
-        dstb_o <= #1 1'b1;
-        ddat_o <= #1 8'h00;
-        dadr_ot <= #1 {15'h0, ri};
-        dmem_wait <= #1 1'b1;
+        dwe_o <= 1'b0;
+        dstb_o <= 1'b1;
+        ddat_o <= 8'h00;
+        dadr_ot <= {15'h0, ri};
+        dmem_wait <= 1'b1;
       end
       `OC8051_MAS_RI_W: begin    // write to external rom: (Ri)=acc
-        dwe_o <= #1 1'b1;
-        dstb_o <= #1 1'b1;
-        ddat_o <= #1 acc;
-        dadr_ot <= #1 {15'h0, ri};
-        dmem_wait <= #1 1'b1;
+        dwe_o <= 1'b1;
+        dstb_o <= 1'b1;
+        ddat_o <= acc;
+        dadr_ot <= {15'h0, ri};
+        dmem_wait <= 1'b1;
       end
     endcase
   end
-end
 
 /////////////////////////////
 //
@@ -546,27 +548,27 @@ end
 
 
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
-    idat_cur <= #1 32'h0;
-    idat_old <= #1 32'h0;
-  end else if ((iack_i | ea_rom_sel) & (inc_pc | pc_wr_r2)) begin
-    idat_cur <= #1 ea_rom_sel ? idat_onchip : idat_i;
-    idat_old <= #1 idat_cur;
+    idat_cur <= 32'h0;
+    idat_old <= 32'h0;
+  end else if(cen) begin
+  if ((iack_i | ea_rom_sel) & (inc_pc | pc_wr_r2)) begin
+    idat_cur <= ea_rom_sel ? idat_onchip : idat_i;
+    idat_old <= idat_cur;
   end
 
 end
 
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
-    cdata <= #1 8'h00;
-    cdone <= #1 1'b0;
-  end else if (istb_t) begin
-    cdata <= #1 ea_rom_sel ? idat_onchip[7:0] : idat_i[7:0];
-    cdone <= #1 1'b1;
+    cdata <= 8'h00;
+    cdone <= 1'b0;
+  end else if(cen) begin
+  if (istb_t) begin
+    cdata <= ea_rom_sel ? idat_onchip[7:0] : idat_i[7:0];
+    cdone <= 1'b1;
   end else begin
-    cdone <= #1 1'b0;
+    cdone <= 1'b0;
   end
 end
 
@@ -658,20 +660,22 @@ end
 //
 //in case of reti
 always @(posedge clk or posedge rst)
-  if (rst) reti <= #1 1'b0;
-  else if ((op1_o==`OC8051_RETI) & rd & !mem_wait) reti <= #1 1'b1;
-  else reti <= #1 1'b0;
+  if (rst) reti <= 1'b0;
+  else if(cen) begin
+    if ((op1_o==`OC8051_RETI) & rd & !mem_wait) reti <= 1'b1;
+    else reti <= 1'b0;
+  end
 
 //
 // remember inputs
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
-    op2_buff <= #1 8'h0;
-    op3_buff <= #1 8'h0;
-  end else if (rd) begin
-    op2_buff <= #1 op2_o;
-    op3_buff <= #1 op3_o;
+    op2_buff <= 8'h0;
+    op3_buff <= 8'h0;
+  end else if(cen) begin
+  if (rd) begin
+    op2_buff <= op2_o;
+    op3_buff <= op3_o;
   end
 end
 
@@ -764,75 +768,75 @@ begin
 //    end else if (pc_wait) begin
     end else begin
         casex (op1_out)
-          `OC8051_ACALL :  op_length <= #1 2'h2;
-          `OC8051_AJMP :   op_length <= #1 2'h2;
+          `OC8051_ACALL :  op_length <= 2'h2;
+          `OC8051_AJMP :   op_length <= 2'h2;
 
         //op_code [7:3]
-          `OC8051_CJNE_R : op_length <= #1 2'h3;
-          `OC8051_DJNZ_R : op_length <= #1 2'h2;
-          `OC8051_MOV_DR : op_length <= #1 2'h2;
-          `OC8051_MOV_CR : op_length <= #1 2'h2;
-          `OC8051_MOV_RD : op_length <= #1 2'h2;
+          `OC8051_CJNE_R : op_length <= 2'h3;
+          `OC8051_DJNZ_R : op_length <= 2'h2;
+          `OC8051_MOV_DR : op_length <= 2'h2;
+          `OC8051_MOV_CR : op_length <= 2'h2;
+          `OC8051_MOV_RD : op_length <= 2'h2;
 
         //op_code [7:1]
-          `OC8051_CJNE_I : op_length <= #1 2'h3;
-          `OC8051_MOV_ID : op_length <= #1 2'h2;
-          `OC8051_MOV_DI : op_length <= #1 2'h2;
-          `OC8051_MOV_CI : op_length <= #1 2'h2;
+          `OC8051_CJNE_I : op_length <= 2'h3;
+          `OC8051_MOV_ID : op_length <= 2'h2;
+          `OC8051_MOV_DI : op_length <= 2'h2;
+          `OC8051_MOV_CI : op_length <= 2'h2;
 
         //op_code [7:0]
-          `OC8051_ADD_D :  op_length <= #1 2'h2;
-          `OC8051_ADD_C :  op_length <= #1 2'h2;
-          `OC8051_ADDC_D : op_length <= #1 2'h2;
-          `OC8051_ADDC_C : op_length <= #1 2'h2;
-          `OC8051_ANL_D :  op_length <= #1 2'h2;
-          `OC8051_ANL_C :  op_length <= #1 2'h2;
-          `OC8051_ANL_DD : op_length <= #1 2'h2;
-          `OC8051_ANL_DC : op_length <= #1 2'h3;
-          `OC8051_ANL_B :  op_length <= #1 2'h2;
-          `OC8051_ANL_NB : op_length <= #1 2'h2;
-          `OC8051_CJNE_D : op_length <= #1 2'h3;
-          `OC8051_CJNE_C : op_length <= #1 2'h3;
-          `OC8051_CLR_B :  op_length <= #1 2'h2;
-          `OC8051_CPL_B :  op_length <= #1 2'h2;
-          `OC8051_DEC_D :  op_length <= #1 2'h2;
-          `OC8051_DJNZ_D : op_length <= #1 2'h3;
-          `OC8051_INC_D :  op_length <= #1 2'h2;
-          `OC8051_JB :     op_length <= #1 2'h3;
-          `OC8051_JBC :    op_length <= #1 2'h3;
-          `OC8051_JC :     op_length <= #1 2'h2;
-          `OC8051_JNB :    op_length <= #1 2'h3;
-          `OC8051_JNC :    op_length <= #1 2'h2;
-          `OC8051_JNZ :    op_length <= #1 2'h2;
-          `OC8051_JZ :     op_length <= #1 2'h2;
-          `OC8051_LCALL :  op_length <= #1 2'h3;
-          `OC8051_LJMP :   op_length <= #1 2'h3;
-          `OC8051_MOV_D :  op_length <= #1 2'h2;
-          `OC8051_MOV_C :  op_length <= #1 2'h2;
-          `OC8051_MOV_DA : op_length <= #1 2'h2;
-          `OC8051_MOV_DD : op_length <= #1 2'h3;
-          `OC8051_MOV_CD : op_length <= #1 2'h3;
-          `OC8051_MOV_BC : op_length <= #1 2'h2;
-          `OC8051_MOV_CB : op_length <= #1 2'h2;
-          `OC8051_MOV_DP : op_length <= #1 2'h3;
-          `OC8051_ORL_D :  op_length <= #1 2'h2;
-          `OC8051_ORL_C :  op_length <= #1 2'h2;
-          `OC8051_ORL_AD : op_length <= #1 2'h2;
-          `OC8051_ORL_CD : op_length <= #1 2'h3;
-          `OC8051_ORL_B :  op_length <= #1 2'h2;
-          `OC8051_ORL_NB : op_length <= #1 2'h2;
-          `OC8051_POP :    op_length <= #1 2'h2;
-          `OC8051_PUSH :   op_length <= #1 2'h2;
-          `OC8051_SETB_B : op_length <= #1 2'h2;
-          `OC8051_SJMP :   op_length <= #1 2'h2;
-          `OC8051_SUBB_D : op_length <= #1 2'h2;
-          `OC8051_SUBB_C : op_length <= #1 2'h2;
-          `OC8051_XCH_D :  op_length <= #1 2'h2;
-          `OC8051_XRL_D :  op_length <= #1 2'h2;
-          `OC8051_XRL_C :  op_length <= #1 2'h2;
-          `OC8051_XRL_AD : op_length <= #1 2'h2;
-          `OC8051_XRL_CD : op_length <= #1 2'h3;
-          default:         op_length <= #1 2'h1;
+          `OC8051_ADD_D :  op_length <= 2'h2;
+          `OC8051_ADD_C :  op_length <= 2'h2;
+          `OC8051_ADDC_D : op_length <= 2'h2;
+          `OC8051_ADDC_C : op_length <= 2'h2;
+          `OC8051_ANL_D :  op_length <= 2'h2;
+          `OC8051_ANL_C :  op_length <= 2'h2;
+          `OC8051_ANL_DD : op_length <= 2'h2;
+          `OC8051_ANL_DC : op_length <= 2'h3;
+          `OC8051_ANL_B :  op_length <= 2'h2;
+          `OC8051_ANL_NB : op_length <= 2'h2;
+          `OC8051_CJNE_D : op_length <= 2'h3;
+          `OC8051_CJNE_C : op_length <= 2'h3;
+          `OC8051_CLR_B :  op_length <= 2'h2;
+          `OC8051_CPL_B :  op_length <= 2'h2;
+          `OC8051_DEC_D :  op_length <= 2'h2;
+          `OC8051_DJNZ_D : op_length <= 2'h3;
+          `OC8051_INC_D :  op_length <= 2'h2;
+          `OC8051_JB :     op_length <= 2'h3;
+          `OC8051_JBC :    op_length <= 2'h3;
+          `OC8051_JC :     op_length <= 2'h2;
+          `OC8051_JNB :    op_length <= 2'h3;
+          `OC8051_JNC :    op_length <= 2'h2;
+          `OC8051_JNZ :    op_length <= 2'h2;
+          `OC8051_JZ :     op_length <= 2'h2;
+          `OC8051_LCALL :  op_length <= 2'h3;
+          `OC8051_LJMP :   op_length <= 2'h3;
+          `OC8051_MOV_D :  op_length <= 2'h2;
+          `OC8051_MOV_C :  op_length <= 2'h2;
+          `OC8051_MOV_DA : op_length <= 2'h2;
+          `OC8051_MOV_DD : op_length <= 2'h3;
+          `OC8051_MOV_CD : op_length <= 2'h3;
+          `OC8051_MOV_BC : op_length <= 2'h2;
+          `OC8051_MOV_CB : op_length <= 2'h2;
+          `OC8051_MOV_DP : op_length <= 2'h3;
+          `OC8051_ORL_D :  op_length <= 2'h2;
+          `OC8051_ORL_C :  op_length <= 2'h2;
+          `OC8051_ORL_AD : op_length <= 2'h2;
+          `OC8051_ORL_CD : op_length <= 2'h3;
+          `OC8051_ORL_B :  op_length <= 2'h2;
+          `OC8051_ORL_NB : op_length <= 2'h2;
+          `OC8051_POP :    op_length <= 2'h2;
+          `OC8051_PUSH :   op_length <= 2'h2;
+          `OC8051_SETB_B : op_length <= 2'h2;
+          `OC8051_SJMP :   op_length <= 2'h2;
+          `OC8051_SUBB_D : op_length <= 2'h2;
+          `OC8051_SUBB_C : op_length <= 2'h2;
+          `OC8051_XCH_D :  op_length <= 2'h2;
+          `OC8051_XRL_D :  op_length <= 2'h2;
+          `OC8051_XRL_C :  op_length <= 2'h2;
+          `OC8051_XRL_AD : op_length <= 2'h2;
+          `OC8051_XRL_CD : op_length <= 2'h3;
+          default:         op_length <= 2'h1;
         endcase
 //
 //in case of instructions that use more than one clock hold current pc
@@ -845,25 +849,25 @@ end
 assign inc_pc = ((op_pos[2] | (&op_pos[1:0])) & rd) | pc_wr_r2;
 
 always @(posedge rst or posedge clk)
-begin
   if (rst) begin
-    op_pos <= #1 3'h0;
-  end else if (pc_wr_r2) begin
-    op_pos <= #1 3'h4;// - op_length;////****??????????
+    op_pos <= 3'h0;
+  end else if(cen) begin
+  if (pc_wr_r2) begin
+    op_pos <= 3'h4;// - op_length;////****??????????
 /*  end else if (inc_pc & rd) begin
-    op_pos[2]   <= #1 op_pos[2] & !op_pos[1] & op_pos[0] & (&op_length);
-    op_pos[1:0] <= #1 op_pos[1:0] + op_length;
-//    op_pos   <= #1 {1'b0, op_pos[1:0]} + {1'b0, op_length};
+    op_pos[2]   <= op_pos[2] & !op_pos[1] & op_pos[0] & (&op_length);
+    op_pos[1:0] <= op_pos[1:0] + op_length;
+//    op_pos   <= {1'b0, op_pos[1:0]} + {1'b0, op_length};
   end else if (rd) begin
-    op_pos <= #1 op_pos + {1'b0, op_length};
+    op_pos <= op_pos + {1'b0, op_length};
   end*/
   end else if (inc_pc & rd) begin
-    op_pos[2]   <= #1 op_pos[2] & !op_pos[1] & op_pos[0] & (&op_length);
-    op_pos[1:0] <= #1 op_pos[1:0] + op_length;
-//    op_pos   <= #1 {1'b0, op_pos[1:0]} + {1'b0, op_length};
+    op_pos[2]   <= op_pos[2] & !op_pos[1] & op_pos[0] & (&op_length);
+    op_pos[1:0] <= op_pos[1:0] + op_length;
+//    op_pos   <= {1'b0, op_pos[1:0]} + {1'b0, op_length};
 //  end else if (istb & rd) begin
   end else if (rd) begin
-    op_pos <= #1 op_pos + {1'b0, op_length};
+    op_pos <= op_pos + {1'b0, op_length};
   end
 end
 
@@ -872,23 +876,25 @@ end
 // we don't want to interrupt instruction in the middle of execution
 always @(posedge clk or posedge rst)
  if (rst) begin
-   int_ack_t <= #1 1'b0;
-   int_vec_buff <= #1 8'h00;
- end else if (intr) begin
-   int_ack_t <= #1 1'b1;
-   int_vec_buff <= #1 int_v;
- end else if (rd && (ea_rom_sel || iack_i) && !pc_wr_r2) int_ack_t <= #1 1'b0;
+   int_ack_t <= 1'b0;
+   int_vec_buff <= 8'h00;
+ end else if(cen) begin
+ if (intr) begin
+   int_ack_t <= 1'b1;
+   int_vec_buff <= int_v;
+ end else if (rd && (ea_rom_sel || iack_i) && !pc_wr_r2) int_ack_t <= 1'b0;
+end
 
 always @(posedge clk or posedge rst)
-  if (rst) int_ack_buff <= #1 1'b0;
-  else int_ack_buff <= #1 int_ack_t;
+  if (rst) int_ack_buff <= 1'b0;
+  else if(cen) int_ack_buff <= int_ack_t;
 
 always @(posedge clk or posedge rst)
-  if (rst) int_ack <= #1 1'b0;
-  else begin
+  if (rst) int_ack <= 1'b0;
+  else if(cen) begin
     if ((int_ack_buff) & !(int_ack_t))
-      int_ack <= #1 1'b1;
-    else int_ack <= #1 1'b0;
+      int_ack <= 1'b1;
+    else int_ack <= 1'b0;
   end
 
 
@@ -896,18 +902,20 @@ always @(posedge clk or posedge rst)
 //interrupt buffer
 always @(posedge clk or posedge rst)
   if (rst) begin
-    int_buff1 <= #1 1'b0;
-  end else begin
-    int_buff1 <= #1 int_buff;
+    int_buff1 <= 1'b0;
+  end else if(cen) begin
+    int_buff1 <= int_buff;
   end
 
 always @(posedge clk or posedge rst)
   if (rst) begin
-    int_buff <= #1 1'b0;
-  end else if (intr) begin
-    int_buff <= #1 1'b1;
+    int_buff <= 1'b0;
+  end else if(cen) begin
+  if (intr) begin
+    int_buff <= 1'b1;
   end else if (pc_wait)
-    int_buff <= #1 1'b0;
+    int_buff <= 1'b0;
+end
 
 wire [7:0]  pcs_source;
 reg  [15:0] pcs_result;
@@ -928,37 +936,37 @@ end
 //assign pc = pc_buf - 16'h8 + {13'h0, op_pos} + {14'h0, op_length};
 
 always @(posedge clk or posedge rst)
-begin
   if (rst)
-    pc <= #1 16'h0;
-  else if (pc_wr_r2)
-    pc <= #1 pc_buf;
-  else if (rd & !int_ack_t)
-    pc <= #1 pc_buf - 16'h8 + {13'h0, op_pos} + {14'h0, op_length};
-end
+    pc <= 16'h0;
+  else if(cen) begin
+      if (pc_wr_r2)
+        pc <= pc_buf;
+      else if (rd & !int_ack_t)
+        pc <= pc_buf - 16'h8 + {13'h0, op_pos} + {14'h0, op_length};
+    end
 
 
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
-    pc_buf <= #1 `OC8051_RST_PC;
-  end else if (pc_wr) begin
+    pc_buf <= `OC8051_RST_PC;
+  end else if(cen) begin
+  if (pc_wr) begin
 //
 //case of writing new value to pc (jupms)
       case (pc_wr_sel) /* synopsys full_case parallel_case */
-        `OC8051_PIS_ALU: pc_buf        <= #1 alu;
-        `OC8051_PIS_AL:  pc_buf[7:0]   <= #1 alu[7:0];
-        `OC8051_PIS_AH:  pc_buf[15:8]  <= #1 alu[7:0];
-        `OC8051_PIS_I11: pc_buf[10:0]  <= #1 {op1_out[7:5], op2_out};
-        `OC8051_PIS_I16: pc_buf        <= #1 {op2_out, op3_out};
-        `OC8051_PIS_SO1: pc_buf        <= #1 pcs_result;
-        `OC8051_PIS_SO2: pc_buf        <= #1 pcs_result;
+        `OC8051_PIS_ALU: pc_buf        <= alu;
+        `OC8051_PIS_AL:  pc_buf[7:0]   <= alu[7:0];
+        `OC8051_PIS_AH:  pc_buf[15:8]  <= alu[7:0];
+        `OC8051_PIS_I11: pc_buf[10:0]  <= {op1_out[7:5], op2_out};
+        `OC8051_PIS_I16: pc_buf        <= {op2_out, op3_out};
+        `OC8051_PIS_SO1: pc_buf        <= pcs_result;
+        `OC8051_PIS_SO2: pc_buf        <= pcs_result;
       endcase
 //  end else if (inc_pc) begin
   end else begin
 //
 //or just remember current
-      pc_buf <= #1 pc_out;
+      pc_buf <= pc_out;
   end
 end
 
@@ -972,195 +980,44 @@ assign pc_out = inc_pc ? pc_buf + 16'h4
 
 always @(posedge clk or posedge rst)
   if (rst)
-    ddat_ir <= #1 8'h00;
-  else if (dack_i)
-    ddat_ir <= #1 ddat_i;
-
-/*
-
-always @(pc_buf or op1_out or pc_wait or int_buff or int_buff1 or ea_rom_sel or iack_i)
-begin
-    if (int_buff || int_buff1) begin
-//
-//in case of interrupt hold valut, to be written to stack
-      pc= pc_buf;
-//    end else if (pis_l) begin
-//      pc = {pc_buf[22:8], alu[7:0]};
-    end else if (pc_wait) begin
-        casex (op1_out)
-          `OC8051_ACALL :  pc= pc_buf + 16'h2;
-          `OC8051_AJMP :   pc= pc_buf + 16'h2;
-
-        //op_code [7:3]
-          `OC8051_CJNE_R : pc= pc_buf + 16'h3;
-          `OC8051_DJNZ_R : pc= pc_buf + 16'h2;
-          `OC8051_MOV_DR : pc= pc_buf + 16'h2;
-          `OC8051_MOV_CR : pc= pc_buf + 16'h2;
-          `OC8051_MOV_RD : pc= pc_buf + 16'h2;
-
-        //op_code [7:1]
-          `OC8051_CJNE_I : pc= pc_buf + 16'h3;
-          `OC8051_MOV_ID : pc= pc_buf + 16'h2;
-          `OC8051_MOV_DI : pc= pc_buf + 16'h2;
-          `OC8051_MOV_CI : pc= pc_buf + 16'h2;
-
-        //op_code [7:0]
-          `OC8051_ADD_D :  pc= pc_buf + 16'h2;
-          `OC8051_ADD_C :  pc= pc_buf + 16'h2;
-          `OC8051_ADDC_D : pc= pc_buf + 16'h2;
-          `OC8051_ADDC_C : pc= pc_buf + 16'h2;
-          `OC8051_ANL_D :  pc= pc_buf + 16'h2;
-          `OC8051_ANL_C :  pc= pc_buf + 16'h2;
-          `OC8051_ANL_DD : pc= pc_buf + 16'h2;
-          `OC8051_ANL_DC : pc= pc_buf + 16'h3;
-          `OC8051_ANL_B :  pc= pc_buf + 16'h2;
-          `OC8051_ANL_NB : pc= pc_buf + 16'h2;
-          `OC8051_CJNE_D : pc= pc_buf + 16'h3;
-          `OC8051_CJNE_C : pc= pc_buf + 16'h3;
-          `OC8051_CLR_B :  pc= pc_buf + 16'h2;
-          `OC8051_CPL_B :  pc= pc_buf + 16'h2;
-          `OC8051_DEC_D :  pc= pc_buf + 16'h2;
-          `OC8051_DJNZ_D : pc= pc_buf + 16'h3;
-          `OC8051_INC_D :  pc= pc_buf + 16'h2;
-          `OC8051_JB :     pc= pc_buf + 16'h3;
-          `OC8051_JBC :    pc= pc_buf + 16'h3;
-          `OC8051_JC :     pc= pc_buf + 16'h2;
-          `OC8051_JNB :    pc= pc_buf + 16'h3;
-          `OC8051_JNC :    pc= pc_buf + 16'h2;
-          `OC8051_JNZ :    pc= pc_buf + 16'h2;
-          `OC8051_JZ :     pc= pc_buf + 16'h2;
-          `OC8051_LCALL :  pc= pc_buf + 16'h3;
-          `OC8051_LJMP :   pc= pc_buf + 16'h3;
-          `OC8051_MOV_D :  pc= pc_buf + 16'h2;
-          `OC8051_MOV_C :  pc= pc_buf + 16'h2;
-          `OC8051_MOV_DA : pc= pc_buf + 16'h2;
-          `OC8051_MOV_DD : pc= pc_buf + 16'h3;
-          `OC8051_MOV_CD : pc= pc_buf + 16'h3;
-          `OC8051_MOV_BC : pc= pc_buf + 16'h2;
-          `OC8051_MOV_CB : pc= pc_buf + 16'h2;
-          `OC8051_MOV_DP : pc= pc_buf + 16'h3;
-          `OC8051_ORL_D :  pc= pc_buf + 16'h2;
-          `OC8051_ORL_C :  pc= pc_buf + 16'h2;
-          `OC8051_ORL_AD : pc= pc_buf + 16'h2;
-          `OC8051_ORL_CD : pc= pc_buf + 16'h3;
-          `OC8051_ORL_B :  pc= pc_buf + 16'h2;
-          `OC8051_ORL_NB : pc= pc_buf + 16'h2;
-          `OC8051_POP :    pc= pc_buf + 16'h2;
-          `OC8051_PUSH :   pc= pc_buf + 16'h2;
-          `OC8051_SETB_B : pc= pc_buf + 16'h2;
-          `OC8051_SJMP :   pc= pc_buf + 16'h2;
-          `OC8051_SUBB_D : pc= pc_buf + 16'h2;
-          `OC8051_SUBB_C : pc= pc_buf + 16'h2;
-          `OC8051_XCH_D :  pc= pc_buf + 16'h2;
-          `OC8051_XRL_D :  pc= pc_buf + 16'h2;
-          `OC8051_XRL_C :  pc= pc_buf + 16'h2;
-          `OC8051_XRL_AD : pc= pc_buf + 16'h2;
-          `OC8051_XRL_CD : pc= pc_buf + 16'h3;
-          default:         pc= pc_buf + 16'h1;
-        endcase
-//
-//in case of instructions that use more than one clock hold current pc
-    end else begin
-      pc= pc_buf;
-   end
-end
-
-
-//
-//interrupt buffer
-always @(posedge clk or posedge rst)
-  if (rst) begin
-    int_buff1 <= #1 1'b0;
-  end else begin
-    int_buff1 <= #1 int_buff;
+    ddat_ir <= 8'h00;
+  else if(cen) begin
+    if (dack_i)
+    ddat_ir <= ddat_i;
   end
-
-always @(posedge clk or posedge rst)
-  if (rst) begin
-    int_buff <= #1 1'b0;
-  end else if (intr) begin
-    int_buff <= #1 1'b1;
-  end else if (pc_wait)
-    int_buff <= #1 1'b0;
-
-wire [7:0]  pcs_source;
-reg  [15:0] pcs_result;
-reg         pcs_cy;
-
-assign pcs_source = pc_wr_sel[0] ? op3_out : op2_out;
-
-always @(pcs_source or pc or pcs_cy)
-begin
-  if (pcs_source[7]) begin
-    {pcs_cy, pcs_result[7:0]} = {1'b0, pc[7:0]} + {1'b0, pcs_source};
-    pcs_result[15:8] = pc[15:8] - {7'h0, !pcs_cy};
-  end else pcs_result = pc + {8'h00, pcs_source};
-end
-
-
-always @(posedge clk or posedge rst)
-begin
-  if (rst) begin
-    pc_buf <= #1 `OC8051_RST_PC;
-  end else begin
-    if (pc_wr) begin
-//
-//case of writing new value to pc (jupms)
-      case (pc_wr_sel)
-        `OC8051_PIS_ALU: pc_buf        <= #1 alu;
-        `OC8051_PIS_AL:  pc_buf[7:0]   <= #1 alu[7:0];
-        `OC8051_PIS_AH:  pc_buf[15:8]  <= #1 alu[7:0];
-        `OC8051_PIS_I11: pc_buf[10:0]  <= #1 {op1_out[7:5], op2_out};
-        `OC8051_PIS_I16: pc_buf        <= #1 {op2_out, op3_out};
-        `OC8051_PIS_SO1: pc_buf        <= #1 pcs_result;
-        `OC8051_PIS_SO2: pc_buf        <= #1 pcs_result;
-      endcase
-    end else
-//
-//or just remember current
-      pc_buf <= #1 pc;
-  end
-end
-
-
-always @(posedge clk or posedge rst)
-  if (rst)
-    ddat_ir <= #1 8'h00;
-  else if (dack_i)
-    ddat_ir <= #1 ddat_i;
-*/
 
 ////////////////////////
 always @(posedge clk or posedge rst)
   if (rst) begin
-    rn_r      <= #1 5'd0;
-    ri_r      <= #1 8'h00;
-    imm_r     <= #1 8'h00;
-    imm2_r    <= #1 8'h00;
-    rd_addr_r <= #1 1'b0;
-    op1_r     <= #1 8'h0;
-    dack_ir   <= #1 1'b0;
-    sp_r      <= #1 1'b0;
-    pc_wr_r   <= #1 1'b0;
-    pc_wr_r2  <= #1 1'b0;
-  end else begin
-    rn_r      <= #1 rn;
-    ri_r      <= #1 ri;
-    imm_r     <= #1 imm;
-    imm2_r    <= #1 imm2;
-    rd_addr_r <= #1 rd_addr[7];
-    op1_r     <= #1 op1_out;
-    dack_ir   <= #1 dack_i;
-    sp_r      <= #1 sp;
-    pc_wr_r   <= #1 pc_wr && (pc_wr_sel != `OC8051_PIS_AH);
-    pc_wr_r2  <= #1 pc_wr_r;
+    rn_r      <= 5'd0;
+    ri_r      <= 8'h00;
+    imm_r     <= 8'h00;
+    imm2_r    <= 8'h00;
+    rd_addr_r <= 1'b0;
+    op1_r     <= 8'h0;
+    dack_ir   <= 1'b0;
+    sp_r      <= 1'b0;
+    pc_wr_r   <= 1'b0;
+    pc_wr_r2  <= 1'b0;
+  end else if(cen) begin
+    rn_r      <= rn;
+    ri_r      <= ri;
+    imm_r     <= imm;
+    imm2_r    <= imm2;
+    rd_addr_r <= rd_addr[7];
+    op1_r     <= op1_out;
+    dack_ir   <= dack_i;
+    sp_r      <= sp;
+    pc_wr_r   <= pc_wr && (pc_wr_sel != `OC8051_PIS_AH);
+    pc_wr_r2  <= pc_wr_r;
   end
 
 always @(posedge clk or posedge rst)
   if (rst) begin
-    inc_pc_r  <= #1 1'b1;
-  end else if (istb) begin
-    inc_pc_r  <= #1 inc_pc;
+    inc_pc_r  <= 1'b1;
+  end else if(cen) begin
+    if (istb)
+        inc_pc_r  <= inc_pc;
   end
 
 `ifdef OC8051_SIMULATION

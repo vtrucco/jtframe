@@ -48,7 +48,7 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
@@ -59,6 +59,7 @@
 module oc8051_ram_256x8_two_bist (
                      clk,
                      rst,
+                     cen,
 		     rd_addr,
 		     rd_data,
 		     rd_en,
@@ -79,6 +80,7 @@ module oc8051_ram_256x8_two_bist (
 
 input         clk, 
               wr, 
+              cen,
 	      rst,
 	      rd_en,
 	      wr_en;
@@ -156,7 +158,7 @@ input   scanb_en;
       //
       // writing to ram
       always @(posedge clk)
-      begin
+      if(cen) begin
        if (wr)
           buff[wr_addr] <= #1 wr_data;
       end
