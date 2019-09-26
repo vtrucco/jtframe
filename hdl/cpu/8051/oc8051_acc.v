@@ -125,9 +125,9 @@ end
 always @(posedge clk or posedge rst)
 begin
   if (rst)
-    data_out <= #1 `OC8051_RST_ACC;
+    data_out <= `OC8051_RST_ACC;
   else if(cen)
-    data_out <= #1 acc;
+    data_out <= acc;
 end
 
 

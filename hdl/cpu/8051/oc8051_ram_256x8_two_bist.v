@@ -160,7 +160,7 @@ input   scanb_en;
       always @(posedge clk)
       if(cen) begin
        if (wr)
-          buff[wr_addr] <= #1 wr_data;
+          buff[wr_addr] <= wr_data;
       end
       
       //
@@ -168,11 +168,11 @@ input   scanb_en;
       always @(posedge clk or posedge rst)
       begin
         if (rst)
-          rd_data <= #1 8'h0;
+          rd_data <= 8'h0;
         else if ((wr_addr==rd_addr) & wr & rd_en)
-          rd_data <= #1 wr_data;
+          rd_data <= wr_data;
         else if (rd_en)
-          rd_data <= #1 buff[rd_addr];
+          rd_data <= buff[rd_addr];
       end
     `endif  //OC8051_RAM_GENERIC
   `endif    //OC8051_RAM_VIRTUALSILICON  

@@ -110,13 +110,13 @@ assign desOv = src2 == 8'h0;
 // divider works in four clock cycles -- 0, 1, 2 and 3
 always @(posedge clk or posedge rst)
   if (rst) begin
-    cycle <= #1 2'b0;
-    tmp_div <= #1 6'h0;
-    tmp_rem <= #1 8'h0;
+    cycle <= 2'b0;
+    tmp_div <= 6'h0;
+    tmp_rem <= 8'h0;
   end else if(cen) begin
-    if (enable) cycle <= #1 cycle + 2'b1;
-    tmp_div <= #1 div_out[5:0];
-    tmp_rem <= #1 rem_out;
+    if (enable) cycle <= cycle + 2'b1;
+    tmp_div <= div_out[5:0];
+    tmp_rem <= rem_out;
 end
 
 //

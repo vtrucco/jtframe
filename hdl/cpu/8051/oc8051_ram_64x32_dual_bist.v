@@ -164,22 +164,22 @@ input   scanb_en;
       always @(posedge clk or posedge rst)
       begin
         if (rst)
-          dat1_o     <= #1 32'h0;
+          dat1_o     <= 32'h0;
         else if (wr1) begin
-          buff[adr1] <= #1 dat1_i;
-          dat1_o    <= #1 dat1_i;
+          buff[adr1] <= dat1_i;
+          dat1_o    <= dat1_i;
         end else
-          dat1_o <= #1 buff[adr1];
+          dat1_o <= buff[adr1];
       end
       
       always @(posedge clk or posedge rst)
       begin
         if (rst)
-          dat0_o <= #1 32'h0;
+          dat0_o <= 32'h0;
         else if ((adr0==adr1) & wr1)
-          dat0_o <= #1 dat1_i;
+          dat0_o <= dat1_i;
         else
-          dat0_o <= #1 buff[adr0];
+          dat0_o <= buff[adr0];
       end
             
     `endif  //OC8051_RAM_GENERIC
