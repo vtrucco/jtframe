@@ -128,6 +128,24 @@ output [2:0] mem_act, src_sel1, ram_rd_sel_o, ram_wr_sel_o, pc_sel, op1_c;
 output [3:0] alu_op_o;
 output rd;
 
+parameter [3:0]
+    OC8051_ALU_NOP  = 4'b0000,
+    OC8051_ALU_ADD  = 4'b0001,
+    OC8051_ALU_SUB  = 4'b0010,
+    OC8051_ALU_MUL  = 4'b0011,
+    OC8051_ALU_DIV  = 4'b0100,
+    OC8051_ALU_DA   = 4'b0101,
+    OC8051_ALU_NOT  = 4'b0110,
+    OC8051_ALU_AND  = 4'b0111,
+    OC8051_ALU_XOR  = 4'b1000,
+    OC8051_ALU_OR   = 4'b1001,
+    OC8051_ALU_RL   = 4'b1010,
+    OC8051_ALU_RLC  = 4'b1011,
+    OC8051_ALU_RR   = 4'b1100,
+    OC8051_ALU_RRC  = 4'b1101,
+    OC8051_ALU_INC  = 4'b1110,
+    OC8051_ALU_XCH  = 4'b1111;
+
 reg rmw;
 reg src_sel3, wr,  bit_addr, pc_wr;
 reg [3:0] alu_op;
@@ -157,7 +175,7 @@ assign op_cur = mem_wait ? 8'h00
 
 assign op1_c = op_cur[2:0];
 
-assign alu_op_o     = wait_data ? `OC8051_ALU_NOP : alu_op;
+assign alu_op_o     = wait_data ? OC8051_ALU_NOP : alu_op;
 assign wr_sfr_o     = wait_data ? `OC8051_WRS_N   : wr_sfr;
 assign ram_rd_sel_o = wait_data ? ram_rd_sel_r    : ram_rd_sel;
 assign ram_wr_sel_o = wait_data ? `OC8051_RWS_DC  : ram_wr_sel;
@@ -1193,7 +1211,7 @@ always @(posedge clk or posedge rst)
     ram_wr_sel <= `OC8051_RWS_DC;
     src_sel1 <= `OC8051_AS1_DC;
     src_sel2 <= `OC8051_AS2_DC;
-    alu_op <= `OC8051_ALU_NOP;
+    alu_op <= OC8051_ALU_NOP;
     wr <= 1'b0;
     psw_set <= `OC8051_PS_NOT;
     cy_sel <= `OC8051_CY_0;
@@ -1208,7 +1226,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP1;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               wr_sfr <= `OC8051_WRS_ACC1;
@@ -1217,7 +1235,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP1;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               wr_sfr <= `OC8051_WRS_ACC1;
@@ -1226,7 +1244,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP1;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               wr_sfr <= `OC8051_WRS_ACC1;
@@ -1235,7 +1253,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP1;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               wr_sfr <= `OC8051_WRS_ACC1;
@@ -1244,7 +1262,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_SP;
               src_sel1 <= `OC8051_AS1_PCH;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               wr_sfr <= `OC8051_WRS_N;
@@ -1253,7 +1271,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               wr_sfr <= `OC8051_WRS_N;
@@ -1262,7 +1280,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_SP;
               src_sel1 <= `OC8051_AS1_PCH;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               wr_sfr <= `OC8051_WRS_N;
@@ -1271,7 +1289,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_B;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_DIV;
+              alu_op <= OC8051_ALU_DIV;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_OV;
               wr_sfr <= `OC8051_WRS_ACC2;
@@ -1280,7 +1298,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_B;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_MUL;
+              alu_op <= OC8051_ALU_MUL;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_OV;
               wr_sfr <= `OC8051_WRS_ACC2;
@@ -1289,7 +1307,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               wr_sfr <= `OC8051_WRS_N;
@@ -1304,7 +1322,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_SP;
               src_sel1 <= `OC8051_AS1_PCH;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
             end
@@ -1312,7 +1330,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_SP;
               src_sel1 <= `OC8051_AS1_PCH;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
             end
@@ -1320,7 +1338,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
             end
@@ -1328,7 +1346,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_DIV;
+              alu_op <= OC8051_ALU_DIV;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_OV;
             end
@@ -1336,7 +1354,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_MUL;
+              alu_op <= OC8051_ALU_MUL;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_OV;
             end
@@ -1344,7 +1362,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
           end
@@ -1359,31 +1377,31 @@ always @(posedge clk or posedge rst)
           `OC8051_RET : begin
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               psw_set <= `OC8051_PS_NOT;
             end
           `OC8051_RETI : begin
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               psw_set <= `OC8051_PS_NOT;
             end
           `OC8051_DIV : begin
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_DIV;
+              alu_op <= OC8051_ALU_DIV;
               psw_set <= `OC8051_PS_OV;
             end
           `OC8051_MUL : begin
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_MUL;
+              alu_op <= OC8051_ALU_MUL;
               psw_set <= `OC8051_PS_OV;
             end
          default begin
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               psw_set <= `OC8051_PS_NOT;
           end
         endcase
@@ -1399,7 +1417,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_SP;
               src_sel1 <= `OC8051_AS1_PCL;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1410,7 +1428,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1421,7 +1439,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_0;
@@ -1432,7 +1450,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_PSW;
@@ -1443,7 +1461,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_AND;
+              alu_op <= OC8051_ALU_AND;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1454,7 +1472,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_OP2;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_0;
@@ -1465,7 +1483,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_RN;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -1476,7 +1494,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_RN;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -1487,7 +1505,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_RN;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1498,7 +1516,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1509,7 +1527,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_RN;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1520,7 +1538,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_RN;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1531,7 +1549,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_RN;
               src_sel1 <= `OC8051_AS1_OP2;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1542,7 +1560,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1553,7 +1571,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_OR;
+              alu_op <= OC8051_ALU_OR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1564,7 +1582,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_PSW;
@@ -1575,7 +1593,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_RN;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XCH;
+              alu_op <= OC8051_ALU_XCH;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -1586,7 +1604,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XOR;
+              alu_op <= OC8051_ALU_XOR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1599,7 +1617,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_0;
@@ -1610,7 +1628,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_PSW;
@@ -1621,7 +1639,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_AND;
+              alu_op <= OC8051_ALU_AND;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1632,7 +1650,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_OP2;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_0;
@@ -1643,7 +1661,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_I;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -1654,7 +1672,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_I;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1665,7 +1683,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1676,7 +1694,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1687,7 +1705,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_I;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1698,7 +1716,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_I;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1709,7 +1727,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_I;
               src_sel1 <= `OC8051_AS1_OP2;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1720,7 +1738,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1731,7 +1749,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1742,7 +1760,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_OR;
+              alu_op <= OC8051_ALU_OR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1753,7 +1771,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_PSW;
@@ -1764,7 +1782,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_I;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XCH;
+              alu_op <= OC8051_ALU_XCH;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -1775,7 +1793,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_I;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XCH;
+              alu_op <= OC8051_ALU_XCH;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1786,7 +1804,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XOR;
+              alu_op <= OC8051_ALU_XOR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1799,7 +1817,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_0;
@@ -1810,7 +1828,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP2;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_0;
@@ -1821,7 +1839,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_PSW;
@@ -1832,7 +1850,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP2;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_PSW;
@@ -1843,7 +1861,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_AND;
+              alu_op <= OC8051_ALU_AND;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1854,7 +1872,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP2;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_AND;
+              alu_op <= OC8051_ALU_AND;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1865,7 +1883,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_AND;
+              alu_op <= OC8051_ALU_AND;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1876,7 +1894,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_OP3;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_AND;
+              alu_op <= OC8051_ALU_AND;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1887,7 +1905,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_AND;
+              alu_op <= OC8051_ALU_AND;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_PSW;
@@ -1898,7 +1916,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_RR;
+              alu_op <= OC8051_ALU_RR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_PSW;
@@ -1909,7 +1927,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_0;
@@ -1920,7 +1938,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_OP2;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_0;
@@ -1931,7 +1949,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1942,7 +1960,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_0;
@@ -1953,7 +1971,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1964,7 +1982,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOT;
+              alu_op <= OC8051_ALU_NOT;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -1975,7 +1993,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOT;
+              alu_op <= OC8051_ALU_NOT;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_PSW;
@@ -1986,7 +2004,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOT;
+              alu_op <= OC8051_ALU_NOT;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_RAM;
@@ -1997,7 +2015,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_DA;
+              alu_op <= OC8051_ALU_DA;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_PSW;
@@ -2008,7 +2026,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -2019,7 +2037,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -2030,7 +2048,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_DIV;
+              alu_op <= OC8051_ALU_DIV;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_OV;
               cy_sel <= `OC8051_CY_0;
@@ -2041,7 +2059,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -2052,7 +2070,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2063,7 +2081,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_INC;
+              alu_op <= OC8051_ALU_INC;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2074,7 +2092,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ZERO;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -2085,7 +2103,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2096,7 +2114,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2107,7 +2125,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2118,7 +2136,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2129,7 +2147,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2140,7 +2158,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2151,7 +2169,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2162,7 +2180,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2173,7 +2191,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_SP;
               src_sel1 <= `OC8051_AS1_PCL;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2184,7 +2202,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2195,7 +2213,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2206,7 +2224,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP2;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2217,7 +2235,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2228,7 +2246,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D3;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2239,7 +2257,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_OP3;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2250,7 +2268,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_RAM;
@@ -2261,7 +2279,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_PSW;
@@ -2272,7 +2290,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP3;
               src_sel2 <= `OC8051_AS2_OP2;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2283,7 +2301,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2294,7 +2312,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_PCL;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_ADD;
+              alu_op <= OC8051_ALU_ADD;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2305,7 +2323,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2316,7 +2334,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2327,7 +2345,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_MUL;
+              alu_op <= OC8051_ALU_MUL;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_OV;
               cy_sel <= `OC8051_CY_0;
@@ -2338,7 +2356,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_OR;
+              alu_op <= OC8051_ALU_OR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2349,7 +2367,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP2;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_OR;
+              alu_op <= OC8051_ALU_OR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2360,7 +2378,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_OR;
+              alu_op <= OC8051_ALU_OR;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2371,7 +2389,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_OP3;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_OR;
+              alu_op <= OC8051_ALU_OR;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2382,7 +2400,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_OR;
+              alu_op <= OC8051_ALU_OR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_PSW;
@@ -2393,7 +2411,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_RL;
+              alu_op <= OC8051_ALU_RL;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_PSW;
@@ -2404,7 +2422,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2415,7 +2433,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_SP;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2426,7 +2444,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2437,7 +2455,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2448,7 +2466,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_RL;
+              alu_op <= OC8051_ALU_RL;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2459,7 +2477,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_RLC;
+              alu_op <= OC8051_ALU_RLC;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_PSW;
@@ -2470,7 +2488,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_RR;
+              alu_op <= OC8051_ALU_RR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2481,7 +2499,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_RRC;
+              alu_op <= OC8051_ALU_RRC;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_PSW;
@@ -2492,7 +2510,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_CY;
               cy_sel <= `OC8051_CY_1;
@@ -2503,7 +2521,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -2514,7 +2532,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2525,7 +2543,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_PSW;
@@ -2536,7 +2554,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_OP2;
-              alu_op <= `OC8051_ALU_SUB;
+              alu_op <= OC8051_ALU_SUB;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_AC;
               cy_sel <= `OC8051_CY_PSW;
@@ -2547,7 +2565,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_ACC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_RLC;
+              alu_op <= OC8051_ALU_RLC;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2558,7 +2576,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XCH;
+              alu_op <= OC8051_ALU_XCH;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_1;
@@ -2569,7 +2587,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XOR;
+              alu_op <= OC8051_ALU_XOR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2580,7 +2598,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_OP2;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XOR;
+              alu_op <= OC8051_ALU_XOR;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2591,7 +2609,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_RAM;
               src_sel2 <= `OC8051_AS2_ACC;
-              alu_op <= `OC8051_ALU_XOR;
+              alu_op <= OC8051_ALU_XOR;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2602,7 +2620,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_D;
               src_sel1 <= `OC8051_AS1_OP3;
               src_sel2 <= `OC8051_AS2_RAM;
-              alu_op <= `OC8051_ALU_XOR;
+              alu_op <= OC8051_ALU_XOR;
               wr <= 1'b1;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;
@@ -2613,7 +2631,7 @@ always @(posedge clk or posedge rst)
               ram_wr_sel <= `OC8051_RWS_DC;
               src_sel1 <= `OC8051_AS1_DC;
               src_sel2 <= `OC8051_AS2_DC;
-              alu_op <= `OC8051_ALU_NOP;
+              alu_op <= OC8051_ALU_NOP;
               wr <= 1'b0;
               psw_set <= `OC8051_PS_NOT;
               cy_sel <= `OC8051_CY_0;

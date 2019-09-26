@@ -47,6 +47,9 @@
 // $Log: not supported by cvs2svn $
 // 1.33 2019/9/25 jotego
 // clock enable added
+// Internal ROM/RAM deleted
+// BIST signals removed
+// include for timescale removed
 //
 // Revision 1.32  2003/06/20 13:36:37  simont
 // ram modules added.
