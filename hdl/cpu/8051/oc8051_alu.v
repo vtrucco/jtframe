@@ -79,14 +79,10 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
-`include "oc8051_defines.v"
-
-
-
-module oc8051_alu (clk, rst, op_code, src1, src2, src3, srcCy, srcAc, bit_in, 
+module oc8051_alu (clk, rst, cen, op_code, src1, src2, src3, srcCy, srcAc, bit_in, 
                   des1, des2, des_acc, desCy, desAc, desOv, sub_result);
 //
 // op_code      (in)  operation code [oc8051_decoder.alu_op -r]
@@ -103,11 +99,29 @@ module oc8051_alu (clk, rst, op_code, src1, src2, src3, srcCy, srcAc, bit_in,
 // desOv        (out) Overflow output [oc8051_psw.ov_in]
 //
 
-input        srcCy, srcAc, bit_in, clk, rst;
+input        srcCy, srcAc, bit_in, clk, rst, cen;
 input  [3:0] op_code;
 input  [7:0] src1, src2, src3;
 output       desCy, desAc, desOv;
 output [7:0] des1, des2, des_acc, sub_result;
+
+parameter [3:0]
+    OC8051_ALU_NOP  = 4'b0000,
+    OC8051_ALU_ADD  = 4'b0001,
+    OC8051_ALU_SUB  = 4'b0010,
+    OC8051_ALU_MUL  = 4'b0011,
+    OC8051_ALU_DIV  = 4'b0100,
+    OC8051_ALU_DA   = 4'b0101,
+    OC8051_ALU_NOT  = 4'b0110,
+    OC8051_ALU_AND  = 4'b0111,
+    OC8051_ALU_XOR  = 4'b1000,
+    OC8051_ALU_OR   = 4'b1001,
+    OC8051_ALU_RL   = 4'b1010,
+    OC8051_ALU_RLC  = 4'b1011,
+    OC8051_ALU_RR   = 4'b1100,
+    OC8051_ALU_RRC  = 4'b1101,
+    OC8051_ALU_INC  = 4'b1110,
+    OC8051_ALU_XCH  = 4'b1111;
 
 reg desCy, desAc, desOv;
 reg [7:0] des1, des2, des_acc;
@@ -153,8 +167,8 @@ reg da_tmp, da_tmp1;
 //
 wire [15:0] inc, dec;
 
-oc8051_multiply oc8051_mul1(.clk(clk), .rst(rst), .enable(enable_mul), .src1(src1), .src2(src2), .des1(mulsrc1), .des2(mulsrc2), .desOv(mulOv));
-oc8051_divide oc8051_div1(.clk(clk), .rst(rst), .enable(enable_div), .src1(src1), .src2(src2), .des1(divsrc1), .des2(divsrc2), .desOv(divOv));
+oc8051_multiply oc8051_mul1(.clk(clk), .rst(rst), .cen(cen), .enable(enable_mul), .src1(src1), .src2(src2), .des1(mulsrc1), .des2(mulsrc2), .desOv(mulOv));
+oc8051_divide oc8051_div1(.clk(clk), .rst(rst), .cen(cen), .enable(enable_div), .src1(src1), .src2(src2), .des1(divsrc1), .des2(divsrc2), .desOv(divOv));
 
 /* Add */
 assign add1 = {1'b0,src1[3:0]};
@@ -201,7 +215,7 @@ begin
 
   case (op_code) /* synopsys full_case parallel_case */
 //operation add
-    `OC8051_ALU_ADD: begin
+    OC8051_ALU_ADD: begin
       des_acc = {addc[0],add8[2:0],add4[3:0]};
       des1 = src1;
       des2 = src3+ {7'b0, addc[1]};
@@ -213,7 +227,7 @@ begin
       enable_div = 1'b0;
     end
 //operation subtract
-    `OC8051_ALU_SUB: begin
+    OC8051_ALU_SUB: begin
       des_acc = sub_result;
 //      des1 = sub_result;
       des1 = 8'h00;
@@ -226,7 +240,7 @@ begin
       enable_div = 1'b0;
     end
 //operation multiply
-    `OC8051_ALU_MUL: begin
+    OC8051_ALU_MUL: begin
       des_acc = mulsrc1;
       des1 = src1;
       des2 = mulsrc2;
@@ -237,7 +251,7 @@ begin
       enable_div = 1'b0;
     end
 //operation divide
-    `OC8051_ALU_DIV: begin
+    OC8051_ALU_DIV: begin
       des_acc = divsrc1;
       des1 = src1;
       des2 = divsrc2;
@@ -248,7 +262,7 @@ begin
       enable_div = 1'b1;
     end
 //operation decimal adjustment
-    `OC8051_ALU_DA: begin
+    OC8051_ALU_DA: begin
 
       if (srcAc==1'b1 | src1[3:0]>4'b1001) {da_tmp, des_acc[3:0]} = {1'b0, src1[3:0]}+ 5'b00110;
       else {da_tmp, des_acc[3:0]} = {1'b0, src1[3:0]};
@@ -267,7 +281,7 @@ begin
     end
 //operation not
 // bit operation not
-    `OC8051_ALU_NOT: begin
+    OC8051_ALU_NOT: begin
       des_acc = ~src1;
       des1 = ~src1;
       des2 = 8'h00;
@@ -279,7 +293,7 @@ begin
     end
 //operation and
 //bit operation and
-    `OC8051_ALU_AND: begin
+    OC8051_ALU_AND: begin
       des_acc = src1 & src2;
       des1 = src1 & src2;
       des2 = 8'h00;
@@ -291,7 +305,7 @@ begin
     end
 //operation xor
 // bit operation xor
-    `OC8051_ALU_XOR: begin
+    OC8051_ALU_XOR: begin
       des_acc = src1 ^ src2;
       des1 = src1 ^ src2;
       des2 = 8'h00;
@@ -303,7 +317,7 @@ begin
     end
 //operation or
 // bit operation or
-    `OC8051_ALU_OR: begin
+    OC8051_ALU_OR: begin
       des_acc = src1 | src2;
       des1 = src1 | src2;
       des2 = 8'h00;
@@ -315,7 +329,7 @@ begin
     end
 //operation rotate left
 // bit operation cy= cy or (not ram)
-    `OC8051_ALU_RL: begin
+    OC8051_ALU_RL: begin
       des_acc = {src1[6:0], src1[7]};
       des1 = src1 ;
       des2 = 8'h00;
@@ -326,7 +340,7 @@ begin
       enable_div = 1'b0;
     end
 //operation rotate left with carry and swap nibbles
-    `OC8051_ALU_RLC: begin
+    OC8051_ALU_RLC: begin
       des_acc = {src1[6:0], srcCy};
       des1 = src1 ;
       des2 = {src1[3:0], src1[7:4]};
@@ -337,7 +351,7 @@ begin
       enable_div = 1'b0;
     end
 //operation rotate right
-    `OC8051_ALU_RR: begin
+    OC8051_ALU_RR: begin
       des_acc = {src1[0], src1[7:1]};
       des1 = src1 ;
       des2 = 8'h00;
@@ -348,7 +362,7 @@ begin
       enable_div = 1'b0;
     end
 //operation rotate right with carry
-    `OC8051_ALU_RRC: begin
+    OC8051_ALU_RRC: begin
       des_acc = {srcCy, src1[7:1]};
       des1 = src1 ;
       des2 = 8'h00;
@@ -359,7 +373,7 @@ begin
       enable_div = 1'b0;
     end
 //operation pcs Add
-    `OC8051_ALU_INC: begin
+    OC8051_ALU_INC: begin
       if (srcCy) begin
         des_acc = dec[7:0];
 	des1 = dec[7:0];
@@ -377,7 +391,7 @@ begin
     end
 //operation exchange
 //if carry = 0 exchange low order digit
-    `OC8051_ALU_XCH: begin
+    OC8051_ALU_XCH: begin
       if (srcCy)
       begin
         des_acc = src2;
@@ -394,7 +408,7 @@ begin
       enable_mul = 1'b0;
       enable_div = 1'b0;
     end
-    `OC8051_ALU_NOP: begin
+    OC8051_ALU_NOP: begin
       des_acc = src1;
       des1 = src1;
       des2 = src2;

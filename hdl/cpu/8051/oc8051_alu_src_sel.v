@@ -57,7 +57,7 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
@@ -140,13 +140,13 @@ end
 
 always @(posedge clk or posedge rst)
   if (rst) begin
-    op1_r <= #1 8'h00;
-    op2_r <= #1 8'h00;
-    op3_r <= #1 8'h00;
+    op1_r <= 8'h00;
+    op2_r <= 8'h00;
+    op3_r <= 8'h00;
   end else if(cen) begin
-    op1_r <= #1 op1;
-    op2_r <= #1 op2;
-    op3_r <= #1 op3;
+    op1_r <= op1;
+    op2_r <= op2;
+    op3_r <= op3;
   end
 
 endmodule

@@ -58,24 +58,8 @@
 `define OC8051_PORT3
 
 
-//
-// oc8051 ITERNAL ROM
-//
-//`define OC8051_ROM
-
-
-//
-// oc8051 memory
-//
-//`define OC8051_CACHE
-//`define OC8051_WB
-
-//`define OC8051_RAM_XILINX
-//`define OC8051_RAM_VIRTUALSILICON
 `define OC8051_RAM_GENERIC
 
-
-// `define OC8051_XILINX_ROM
 
 //
 // oc8051 simulation defines
@@ -84,32 +68,9 @@
 //`define OC8051_SERIAL
 
 //
-// oc8051 bist
-//
-//`define OC8051_BIST
-
-
-//
 // operation codes for alu
 //
 
-
-`define OC8051_ALU_NOP 4'b0000
-`define OC8051_ALU_ADD 4'b0001
-`define OC8051_ALU_SUB 4'b0010
-`define OC8051_ALU_MUL 4'b0011
-`define OC8051_ALU_DIV 4'b0100
-`define OC8051_ALU_DA 4'b0101
-`define OC8051_ALU_NOT 4'b0110
-`define OC8051_ALU_AND 4'b0111
-`define OC8051_ALU_XOR 4'b1000
-`define OC8051_ALU_OR 4'b1001
-`define OC8051_ALU_RL 4'b1010
-`define OC8051_ALU_RLC 4'b1011
-`define OC8051_ALU_RR 4'b1100
-`define OC8051_ALU_RRC 4'b1101
-`define OC8051_ALU_INC 4'b1110
-`define OC8051_ALU_XCH 4'b1111
 
 //
 // sfr addresses

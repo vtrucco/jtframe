@@ -60,7 +60,7 @@
 
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
 `include "oc8051_defines.v"
@@ -68,6 +68,7 @@
 
 module oc8051_ports (clk, 
                     rst,
+                    cen,
                     bit_in, 
 		    data_in,
 		    wr, 
@@ -103,6 +104,7 @@ module oc8051_ports (clk,
 
 input        clk,	//clock
              rst,	//reset
+             cen,
 	     wr,	//write [oc8051_decoder.wr -r]
 	     wr_bit,	//write bit addresable [oc8051_decoder.bit_addr -r]
 	     bit_in,	//bit input [oc8051_alu.desCy]
@@ -152,42 +154,42 @@ input [7:0]  wr_addr,	//write address [oc8051_ram_wr_sel.out]
 //
 // case of writing to port
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
 `ifdef OC8051_PORT0
-    p0_out <= #1 `OC8051_RST_P0;
+    p0_out <= `OC8051_RST_P0;
 `endif
 
 `ifdef OC8051_PORT1
-    p1_out <= #1 `OC8051_RST_P1;
+    p1_out <= `OC8051_RST_P1;
 `endif
 
 `ifdef OC8051_PORT2
-    p2_out <= #1 `OC8051_RST_P2;
+    p2_out <= `OC8051_RST_P2;
 `endif
 
 `ifdef OC8051_PORT3
-    p3_out <= #1 `OC8051_RST_P3;
+    p3_out <= `OC8051_RST_P3;
 `endif
-  end else if (wr) begin
+  end else if(cen) begin
+  if (wr) begin
     if (!wr_bit) begin
       case (wr_addr) /* synopsys full_case parallel_case */
 //
 // bytaddresable
 `ifdef OC8051_PORT0
-        `OC8051_SFR_P0: p0_out <= #1 data_in;
+        `OC8051_SFR_P0: p0_out <= data_in;
 `endif
 
 `ifdef OC8051_PORT1
-        `OC8051_SFR_P1: p1_out <= #1 data_in;
+        `OC8051_SFR_P1: p1_out <= data_in;
 `endif
 
 `ifdef OC8051_PORT2
-        `OC8051_SFR_P2: p2_out <= #1 data_in;
+        `OC8051_SFR_P2: p2_out <= data_in;
 `endif
 
 `ifdef OC8051_PORT3
-        `OC8051_SFR_P3: p3_out <= #1 data_in;
+        `OC8051_SFR_P3: p3_out <= data_in;
 `endif
       endcase
     end else begin
@@ -196,19 +198,19 @@ begin
 //
 // bit addressable
 `ifdef OC8051_PORT0
-        `OC8051_SFR_B_P0: p0_out[wr_addr[2:0]] <= #1 bit_in;
+        `OC8051_SFR_B_P0: p0_out[wr_addr[2:0]] <= bit_in;
 `endif
 
 `ifdef OC8051_PORT1
-        `OC8051_SFR_B_P1: p1_out[wr_addr[2:0]] <= #1 bit_in;
+        `OC8051_SFR_B_P1: p1_out[wr_addr[2:0]] <= bit_in;
 `endif
 
 `ifdef OC8051_PORT2
-        `OC8051_SFR_B_P2: p2_out[wr_addr[2:0]] <= #1 bit_in;
+        `OC8051_SFR_B_P2: p2_out[wr_addr[2:0]] <= bit_in;
 `endif
 
 `ifdef OC8051_PORT3
-        `OC8051_SFR_B_P3: p3_out[wr_addr[2:0]] <= #1 bit_in;
+        `OC8051_SFR_B_P3: p3_out[wr_addr[2:0]] <= bit_in;
 `endif
       endcase
     end

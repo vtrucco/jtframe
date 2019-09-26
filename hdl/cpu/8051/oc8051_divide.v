@@ -51,10 +51,10 @@
 //
 
 // synopsys translate_off
-`include "oc8051_timescale.v"
+`timescale 1ns/10ps
 // synopsys translate_on
 
-module oc8051_divide (clk, rst, enable, src1, src2, des1, des2, desOv);
+module oc8051_divide (clk, rst, cen, enable, src1, src2, des1, des2, desOv);
 //
 // this module is part of alu
 // clk          (in)
@@ -67,7 +67,7 @@ module oc8051_divide (clk, rst, enable, src1, src2, des1, des2, desOv);
 // desOv        (out) Overflow output
 //
 
-input clk, rst, enable;
+input clk, rst, cen, enable;
 input [7:0] src1, src2;
 output desOv;
 output [7:0] des1, des2;
@@ -109,16 +109,14 @@ assign desOv = src2 == 8'h0;
 //
 // divider works in four clock cycles -- 0, 1, 2 and 3
 always @(posedge clk or posedge rst)
-begin
   if (rst) begin
-    cycle <= #1 2'b0;
-    tmp_div <= #1 6'h0;
-    tmp_rem <= #1 8'h0;
-  end else begin
-    if (enable) cycle <= #1 cycle + 2'b1;
-    tmp_div <= #1 div_out[5:0];
-    tmp_rem <= #1 rem_out;
-  end
+    cycle <= 2'b0;
+    tmp_div <= 6'h0;
+    tmp_rem <= 8'h0;
+  end else if(cen) begin
+    if (enable) cycle <= cycle + 2'b1;
+    tmp_div <= div_out[5:0];
+    tmp_rem <= rem_out;
 end
 
 //
