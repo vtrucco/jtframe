@@ -1,26 +1,3 @@
-## Generated SDC file "jt1492.out.sdc"
-
-## Copyright (C) 1991-2013 Altera Corporation
-## Your use of Altera Corporation's design tools, logic functions 
-## and other software and tools, and its AMPP partner logic 
-## functions, and any output files from any of the foregoing 
-## (including device programming or simulation files), and any 
-## associated documentation or information are expressly subject 
-## to the terms and conditions of the Altera Program License 
-## Subscription Agreement, Altera MegaCore Function License 
-## Agreement, or other applicable license agreement, including, 
-## without limitation, that your use is for the sole purpose of 
-## programming logic devices manufactured by Altera and sold by 
-## Altera or its authorized distributors.  Please refer to the 
-## applicable agreement for further details.
-
-
-## VENDOR  "Altera"
-## PROGRAM "Quartus II"
-## VERSION "Version 13.1.0 Build 162 10/23/2013 SJ Web Edition"
-
-## DATE    "Thu Aug 10 21:25:00 2017"
-
 ##
 ## DEVICE  "EP3C25E144C8"
 ##
@@ -50,6 +27,11 @@ create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_port
 derive_pll_clocks -create_base_clocks
 # create_generated_clock -name {sdclk_pin} -source [get_pins {u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] -master_clock {u_pll_game|altpll_component|auto_generated|pll1|clk[2]} [get_ports {SDRAM_CLK}] 
 
+create_generated_clock -name SDRAM_CLK -source \
+    [get_pins {u_pll_game|altpll_component|auto_generated|pll1|clk[2]}] \
+    -divide_by 1 \
+    [get_ports SDRAM_CLK]
+
 
 
 #**************************************************************
@@ -71,26 +53,26 @@ derive_clock_uncertainty
 # output pins of the SDRAM to change after a new clock edge.
 # This is used to calculate set-up time conditions in the FF
 # latching the signal inside the FPGA
-set_input_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
-    -max 6 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
+set_input_delay -clock SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]] 
 
 # This is tOH in the data sheet. It is the time data is hold at the
 # output pins of the SDRAM after a new clock edge.
 # This is used to calculate hold time conditions in the FF
 # latching the signal inside the FPGA (3.2)
-set_input_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
-    -min 3 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
+set_input_delay -clock SDRAM_CLK -min 3 [get_ports SDRAM_DQ[*]]
 
 #**************************************************************
 # Set Output Delay
 #**************************************************************
 
 # This is tDS in the data sheet, setup time, spec is 1.5ns
-set_output_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
-    -max 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
+set_output_delay -clock SDRAM_CLK -max 1.5 \
+    [get_ports {SDRAM_A[*] SDRAM_BA[*] SDRAM_CKE SDRAM_DQMH SDRAM_DQML \
+                SDRAM_DQ[*] SDRAM_nCAS SDRAM_nCS SDRAM_nRAS SDRAM_nWE}]
 # This is tDH in the data sheet, hold time, spec is 0.8ns
-set_output_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
-    -min -0.8 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
+set_output_delay -clock  SDRAM_CLK -min -0.8 \
+    [get_ports {SDRAM_A[*] SDRAM_BA[*] SDRAM_CKE SDRAM_DQMH SDRAM_DQML \
+                SDRAM_DQ[*] SDRAM_nCAS SDRAM_nCS SDRAM_nRAS SDRAM_nWE}]
 
 
 
