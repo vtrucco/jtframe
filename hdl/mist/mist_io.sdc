@@ -90,7 +90,7 @@ set_output_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
     -max 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
 # This is tDH in the data sheet, hold time, spec is 0.8ns
 set_output_delay -clock u_pll_game|altpll_component|auto_generated|pll1|clk[2] \
-    -min 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
+    -min -0.8 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
 
 
 
