@@ -22,27 +22,40 @@ derive_clock_uncertainty
 ### SDRAM_A, SDRAM_DQ, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, 
 ### SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS, SDRAM_BA, SDRAM_CLK, SDRAM_CKE,
 
-#set SDRAM_CLK emu|pll|pll_inst|altera_pll_i|outclk_wire[1]~CLKENA0|outclk
-#set SDRAM_CLK {emu|pll|pll_inst|altera_pll_i|general[1].gpll~PLL_OUTPUT_COUNTER|divclk}
-# if there is no phase shift, then output 1 gets deleted and
-# SDRAM is output 0
-set SDRAM_CLK {emu|pll|pll_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}
+create_generated_clock -name SDRAM_CLK -source \
+    [get_pins {emu|pll|pll_inst|altera_pll_i|general[1].gpll~PLL_OUTPUT_COUNTER|divclk}] \
+    -divide_by 1 \
+    [get_ports SDRAM_CLK]
 
 
-# This is tHS in the data sheet (setup time)
-set_output_delay -clock $SDRAM_CLK \
-    -max 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
-# This is tiH in the data sheet (hold time), 0.8ns in data sheet. Using 1.5ns for extra margin
-set_output_delay -clock $SDRAM_CLK \
-    -min 1.5 [get_ports SDRAM_*] -reference_pin SDRAM_CLK
-# the above statement generates an output delay constraint for SDRAM_CLK pin itself
-# that is not needed:
-remove_output_delay SDRAM_CLK
+#**************************************************************
+# Set Input Delay
+#**************************************************************
 
-# This is tAC in the data sheet
-set_input_delay -clock $SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
-# this is tOH in the data sheet
-set_input_delay -clock $SDRAM_CLK -min 2.5 [get_ports SDRAM_DQ[*]] -reference_pin SDRAM_CLK
+# This is tAC in the data sheet. It is the time it takes to the
+# output pins of the SDRAM to change after a new clock edge.
+# This is used to calculate set-up time conditions in the FF
+# latching the signal inside the FPGA
+set_input_delay -clock SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]] 
+
+# This is tOH in the data sheet. It is the time data is hold at the
+# output pins of the SDRAM after a new clock edge.
+# This is used to calculate hold time conditions in the FF
+# latching the signal inside the FPGA (3.2)
+set_input_delay -clock SDRAM_CLK -min 3 [get_ports SDRAM_DQ[*]]
+
+#**************************************************************
+# Set Output Delay
+#**************************************************************
+
+# This is tDS in the data sheet, setup time, spec is 1.5ns
+set_output_delay -clock SDRAM_CLK -max 1.5 \
+    [get_ports {SDRAM_A[*] SDRAM_BA[*] SDRAM_CKE SDRAM_DQMH SDRAM_DQML \
+                SDRAM_DQ[*] SDRAM_nCAS SDRAM_nCS SDRAM_nRAS SDRAM_nWE}]
+# This is tDH in the data sheet, hold time, spec is 0.8ns
+set_output_delay -clock  SDRAM_CLK -min -0.8 \
+    [get_ports {SDRAM_A[*] SDRAM_BA[*] SDRAM_CKE SDRAM_DQMH SDRAM_DQML \
+                SDRAM_DQ[*] SDRAM_nCAS SDRAM_nCS SDRAM_nRAS SDRAM_nWE}]
 
 ##################################################################
 
