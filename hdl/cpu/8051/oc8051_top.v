@@ -126,10 +126,7 @@ module oc8051_top (
 //interface to instruction rom
 		wbi_adr_o, 
 		wbi_dat_i, 
-		wbi_stb_o, 
 		wbi_ack_i, 
-		wbi_cyc_o, 
-		wbi_err_i,
 
 //interface to data ram
 		wbd_dat_i, 
@@ -139,7 +136,6 @@ module oc8051_top (
 		wbd_ack_i,
 		wbd_stb_o, 
 		wbd_cyc_o, 
-		wbd_err_i,
 
 // interrupt interface
 		int0_i, 
@@ -197,8 +193,6 @@ input         wb_rst_i,		// reset input
               ea_in,		// external access
               wbd_ack_i,	// data acknowalge
               wbi_ack_i,	// instruction acknowlage
-              wbd_err_i,	// data error
-              wbi_err_i;	// instruction error
 
 input [7:0]   wbd_dat_i;	// ram data input
 input [31:0]  wbi_dat_i;	// rom data input
@@ -206,8 +200,6 @@ input [31:0]  wbi_dat_i;	// rom data input
 output        wbd_we_o,		// data write enable
 	      wbd_stb_o,	// data strobe
 	      wbd_cyc_o,	// data cycle
-	      wbi_stb_o,	// instruction strobe
-	      wbi_cyc_o;	// instruction cycle
 
 output [7:0]  wbd_dat_o;	// data output
 
@@ -660,9 +652,6 @@ oc8051_sfr oc8051_sfr1(.rst(wb_rst_i),
 // No WB interface
 assign wbi_adr_o = iadr_o    ;
 assign idat_i    = wbi_dat_i ;
-assign wbi_stb_o = 1'b1      ;
 assign iack_i    = wbi_ack_i ;
-assign wbi_cyc_o = 1'b1      ;
-
 
 endmodule

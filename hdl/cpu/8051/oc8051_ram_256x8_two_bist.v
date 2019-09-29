@@ -67,15 +67,7 @@ module oc8051_ram_256x8_two_bist (
 		     wr_data,
 		     wr_en,
 		     wr
-`ifdef OC8051_BIST
-	 ,
-         scanb_rst,
-         scanb_clk,
-         scanb_si,
-         scanb_so,
-         scanb_en
-`endif
-		     );
+);
 
 
 input         clk, 
@@ -88,15 +80,6 @@ input  [7:0]  wr_data;
 input  [7:0]  rd_addr,
               wr_addr;
 output [7:0]  rd_data;
-
-`ifdef OC8051_BIST
-input   scanb_rst;
-input   scanb_clk;
-input   scanb_si;
-output  scanb_so;
-input   scanb_en;
-`endif
-
 
 `ifdef OC8051_RAM_XILINX
   xilinx_ram_dp xilinx_ram(

@@ -165,20 +165,20 @@ module oc8051_memory_interface (clk, rst, cen,
    );
 
 
-input         clk,
-              rst,
-              cen,
-	      wr_i,
-	      wr_bit_i;
+input       clk,
+            rst,
+            cen,
+	          wr_i,
+	          wr_bit_i;
 
-input         bit_in,
-              sfr_bit,
-	      dack_i;
-input [2:0]   mem_act;
-input [7:0]   in_ram,
-              sfr,
-	      acc,
-	      sp_w;
+input       bit_in,
+            sfr_bit,
+	          dack_i;
+input [2:0] mem_act;
+input [7:0] in_ram,
+            sfr,
+	          acc,
+	          sp_w;
 input [31:0]  idat_i;
 
 output        bit_out,
