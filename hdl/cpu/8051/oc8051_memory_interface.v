@@ -168,22 +168,22 @@ module oc8051_memory_interface (clk, rst, cen,
 input       clk,
             rst,
             cen,
-	          wr_i,
-	          wr_bit_i;
+              wr_i,
+              wr_bit_i;
 
 input       bit_in,
             sfr_bit,
-	          dack_i;
+              dack_i;
 input [2:0] mem_act;
 input [7:0] in_ram,
             sfr,
-	          acc,
-	          sp_w;
+              acc,
+              sp_w;
 input [31:0]  idat_i;
 
 output        bit_out,
               mem_wait,
-	      reti;
+          reti;
 output [7:0]  iram_out,
               wr_dat;
 
@@ -208,7 +208,7 @@ reg [23:0]    idat_ir;
 input         iack_i;
 input [7:0]   des_acc,
               des1,
-	      des2;
+          des2;
 output [15:0] iadr_o;
 
 wire          ea_rom_sel;
@@ -250,8 +250,8 @@ reg [7:0]     wr_addr,
 reg [4:0]     rn_r;
 reg [7:0]     ri_r,
               imm_r,
-	      imm2_r,
-	      op1_r;
+          imm2_r,
+          op1_r;
 wire [7:0]    imm,
               imm2;
 
@@ -263,9 +263,9 @@ wire [7:0]    imm,
 
 input         intr,
               rd,
-	      ea, 
-	      ea_int, 
-	      istb;
+          ea, 
+          ea_int, 
+          istb;
 
 input  [7:0]  int_v;
 
@@ -276,27 +276,27 @@ output        int_ack,
 
 output  [7:0] op1_out,
               op3_out,
-	      op2_out;
+          op2_out;
 
 reg           int_ack_t,
               int_ack,
-	      int_ack_buff;
+          int_ack_buff;
 
 reg [7:0]     int_vec_buff;
 reg [7:0]     op1_out,
               op2_buff,
-	      op3_buff;
+          op3_buff;
 reg [7:0]     op1_o,
               op2_o,
-	      op3_o;
+          op3_o;
 
 reg [7:0]     op1_xt, 
               op2_xt, 
-	      op3_xt;
+          op3_xt;
 
 reg [7:0]     op1,
               op2,
-	      op3;
+          op3;
 wire [7:0]    op2_direct;
 
 input [2:0]   pc_wr_sel;
@@ -319,10 +319,10 @@ reg           int_buff,
 //
 //
 ////////////////////////////
-reg           istb_t,
-              imem_wait,
-	      dstb_o,
-	      dwe_o;
+reg istb_t,
+    imem_wait,
+    dstb_o,
+    dwe_o;
 
 reg [7:0]     ddat_o;
 reg [15:0]    iadr_t,
@@ -367,33 +367,19 @@ assign pc_wait    = rd && (ea_rom_sel || (!istb_t && iack_i));
 
 assign wr_dat     = des1;
 
-
-`ifdef OC8051_SIMULATION
-  always @(negedge rst) begin
-    #5
-    if (ea_rom_sel)
-      $display("   progran execution from external rom");
-    else
-      $display("   progran execution from internal rom");
-  end
-
-`endif
-
-
 /////////////////////////////
 //
 //  ram_select
 //
 /////////////////////////////
-always @(rd_addr_r or in_ram or sfr or bit_in or sfr_bit or rd_ind)
-begin
-  if (rd_addr_r && !rd_ind) begin
-    iram_out = sfr;
-    bit_out = sfr_bit;
-  end else begin
-    iram_out = in_ram;
-    bit_out = bit_in;
-  end
+always @(rd_addr_r or in_ram or sfr or bit_in or sfr_bit or rd_ind) begin
+    if (rd_addr_r && !rd_ind) begin
+        iram_out = sfr;
+        bit_out = sfr_bit;
+    end else begin
+        iram_out = in_ram;
+        bit_out = bit_in;
+    end
 end
 
 /////////////////////////////
@@ -402,54 +388,49 @@ end
 //
 /////////////////////////////
 
-always @(rd_sel or sp or ri or rn or imm or dadr_o[15:0] or bank)
-begin
-  case (rd_sel) /* synopsys full_case parallel_case */
-    `OC8051_RRS_RN   : rd_addr = {3'h0, rn};
-    `OC8051_RRS_I    : rd_addr = ri;
-    `OC8051_RRS_D    : rd_addr = imm;
-    `OC8051_RRS_SP   : rd_addr = sp;
+always @(rd_sel or sp or ri or rn or imm or dadr_o[15:0] or bank) begin
+    case (rd_sel) /* synopsys full_case parallel_case */
+        `OC8051_RRS_RN   : rd_addr = {3'h0, rn};
+        `OC8051_RRS_I    : rd_addr = ri;
+        `OC8051_RRS_D    : rd_addr = imm;
+        `OC8051_RRS_SP   : rd_addr = sp;
 
-    `OC8051_RRS_B    : rd_addr = `OC8051_SFR_B;
-    `OC8051_RRS_DPTR : rd_addr = `OC8051_SFR_DPTR_LO;
-    `OC8051_RRS_PSW  : rd_addr = `OC8051_SFR_PSW;
-    `OC8051_RRS_ACC  : rd_addr = `OC8051_SFR_ACC;
-//    default          : rd_addr = 2'bxx;
-  endcase
-
+        `OC8051_RRS_B    : rd_addr = `OC8051_SFR_B;
+        `OC8051_RRS_DPTR : rd_addr = `OC8051_SFR_DPTR_LO;
+        `OC8051_RRS_PSW  : rd_addr = `OC8051_SFR_PSW;
+        `OC8051_RRS_ACC  : rd_addr = `OC8051_SFR_ACC;
+        //    default          : rd_addr = 2'bxx;
+    endcase
 end
 
-
-//
-//
 always @(wr_sel or sp_w or rn_r or imm_r or ri_r or imm2_r or op1_r or dadr_o[15:0])
 begin
-  case (wr_sel) /* synopsys full_case parallel_case */
-    `OC8051_RWS_RN : wr_addr = {3'h0, rn_r};
-    `OC8051_RWS_I  : wr_addr = ri_r;
-    `OC8051_RWS_D  : wr_addr = imm_r;
-    `OC8051_RWS_SP : wr_addr = sp_w;
-    `OC8051_RWS_D3 : wr_addr = imm2_r;
-    `OC8051_RWS_B  : wr_addr = `OC8051_SFR_B;
-//    default        : wr_addr = 2'bxx;
-  endcase
+    case (wr_sel) /* synopsys full_case parallel_case */
+        `OC8051_RWS_RN : wr_addr = {3'h0, rn_r};
+        `OC8051_RWS_I  : wr_addr = ri_r;
+        `OC8051_RWS_D  : wr_addr = imm_r;
+        `OC8051_RWS_SP : wr_addr = sp_w;
+        `OC8051_RWS_D3 : wr_addr = imm2_r;
+        `OC8051_RWS_B  : wr_addr = `OC8051_SFR_B;
+        //    default        : wr_addr = 2'bxx;
+    endcase
 end
 
 always @(posedge clk or posedge rst)
-  if (rst)
-    rd_ind <= 1'b0;
-  else if(cen) begin
-      if ((rd_sel==`OC8051_RRS_I) || (rd_sel==`OC8051_RRS_SP))
-        rd_ind <= 1'b1;
-      else
+    if (rst)
         rd_ind <= 1'b0;
-  end
+    else if(cen) begin
+        if ((rd_sel==`OC8051_RRS_I) || (rd_sel==`OC8051_RRS_SP))
+            rd_ind <= 1'b1;
+        else
+            rd_ind <= 1'b0;
+    end
 
 always @(wr_sel)
-  if ((wr_sel==`OC8051_RWS_I) || (wr_sel==`OC8051_RWS_SP))
-    wr_ind = 1'b1;
-  else
-    wr_ind = 1'b0;
+    if ((wr_sel==`OC8051_RWS_I) || (wr_sel==`OC8051_RWS_SP))
+        wr_ind = 1'b1;
+    else
+        wr_ind = 1'b0;
 
 
 /////////////////////////////
@@ -461,9 +442,7 @@ always @(wr_sel)
 // output address is alu destination
 // (instructions MOVC)
 
-//assign iadr_o = (istb_t & !iack_i) ? iadr_t : pc_out;
 assign iadr_o = (istb_t) ? iadr_t : pc_out;
-
 
 always @(posedge clk or posedge rst)
   if (rst) begin
@@ -607,11 +586,6 @@ begin
       end
   endcase
 end
-
-/*assign op1 = ea_rom_sel ? idat_onchip[7:0]   : op1_xt;
-assign op2 = ea_rom_sel ? idat_onchip[15:8]  : op2_xt;
-assign op3 = ea_rom_sel ? idat_onchip[23:16] : op3_xt;*/
-
 
 always @(dack_ir or ddat_ir or op1_o or iram_out or cdone or cdata)
   if (dack_ir)
@@ -854,13 +828,6 @@ always @(posedge rst or posedge clk)
   end else if(cen) begin
   if (pc_wr_r2) begin
     op_pos <= 3'h4;// - op_length;////****??????????
-/*  end else if (inc_pc & rd) begin
-    op_pos[2]   <= op_pos[2] & !op_pos[1] & op_pos[0] & (&op_length);
-    op_pos[1:0] <= op_pos[1:0] + op_length;
-//    op_pos   <= {1'b0, op_pos[1:0]} + {1'b0, op_length};
-  end else if (rd) begin
-    op_pos <= op_pos + {1'b0, op_length};
-  end*/
   end else if (inc_pc & rd) begin
     op_pos[2]   <= op_pos[2] & !op_pos[1] & op_pos[0] & (&op_length);
     op_pos[1:0] <= op_pos[1:0] + op_length;
@@ -930,10 +897,6 @@ begin
     pcs_result[15:8] = pc[15:8] - {7'h0, !pcs_cy};
   end else pcs_result = pc + {8'h00, pcs_source};
 end
-
-//assign pc = pc_buf - {13'h0, op_pos[2] | inc_pc_r, op_pos[1:0]}; ////******???
-//assign pc = pc_buf - 16'h8 + {13'h0, op_pos}; ////******???
-//assign pc = pc_buf - 16'h8 + {13'h0, op_pos} + {14'h0, op_length};
 
 always @(posedge clk or posedge rst)
   if (rst)
@@ -1019,23 +982,5 @@ always @(posedge clk or posedge rst)
     if (istb)
         inc_pc_r  <= inc_pc;
   end
-
-`ifdef OC8051_SIMULATION
-
-initial
-begin
-  wait (!rst)
-  if (ea_rom_sel) begin
-    $display(" ");
-    $display("\t Program running from internal rom !");
-    $display(" ");
-  end else begin
-    $display(" ");
-    $display("\t Program running from external rom !");
-    $display(" ");
-  end
-end
-`endif
-  
 
 endmodule

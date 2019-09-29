@@ -78,10 +78,21 @@ if which ncverilog; then
 fi
 
 if [ "$YM2203" = 1 ]; then
+    echo "INFO: YM2203 support added."
     PERCORE="$PERCORE $(add_dir $MODULES/jt12/hdl jt03.f)"
 fi
 
+if [ "$I8051" = 1 ]; then
+    echo "INFO: i8051 support added."
+    if [ ! -e oc8051_defines.v ]; then
+        echo "INFO: copying default oc8051_defines files"
+        ln -s $MODULES/jtframe/hdl/cpu/8051/oc8051_defines.v
+    fi
+    PERCORE="$PERCORE $(add_dir $MODULES/jtframe/hdl/cpu/8051 oc8051.f)"
+fi
+
 if [ "$YM2149" = 1 ]; then
+    echo "INFO: YM2149 support added."
     PERCORE="$PERCORE $(add_dir $MODULES/jt12/jt49/hdl jt49.f)"
 fi
 

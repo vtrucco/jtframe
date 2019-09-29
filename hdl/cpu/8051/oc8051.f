@@ -14,6 +14,8 @@ oc8051_memory_interface.v
 oc8051_multiply.v
 oc8051_ports.v
 oc8051_psw.v
+oc8051_ram_256x8_two_bist.v
+oc8051_ram_top.v
 oc8051_sfr.v
 oc8051_sp.v
 oc8051_tc2.v
