@@ -25,6 +25,7 @@ PLL_FILE=fast_pll.f
 SIMFILE=sim.f
 MACROPREFIX=-D
 EXTRA=
+EXTRA_VHDL=
 SHOWCMD=
 ARGNUMBER=1
 
@@ -84,11 +85,7 @@ fi
 
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."
-    if [ ! -e oc8051_defines.v ]; then
-        echo "INFO: copying default oc8051_defines files"
-        ln -s $MODULES/jtframe/hdl/cpu/8051/oc8051_defines.v
-    fi
-    PERCORE="$PERCORE $(add_dir $MODULES/jtframe/hdl/cpu/8051 oc8051.f)"
+    EXTRA_VHDL="$MODULES/jtframe/hdl/cpu/8051/*.vhd"
 fi
 
 if [ "$YM2149" = 1 ]; then
@@ -373,6 +370,7 @@ ncverilog)
         $DUMP $LOADROM \
         $MAXFRAME \
         -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
+        $EXTRA_VHDL \
         $MODULES/jtframe/hdl/cpu/tv80/*.v \
         $EXTRA;;
 verilator)
