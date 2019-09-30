@@ -47,7 +47,7 @@
 --
 --         Author:                 Roland Höller
 --
---         Filename:               alumux_rtl.vhd
+--         Filename:               alumux_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
@@ -62,6 +62,67 @@
 --
 --
 -------------------------------------------------------------------------------
+library IEEE; 
+use IEEE.std_logic_1164.all; 
+use IEEE.std_logic_arith.all; 
+library work;
+use work.mc8051_p.all;
+  
+-----------------------------ENTITY DECLARATION--------------------------------
+
+
+entity alumux is
+
+  generic (DWIDTH : integer := 8);             -- Data width of the ALU
+
+  port (
+        -- inputs from control unit
+        rom_data_i    : in  std_logic_vector(DWIDTH-1 downto 0);
+        ram_data_i    : in  std_logic_vector(DWIDTH-1 downto 0);
+        acc_i         : in  std_logic_vector(DWIDTH-1 downto 0);
+        cmd_i         : in  std_logic_vector(5 downto 0);
+        cy_i          : in  std_logic_vector((DWIDTH-1)/4 downto 0);
+        ov_i          : in  std_logic;
+        -- outputs to control unit
+        cy_o          : out std_logic_vector((DWIDTH-1)/4 downto 0);
+        ov_o          : out std_logic;
+        result_a_o    : out std_logic_vector(DWIDTH-1 downto 0);
+        result_b_o    : out std_logic_vector(DWIDTH-1 downto 0);
+        -- inputs from alu core   
+        result_i      : in  std_logic_vector(DWIDTH-1 downto 0);
+        new_cy_i      : in  std_logic_vector((DWIDTH-1)/4 downto 0);
+        -- inputs from addsub unit   
+        addsub_rslt_i : in  std_logic_vector(DWIDTH-1 downto 0);
+        addsub_cy_i   : in  std_logic_vector((DWIDTH-1)/4 downto 0);
+        addsub_ov_i   : in  std_logic;
+        -- outputs to alu core
+        op_a_o        : out std_logic_vector(DWIDTH-1 downto 0);
+        op_b_o        : out std_logic_vector(DWIDTH-1 downto 0);
+        alu_cmd_o     : out std_logic_vector(3 downto 0);
+        -- outputs to addsub unit
+        opa_o         : out std_logic_vector(DWIDTH-1 downto 0);
+        opb_o         : out std_logic_vector(DWIDTH-1 downto 0);
+        addsub_o      : out std_logic;
+        addsub_cy_o   : out std_logic;
+        -- outputs to divider unit
+        dvdnd_o       : out std_logic_vector(DWIDTH-1 downto 0);
+        dvsor_o       : out std_logic_vector(DWIDTH-1 downto 0);
+        -- inputs from divider
+        qutnt_i       : in  std_logic_vector(DWIDTH-1 downto 0);
+        rmndr_i       : in  std_logic_vector(DWIDTH-1 downto 0);
+        -- outputs to multiplier
+        mltplcnd_o    : out std_logic_vector(DWIDTH-1 downto 0);
+        mltplctr_o    : out std_logic_vector(DWIDTH-1 downto 0);
+        -- inputs from multiplier
+        product_i     : in  std_logic_vector((DWIDTH*2)-1 downto 0);
+        -- outputs to decimal adjustement
+        dcml_data_o   : out std_logic_vector(DWIDTH-1 downto 0);
+        -- inputs from decimal adjustement
+        dcml_data_i   : in  std_logic_vector(DWIDTH-1 downto 0);
+        dcml_cy_i     : in  std_logic);
+
+end alumux;
+
 architecture rtl of alumux is
 
   constant DA             : std_logic_vector(5 downto 0) := "100000";
@@ -200,7 +261,7 @@ begin
   p_ext_mux : process (ram_data_i,
                        rom_data_i,
                        acc_i,
-		       cy_i,
+               cy_i,
                        cmd_i)
   begin
     case cmd_i is
@@ -356,29 +417,29 @@ begin
                         rmndr_i,
                         result_i,
                         new_cy_i,
-			addsub_rslt_i,
-			addsub_cy_i,
-			addsub_ov_i,
+            addsub_rslt_i,
+            addsub_cy_i,
+            addsub_ov_i,
                         dcml_data_i,
                         dcml_cy_i,
                         cmd_i)
   begin
     case cmd_i is
        when DA          =>
-	 if (C_IMPL_DA /= 0) then
+     if (C_IMPL_DA /= 0) then
            result_a_o         <= dcml_data_i;
            result_b_o         <= ( others => '0' );
            cy_o               <= cy_i;
            cy_o((DWIDTH-1)/4) <= dcml_cy_i;
            ov_o               <= ov_i;
-	 else  
+     else  
            result_a_o         <= ( others => '0' );
            result_b_o         <= ( others => '0' );
            cy_o               <= conv_std_logic_vector(0,(DWIDTH-1)/4+1);
            ov_o               <= '0';
-	 end if;
+     end if;
        when DIV_ACC_RAM =>
-	 if (C_IMPL_DIV /= 0) then
+     if (C_IMPL_DIV /= 0) then
            result_a_o         <= qutnt_i;
            result_b_o         <= rmndr_i;
            cy_o               <= conv_std_logic_vector(0,(DWIDTH-1)/4+1);
@@ -387,14 +448,14 @@ begin
            else
              ov_o             <= '0';
            end if;
-	 else
+     else
            result_a_o         <= ( others => '0' );
            result_b_o         <= ( others => '0' );
            cy_o               <= conv_std_logic_vector(0,(DWIDTH-1)/4+1);
-	   ov_o               <= '0';
-	 end if;
+       ov_o               <= '0';
+     end if;
        when MUL_ACC_RAM =>
-	 if (C_IMPL_MUL /= 0) then
+     if (C_IMPL_MUL /= 0) then
            result_a_o         <= product_i(DWIDTH-1 downto 0);
            result_b_o         <= product_i(DWIDTH*2-1 downto DWIDTH);
            cy_o               <= conv_std_logic_vector(0,(DWIDTH-1)/4+1);
@@ -404,14 +465,14 @@ begin
            else
              ov_o             <= '1';
            end if;
-	 else
+     else
            result_a_o         <= ( others => '0' );
            result_b_o         <= ( others => '0' );
            cy_o               <= conv_std_logic_vector(0,(DWIDTH-1)/4+1);
            ov_o               <= '0';
-	 end if;
+     end if;
        when SUB_ACC_RAM | SUB_ACC_ROM | ADD_ACC_RAM | ADD_ACC_ROM |
-	    ADDC_ACC_RAM | ADDC_ACC_ROM  =>
+        ADDC_ACC_RAM | ADDC_ACC_ROM  =>
          result_a_o         <= addsub_rslt_i;
          result_b_o         <= ( others => '0' );
          cy_o               <= addsub_cy_i;
@@ -420,7 +481,7 @@ begin
          result_a_o         <= addsub_rslt_i;
          result_b_o         <= ( others => '0' );
          cy_o               <= cy_i;
-         ov_o               <= addsub_ov_i;	 
+         ov_o               <= addsub_ov_i;  
        when others      =>
          result_a_o         <= result_i;
          result_b_o         <= ( others => '0' );
@@ -430,3 +491,8 @@ begin
   end process p_rslt_mux;
 
 end rtl;
+
+configuration alumux_rtl_cfg of alumux is
+    for rtl 
+    end for;
+end alumux_rtl_cfg;

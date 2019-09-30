@@ -47,7 +47,7 @@
 --
 --         Author:                 Roland Höller
 --
---         Filename:               comb_divider_.vhd
+--         Filename:               comb_mltplr_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
@@ -56,7 +56,7 @@
 --         Date of Latest Version: $Date: 2002-01-07 12:17:44 $
 --
 --
---         Description: Divider with parameteriseable data width. Realised
+--         Description: Multiplier with parameteriseable data width. Realised
 --                      using combinational logic only.
 --
 --
@@ -69,14 +69,42 @@ use IEEE.std_logic_arith.all;
   
 -----------------------------ENTITY DECLARATION--------------------------------
 
-entity comb_divider is
+entity comb_mltplr is
 
   generic (DWIDTH : integer := 8);
-  
-  port (dvdnd_i :  in  std_logic_vector(DWIDTH-1 downto 0);  -- Dividend
-        dvsor_i :  in  std_logic_vector(DWIDTH-1 downto 0);  -- Divisor
-        qutnt_o :  out std_logic_vector(DWIDTH-1 downto 0);  -- Quotient    
-        rmndr_o :  out std_logic_vector(DWIDTH-1 downto 0)); -- Remainder
-      
-end comb_divider;
 
+  port (mltplcnd_i : in  std_logic_vector(DWIDTH-1 downto 0);  -- Multiplicand
+        mltplctr_i : in  std_logic_vector(DWIDTH-1 downto 0);  -- Multiplicator
+        product_o  : out std_logic_vector((DWIDTH*2)-1 downto 0)); -- Product
+
+end comb_mltplr;
+
+architecture rtl of comb_mltplr is
+
+begin  -- rtl
+
+  -- purpose: Multiply the multiplicand with the multiplicator.
+  -- type   : combinational
+  -- inputs : dvdnd_i, dvsor_i
+  -- outputs: product_o
+  p_mltply: process (mltplctr_i, mltplcnd_i)
+
+    variable v_product : unsigned(DWIDTH*2-1 downto 0);
+    
+  begin  -- process p_divide
+
+    v_product := conv_unsigned(unsigned(mltplctr_i)
+                               * unsigned(mltplcnd_i),DWIDTH*2);
+    product_o <= std_logic_vector(v_product);
+
+  end process p_mltply;
+
+end rtl;
+
+configuration comb_mltplr_rtl_cfg of comb_mltplr is
+
+  for rtl
+    
+  end for;
+
+end comb_mltplr_rtl_cfg;

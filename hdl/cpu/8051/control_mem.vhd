@@ -47,13 +47,13 @@
 --
 --         Author:                 Helmut Mayrhofer
 --
---         Filename:               control_mem_rtl.vhd
+--         Filename:               control_mem_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
---         Version:                $Revision: 1.11 $
+--         Version:                $Revision: 1.6 $
 --
---         Date of Latest Version: $Date: 2010-03-24 10:20:48 $
+--         Date of Latest Version: $Date: 2006-09-07 09:59:09 $
 --
 --
 --         Description: Describe all sequential funcitonality like read from
@@ -65,6 +65,144 @@
 --
 --
 -------------------------------------------------------------------------------
+library IEEE;
+library work;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+use work.mc8051_p.all;
+
+
+entity control_mem is
+
+  port (pc_o       : out std_logic_vector(15 downto 0);  -- Programmcounter =
+  							 -- ROM-adress
+        rom_data_i : in  std_logic_vector(7 downto 0);   -- data input from ROM
+        ram_data_o : out std_logic_vector(7 downto 0);   -- data output to
+  							 -- internal RAM
+        ram_data_i : in  std_logic_vector(7 downto 0);   -- data input from
+  							 -- internal RAM
+        ram_adr_o  : out std_logic_vector(6 downto 0);   -- internal RAM-adress
+        reg_data_o : out std_logic_vector(7 downto 0);   -- data for ALU
+        ram_wr_o   : out std_logic;  	-- read (0) / write (1)
+  					-- internal RAM
+        cy_o       : out std_logic_vector(1 downto 0);   -- Carry Flag
+        ov_o       : out std_logic;  	-- Overflow Flag
+        ram_en_o   : out std_logic;  	-- RAM-block enable
+        aludata_i  : in  std_logic_vector (7 downto 0);  -- ALU result
+        aludatb_i  : in  std_logic_vector (7 downto 0);  -- 2nd ALU result
+        acc_o      : out std_logic_vector (7 downto 0);  -- ACC register
+        new_cy_i   : in  std_logic_vector(1 downto 0);   -- CY result of ALU
+        new_ov_i   : in  std_logic;  	-- OV result of ALU
+        reset      : in  std_logic;  	-- reset signal
+        clk        : in  std_logic;  	-- clock signal
+        int0_i     : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);  -- ext.Int
+        int1_i     : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);  -- ext.Int
+
+        p0_i : in std_logic_vector(7 downto 0);  -- IO-port0
+        p1_i : in std_logic_vector(7 downto 0);  -- IO-port1
+        p2_i : in std_logic_vector(7 downto 0);  -- IO-port2
+        p3_i : in std_logic_vector(7 downto 0);  -- IO-port3
+
+        p0_o : out std_logic_vector(7 downto 0);  -- IO-port0
+        p1_o : out std_logic_vector(7 downto 0);  -- IO-port1
+        p2_o : out std_logic_vector(7 downto 0);  -- IO-port2
+        p3_o : out std_logic_vector(7 downto 0);  -- IO-port3
+
+        -- Signals to and from the SIUs
+
+        -- "1" starts serial transmission in SIU
+        all_trans_o : out std_logic_vector(C_IMPL_N_SIU-1 downto 0);
+        -- RI,SM0,SM1,SM2,REN,TB8
+        all_scon_o  : out std_logic_vector(6*C_IMPL_N_SIU-1 downto 0);
+        -- data buffer for SIU
+        all_sbuf_o  : out std_logic_vector(8*C_IMPL_N_SIU-1 downto 0);
+        -- baud rate for SIU in PCON
+        all_smod_o  : out std_logic_vector(C_IMPL_N_SIU-1 downto 0);
+        -- RB8, TI, RI of SIU
+        all_scon_i  : in  std_logic_vector(3*C_IMPL_N_SIU-1 downto 0);
+        -- int. data buffer of SIU
+        all_sbuf_i  : in  std_logic_vector(8*C_IMPL_N_SIU-1 downto 0);
+
+        -- signals to and from the timer/counters
+
+        -- timer run flag0 of T/C
+        all_tcon_tr0_o : out std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        -- timer run flag1 of T/C
+        all_tcon_tr1_o : out std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        -- TMOD for T/C
+        all_tmod_o     : out std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        -- user reload value for T/C
+        all_reload_o   : out std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        -- reload enable for T/C
+        all_wt_o       : out std_logic_vector(2*C_IMPL_N_TMR-1 downto 0);
+        -- reload target for T/C
+        all_wt_en_o    : out std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        -- timer OF flag0 of T/C
+        all_tf0_i      : in  std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        -- timer OF flag1 of T/C
+        all_tf1_i      : in  std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        -- count value of T/C
+        all_tl0_i      : in  std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        -- count value of T/C
+        all_tl1_i      : in  std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        -- count value of T/C
+        all_th0_i      : in  std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        -- count value of T/C
+        all_th1_i      : in  std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+
+        -- signals from/to the state-machine
+
+        state_o    : out t_state;  	-- actual state
+        help_o     : out std_logic_vector(7 downto 0);   -- general help-reg
+        bit_data_o : out std_logic;  	-- bitdata from regs
+        command_o  : out std_logic_vector (7 downto 0);  -- actual command
+        inthigh_o  : out std_logic;  	-- high priority int is running
+        intlow_o   : out std_logic;  	-- low priority int is running
+        intpre_o   : out std_logic;  	-- an interrupt must start
+        intpre2_o  : out std_logic;  	-- prepare for interrupt
+        intblock_o : out std_logic;     -- interrupt delay at RETI, IE, IP
+        ti_o       : out std_logic;
+        ri_o       : out std_logic;
+        ie0_o      : out std_logic;
+        ie1_o      : out std_logic;
+        tf0_o      : out std_logic;
+        tf1_o      : out std_logic;
+        psw_o      : out std_logic_vector(7 downto 0);
+        ie_o       : out std_logic_vector(7 downto 0);
+        ip_o       : out std_logic_vector(7 downto 0);
+        adrx_o     : out std_logic_vector(15 downto 0);  -- ext. RAM
+        datax_o    : out std_logic_vector(7 downto 0);   -- ext. RAM
+        wrx_o      : out std_logic;  	-- ext. RAM
+
+        datax_i      : in std_logic_vector(7 downto 0);  -- ext. RAM
+        pc_inc_en_i  : in std_logic_vector (3 downto 0);
+        nextstate_i  : in t_state;  	-- enable signal for state
+        adr_mux_i    : in std_logic_vector (3 downto 0);
+        adrx_mux_i   : in std_logic_vector (1 downto 0);
+        wrx_mux_i    : in std_logic;
+        data_mux_i   : in std_logic_vector (3 downto 0);
+        bdata_mux_i  : in std_logic_vector (3 downto 0);
+        regs_wr_en_i : in std_logic_vector (2 downto 0);
+        help_en_i    : in std_logic_vector (3 downto 0);
+        help16_en_i  : in std_logic_vector (1 downto 0);
+        helpb_en_i   : in std_logic;
+        inthigh_en_i : in std_logic;
+        intlow_en_i  : in std_logic;
+        intpre2_en_i : in std_logic;
+        inthigh_d_i  : in std_logic;
+        intlow_d_i   : in std_logic;
+        intpre2_d_i  : in std_logic;
+        ext0isr_d_i   : in std_logic;
+        ext1isr_d_i   : in std_logic;
+        ext0isrh_d_i  : in std_logic;
+        ext1isrh_d_i  : in std_logic;
+        ext0isr_en_i  : in std_logic;
+        ext1isr_en_i  : in std_logic;
+        ext0isrh_en_i : in std_logic;
+        ext1isrh_en_i : in std_logic);
+
+end control_mem;
+
 architecture rtl of control_mem is  
 
  
@@ -76,14 +214,14 @@ architecture rtl of control_mem is
    signal s_helpb :      std_logic;               -- general help-bit 
    signal s_ir:          unsigned (7 downto 0);   -- reg for saving the command
    signal gprbit:        t_gprbit;         -- bitadressable general purpose RAM
-   signal s_r0_b0:	 unsigned (7 downto 0);   -- Register R0 / Bank 0
-   signal s_r1_b0:	 unsigned (7 downto 0);   -- Register R1 / Bank 0
-   signal s_r0_b1:	 unsigned (7 downto 0);   -- Register R0 / Bank 1
-   signal s_r1_b1:	 unsigned (7 downto 0);   -- Register R1 / Bank 1
-   signal s_r0_b2:	 unsigned (7 downto 0);   -- Register R0 / Bank 2
-   signal s_r1_b2:	 unsigned (7 downto 0);   -- Register R1 / Bank 2
-   signal s_r0_b3:	 unsigned (7 downto 0);   -- Register R0 / Bank 3
-   signal s_r1_b3:	 unsigned (7 downto 0);   -- Register R1 / Bank 3
+   signal s_r0_b0:   unsigned (7 downto 0);   -- Register R0 / Bank 0
+   signal s_r1_b0:   unsigned (7 downto 0);   -- Register R1 / Bank 0
+   signal s_r0_b1:   unsigned (7 downto 0);   -- Register R0 / Bank 1
+   signal s_r1_b1:   unsigned (7 downto 0);   -- Register R1 / Bank 1
+   signal s_r0_b2:   unsigned (7 downto 0);   -- Register R0 / Bank 2
+   signal s_r1_b2:   unsigned (7 downto 0);   -- Register R1 / Bank 2
+   signal s_r0_b3:   unsigned (7 downto 0);   -- Register R0 / Bank 3
+   signal s_r1_b3:   unsigned (7 downto 0);   -- Register R1 / Bank 3
    signal s_reg_data:    unsigned (7 downto 0);   -- equals reg_data_o 
    Signal state:         t_state;                 -- actual state 
    signal s_command:     std_logic_vector (7 downto 0); 
@@ -259,14 +397,14 @@ begin
 
   s_pc_inc_en <= pc_inc_en_i;   
   s_nextstate <= nextstate_i;    
-  s_adr_mux <=	adr_mux_i;     
-  s_adrx_mux <=	adrx_mux_i;     
-  s_data_mux <=	data_mux_i;    
+  s_adr_mux <=  adr_mux_i;     
+  s_adrx_mux <= adrx_mux_i;     
+  s_data_mux <= data_mux_i;    
   s_bdata_mux <= bdata_mux_i;   
   s_regs_wr_en <= regs_wr_en_i;  
-  s_help_en <=	help_en_i;     
+  s_help_en <=  help_en_i;     
   s_help16_en <= help16_en_i;   
-  s_helpb_en <=	helpb_en_i;    
+  s_helpb_en <= helpb_en_i;    
   s_inthigh_en <= inthigh_en_i;  
   s_intlow_en <=  intlow_en_i;   
   s_intpre2_en <= intpre2_en_i;  
@@ -398,7 +536,7 @@ begin
                        s_r0_b1,s_r1_b1,s_r0_b2,s_r1_b2,s_r0_b3,s_r1_b3,
                        s_smod,s_sm0,s_sm1,s_sm2,s_ren,s_tb8,s_rb8,s_ti,s_ri,
                        s_sbufi,s_th1,s_th0,s_ssel,s_tsel,s_tl1,s_tl0,
-		       ssel,tsel) 
+               ssel,tsel) 
   begin  
     if s_preadr(7)='1' then 
       case conv_integer(s_preadr) is         -- read one byte of a SFR  
@@ -632,7 +770,7 @@ for_siu_edge:
                      s_ri_data,s_help,s_adr_mux,s_adr,s_regs_wr_en,pc_plus2,
                      s_help16,s_ri_adr,s_r0_b0,s_r1_b0,s_r0_b1,s_r1_b1,
                      s_r0_b2,s_r1_b2,s_r0_b3,s_r1_b3,s_adrx_mux,dph,dpl,
-		     datax_i) 
+             datax_i) 
   begin
     case s_data_mux is
       when "0000" => s_data <= conv_unsigned(0,8);
@@ -835,10 +973,10 @@ for_siu_edge:
 
         pc <= pc_comb;               -- write pc-register
 
-	s_p0 <= p0_i;
-	s_p1 <= p1_i;
-	s_p2 <= p2_i;
-	s_p3 <= p3_i;
+    s_p0 <= p0_i;
+    s_p1 <= p1_i;
+    s_p2 <= p2_i;
+    s_p3 <= p3_i;
 
       end if;
     end if;
@@ -1144,3 +1282,7 @@ for_siu_edge:
 
 end rtl;  
   
+configuration control_mem_rtl_cfg of control_mem is 
+    for rtl          
+    end for; 
+end control_mem_rtl_cfg; 

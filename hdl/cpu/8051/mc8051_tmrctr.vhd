@@ -47,13 +47,13 @@
 --
 --         Author:                 Roland Höller
 --
---         Filename:               mc8051_tmrctr_rtl.vhd
+--         Filename:               mc8051_tmrctr_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
---         Version:                $Revision: 1.9 $
+--         Version:                $Revision: 1.4 $
 --
---         Date of Latest Version: $Date: 2006-09-07 09:43:21 $
+--         Date of Latest Version: $Date: 2002-01-07 12:17:45 $
 --
 --
 --         Description: Timer/Counter unit of the mc8051 microcontroller.
@@ -62,6 +62,37 @@
 --
 --
 -------------------------------------------------------------------------------
+library IEEE; 
+use IEEE.std_logic_1164.all; 
+use IEEE.std_logic_arith.all; 
+  
+-----------------------------ENTITY DECLARATION--------------------------------
+
+entity mc8051_tmrctr is
+
+  port (clk        : in  std_logic;  			--< system clock
+        reset      : in  std_logic;  			--< system reset
+        int0_i     : in  std_logic;  			--< interrupt 0
+        int1_i     : in  std_logic;  			--< interrupt 1
+        t0_i       : in  std_logic;  			--< external clock for
+  							--  timer/counter0
+        t1_i       : in  std_logic;  			--< external clock for
+  							--  timer/counter1
+        tmod_i     : in  std_logic_vector(7 downto 0);  --< from SFR register
+        tcon_tr0_i : in  std_logic;  			--< timer run 0
+        tcon_tr1_i : in  std_logic;  			--< timer run 1
+        reload_i   : in  std_logic_vector(7 downto 0);  --< to load counter
+        wt_en_i    : in  std_logic;  			--< indicates reload
+        wt_i       : in  std_logic_vector(1 downto 0);  --< reload which reg.
+        th0_o      : out std_logic_vector(7 downto 0);  --< contents of th0 
+        tl0_o      : out std_logic_vector(7 downto 0);  --< contents of tl0 
+        th1_o      : out std_logic_vector(7 downto 0);  --< contents of th1 
+        tl1_o      : out std_logic_vector(7 downto 0);  --< contents of tl1 
+        tf0_o      : out std_logic;  			--< interrupt flag 0
+        tf1_o      : out std_logic);  			--< interrupt flag 1
+      
+end mc8051_tmrctr;
+
 architecture rtl of mc8051_tmrctr is
 
   signal s_pre_count    : unsigned(3 downto 0);  -- these two signals provide
@@ -764,3 +795,10 @@ begin                 -- architecture rtl
   
 end rtl;
 
+configuration mc8051_tmrctr_rtl_cfg of mc8051_tmrctr is
+  
+    for rtl
+      
+    end for;
+    
+end mc8051_tmrctr_rtl_cfg;

@@ -47,7 +47,7 @@
 --
 --         Author:                 Roland Höller
 --
---         Filename:               addsub_core_struc.vhd
+--         Filename:               addsub_cy_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
@@ -56,61 +56,66 @@
 --         Date of Latest Version: $Date: 2002-01-07 12:17:44 $
 --
 --
---         Description: Adder/Subtractor with carry/borrow, arbitrary data 
---                      width, overflow, and nibble carry for decimal 
---                      adjustment.
+--         Description: Adder/Subtractor with carry/borrow and arbitrary
+--                      data width.
 --
 --
 --
 --
 -------------------------------------------------------------------------------
-architecture struc of addsub_core is
-
-  type t_cy is array (1 to (DWIDTH/4)+1) of std_logic_vector(0 downto 0);
-
-  signal s_cy : t_cy;
-
-begin  -- architecture structural
-
-  gen_smorequ_four : if (DWIDTH > 0 and DWIDTH <= 4) generate
-    addsub_ovcy_1 : addsub_ovcy
-      generic map (DWIDTH => DWIDTH)
-      port map (opa_i    => opa_i,
-                opb_i    => opb_i,
-                addsub_i => addsub_i,
-                cy_i     => cy_i,
-                cy_o     => cy_o(0),
-                ov_o     => ov_o,
-                rslt_o   => rslt_o);
-  end generate gen_smorequ_four;
-
-  s_cy(1)(0) <= cy_i;
+library IEEE; 
+use IEEE.std_logic_1164.all; 
+use IEEE.std_logic_arith.all; 
   
-  gen_greater_four : if (DWIDTH > 4) generate
-    gen_addsub: for i in 1 to DWIDTH generate
-      gen_nibble_addsub: if (i mod 4 = 0) and i <= ((DWIDTH-1)/4)*4 generate
-	i_addsub_cy: addsub_cy
-	  generic map (DWIDTH => 4)
-	  port map (opa_i => opa_i(i-1 downto i-4),
-		    opb_i => opb_i(i-1 downto i-4),
-		    addsub_i => addsub_i,
-		    cy_i => s_cy(i/4)(0),
-		    cy_o => s_cy((i+4)/4)(0),
-		    rslt_o => rslt_o(i-1 downto i-4));
-	cy_o(i/4-1) <= s_cy((i+4)/4)(0);
-      end generate gen_nibble_addsub;
-      gen_last_addsub: if (i = ((DWIDTH-1)/4)*4+1) generate
-	i_addsub_ovcy: addsub_ovcy
-	  generic map (DWIDTH => DWIDTH-((DWIDTH-1)/4)*4)
-	  port map (opa_i => opa_i(DWIDTH-1 downto i-1), 
-		    opb_i => opb_i(DWIDTH-1 downto i-1), 
-		    addsub_i => addsub_i,
-		    cy_i => s_cy((DWIDTH-1)/4+1)(0),
-		    cy_o => cy_o((DWIDTH-1)/4),
-		    ov_o => ov_o,
-		    rslt_o => rslt_o(DWIDTH-1 downto i-1)); 
-      end generate gen_last_addsub;
-    end generate gen_addsub;
-  end generate gen_greater_four;
+-----------------------------ENTITY DECLARATION--------------------------------
 
-end struc;
+entity addsub_cy is
+
+  generic (DWIDTH : integer := 4);
+  
+  port (opa_i    : in  std_logic_vector(DWIDTH-1 downto 0);   -- Operand A
+        opb_i    : in  std_logic_vector(DWIDTH-1 downto 0);   -- Operand B
+        addsub_i : in  std_logic;       -- Add or subtract command
+        cy_i     : in  std_logic;       -- Carry input
+        cy_o     : out std_logic;       -- Carry/borrow bit   
+        rslt_o   : out std_logic_vector(DWIDTH-1 downto 0));  -- Result
+  
+end addsub_cy;
+
+architecture rtl of addsub_cy is
+
+begin
+
+  -- purpose: Simple adder/subtractor with carry/borrow
+  -- type   : combinational
+  -- inputs : opa_i, opb_i, addsub_i
+  -- outputs: cy_o, rslt_o
+  p_addsub: process (opa_i, opb_i, addsub_i, cy_i)
+    variable v_a : unsigned(DWIDTH downto 0);
+    variable v_b : unsigned(DWIDTH downto 0);
+    variable v_result : std_logic_vector(DWIDTH+1 downto 0);
+  begin  -- process p_addsub
+    v_a(DWIDTH downto 1) := unsigned(opa_i);
+    v_b(DWIDTH downto 1) := unsigned(opb_i);
+    if addsub_i = '1' then
+      v_a(0) := '1';
+      v_b(0) := cy_i;
+      v_result := conv_unsigned(v_a,DWIDTH+2) + v_b;
+    else
+      v_a(0) := '0';
+      v_b(0) := cy_i;
+      v_result := conv_unsigned(v_a,DWIDTH+2) - v_b;
+    end if;
+    cy_o <= v_result(DWIDTH+1);
+    rslt_o <= v_result(DWIDTH downto 1);
+  end process p_addsub;
+
+end rtl;
+
+configuration addsub_cy_rtl_cfg of addsub_cy is
+
+  for rtl
+    
+  end for;
+
+end addsub_cy_rtl_cfg;

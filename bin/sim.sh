@@ -85,7 +85,14 @@ fi
 
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."
-    EXTRA_VHDL="$MODULES/jtframe/hdl/cpu/8051/*.vhd"
+    EXTRA_VHDL=$(ls \
+        $MODULES/jtframe/hdl/cpu/8051/{control_mem,control_fsm,alucore,addsub_core}.vhd \
+        $MODULES/jtframe/hdl/cpu/8051/{addsub_cy,comb_divider,comb_mltplr,addsub_ovcy}.vhd \
+        $MODULES/jtframe/hdl/cpu/8051/{dcml_adjust,alumux}.vhd \
+        $MODULES/jtframe/hdl/cpu/8051/mc8051_{core,control,alu,tmrctr,siu}.vhd \
+        | tr '\n' ' ')
+    echo $EXTRA_VHDL
+    # EXTRA_VHDL=$(echo "$EXTRA_VHDL" | tr ' ' ,)
 fi
 
 if [ "$YM2149" = 1 ]; then

@@ -45,9 +45,9 @@
 -------------------------------------------------------------------------------
 --
 --
---         Author:                 Helmut Mayrhofer
+--         Author:                 Roland Höller
 --
---         Filename:               control_fsm_rtl_cfg.vhd
+--         Filename:               comb_divider_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
@@ -56,14 +56,83 @@
 --         Date of Latest Version: $Date: 2002-01-07 12:17:44 $
 --
 --
---         Description: Decode instruction and execute it. Pure combinational
---                      descripton of the finite state machine.
+--         Description: Divider with parameteriseable data width. Realised
+--                      using combinational logic only.
 --
 --
 --
 --
 -------------------------------------------------------------------------------
-configuration control_fsm_rtl_cfg of control_fsm is 
-    for rtl          
-    end for; 
-end control_fsm_rtl_cfg; 
+library IEEE; 
+use IEEE.std_logic_1164.all; 
+use IEEE.std_logic_arith.all; 
+  
+-----------------------------ENTITY DECLARATION--------------------------------
+
+entity comb_divider is
+
+  generic (DWIDTH : integer := 8);
+  
+  port (dvdnd_i :  in  std_logic_vector(DWIDTH-1 downto 0);  -- Dividend
+        dvsor_i :  in  std_logic_vector(DWIDTH-1 downto 0);  -- Divisor
+        qutnt_o :  out std_logic_vector(DWIDTH-1 downto 0);  -- Quotient    
+        rmndr_o :  out std_logic_vector(DWIDTH-1 downto 0)); -- Remainder
+      
+end comb_divider;
+
+architecture rtl of comb_divider is
+
+begin  -- rtl
+
+  -- purpose: Divide dvdnd_i through dvsor_i and deliver the result to qutnt_o
+  --          and the remainder to rmndr_o.
+  -- type   : combinational
+  -- inputs : dvdnd_i, dvsor_i
+  -- outputs: qutnt_o, rmndr_o
+  p_divide: process (dvdnd_i, dvsor_i)
+
+    variable v_actl_dvdnd : unsigned(DWIDTH-1 downto 0);
+    variable v_dffrnc     : unsigned(DWIDTH-1 downto 0);
+    variable v_qutnt      : unsigned(DWIDTH-1 downto 0);
+    
+  begin  -- process p_divide
+
+    v_actl_dvdnd := unsigned(dvdnd_i);
+    
+    for i in DWIDTH-1 downto 0 loop
+      -- If the divisor can be subtracted from this part of the dividend, then
+      -- the corresponding bit of the quotient has to be 1, otherwise 0.
+      if conv_std_logic_vector(v_actl_dvdnd(DWIDTH-1 downto i),DWIDTH) >=
+        dvsor_i then
+        -- Divisor can be subtracted
+        v_qutnt(i) := '1';
+        v_dffrnc := conv_unsigned(v_actl_dvdnd(DWIDTH-1 downto i),DWIDTH)
+                    - unsigned(dvsor_i);
+        -- As long as this is not the last step of calculation, shift the
+        -- intermediate result.
+        if i /= 0 then
+          v_actl_dvdnd(DWIDTH-1 downto i) := v_dffrnc(DWIDTH-1-i downto 0);
+          v_actl_dvdnd(i-1) := dvdnd_i(i-1);
+        end if;
+      else
+        -- Divisor is greater than this part of the dividend.
+        v_qutnt(i) := '0';
+        v_dffrnc := conv_unsigned(v_actl_dvdnd(DWIDTH-1 downto i),DWIDTH);
+      end if;
+    end loop;  -- i
+    
+    rmndr_o <= std_logic_vector(v_dffrnc);
+    qutnt_o <= std_logic_vector(v_qutnt);
+    
+  end process p_divide;
+
+end rtl;
+
+
+configuration comb_divider_rtl_cfg of comb_divider is
+
+  for rtl
+    
+  end for;
+
+end comb_divider_rtl_cfg;

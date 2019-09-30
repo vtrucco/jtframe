@@ -47,11 +47,11 @@
 --
 --         Author:                 Roland Höller
 --
---         Filename:               addsub_core_struc_cfg.vhd
+--         Filename:               addsub_core_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
---         Version:                $Revision: 1.4 $
+--         Version:                $Revision: 1.5 $
 --
 --         Date of Latest Version: $Date: 2002-01-07 12:17:44 $
 --
@@ -64,6 +64,81 @@
 --
 --
 -------------------------------------------------------------------------------
+library IEEE; 
+use IEEE.std_logic_1164.all; 
+use IEEE.std_logic_arith.all;
+
+library work;
+use work.mc8051_p.all;
+  
+-----------------------------ENTITY DECLARATION--------------------------------
+
+entity addsub_core is
+  
+  generic (DWIDTH : integer := 16);  	-- Data width of the ALU
+
+  port (opa_i    : in std_logic_vector(DWIDTH-1 downto 0);
+        opb_i    : in std_logic_vector(DWIDTH-1 downto 0);
+        addsub_i : in std_logic;
+        cy_i     : in std_logic;
+
+        cy_o   : out std_logic_vector((DWIDTH-1)/4 downto 0);
+        ov_o   : out std_logic;
+        rslt_o : out std_logic_vector(DWIDTH-1 downto 0));
+ 
+end addsub_core;
+
+architecture struc of addsub_core is
+
+  type t_cy is array (1 to (DWIDTH/4)+1) of std_logic_vector(0 downto 0);
+
+  signal s_cy : t_cy;
+
+begin  -- architecture structural
+
+  gen_smorequ_four : if (DWIDTH > 0 and DWIDTH <= 4) generate
+    addsub_ovcy_1 : addsub_ovcy
+      generic map (DWIDTH => DWIDTH)
+      port map (opa_i    => opa_i,
+                opb_i    => opb_i,
+                addsub_i => addsub_i,
+                cy_i     => cy_i,
+                cy_o     => cy_o(0),
+                ov_o     => ov_o,
+                rslt_o   => rslt_o);
+  end generate gen_smorequ_four;
+
+  s_cy(1)(0) <= cy_i;
+  
+  gen_greater_four : if (DWIDTH > 4) generate
+    gen_addsub: for i in 1 to DWIDTH generate
+      gen_nibble_addsub: if (i mod 4 = 0) and i <= ((DWIDTH-1)/4)*4 generate
+    i_addsub_cy: addsub_cy
+      generic map (DWIDTH => 4)
+      port map (opa_i => opa_i(i-1 downto i-4),
+            opb_i => opb_i(i-1 downto i-4),
+            addsub_i => addsub_i,
+            cy_i => s_cy(i/4)(0),
+            cy_o => s_cy((i+4)/4)(0),
+            rslt_o => rslt_o(i-1 downto i-4));
+    cy_o(i/4-1) <= s_cy((i+4)/4)(0);
+      end generate gen_nibble_addsub;
+      gen_last_addsub: if (i = ((DWIDTH-1)/4)*4+1) generate
+    i_addsub_ovcy: addsub_ovcy
+      generic map (DWIDTH => DWIDTH-((DWIDTH-1)/4)*4)
+      port map (opa_i => opa_i(DWIDTH-1 downto i-1), 
+            opb_i => opb_i(DWIDTH-1 downto i-1), 
+            addsub_i => addsub_i,
+            cy_i => s_cy((DWIDTH-1)/4+1)(0),
+            cy_o => cy_o((DWIDTH-1)/4),
+            ov_o => ov_o,
+            rslt_o => rslt_o(DWIDTH-1 downto i-1)); 
+      end generate gen_last_addsub;
+    end generate gen_addsub;
+  end generate gen_greater_four;
+
+end struc;
+
 configuration addsub_core_struc_cfg of addsub_core is
   for struc 
     for gen_smorequ_four
@@ -74,12 +149,12 @@ configuration addsub_core_struc_cfg of addsub_core is
     for gen_greater_four
       for gen_addsub
         for gen_nibble_addsub
-  	  for all : addsub_cy
+      for all : addsub_cy
             use configuration work.addsub_cy_rtl_cfg;
           end for;
         end for;
         for gen_last_addsub
-  	  for all : addsub_ovcy
+      for all : addsub_ovcy
             use configuration work.addsub_ovcy_rtl_cfg;
           end for;
         end for;

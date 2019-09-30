@@ -47,13 +47,13 @@
 --
 --         Author:                 Helmut Mayrhofer
 --
---         Filename:               mc8051_control_struc.vhd
+--         Filename:               mc8051_control_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
 --         Version:                $Revision: 1.7 $
 --
---         Date of Latest Version: $Date: 2006-09-07 10:03:45 $
+--         Date of Latest Version: $Date: 2002-01-07 12:17:45 $
 --
 --
 --         Description: Connects the units control_fsm and control_mem. This
@@ -63,6 +63,83 @@
 --
 --
 -------------------------------------------------------------------------------
+library IEEE;
+library work;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+use work.mc8051_p.all;
+
+
+------------------------ ENTITY DECLARATION -------------------------
+entity mc8051_control is
+
+  port (pc_o       : out std_logic_vector(15 downto 0);  -- Programmcounter =
+  							 -- ROM-adress
+        rom_data_i : in  std_logic_vector(7 downto 0);   -- data input from ROM
+        ram_data_o : out std_logic_vector(7 downto 0);   -- data output to
+  							 -- internal RAM
+        ram_data_i : in  std_logic_vector(7 downto 0);   -- data input from
+  							 -- internal RAM
+        ram_adr_o  : out std_logic_vector(6 downto 0);   -- internal RAM-adress
+        reg_data_o : out std_logic_vector(7 downto 0);   -- data for ALU
+        ram_wr_o   : out std_logic;  	-- read (0) / write (1)
+  					-- internal RAM
+        cy_o       : out std_logic_vector(1 downto 0);   -- Carry Flag
+        ov_o       : out std_logic;  	-- Overflow Flag
+        ram_en_o   : out std_logic;  	-- RAM-block enable
+        alu_cmd_o  : out std_logic_vector (5 downto 0);  -- ALU operationscode
+        aludata_i  : in  std_logic_vector (7 downto 0);  -- ALU result
+        aludatb_i  : in  std_logic_vector (7 downto 0);  -- 2nd ALU result
+        acc_o      : out std_logic_vector (7 downto 0);  -- ACC register
+        new_cy_i   : in  std_logic_vector(1 downto 0);   -- CY result of ALU
+        new_ov_i   : in  std_logic;  	-- OV result of ALU
+        reset      : in  std_logic;  	-- reset signal
+        clk        : in  std_logic;  	-- clock signal
+        int0_i     : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);  -- ext.Int
+        int1_i     : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);  -- ext.Int
+
+        datax_i : in  std_logic_vector (7 downto 0);   -- ext. RAM
+        datax_o : out std_logic_vector (7 downto 0);   -- ext. RAM
+        adrx_o  : out std_logic_vector (15 downto 0);  -- ext. RAM
+        wrx_o   : out std_logic;  		       -- ext. RAM
+
+        p0_i : in std_logic_vector(7 downto 0);  -- IO-port0
+        p1_i : in std_logic_vector(7 downto 0);  -- IO-port1
+        p2_i : in std_logic_vector(7 downto 0);  -- IO-port2
+        p3_i : in std_logic_vector(7 downto 0);  -- IO-port3
+
+        p0_o : out std_logic_vector(7 downto 0);  -- IO-port0
+        p1_o : out std_logic_vector(7 downto 0);  -- IO-port1
+        p2_o : out std_logic_vector(7 downto 0);  -- IO-port2
+        p3_o : out std_logic_vector(7 downto 0);  -- IO-port3
+
+        -- Signals to and from the SIUs
+
+        all_trans_o : out std_logic_vector(C_IMPL_N_SIU-1 downto 0);
+        all_scon_o  : out std_logic_vector(6*C_IMPL_N_SIU-1 downto 0);
+        all_sbuf_o  : out std_logic_vector(8*C_IMPL_N_SIU-1 downto 0);
+        all_smod_o  : out std_logic_vector(C_IMPL_N_SIU-1 downto 0);
+        all_scon_i  : in  std_logic_vector(3*C_IMPL_N_SIU-1 downto 0);
+        all_sbuf_i  : in  std_logic_vector(8*C_IMPL_N_SIU-1 downto 0);
+
+        -- signals to and from the timer/counters
+
+        all_tcon_tr0_o : out std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        all_tcon_tr1_o : out std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        all_tmod_o     : out std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        all_reload_o   : out std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        all_wt_o       : out std_logic_vector(2*C_IMPL_N_TMR-1 downto 0);
+        all_wt_en_o    : out std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+
+        all_tf0_i : in std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        all_tf1_i : in std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        all_tl0_i : in std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        all_tl1_i : in std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        all_th0_i : in std_logic_vector(8*C_IMPL_N_TMR-1 downto 0);
+        all_th1_i : in std_logic_vector(8*C_IMPL_N_TMR-1 downto 0));
+
+end mc8051_control;
+
 architecture struc of mc8051_control is
 
   -- signals connecting the fsm and the mem unit
@@ -83,15 +160,15 @@ architecture struc of mc8051_control is
   signal s_intlow_en  : std_logic;
   signal s_inthigh_d  : std_logic;
   signal s_inthigh_en : std_logic;
-  signal s_nextstate  : t_state;  	-- enable signal for state
-  signal state        : t_state;  	-- actual state 
+  signal s_nextstate  : t_state;    -- enable signal for state
+  signal state        : t_state;    -- actual state 
   signal s_command    : std_logic_vector (7 downto 0);
   signal s_help       : std_logic_vector(7 downto 0);  -- general help-register
   signal s_bit_data   : std_logic;
-  signal s_intpre     : std_logic;  	-- an interrupt must start 
-  signal s_intpre2    : std_logic;  	-- prepare for interrupt 
-  signal s_inthigh    : std_logic;  	-- high priority int is running 
-  signal s_intlow     : std_logic;  	-- low priority int is running 
+  signal s_intpre     : std_logic;      -- an interrupt must start 
+  signal s_intpre2    : std_logic;      -- prepare for interrupt 
+  signal s_inthigh    : std_logic;      -- high priority int is running 
+  signal s_intlow     : std_logic;      -- low priority int is running 
   signal s_intblock   : std_logic;      -- interrupt delay at RETI, IE, IP
   signal s_ri         : std_logic;
   signal s_ti         : std_logic;
@@ -265,3 +342,14 @@ begin                 -- architecture structural
              ext1isrh_en_i => s_ext1isrh_en);
       
 end struc;
+
+configuration mc8051_control_struc_cfg of mc8051_control is 
+  for struc
+    for i_control_fsm : control_fsm
+      use configuration work.control_fsm_rtl_cfg;
+    end for;
+    for i_control_mem : control_mem
+      use configuration work.control_mem_rtl_cfg;
+    end for;
+  end for; 
+end mc8051_control_struc_cfg; 

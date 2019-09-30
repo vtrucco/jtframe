@@ -47,11 +47,11 @@
 --
 --         Author:                 Helmut Mayrhofer
 --
---         Filename:               mc8051_core_struc.vhd
+--         Filename:               mc8051_core_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
---         Version:                $Revision: 1.9 $
+--         Version:                $Revision: 1.8 $
 --
 --         Date of Latest Version: $Date: 2002-01-07 12:17:45 $
 --
@@ -64,6 +64,60 @@
 --
 --
 -------------------------------------------------------------------------------
+library IEEE; 
+use IEEE.std_logic_1164.all; 
+use IEEE.std_logic_arith.all; 
+library work;
+use work.mc8051_p.all;
+  
+-----------------------------ENTITY DECLARATION--------------------------------
+
+entity mc8051_core is
+    
+  port (clk        : in std_logic;   -- system clock
+        reset      : in std_logic;   -- system reset
+        rom_data_i : in std_logic_vector(7 downto 0);  -- data input from ROM 
+        ram_data_i : in std_logic_vector(7 downto 0);  -- data input from
+                                                       -- internal RAM
+        int0_i     : in std_logic_vector(C_IMPL_N_EXT-1 downto 0);  -- ext.Int
+        int1_i     : in std_logic_vector(C_IMPL_N_EXT-1 downto 0);  -- ext.Int
+        -- counter input 0 for T/C
+        all_t0_i   : in std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        -- counter input 1 for T/C
+        all_t1_i   : in std_logic_vector(C_IMPL_N_TMR-1 downto 0);
+        -- serial input for SIU
+        all_rxd_i  : in std_logic_vector(C_IMPL_N_SIU-1 downto 0);
+        p0_i       : in std_logic_vector(7 downto 0);  -- IO-port0 input
+        p1_i       : in std_logic_vector(7 downto 0);  -- IO-port1 input
+        p2_i       : in std_logic_vector(7 downto 0);  -- IO-port2 input
+        p3_i       : in std_logic_vector(7 downto 0);  -- IO-port3 input 
+
+        p0_o        : out std_logic_vector(7 downto 0);  -- IO-port0 output
+        p1_o        : out std_logic_vector(7 downto 0);  -- IO-port1 output
+        p2_o        : out std_logic_vector(7 downto 0);  -- IO-port2 output
+        p3_o        : out std_logic_vector(7 downto 0);  -- IO-port3 output
+        -- M0 serial output for SIU
+        all_rxd_o   : out std_logic_vector(C_IMPL_N_SIU-1 downto 0);
+        -- serial output for SIU 
+        all_txd_o   : out std_logic_vector(C_IMPL_N_SIU-1 downto 0);
+        -- rxd direction signal
+        all_rxdwr_o : out std_logic_vector(C_IMPL_N_SIU-1 downto 0);
+        
+        rom_adr_o   : out std_logic_vector(15 downto 0);  -- Programmcounter =
+                                                          -- ROM-adress
+        ram_data_o  : out std_logic_vector(7 downto 0); -- data output to
+                                                        -- internal RAM
+        ram_adr_o   : out std_logic_vector(6 downto 0); -- internal RAM-address
+        ram_wr_o    : out std_logic;                    -- read (0) / write (1)
+        ram_en_o    : out std_logic;                    -- RAM-block enable
+
+        datax_i : in  std_logic_vector (7 downto 0);   -- ext. RAM data input
+        datax_o : out std_logic_vector (7 downto 0);   -- ext. RAM data output
+        adrx_o  : out std_logic_vector (15 downto 0);  -- ext. RAM address
+        wrx_o   : out std_logic);                      -- ext. RAM write enable
+
+end mc8051_core;
+
 architecture struc of mc8051_core is
 
   -- signals connecting the control unit with the rest
@@ -219,3 +273,24 @@ begin                 -- architecture structural
 
   
 end struc;
+
+configuration mc8051_core_struc_cfg of mc8051_core is
+  for struc
+    for i_mc8051_control : mc8051_control
+      use configuration work.mc8051_control_struc_cfg;
+    end for;
+    for i_mc8051_alu : mc8051_alu
+      use configuration work.mc8051_alu_struc_cfg;
+    end for;
+    for gen_mc8051_siu
+      for all : mc8051_siu
+        use configuration work.mc8051_siu_rtl_cfg;
+      end for;
+    end for;
+    for gen_mc8051_tmrctr
+      for all : mc8051_tmrctr
+        use configuration work.mc8051_tmrctr_rtl_cfg;
+      end for;
+    end for;
+  end for;
+end mc8051_core_struc_cfg;

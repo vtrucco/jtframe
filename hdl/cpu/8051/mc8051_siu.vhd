@@ -47,13 +47,13 @@
 --
 --         Author:                 Roland Höller
 --
---         Filename:               mc8051_siu_rtl.vhd
+--         Filename:               mc8051_siu_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
---         Version:                $Revision: 1.10 $
+--         Version:                $Revision: 1.5 $
 --
---         Date of Latest Version: $Date: 2010-03-24 10:20:48 $
+--         Date of Latest Version: $Date: 2002-01-07 12:17:45 $
 --
 --
 --         Description: Serial interface unit for the mc8051 microcontroller.
@@ -62,6 +62,33 @@
 --
 --
 -------------------------------------------------------------------------------
+library IEEE; 
+use IEEE.std_logic_1164.all; 
+use IEEE.std_logic_arith.all; 
+  
+-----------------------------ENTITY DECLARATION--------------------------------
+
+entity mc8051_siu is
+
+  port (clk     : in std_logic;  		    --< system clock
+        reset   : in std_logic;  		    --< system reset
+        tf_i    : in std_logic;  		    --< timer1 overflow flag
+        trans_i : in std_logic;  		    --< 1 activates transm.
+        rxd_i   : in std_logic;  		    --< serial data input
+        scon_i  : in std_logic_vector(5 downto 0);  --< from SFR register
+  						    --< bits 7 to 3
+        sbuf_i  : in std_logic_vector(7 downto 0);  --< data for transm.
+        smod_i  : in std_logic;  		    --< low(0)/high baudrate
+
+        sbuf_o  : out std_logic_vector(7 downto 0);  --< received data 
+        scon_o  : out std_logic_vector(2 downto 0);  --< to SFR register 
+  						     --< bits 0 to 2
+        rxdwr_o : out std_logic;  	             --< rxd direction signal
+        rxd_o   : out std_logic;  		     --< mode0 data output
+        txd_o   : out std_logic);  		     --< serial data output
+  
+end mc8051_siu;
+
 architecture rtl of mc8051_siu is
 
   signal s_rxpre_count  : unsigned(5 downto 0);  -- Receive prescaler
@@ -424,7 +451,7 @@ begin                 -- architecture rtl
 -- MODE 0
 -------------------------------------------------------------------------------
           when ("00") =>
-	    
+        
             if s_tran_state = conv_unsigned(1, 4) or
               s_tran_state = conv_unsigned(2, 4) or
               s_tran_state = conv_unsigned(3, 4) or
@@ -451,56 +478,56 @@ begin                 -- architecture rtl
 
             if s_m0_shift_en = '1' then
               case s_tran_state is
-                when ("0001") =>  	-- D1
+                when ("0001") =>    -- D1
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   rxd_o                 <= s_tran_sh(1);
                   rxdwr_o <= '1';
-                when ("0010") =>  	-- D2
+                when ("0010") =>    -- D2
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   rxd_o                 <= s_tran_sh(1);
                   rxdwr_o <= '1';
-                when ("0011") =>  	-- D3
+                when ("0011") =>    -- D3
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   rxd_o                 <= s_tran_sh(1);
                   rxdwr_o <= '1';
-                when ("0100") =>  	-- D4
+                when ("0100") =>    -- D4
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   rxd_o                 <= s_tran_sh(1);
                   rxdwr_o <= '1';
-                when ("0101") =>  	-- D5
+                when ("0101") =>    -- D5
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   rxd_o                 <= s_tran_sh(1);
                   rxdwr_o <= '1';
-                when ("0110") =>  	-- D6
+                when ("0110") =>    -- D6
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   rxd_o                 <= s_tran_sh(1);
                   rxdwr_o <= '1';
-                when ("0111") =>  	-- D7
+                when ("0111") =>    -- D7
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   rxd_o                 <= s_tran_sh(1);
                   rxdwr_o <= '1';
-                when ("1000") =>  	-- D8, STOP BIT
+                when ("1000") =>    -- D8, STOP BIT
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   s_tran_done           <= '1';
                   v_txstep              := "10";
                   rxd_o                 <= s_tran_sh(1);
                   rxdwr_o <= '1';
-                when others =>  	-- D0
+                when others =>      -- D0
                   -- commence transmission if conditions are met
                   rxdwr_o <= '0';
                   if s_trans = '1' then
@@ -520,63 +547,63 @@ begin                 -- architecture rtl
             rxdwr_o <= '0';
             rxd_o <= '0';
             case s_tran_state is
-              when ("0001") =>  	-- D1
+              when ("0001") =>      -- D1
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0010") =>  	-- D2
+              when ("0010") =>      -- D2
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0011") =>  	-- D3
+              when ("0011") =>      -- D3
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0100") =>  	-- D4
+              when ("0100") =>      -- D4
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0101") =>  	-- D5
+              when ("0101") =>      -- D5
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0110") =>  	-- D6
+              when ("0110") =>      -- D6
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0111") =>  	-- D7
+              when ("0111") =>      -- D7
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("1000") =>  	-- D8
+              when ("1000") =>      -- D8
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("1001") =>  	-- D9, set done bit
+              when ("1001") =>      -- D9, set done bit
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
@@ -584,7 +611,7 @@ begin                 -- architecture rtl
                   v_txstep              := "10";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when others =>  		-- D0
+              when others =>        -- D0
                 -- commence transmission if conditions are met
                 s_txdm0 <= '1';
                 if s_m13_txshift_en = '1' then
@@ -605,70 +632,70 @@ begin                 -- architecture rtl
             rxdwr_o <= '0';
             rxd_o <= '0';
             case s_tran_state is
-              when ("0001") =>  	-- D1
+              when ("0001") =>      -- D1
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0010") =>  	-- D2
+              when ("0010") =>      -- D2
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0011") =>  	-- D3
+              when ("0011") =>      -- D3
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0100") =>  	-- D4
+              when ("0100") =>      -- D4
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0101") =>  	-- D5
+              when ("0101") =>      -- D5
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0110") =>  	-- D6
+              when ("0110") =>      -- D6
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0111") =>  	-- D7
+              when ("0111") =>      -- D7
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("1000") =>  	-- D8
+              when ("1000") =>      -- D8
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("1001") =>  	-- D9
+              when ("1001") =>      -- D9
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("1010") =>  	-- D10, set done bit
+              when ("1010") =>      -- D10, set done bit
                 if s_m2_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
@@ -676,7 +703,7 @@ begin                 -- architecture rtl
                   v_txstep              := "10";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when others =>  		-- D0
+              when others =>        -- D0
                 -- commence transmission if conditions are met
                 s_txdm0 <= '1';
                 if s_m2_txshift_en = '1' then
@@ -698,70 +725,70 @@ begin                 -- architecture rtl
             rxd_o <= '0';
             rxdwr_o <= '0';
             case s_tran_state is
-              when ("0001") =>  	-- D1
+              when ("0001") =>      -- D1
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0010") =>  	-- D2
+              when ("0010") =>      -- D2
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0011") =>  	-- D3
+              when ("0011") =>      -- D3
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0100") =>  	-- D4
+              when ("0100") =>      -- D4
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0101") =>  	-- D5
+              when ("0101") =>      -- D5
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0110") =>  	-- D6
+              when ("0110") =>      -- D6
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("0111") =>  	-- D7
+              when ("0111") =>      -- D7
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("1000") =>  	-- D8
+              when ("1000") =>      -- D8
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("1001") =>  	-- D9
+              when ("1001") =>      -- D9
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
                   v_txstep              := "01";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when ("1010") =>  	-- D10, set done bit
+              when ("1010") =>      -- D10, set done bit
                 if s_m13_txshift_en = '1' then
                   s_tran_sh(10)         <= '1';
                   s_tran_sh(9 downto 0) <= s_tran_sh(10 downto 1);
@@ -769,7 +796,7 @@ begin                 -- architecture rtl
                   v_txstep              := "10";
                   s_txdm0               <= s_tran_sh(1);
                 end if;
-              when others =>  		-- D0
+              when others =>        -- D0
                 -- commence transmission if conditions are met
                 s_txdm0 <= '1';
                 if s_m13_txshift_en = '1' then
@@ -826,7 +853,7 @@ begin                 -- architecture rtl
 -------------------------------------------------------------------------------
 -- MODE 0
 -------------------------------------------------------------------------------
-	  v_rxstep := "00";
+      v_rxstep := "00";
           case s_mode is
           when ("00") =>
             case s_recv_state is
@@ -841,52 +868,52 @@ begin                 -- architecture rtl
             when ("0001") =>            -- D1
               if s_m0_shift_en = '1' then
                 s_recv_sh(7) <= rxd_i;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0010") =>            -- D2
               if s_m0_shift_en = '1' then
                 s_recv_sh(7) <= rxd_i;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0011") =>            -- D3
               if s_m0_shift_en = '1' then
                 s_recv_sh(7) <= rxd_i;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0100") =>            -- D4
               if s_m0_shift_en = '1' then
                 s_recv_sh(7) <= rxd_i;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0101") =>            -- D5
               if s_m0_shift_en = '1' then
                 s_recv_sh(7) <= rxd_i;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0110") =>            -- D6
               if s_m0_shift_en = '1' then
                 s_recv_sh(7) <= rxd_i;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0111") =>            -- D6
               if s_m0_shift_en = '1' then
                 s_recv_sh(7) <= rxd_i;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1000") =>            -- D7, set bits and store data
               if s_m0_shift_en = '1' then
                 s_recv_sh(7) <= rxd_i;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 s_recv_done <= '1';
                 s_recv_buf(7) <= rxd_i;
-		s_recv_buf(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_buf(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "10";
               end if;
             when others =>            
@@ -909,7 +936,7 @@ begin                 -- architecture rtl
                 if s_rxd_val = '0' then
                   if s_m13_rxshift_en = '1' then
                     s_recv_sh(7) <= s_rxd_val;
-		    s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+            s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
                   end if;
                 else                    -- reject false start bits
@@ -921,49 +948,49 @@ begin                 -- architecture rtl
             when ("0010") =>            -- D1
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0011") =>            -- D2
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0100") =>            -- D3
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0101") =>            -- D4
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0110") =>            -- D5
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0111") =>            -- D6
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1000") =>            -- D7
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1001") =>            -- D8
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1010") =>            -- D9 = STOP BIT
@@ -973,7 +1000,7 @@ begin                 -- architecture rtl
                 --if s_m13_rxshift_en = '1' then
                 if s_rxpre_count(3 downto 0) = conv_unsigned(10,4) then      -- CK, CV: changed to enter state 0 after one stopbit
                   s_recv_sh(7) <= s_rxd_val;
-		      s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+              s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                   v_rxstep := "10";
                   s_recv_done <= '1';
                   s_rb8 <= s_rxd_val;
@@ -1004,7 +1031,7 @@ begin                 -- architecture rtl
               if s_rxd_val = '0' then
                 if s_m2_rxshift_en = '1' then
                   s_recv_sh(7) <= s_rxd_val;
-		  s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+          s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
                 end if;
               else                    -- reject false start bits
@@ -1015,49 +1042,49 @@ begin                 -- architecture rtl
             when ("0010") =>            -- D1
               if s_m2_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0011") =>            -- D2
               if s_m2_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0100") =>            -- D3
               if s_m2_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0101") =>            -- D4
               if s_m2_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0110") =>            -- D5
               if s_m2_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0111") =>            -- D6
               if s_m2_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1000") =>            -- D7
               if s_m2_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1001") =>            -- D8
               if s_m2_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1010") =>            -- D9
@@ -1066,7 +1093,7 @@ begin                 -- architecture rtl
                  (s_ri = '0' and s_rxd_val = '1') then
                 if s_m2_rxshift_en = '1' then
                   s_recv_sh(7) <= s_rxd_val;
-		  s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+          s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                   s_recv_done <= '1';
                   s_rb8 <= s_rxd_val;
                   s_recv_buf <= s_recv_sh(7 downto 0);
@@ -1103,7 +1130,7 @@ begin                 -- architecture rtl
                 if s_rxd_val = '0' then
                   if s_m13_rxshift_en = '1' then
                     s_recv_sh(7) <= s_rxd_val;
-	            s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+                s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                   v_rxstep := "01";
                   end if;
                 else                    -- reject false start bits
@@ -1115,49 +1142,49 @@ begin                 -- architecture rtl
             when ("0010") =>            -- D1
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0011") =>            -- D2
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0100") =>            -- D3
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0101") =>            -- D4
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0110") =>            -- D5
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("0111") =>            -- D6
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1000") =>            -- D7
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1001") =>            -- D8
               if s_m13_rxshift_en = '1' then
                 s_recv_sh(7) <= s_rxd_val;
-		s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+        s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                 v_rxstep := "01";
               end if;
             when ("1010") =>            -- D9
@@ -1166,7 +1193,7 @@ begin                 -- architecture rtl
                  (s_ri = '0' and s_rxd_val = '1') then
                 if s_m13_rxshift_en = '1' then
                   s_recv_sh(7) <= s_rxd_val;
-		  s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
+          s_recv_sh(6 downto 0) <= s_recv_sh(7 downto 1);
                   s_recv_done <= '1';
                   s_rb8 <= s_rxd_val;
                   s_recv_buf <= s_recv_sh(7 downto 0);
@@ -1188,15 +1215,15 @@ begin                 -- architecture rtl
             null;
           end case;
 
-	  case v_rxstep is
-	    when "01" =>
-	      s_recv_state <= s_recv_state + conv_unsigned(1,1);
-	    when "10" =>
-	      s_recv_state <= conv_unsigned(0,4);
-	    when others =>
-	      null;
-	  end case;
-	  
+      case v_rxstep is
+        when "01" =>
+          s_recv_state <= s_recv_state + conv_unsigned(1,1);
+        when "10" =>
+          s_recv_state <= conv_unsigned(0,4);
+        when others =>
+          null;
+      end case;
+      
         end if;
       end if;
 
@@ -1205,3 +1232,11 @@ begin                 -- architecture rtl
 
   
 end rtl;
+
+configuration mc8051_siu_rtl_cfg of mc8051_siu is
+  
+    for rtl
+      
+    end for;
+    
+end mc8051_siu_rtl_cfg;

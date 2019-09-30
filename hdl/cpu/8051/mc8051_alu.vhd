@@ -47,13 +47,13 @@
 --
 --         Author:                 Roland Höller
 --
---         Filename:               mc8051_alu_struc.vhd
+--         Filename:               mc8051_alu_.vhd
 --
 --         Date of Creation:       Mon Aug  9 12:14:48 1999
 --
---         Version:                $Revision: 1.9 $
+--         Version:                $Revision: 1.7 $
 --
---         Date of Latest Version: $Date: 2006-09-07 10:02:11 $
+--         Date of Latest Version: $Date: 2002-01-07 12:17:44 $
 --
 --
 --         Description: Connects the units alumux, alucore, addsub_core,
@@ -64,6 +64,44 @@
 --
 --
 -------------------------------------------------------------------------------
+library IEEE; 
+use IEEE.std_logic_1164.all; 
+use IEEE.std_logic_arith.all; 
+library work;
+use work.mc8051_p.all;
+  
+-----------------------------ENTITY DECLARATION--------------------------------
+
+entity mc8051_alu is
+
+  generic (DWIDTH : integer := 8);             -- Data width of the ALU
+
+  port (rom_data_i : in std_logic_vector(DWIDTH-1 downto 0);
+        ram_data_i : in std_logic_vector(DWIDTH-1 downto 0);
+        acc_i      : in std_logic_vector(DWIDTH-1 downto 0);
+        cmd_i      : in std_logic_vector(5 downto 0);
+        cy_i       : in std_logic_vector((DWIDTH-1)/4 downto 0);
+        ov_i       : in std_logic;
+  
+        new_cy_o   : out std_logic_vector((DWIDTH-1)/4 downto 0);
+        new_ov_o   : out std_logic;
+        result_a_o : out std_logic_vector(DWIDTH-1 downto 0);
+        result_b_o : out std_logic_vector(DWIDTH-1 downto 0));
+  
+end mc8051_alu;
+--Inputs:
+-- rom_data_i...... data input from ROM
+-- ram_data_i...... data input from RAM
+-- acc_i........... the contents of the accumulator register
+-- cmd_i........... command from the control unit
+-- cy_i............ CY-Flags of the SFR
+-- ov_i............ OV-Flag of the SFR
+--Outputs:
+-- new_cy_o........ new CY-Flags for SFR
+-- new_ov_o........ new OV-Flag for SFR
+-- result_a_o...... result
+-- result_b_o...... result
+
 architecture struc of mc8051_alu is
 
   signal s_alu_result   : std_logic_vector(DWIDTH-1 downto 0);
@@ -195,3 +233,34 @@ begin                 -- architecture structural
   end generate gen_dcml_adj0;
 
 end struc;
+
+configuration mc8051_alu_struc_cfg of mc8051_alu is
+
+  for struc
+    for i_alumux : alumux
+      use configuration work.alumux_rtl_cfg;
+    end for;
+    for i_alucore : alucore
+      use configuration work.alucore_rtl_cfg;
+    end for;
+    for i_addsub_core : addsub_core
+      use configuration work.addsub_core_struc_cfg;
+    end for;
+    for gen_multiplier1
+      for all : comb_mltplr
+        use configuration work.comb_mltplr_rtl_cfg;
+      end for;
+    end for;
+    for gen_divider1
+      for all : comb_divider
+        use configuration work.comb_divider_rtl_cfg;
+      end for;
+    end for;
+    for gen_dcml_adj1
+      for all : dcml_adjust
+        use configuration work.dcml_adjust_rtl_cfg;
+      end for;
+    end for;
+  end for;
+  
+end mc8051_alu_struc_cfg;
