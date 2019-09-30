@@ -92,7 +92,9 @@ if [ "$I8051" = 1 ]; then
         $MODULES/jtframe/hdl/cpu/8051/{dcml_adjust,alumux}.vhd \
         $MODULES/jtframe/hdl/cpu/8051/mc8051_{core,control,alu,tmrctr,siu}.vhd \
         | tr '\n' ' ')
-    echo $EXTRA_VHDL
+    # iVerilog cannot simulate the 8051 because it's in VHDL
+    PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/8051/dummy_8051.v"
+    # echo $EXTRA_VHDL
 fi
 
 if [ "$YM2149" = 1 ]; then
