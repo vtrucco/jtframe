@@ -39,7 +39,7 @@ assign adrx_o    = 16'd0;
 assign p0_o      = 8'd0;
 assign p1_o      = 8'd0;
 assign p2_o      = 8'd0;
-assign p3_o      = 8'd0;
+assign p3_o      = 8'h20;
 
 assign all_rxd_o = 1'b0;
 assign all_txd_o = 1'b0;

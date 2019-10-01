@@ -88,12 +88,14 @@ if [ "$I8051" = 1 ]; then
     EXTRA_VHDL=$(ls \
         $MODULES/jtframe/hdl/cpu/8051/mc8051_p.vhd \
         $MODULES/jtframe/hdl/cpu/8051/{addsub_cy,addsub_ovcy,comb_divider,comb_mltplr}.vhd \
-        $MODULES/jtframe/hdl/cpu/8051/{control_mem,control_fsm,alucore,addsub_core}.vhd \
         $MODULES/jtframe/hdl/cpu/8051/{dcml_adjust,alumux}.vhd \
+        $MODULES/jtframe/hdl/cpu/8051/{control_mem,control_fsm,alucore,addsub_core}.vhd \
         $MODULES/jtframe/hdl/cpu/8051/mc8051_{core,control,alu,tmrctr,siu}.vhd \
         | tr '\n' ' ')
     # iVerilog cannot simulate the 8051 because it's in VHDL
-    PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/8051/dummy_8051.v"
+    if [ $SIMULATOR = iverilog ]; then
+        PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/8051/dummy_8051.v"
+    fi
     # echo $EXTRA_VHDL
 fi
 
