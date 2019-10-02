@@ -65,8 +65,10 @@ module jtgng_mist_base(
     output          ps2_kbd_data,
     // Sound
     input           clk_dac,
-    input   [15:0]  snd,
-    output          snd_pwm,
+    input   [15:0]  snd_left,
+    input   [15:0]  snd_right,
+    output          snd_pwm_left,
+    output          snd_pwm_right,
     // ROM load from SPI
     output [21:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
@@ -81,21 +83,40 @@ parameter SIGNED_SND=1'b0;
 wire ypbpr;
 
 `ifndef SIMULATION
-`ifndef NOSOUND
-wire [15:0] snd_in = {snd[15]^SIGNED_SND, snd[14:0]};
-wire [19:0] snd_padded = { 1'b0, snd_in, 3'd0 };
+    `ifndef NOSOUND
 
+    function [19:0] snd_padded;
+        input [15:0] snd;
+        reg   [15:0] snd_in;
+        begin
+            snd_in = {snd[15]^SIGNED_SND, snd[14:0]};
+            snd_padded = { 1'b0, snd_in, 3'd0 };
+        end
+    endfunction
 
-hifi_1bit_dac u_dac
-(
-  .reset    ( rst        ),
-  .clk      ( clk_dac    ),
-  .clk_ena  ( 1'b1       ),
-  .pcm_in   ( snd_padded ),
-  .dac_out  ( snd_pwm    )
-);
-`endif
-`else
+    hifi_1bit_dac u_dac_left
+    (
+      .reset    ( rst                  ),
+      .clk      ( clk_dac              ),
+      .clk_ena  ( 1'b1                 ),
+      .pcm_in   ( snd_padded(snd_left) ),
+      .dac_out  ( snd_pwm_left         )
+    );
+
+        `ifdef STEREO_GAME
+        hifi_1bit_dac u_dac_right
+        (
+          .reset    ( rst                  ),
+          .clk      ( clk_dac              ),
+          .clk_ena  ( 1'b1                 ),
+          .pcm_in   ( snd_padded(snd_right)),
+          .dac_out  ( snd_pwm_right        )
+        );
+        `else
+        assign snd_pwm_right = snd_pwm_left;
+        `endif
+    `endif
+`else // Simulation:
 assign snd_pwm = 1'b0;
 `endif
 

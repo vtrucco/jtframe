@@ -86,7 +86,8 @@ module jtframe_mist(
     // reset forcing signals:
     input           rst_req,
     // Sound
-    input   [15:0]  snd,
+    input   [15:0]  snd_left,
+    input   [15:0]  snd_right,
     output          AUDIO_L,
     output          AUDIO_R,
     // joystick
@@ -127,8 +128,6 @@ wire          osd_shown;
 wire [7:0]    scan2x_r, scan2x_g, scan2x_b;
 wire          scan2x_hs, scan2x_vs;
 wire          scan2x_enb;
-
-assign AUDIO_R = AUDIO_L;
 
 ///////////////// LED is on while
 // downloading, PLL lock lost, OSD is shown or in reset state
@@ -184,8 +183,10 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .ps2_kbd_data   ( ps2_kbd_data  ),
     // audio
     .clk_dac        ( clk_sys       ),
-    .snd            ( snd           ),
-    .snd_pwm        ( AUDIO_L       ),
+    .snd_left       ( snd_left      ),
+    .snd_right      ( snd_right     ),
+    .snd_pwm_left   ( AUDIO_L       ),
+    .snd_pwm_right  ( AUDIO_R       ),
     // ROM load from SPI
     .ioctl_addr     ( ioctl_addr    ),
     .ioctl_data     ( ioctl_data    ),
