@@ -366,7 +366,9 @@ begin
 
   -- some simple assignments 
  
-  pc_o <= std_logic_vector(pc_comb);
+  -- edit by jotego: avoid combinational output
+  -- as it creates problems when using gated clocks
+  pc_o <= std_logic_vector(pc); -- std_logic_vector(pc_comb);
   pc_plus1 <= pc + conv_unsigned(1,1);
   pc_plus2 <= pc + conv_unsigned(2,2);
   ram_adr_o <= std_logic_vector(s_adr(6 downto 0)); 
