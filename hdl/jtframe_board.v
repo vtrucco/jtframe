@@ -218,13 +218,13 @@ wire joy_pause = joy1_sync[PAUSE_BIT] | joy2_sync[PAUSE_BIT];
 
 integer cnt;
 
-function [10:0] apply_rotation;
-    input [10:0] joy_in;
+function [9:0] apply_rotation;
+    input [9:0] joy_in;
     input       rot;
     input       invert;
     begin
-    apply_rotation = {11{invert}} ^ 
-        (!rot ? joy_in : { joy_in[10:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
+    apply_rotation = {10{invert}} ^ 
+        (!rot ? joy_in : { joy_in[9:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
     end
 endfunction
 
