@@ -284,6 +284,15 @@ jtframe_dip u_dip(
     .dip_fxlevel( dip_fxlevel   )
 );
 
+// This strange arrangement is what MiSTer 128MB board needs:
+wire [12:11] sdram_a;
+wire         sdram_dqml, sdram_dqmh;
+
+assign       SDRAM_DQML = sdram_a[11] | sdram_dqml;
+assign       SDRAM_DQMH = sdram_a[12] | sdram_dqmh;
+assign       SDRAM_A[11] = SDRAM_DQML;
+assign       SDRAM_A[12] = SDRAM_DQMH;
+
 jtgng_sdram u_sdram(
     .rst            ( rst           ),
     .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
@@ -302,9 +311,9 @@ jtgng_sdram u_sdram(
     .sdram_ack      ( sdram_ack     ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ      ),
-    .SDRAM_A        ( SDRAM_A       ),
-    .SDRAM_DQML     ( SDRAM_DQML    ),
-    .SDRAM_DQMH     ( SDRAM_DQMH    ),
+    .SDRAM_A        ( { sdram_a, SDRAM_A[10:0] } ),
+    .SDRAM_DQML     ( sdram_dqml    ),
+    .SDRAM_DQMH     ( sdram_dqmh    ),
     .SDRAM_nWE      ( SDRAM_nWE     ),
     .SDRAM_nCAS     ( SDRAM_nCAS    ),
     .SDRAM_nRAS     ( SDRAM_nRAS    ),

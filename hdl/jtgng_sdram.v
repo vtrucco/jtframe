@@ -37,6 +37,10 @@ module jtgng_sdram(
     input       [ 7:0]  prog_data,
     input       [ 1:0]  prog_mask,
     // SDRAM interface
+    // SDRAM_A[12:11] and SDRAM_DQML/H are controlled in a way
+    // that can be joined together thru an OR operation at a
+    // higher level. This makes it possible to short the pins
+    // of the SDRAM, as done in the MiSTer 128MB module
     inout       [15:0]  SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output reg  [12:0]  SDRAM_A,        // SDRAM Address bus 13 Bits
     output reg          SDRAM_DQML,     // SDRAM Low-byte Data Mask
@@ -111,8 +115,11 @@ always @(posedge clk)
     if( rst ) begin
         // initialization of SDRAM
         SDRAM_WRITE<= 1'b0;
-        SDRAM_CMD <= CMD_NOP;
-        init_cmd  <= CMD_NOP;
+        SDRAM_CMD  <= CMD_NOP;
+        SDRAM_DQMH <= 1'b0;
+        SDRAM_DQML <= 1'b0;
+        SDRAM_A    <= 13'd0;
+        init_cmd   <= CMD_NOP;
         wait_cnt   <= 14'd5000; // wait for 100us
         initialize <= 1'b1;
         init_state <= 3'd0;
@@ -193,7 +200,7 @@ always @(posedge clk)
             //end
             //else
             data_rdy <= 1'b0;
-            {SDRAM_DQMH, SDRAM_DQML } <= downloading_last ? 2'b11 : 2'b00;
+            {SDRAM_DQMH, SDRAM_DQML } <= 2'b00;
             if( set_burst ) begin
                 SDRAM_CMD <= CMD_LOAD_MODE;
                 // Burst mode can be 0 = 1 word. Used for ROM downloading
@@ -208,7 +215,6 @@ always @(posedge clk)
                     { SDRAM_A, col_addr } <= prog_addr[21:0];
                     autorefresh_cycle <= 1'b0;
                     write_cycle       <= 1'b1;
-                    {SDRAM_DQMH, SDRAM_DQML } <= prog_mask;
                 end
                 else if( (read_req || refresh_ok) && !downloading ) begin
                     SDRAM_CMD <=
@@ -235,6 +241,7 @@ always @(posedge clk)
             sdram_ack     <= 1'b0;
             SDRAM_A[12:9] <= 4'b0010; // auto precharge;
             SDRAM_A[ 8:0] <= col_addr;
+            {SDRAM_DQMH, SDRAM_DQML } <= write_cycle ? prog_mask : 2'b00;
             SDRAM_WRITE <= write_cycle;
             SDRAM_CMD   <= write_cycle ? CMD_WRITE :
                 autorefresh_cycle ? CMD_NOP : CMD_READ;
