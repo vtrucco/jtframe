@@ -151,7 +151,7 @@ always @(negedge clk_sys) begin
         game_rst_cnt <= 8'd0;
         game_rst     <= 1'b1;
     end
-    if( game_rst_cnt != ~8'b0 ) begin
+    else if( game_rst_cnt != ~8'b0 ) begin
         game_rst <= 1'b1;
         game_rst_cnt <= game_rst_cnt + 8'd1;
     end else game_rst <= 1'b0;
