@@ -1,7 +1,8 @@
 `timescale 1ns/10ps
 
 `ifndef SDRAM_SHIFT
-`define SDRAM_SHIFT "2994 ps"
+// 5ns works with both 32 and 128 MB modules
+`define SDRAM_SHIFT "5000 ps"
 `endif
 
 module  pll_0002(
