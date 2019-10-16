@@ -16,32 +16,40 @@
     Version: 1.0
     Date: 16-9-2019 */
 
-module jtframe_din_check #parameter(
+module jtframe_din_check #(parameter
     DW=16,
     AW=18,
-    HEXFILE=""
+    HEXFILE="sdram.hex"
 )(
+    input            rst,
     input            clk,
+    input            cen,
     input            rom_cs,
+    input            rom_ok,
     input   [AW-1:0] rom_addr,
     input   [DW-1:0] rom_data,
     output reg       error=1'b0
 );
 
-reg [DW-1:0] good[0:2**AW-1];
+reg [DW-1:0]  good_rom[0:2**AW-1];
+wire [DW-1:0] good_data = good_rom[rom_addr];
+wire good = rom_data == good_data;
 
 initial begin
-    $readmemh(HEXFILE, good);
+    $readmemh(HEXFILE, good_rom);
 end
 
-wire eq = rom_data == good[rom_addr]
 
-always @(negedge clk) begin
-    if( rom_cs ) begin
-        error <= eq;
-        if( !eq ) begin
-            $display("ERROR: SDRAM read error at time %t");
-            #1000 $finish;
+always @(posedge clk, posedge rst) begin
+    if( rst )
+        error <= 1'b0;
+    else if(cen) begin
+        if( rom_cs && rom_ok) begin
+            error <= !good;
+            if( !good ) begin
+                $display("ERROR: SDRAM read error at time %t",$time);
+                //#1000 $finish;
+            end
         end
     end
 end
