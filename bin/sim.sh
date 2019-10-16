@@ -85,13 +85,18 @@ fi
 
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."
-    EXTRA_VHDL=$(ls \
-        $MODULES/jtframe/hdl/cpu/8051/mc8051_p.vhd \
-        $MODULES/jtframe/hdl/cpu/8051/{addsub_cy,addsub_ovcy,comb_divider,comb_mltplr}.vhd \
-        $MODULES/jtframe/hdl/cpu/8051/{dcml_adjust,alumux}.vhd \
-        $MODULES/jtframe/hdl/cpu/8051/{control_mem,control_fsm,alucore,addsub_core}.vhd \
-        $MODULES/jtframe/hdl/cpu/8051/mc8051_{core,control,alu,tmrctr,siu}.vhd \
-        | tr '\n' ' ')
+    # EXTRA_VHDL=$(ls \
+    #     $MODULES/jtframe/hdl/cpu/8051/mc8051_p.vhd \
+    #     $MODULES/jtframe/hdl/cpu/8051/{addsub_cy,addsub_ovcy,comb_divider,comb_mltplr}.vhd \
+    #     $MODULES/jtframe/hdl/cpu/8051/{dcml_adjust,alumux}.vhd \
+    #     $MODULES/jtframe/hdl/cpu/8051/{control_mem,control_fsm,alucore,addsub_core}.vhd \
+    #     $MODULES/jtframe/hdl/cpu/8051/mc8051_{core,control,alu,tmrctr,siu}.vhd \
+    #     | tr '\n' ' ')
+    EXTRA_VHDL="-smartorder $(ls $MODULES/jtframe/hdl/cpu/8051/mc8051_p.vhd)"
+    EXTRA_VHDL="$EXTRA_VHDL $(ls $MODULES/jtframe/hdl/cpu/8051/*_.vhd)"
+    EXTRA_VHDL="$EXTRA_VHDL $(ls $MODULES/jtframe/hdl/cpu/8051/*_rtl.vhd)"
+    EXTRA_VHDL="$EXTRA_VHDL $(ls $MODULES/jtframe/hdl/cpu/8051/*_cfg.vhd)"
+    EXTRA_VHDL="$EXTRA_VHDL $(ls $MODULES/jtframe/hdl/cpu/8051/*_struc.vhd)"
     # iVerilog cannot simulate the 8051 because it's in VHDL
     if [ $SIMULATOR = iverilog ]; then
         PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/8051/dummy_8051.v"
@@ -311,6 +316,12 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
     -d        Add specific Verilog macros for the simulation. Common options
         VIDEO_START=X   video output will start on frame X
         DUMP_START=X    waveform dump will start on frame X
+        DIP_TEST        Enable the test bit (active low)
+        SIM_INPUTS      Game cabinet inputs will be taken from a sim_inputs.hex
+                        file. Each line contains a byte with the input status.
+                        All bits are read as active high. They are inverted
+                        if necessary by JTFRAME logic,
+        ALWAYS_PAUSE    Enable the DIP PAUSE bit (active low)
         TESTSCR1        disable scroll control by the CPU and scroll the
                         background automatically. It can be used together with
                         NOMAIN macro
@@ -405,7 +416,12 @@ if [ "$VIDEO_DUMP" = TRUE ]; then
     rm -f video*.raw
     $MODULES/jtframe/bin/bin2raw
     for i in video*.raw; do
+        filename=$(basename $i .raw).jpg
+        if [ -e $filename ]; then
+            rm $i       # delete the raw file
+            continue    # do not overwrite
+        fi
         convert $CONVERT_OPTIONS -size 256x224 \
-            -depth 8 RGBA:$i $(basename $i .raw).png && rm $i
+            -depth 8 RGBA:$i $filename && rm $i
     done
 fi

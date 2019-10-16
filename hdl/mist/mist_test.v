@@ -53,9 +53,9 @@ test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     // Video dumping. VGA_ signals are equal to game signals in simulation.
     .HS          ( VGA_HS    ),
     .VS          ( VGA_VS    ),
-    .red         ( VGA_R[3:0]),
-    .green       ( VGA_G[3:0]),
-    .blue        ( VGA_B[3:0]),
+    .red         ( VGA_R[5:2]),
+    .green       ( VGA_G[5:2]),
+    .blue        ( VGA_B[5:2]),
     .frame_cnt   ( frame_cnt ),
     // SDRAM
     .SDRAM_DQ    ( SDRAM_DQ  ),

@@ -228,6 +228,21 @@ function [9:0] apply_rotation;
     end
 endfunction
 
+`ifdef SIM_INPUTS
+    reg [7:0] sim_inputs[0:16383];
+    integer frame_cnt;
+    initial begin : read_sim_inputs
+        integer c;
+        for( c=0; c<16384; c=c+1 ) sim_inputs[c] = 8'h0;
+        $readmemh( "sim_inputs.hex", sim_inputs );
+    end
+    always @(negedge LVBL, posedge rst) begin
+        if( rst )
+            frame_cnt <= 0;
+        else frame_cnt <= frame_cnt+1;
+    end
+`endif
+
 always @(posedge clk_sys)
     if(rst ) begin
         game_pause   <= 1'b0;
@@ -245,13 +260,18 @@ always @(posedge clk_sys)
         game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, invert_inputs);
         game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, invert_inputs);
         
+        `ifdef SIM_INPUTS
+        game_coin  = {2{invert_inputs}} ^ sim_inputs[frame_cnt][1:0];
+        game_start = {2{invert_inputs}} ^ sim_inputs[frame_cnt][3:2];
+        `else
         game_coin      <= {2{invert_inputs}} ^ 
             ({joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
         
         game_start     <= {2{invert_inputs}} ^ 
             ({joy1_sync[START2_BIT],joy1_sync[START1_BIT]} |
              {joy2_sync[START2_BIT],joy2_sync[START1_BIT]} | key_start);
-        
+        `endif
+
         soft_rst <= key_reset && !last_reset;
 
         for(cnt=0; cnt<4; cnt=cnt+1)

@@ -20,6 +20,8 @@ int main() {
     int frame=-1;
     ofstream fout;
 
+    bool skip_output = false;
+
     while( !fin.eof() ) {
         fin.read( (char*) &srgb, 4 );
         if( init ) {
@@ -34,8 +36,16 @@ int main() {
                 }
                 stringstream name;
                 frame++;
-                name << "video_" << setfill('0') << setw(3) << frame << ".raw";
-                fout.open( name.str(), ios_base::binary );
+                name << "video_" << setfill('0') << setw(3) << frame << ".jpg";
+                if( ifstream(name.str()).good() ) {
+                    skip_output = true;
+                }
+                else {
+                    skip_output = false;
+                    name.str("");
+                    name << "video_" << setfill('0') << setw(3) << frame << ".raw";
+                    fout.open( name.str(), ios_base::binary );
+                }
             }
             vsync = true;
             rows=0;
@@ -60,7 +70,7 @@ int main() {
         b = (b<<4) | b;
         // RGB + alpha
         char rgba[4] = { (char)r, (char)g, (char)b, (char)0xff };
-        fout.write( rgba, 4 );
+        if( !skip_output ) fout.write( rgba, 4 );
         cols++;
     }
     return 0;

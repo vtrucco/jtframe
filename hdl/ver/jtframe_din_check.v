@@ -48,7 +48,7 @@ always @(posedge clk, posedge rst) begin
             error <= !good;
             if( !good ) begin
                 $display("ERROR: SDRAM read error at time %t",$time);
-                //#1000 $finish;
+                #40_000_000 $finish;
             end
         end
     end
