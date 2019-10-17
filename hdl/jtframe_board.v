@@ -229,7 +229,7 @@ function [9:0] apply_rotation;
 endfunction
 
 `ifdef SIM_INPUTS
-    reg [7:0] sim_inputs[0:16383];
+    reg [15:0] sim_inputs[0:16383];
     integer frame_cnt;
     initial begin : read_sim_inputs
         integer c;
@@ -257,13 +257,13 @@ always @(posedge clk_sys)
 
         // joystick, coin, start and service inputs are inverted
         // as indicated in the instance parameter
-        game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, invert_inputs);
-        game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, invert_inputs);
         
         `ifdef SIM_INPUTS
         game_coin  = {2{invert_inputs}} ^ sim_inputs[frame_cnt][1:0];
         game_start = {2{invert_inputs}} ^ sim_inputs[frame_cnt][3:2];
+        game_joystick1 <= {10{invert_inputs}} ^ { 4'd0, sim_inputs[frame_cnt][9:4]};
         `else
+        game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, invert_inputs);
         game_coin      <= {2{invert_inputs}} ^ 
             ({joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
         
@@ -271,13 +271,14 @@ always @(posedge clk_sys)
             ({joy1_sync[START2_BIT],joy1_sync[START1_BIT]} |
              {joy2_sync[START2_BIT],joy2_sync[START1_BIT]} | key_start);
         `endif
+        game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, invert_inputs);
 
         soft_rst <= key_reset && !last_reset;
 
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
         // state variables:
-        `ifndef ALWAYS_PAUSE
+        `ifndef DIP_PAUSE
         if( (key_pause && !last_pause) || (joy_pause && !last_joypause) )
             game_pause   <= ~game_pause;
         `else 

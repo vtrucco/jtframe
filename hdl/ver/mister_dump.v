@@ -35,10 +35,10 @@ module mister_dump(
         end
     `endif
 `else // NCVERILOG
-    `ifndef VIDEO_START
-    initial begin
+    `ifdef DUMP_START
+    always @(negedge VGA_VS) if( frame_cnt==`DUMP_START ) begin
     `else
-    always @(negedge VGA_VS) if( frame_cnt==`VIDEO_START ) begin
+    initial begin
     `endif
         $display("NC Verilog: will dump all signals");
         $shm_open("test.shm");

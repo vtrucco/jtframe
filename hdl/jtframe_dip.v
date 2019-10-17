@@ -94,7 +94,7 @@ always @(posedge clk) begin
             dip_test  <= 1'b1;
         `endif
 
-        `ifdef ALWAYS_PAUSE
+        `ifdef DIP_PAUSE
             dip_pause <= 1'b0; // use to simulate pause screen
         `else
             dip_pause <= 1'b1; // avoid having the main CPU halted in simulation

@@ -139,6 +139,10 @@ case "$1" in
         shift
         EXTRA="$EXTRA ${MACROPREFIX}$1"
         ;;
+    -test)
+        EXTRA="$EXTRA ${MACROPREFIX}DIP_TEST";;
+    -pause)
+        EXTRA="$EXTRA ${MACROPREFIX}DIP_PAUSE";;
     "-frame")
         shift
         if [ "$1" = "" ]; then
@@ -268,8 +272,14 @@ case "$1" in
     "-video")
         EXTRA="$EXTRA ${MACROPREFIX}DUMP_VIDEO"
         echo Video dump enabled
+        if [ ${2:0:1} != - ]; then
+            # get number of frames to simulate
+            shift
+            MAXFRAME="${MACROPREFIX}MAXFRAME=$1"
+            echo Simulate up to $1 frames
+        fi
         rm -f video.bin
-        rm -f *png
+        rm -f *.jpg
         VIDEO_DUMP=TRUE
         ;;
     "-load")
@@ -297,7 +307,8 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
     -modules  Location of the modules folder with respect to the simulation folder
     -mist     Use MiST setup for simulation, instead of using directly the
               game module. This is slower but more informative.
-    -video    Enable video output
+    -video    Enable video output. Can be followed by a number to get
+              the number of frames to simulate.              
     -lint     Run verilator as lint tool
     -nc       Select NCVerilog as the simulator
     -load     Load the ROM file using the SPI communication. Slower.
@@ -311,6 +322,8 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
     -deep     Save all signals for scope verification
     -frame    Number of frames to simulate
     -time     Number of milliseconds to simulate
+    -test     Enable test DIP setting. Same as -d DIP_TEST
+    -pause    Enable pause DIP setting. Same as -d DIP_PAUSE
     -slowpll  Simulate using Altera's model for PLLs
     -showcmd  Display the simulation command only. Do not run any simulation.
     -d        Add specific Verilog macros for the simulation. Common options
@@ -321,7 +334,7 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
                         file. Each line contains a byte with the input status.
                         All bits are read as active high. They are inverted
                         if necessary by JTFRAME logic,
-        ALWAYS_PAUSE    Enable the DIP PAUSE bit (active low)
+        DIP_PAUSE       Enable the DIP PAUSE bit (active low)
         TESTSCR1        disable scroll control by the CPU and scroll the
                         background automatically. It can be used together with
                         NOMAIN macro
@@ -417,7 +430,7 @@ if [ "$VIDEO_DUMP" = TRUE ]; then
     $MODULES/jtframe/bin/bin2raw
     for i in video*.raw; do
         filename=$(basename $i .raw).jpg
-        if [ -e $filename ]; then
+        if [ -e "$filename" ]; then
             rm $i       # delete the raw file
             continue    # do not overwrite
         fi
