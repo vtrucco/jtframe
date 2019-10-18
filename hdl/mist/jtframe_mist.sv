@@ -152,7 +152,7 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .LHBL           ( LHBL          ),
     .LVBL           ( LVBL          ),
     .hs             ( hs            ),
-    .vs             ( vs            ), 
+    .vs             ( vs            ),
     .pxl_cen        ( pxl_cen       ),
     // Scan-doubler video
     .scan2x_r       ( scan2x_r[7:2] ),
@@ -258,7 +258,7 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .LHBL           ( LHBL            ),
     .LVBL           ( LVBL            ),
     .hs             ( hs              ),
-    .vs             ( vs              ), 
+    .vs             ( vs              ),
     .pxl_cen        ( pxl_cen         ),
     .pxl2_cen       ( pxl2_cen        ),
     // Scan-doubler video
@@ -269,7 +269,22 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .scan2x_vs      ( scan2x_vs       ),
     .scan2x_enb     ( scan2x_enb      ),
     // Debug
-    .gfx_en         ( gfx_en          )
+    .gfx_en         ( gfx_en          ),
+    // Unused ports (MiSTer)
+    .hdmi_arx       (                 ),
+    .hdmi_ary       (                 ),
+    .hdmi_clk       (                 ),
+    .hdmi_cen       (                 ),
+    .hdmi_r         (                 ),
+    .hdmi_g         (                 ),
+    .hdmi_b         (                 ),
+    .hdmi_hs        (                 ),
+    .hdmi_vs        (                 ),
+    .hdmi_de        (                 ),
+    .hdmi_sl        (                 ),
+    .scan2x_clk     (                 ),
+    .scan2x_cen     (                 ),
+    .scan2x_de      (                 )
 );
 
 endmodule // jtframe
