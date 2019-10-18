@@ -85,23 +85,12 @@ fi
 
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."
-    # EXTRA_VHDL=$(ls \
-    #     $MODULES/jtframe/hdl/cpu/8051/mc8051_p.vhd \
-    #     $MODULES/jtframe/hdl/cpu/8051/{addsub_cy,addsub_ovcy,comb_divider,comb_mltplr}.vhd \
-    #     $MODULES/jtframe/hdl/cpu/8051/{dcml_adjust,alumux}.vhd \
-    #     $MODULES/jtframe/hdl/cpu/8051/{control_mem,control_fsm,alucore,addsub_core}.vhd \
-    #     $MODULES/jtframe/hdl/cpu/8051/mc8051_{core,control,alu,tmrctr,siu}.vhd \
-    #     | tr '\n' ' ')
-    EXTRA_VHDL="-smartorder $(ls $MODULES/jtframe/hdl/cpu/8051/mc8051_p.vhd)"
-    EXTRA_VHDL="$EXTRA_VHDL $(ls $MODULES/jtframe/hdl/cpu/8051/*_.vhd)"
-    EXTRA_VHDL="$EXTRA_VHDL $(ls $MODULES/jtframe/hdl/cpu/8051/*_rtl.vhd)"
-    EXTRA_VHDL="$EXTRA_VHDL $(ls $MODULES/jtframe/hdl/cpu/8051/*_cfg.vhd)"
-    EXTRA_VHDL="$EXTRA_VHDL $(ls $MODULES/jtframe/hdl/cpu/8051/*_struc.vhd)"
+    EXTRA_VHDL=$(add_dir $MODULES/jtframe/hdl/cpu/8051 mc8051.f)
     # iVerilog cannot simulate the 8051 because it's in VHDL
     if [ $SIMULATOR = iverilog ]; then
         PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/8051/dummy_8051.v"
     fi
-    # echo $EXTRA_VHDL
+    #echo $EXTRA_VHDL
 fi
 
 if [ "$YM2149" = 1 ]; then
