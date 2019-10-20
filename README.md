@@ -23,3 +23,21 @@ Many arcade games and 80's computers use 74-series devices to do discrete logic.
 There is a verilog library of 74-series gates in the hdl folder: hdl/jt74.v. The ones that include // ref and // pin comments can be used for KiCAD sims. It is very easy to add support for more cells. Feel free to submit pull merges to Github.
 
 It makes sense to simulate delays in 74-series gates as this is important in some designs. Even if some cells do not include delays, later versions of jt74.v may include delays for all cells. It is not recommended to set up your simulations with Verilator because Verilator does not support delays and other modelling constructs. The jt74 library is not meant for synthesis, only simulation.
+
+Cabinet inputs during simulation
+================================
+You can use a hex file with inputs for simulation. Enable this with the macro
+SIM_INPUTS. The file must be called sim_inputs.hex. Each line has a hexadecimal
+number with inputs coded. Active high only:
+
+bit         meaning
+0           coin 1
+1           coin 2
+2           1P start
+3           2P start
+4
+5
+6
+7
+8           Button 1
+9           Button 2
