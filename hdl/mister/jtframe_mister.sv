@@ -1,4 +1,10 @@
-module jtframe_mister(
+module jtframe_mister #(parameter
+    SIGNED_SND              =1'b0,
+    THREE_BUTTONS           =1'b0,
+    GAME_INPUTS_ACTIVE_LOW  =1'b1,
+    CONF_STR                = "",
+    COLORW                  = 4
+)(
     input           clk_sys,
     input           clk_rom,
     input           clk_vga,
@@ -8,9 +14,9 @@ module jtframe_mister(
     inout  [44:0]   HPS_BUS,
     output [ 1:0]   buttons,
     // Base video
-    input   [3:0]   game_r,
-    input   [3:0]   game_g,
-    input   [3:0]   game_b,
+    input [COLORW-1:0] game_r,
+    input [COLORW-1:0] game_g,
+    input [COLORW-1:0] game_b,
     input           LHBL,
     input           LVBL,
     input           hs,
@@ -96,11 +102,6 @@ module jtframe_mister(
     output   [3:0]  gfx_en
 );
 
-parameter SIGNED_SND=1'b0;
-parameter THREE_BUTTONS=1'b0;
-parameter GAME_INPUTS_ACTIVE_LOW=1'b1;
-parameter CONF_STR = "";
-
 assign LED  = downloading;
 
 // control
@@ -167,7 +168,8 @@ hps_io #(.STRLEN($size(CONF_STR)/8)) u_hps_io
 
 
 jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
-    .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW)
+    .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW),
+    .COLORW(COLORW)    
 ) u_board(
     .rst            ( rst             ),
     .rst_n          ( rst_n           ),

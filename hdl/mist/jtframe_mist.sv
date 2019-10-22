@@ -18,7 +18,13 @@
 
 `timescale 1ns/1ps
 
-module jtframe_mist(
+module jtframe_mist #(parameter
+    SIGNED_SND             = 1'b0,
+    THREE_BUTTONS          = 1'b0,
+    GAME_INPUTS_ACTIVE_LOW = 1'b1,
+    CONF_STR               = "",
+    COLORW                 = 4
+)(
     input           clk_sys,
     input           clk_rom,
     input           clk_vga,
@@ -26,9 +32,9 @@ module jtframe_mist(
     // interface with microcontroller
     output  [31:0]  status,
     // Base video
-    input   [3:0]   game_r,
-    input   [3:0]   game_g,
-    input   [3:0]   game_b,
+    input [COLORW-1:0] game_r,
+    input [COLORW-1:0] game_g,
+    input [COLORW-1:0] game_b,
     input           LHBL,
     input           LVBL,
     input           hs,
@@ -115,11 +121,6 @@ module jtframe_mist(
     output   [3:0]  gfx_en
 );
 
-parameter SIGNED_SND=1'b0;
-parameter THREE_BUTTONS=1'b0;
-parameter GAME_INPUTS_ACTIVE_LOW=1'b1;
-parameter CONF_STR = "";
-
 // control
 wire [31:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
@@ -135,8 +136,11 @@ assign LED = ~( downloading | ~pll_locked | osd_shown | rst );
 wire  [ 1:0]  rotate;
 
 
-jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
-    .SIGNED_SND(SIGNED_SND)
+jtgng_mist_base #(
+    .CONF_STR    (CONF_STR          ),
+    .CONF_STR_LEN($size(CONF_STR)/8 ),
+    .SIGNED_SND  (SIGNED_SND        ),
+    .COLORW      ( COLORW           )
 ) u_base(
     .rst            ( rst           ),
     .clk_sys        ( clk_sys       ),
@@ -194,8 +198,10 @@ jtgng_mist_base #(.CONF_STR(CONF_STR), .CONF_STR_LEN($size(CONF_STR)/8),
     .downloading    ( downloading   )
 );
 
-jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
-    .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW)
+jtframe_board #(
+    .THREE_BUTTONS         ( THREE_BUTTONS         ),
+    .GAME_INPUTS_ACTIVE_LOW( GAME_INPUTS_ACTIVE_LOW),
+    .COLORW                ( COLORW                )
 ) u_board(
     .rst            ( rst             ),
     .rst_n          ( rst_n           ),

@@ -16,7 +16,11 @@
     Version: 1.0
     Date: 25-9-2019 */
 
-module jtframe_board(
+module jtframe_board #(parameter
+    THREE_BUTTONS           = 0,
+    GAME_INPUTS_ACTIVE_LOW  = 1'b1,
+    COLORW                  = 4
+)(
     output  reg       rst,      // use as synchrnous reset
     output  reg       rst_n,    // use as asynchronous reset
     output  reg       game_rst,
@@ -79,9 +83,9 @@ module jtframe_board(
     output    [ 1:0]  dip_fxlevel,
     // Base video
     input     [ 1:0]  osd_rotate,
-    input     [ 3:0]  game_r,
-    input     [ 3:0]  game_g,
-    input     [ 3:0]  game_b,
+    input [COLORW-1:0] game_r,
+    input [COLORW-1:0] game_g,
+    input [COLORW-1:0] game_b,
     input             LHBL,
     input             LVBL,
     input             hs,
@@ -111,10 +115,6 @@ module jtframe_board(
     // GFX enable
     output reg [3:0]  gfx_en
 );
-
-
-parameter THREE_BUTTONS=0;
-parameter GAME_INPUTS_ACTIVE_LOW=1'b1;
 
 wire  [ 2:0]  scanlines;
 wire          en_mixing;
@@ -366,15 +366,39 @@ localparam ROTATE_FX=0;
 `define SCAN2X_TYPE 0
 `endif
 
-parameter SCAN2X_TYPE=`SCAN2X_TYPE;
+localparam SCAN2X_TYPE=`SCAN2X_TYPE;
 
-wire [11:0] game_rgb = {game_r, game_g, game_b };
+wire [COLORW*3-1:0] game_rgb = {game_r, game_g, game_b };
 wire hblank = ~LHBL;
 wire vblank = ~LVBL;
 
+function [7:0] extend8;
+    input [COLORW-1:0] a;
+    case( COLORW )
+        3: extend8 = { a, a, a[2:1] };
+        4: extend8 = { a, a         };
+        5: extend8 = { a, a[4:2]    };
+        6: extend8 = { a, a[5:4]    };
+        7: extend8 = { a, a[6]      };
+        8: extend8 = a;
+    endcase
+endfunction
+
+function [7:0] extend8b;    // the input width is COLORW+1
+    input [COLORW:0] a;
+    case( COLORW )
+        3: extend8b = { a, a         };
+        4: extend8b = { a, a[4:2]    };
+        5: extend8b = { a, a[5:4]    };
+        6: extend8b = { a, a[6]      };
+        7: extend8b = a;
+        8: extend8b = a[8:1];
+    endcase
+endfunction
+
 generate    
     if( ROTATE_FX ) begin
-        arcade_rotate_fx #(.WIDTH(256),.HEIGHT(224),.DW(12),.CCW(1)) 
+        arcade_rotate_fx #(.WIDTH(256),.HEIGHT(224),.DW(COLORW*3),.CCW(1)) 
         u_rotate_fx(
             .clk_video  ( clk_sys       ),
             .ce_pix     ( pxl_cen       ),
@@ -414,9 +438,9 @@ generate
     end
     else case( SCAN2X_TYPE )
         default: begin // JTFRAME easy going scaler
-            wire [11:0] rgbx2;
+            wire [COLORW*3-1:0] rgbx2;
 
-            jtframe_scan2x #(.DW(12), .HLEN(9'd384)) u_scan2x(
+            jtframe_scan2x #(.DW(COLORW*3), .HLEN(9'd384)) u_scan2x(
                 .rst_n      ( rst_n        ),
                 .clk        ( clk_sys      ),
                 .base_cen   ( pxl_cen      ),
@@ -427,9 +451,9 @@ generate
                 .x2_HS      ( scan2x_hs )
             );
             assign scan2x_vs = vs;
-            assign scan2x_r     = {2{rgbx2[11:8]} };
-            assign scan2x_g     = {2{rgbx2[ 7:4]} };
-            assign scan2x_b     = {2{rgbx2[ 3:0]} };
+            assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );
+            assign scan2x_g     = extend8( rgbx2[COLORW*2-1:COLORW] );
+            assign scan2x_b     = extend8( rgbx2[COLORW-1:0] );
             assign scan2x_de    = ~(scan2x_vs | scan2x_hs);
             assign scan2x_cen   = pxl2_cen;
             assign scan2x_clk   = clk_sys;
@@ -445,10 +469,10 @@ generate
         end
         1: begin // JTGNG_VGA, nicely scales up to 640x480
             // Do not use this scaler with MiSTer
-            wire [4:0] pre_r, pre_g, pre_b;
+            wire [COLORW:0] pre_r, pre_g, pre_b;
             wire pre_hb, pre_vb;
 
-            jtgng_vga u_gngvga (
+            jtgng_vga #(COLORW) u_gngvga (
                 .clk_rgb    ( clk_sys       ),
                 .cen6       ( pxl_cen       ), //  6 MHz
                 .clk_vga    ( clk_vga       ), // 25 MHz
@@ -467,9 +491,9 @@ generate
                 .vga_vb     ( pre_vb        ),
                 .vga_hb     ( pre_hb        )
             );
-            assign scan2x_r      = { pre_r, pre_r[4:2] };
-            assign scan2x_g      = { pre_g, pre_g[4:2] };
-            assign scan2x_b      = { pre_b, pre_b[4:2] };
+            assign scan2x_r      = extend8b( pre_r );
+            assign scan2x_g      = extend8b( pre_g );
+            assign scan2x_b      = extend8b( pre_b );
             assign scan2x_de     = !pre_vb && !pre_hb;
             assign scan2x_cen    = 1'b1;
             assign scan2x_clk    = clk_vga;
@@ -494,17 +518,23 @@ generate
                     3'd4:    sl <= 2'd3;
                 endcase // scanlines
             wire [1:0] nc_r, nc_g, nc_b;
-            video_mixer #(.LINE_LENGTH(256), .HALF_DEPTH(1)) u_video_mixer
-            (
+            localparam HALF_DEPTH = COLORW==4;
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
+            video_mixer #(
+                .LINE_LENGTH(256),
+                .HALF_DEPTH(HALF_DEPTH)) 
+            u_video_mixer (
                 .clk_sys        ( clk_sys       ),
                 .ce_pix         ( pxl_cen       ),
                 .ce_pix_out     ( scan2x_cen    ),
                 .scandoubler    ( ~scan2x_enb   ),        
                 .scanlines      ( sl            ),
                 .hq2x           ( hq2x_en       ),
-                .R              ( game_r        ),
-                .G              ( game_g        ),
-                .B              ( game_b        ),
+                .R              ( mr_mixer_r    ),
+                .G              ( mr_mixer_g    ),
+                .B              ( mr_mixer_b    ),
                 .mono           ( 1'b0          ),
                 .HSync          ( hs            ),
                 .VSync          ( vs            ),

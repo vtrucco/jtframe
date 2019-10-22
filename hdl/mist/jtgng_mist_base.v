@@ -18,7 +18,12 @@
 
 `timescale 1ns/1ps
 
-module jtgng_mist_base(
+module jtgng_mist_base #(parameter
+    CONF_STR        = "CORE",
+    CONF_STR_LEN    = 4,
+    SIGNED_SND      = 1'b0,
+    COLORW          = 4
+) (
     input           rst,
     input           clk_sys,
     input           clk_rom,
@@ -28,9 +33,9 @@ module jtgng_mist_base(
 
     // Base video
     input   [1:0]   osd_rotate,
-    input   [3:0]   game_r,
-    input   [3:0]   game_g,
-    input   [3:0]   game_b,
+    input [COLORW-1:0] game_r,
+    input [COLORW-1:0] game_g,
+    input [COLORW-1:0] game_b,
     input           LHBL,
     input           LVBL,
     input           hs,
@@ -75,10 +80,6 @@ module jtgng_mist_base(
     output          ioctl_wr,
     output          downloading
 );
-
-parameter CONF_STR="CORE";
-parameter CONF_STR_LEN=4;
-parameter SIGNED_SND=1'b0;
 
 wire ypbpr;
 
@@ -200,6 +201,22 @@ wire       HSync = scan2x_enb ? ~hs : scan2x_hs;
 wire       VSync = scan2x_enb ? ~vs : scan2x_vs;
 wire       CSync = ~(HSync ^ VSync);
 
+function [5:0] extend_color;
+    input [COLORW-1:0] a;
+    case( COLORW )
+        3: extend_color = { a, a[2:0] };
+        4: extend_color = { a, a[3:2] };
+        5: extend_color = { a, a[4] };
+        6: extend_color = a;
+        7: extend_color = a[6:1];
+        8: extend_color = a[7:2];
+    endcase
+endfunction
+
+wire [5:0] game_r6 = extend_color( game_r );
+wire [5:0] game_g6 = extend_color( game_g );
+wire [5:0] game_b6 = extend_color( game_b );
+
 osd #(0,0,3'b110) osd (
    .clk_sys    ( scan2x_enb ? clk_sys : clk_vga ),
 
@@ -210,9 +227,9 @@ osd #(0,0,3'b110) osd (
 
    .rotate     ( osd_rotate   ),
 
-   .R_in       ( scan2x_enb ? { game_r, game_r[3:2] } : scan2x_r ),
-   .G_in       ( scan2x_enb ? { game_g, game_g[3:2] } : scan2x_g ),
-   .B_in       ( scan2x_enb ? { game_b, game_b[3:2] } : scan2x_b ),
+   .R_in       ( scan2x_enb ? game_r6 : scan2x_r ),
+   .G_in       ( scan2x_enb ? game_g6 : scan2x_g ),
+   .B_in       ( scan2x_enb ? game_b6 : scan2x_b ),
    .HSync      ( HSync        ),
    .VSync      ( VSync        ),
 

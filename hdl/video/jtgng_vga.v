@@ -18,36 +18,36 @@
 
 `timescale 1ns/1ps
 
-module jtgng_vga(
-    input               clk_rgb,    // 24MHz
-    input               cen6,
-    input               clk_vga,    // 25MHz
-    input               rst,
-    input   [3:0]       red,
-    input   [3:0]       green,
-    input   [3:0]       blue,
-    input               LHBL,
-    input               LVBL,
-    input               en_mixing,
-    output  reg [4:0]   vga_red,
-    output  reg [4:0]   vga_green,
-    output  reg [4:0]   vga_blue,
-    output  reg         vga_hsync,
-    output  reg         vga_vsync,
-    output  reg         vga_hb,
-    output  reg         vga_vb
+module jtgng_vga #(parameter COLORW=4)(
+    input                  clk_rgb,    // 24MHz
+    input                  cen6,
+    input                  clk_vga,    // 25MHz
+    input                  rst,
+    input   [COLORW-1:0]   red,
+    input   [COLORW-1:0]   green,
+    input   [COLORW-1:0]   blue,
+    input                  LHBL,
+    input                  LVBL,
+    input                  en_mixing,
+    output  reg [COLORW:0] vga_red,
+    output  reg [COLORW:0] vga_green,
+    output  reg [COLORW:0] vga_blue,
+    output  reg            vga_hsync,
+    output  reg            vga_vsync,
+    output  reg            vga_hb,
+    output  reg            vga_vb
 );
 
 reg [7:0] wr_addr, rd_addr;
 reg wr_sel, rd_sel;
 reg double;
 
-wire [11:0] buf0_rgb, buf1_rgb;
-wire [14:0] dbl0_rgb, dbl1_rgb;
+wire [COLORW*3-1:0] buf0_rgb, buf1_rgb;
+wire [(COLORW+1)*3-1:0] dbl0_rgb, dbl1_rgb;
 
 reg scanline;
 
-jtgng_vgapxl u_pxl0( // pixel doubler
+jtgng_vgapxl #(COLORW) u_pxl0( // pixel doubler
     .clk    ( clk_vga   ),
     .double (  double   ),
     .en_mix ( en_mixing ),
@@ -55,7 +55,7 @@ jtgng_vgapxl u_pxl0( // pixel doubler
     .rgb_out( dbl0_rgb  )
 );
 
-jtgng_vgapxl u_pxl1( // pixel doubler
+jtgng_vgapxl #(COLORW) u_pxl1( // pixel doubler
     .clk    ( clk_vga   ),
     .double (  double   ),
     .en_mix ( en_mixing ),
@@ -63,25 +63,30 @@ jtgng_vgapxl u_pxl1( // pixel doubler
     .rgb_out( dbl1_rgb  )
 );
 
-function [4:0] avg; // Average of two 5-bit numbers
-    input [4:0] a;
-    input [4:0] b;
-    reg [5:0] sum;
+function [COLORW:0] avg; // Average of two 5-bit numbers
+    input [COLORW:0] a;
+    input [COLORW:0] b;
+    reg [COLORW+1:0] sum;
     begin
         sum = { 1'b0, a } + {1'b0,b};
-        avg = sum[5:1];
+        avg = sum[COLORW+1:1];
     end
 endfunction
 
 reg blank; // 1 if the VGA output should be zero
 
+localparam OUTW = COLORW+1;
+localparam R1 = OUTW*3-1, R0=OUTW*2;
+localparam G1 = OUTW*2-1, G0=OUTW;
+localparam B1 = OUTW-1, B0=0;
+
 always @(posedge clk_vga, posedge rst) begin : pixel_mux
     reg last_blank;
     if( rst ) begin
         last_blank <= 1'b0;
-        vga_red    <= 5'd0;
-        vga_green  <= 5'd0;
-        vga_blue   <= 5'd0;
+        vga_red    <= {COLORW+1{1'b0}};
+        vga_green  <= {COLORW+1{1'b0}};
+        vga_blue   <= {COLORW+1{1'b0}};
     end else begin
         last_blank <= blank;
         
@@ -89,9 +94,9 @@ always @(posedge clk_vga, posedge rst) begin : pixel_mux
             if( !scanline || !en_mixing)
                 {vga_red, vga_green,vga_blue} <= !rd_sel ? dbl1_rgb : dbl0_rgb;
             else begin // mix the two lines
-                vga_red  <= avg( dbl1_rgb[14:10], dbl0_rgb[14:10]);
-                vga_green<= avg( dbl1_rgb[ 9:5 ], dbl0_rgb[ 9:5 ]);
-                vga_blue <= avg( dbl1_rgb[ 4:0 ], dbl0_rgb[ 4:0 ]);
+                vga_red  <= avg( dbl1_rgb[R1:R0], dbl0_rgb[R1:R0]);
+                vga_green<= avg( dbl1_rgb[G1:G0], dbl0_rgb[G1:G0]);
+                vga_blue <= avg( dbl1_rgb[B1:B0], dbl0_rgb[B1:B0]);
             end
         end else begin
             {vga_red, vga_green,vga_blue} <= 15'd0; // low during blanking
@@ -107,9 +112,9 @@ reg wr_vga;
 // reg [11:0] rgb_dly;
 // always @(posedge clk_rgb)
 //     rgb_dly <= {red,green,blue};
-wire [11:0] rgb_dly = {red,green,blue};
+wire [COLORW*3-1:0] rgb_dly = {red,green,blue};
 
-jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram0 (
+jtgng_dual_clk_ram #(.dw(COLORW*3),.aw(8)) ram0 (
     .addr_a  ( wr_addr            ),
     .addr_b  ( rd_addr            ),
     .clka    ( clk_rgb            ),
@@ -124,7 +129,7 @@ jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram0 (
     .q_a     (                    )
 );
 
-jtgng_dual_clk_ram #(.dw(12),.aw(8)) ram1 (
+jtgng_dual_clk_ram #(.dw(COLORW*3),.aw(8)) ram1 (
     .addr_a  ( wr_addr            ),
     .addr_b  ( rd_addr            ),
     .clka    ( clk_rgb            ),
@@ -215,7 +220,7 @@ always @(posedge clk_vga, posedge rst) begin
                     vga_vsync <= 1'b0;
                     vsync_cnt <= 1'b0;
                 end
-                if( cnt != 8'd0 ) cnt <= cnt - 8'b1;
+                if( cnt != 7'd0 ) cnt <= cnt - 7'b1;
                 if( ( wait_hsync && (!LHBL_vga && last_LHBL_vga)) ||
                     (!wait_hsync && cnt==7'd0) ) begin
                     state<=FRONT;
