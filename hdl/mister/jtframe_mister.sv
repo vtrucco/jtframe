@@ -132,9 +132,9 @@ always @(*) begin
         scan2x_cen  = pre_scan2x_cen;
         scan2x_de   = pre_scan2x_de;
     end else begin
-        scan2x_r    = {2{game_r}};
-        scan2x_g    = {2{game_g}};
-        scan2x_b    = {2{game_b}};
+        scan2x_r    = {2{game_r}}>>(COLORW*2-8);
+        scan2x_g    = {2{game_g}}>>(COLORW*2-8);
+        scan2x_b    = {2{game_b}}>>(COLORW*2-8);
         scan2x_hs   = hs;
         scan2x_vs   = vs;
         scan2x_clk  = clk_sys;
