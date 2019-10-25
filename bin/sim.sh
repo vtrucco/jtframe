@@ -1,13 +1,5 @@
 #!/bin/bash
 
-if [ ! -e zeros1k.bin ]; then
-    dd if=/dev/zero of=zeros1k.bin count=2
-fi
-
-if [ ! -e zeros512.bin ]; then
-    dd if=/dev/zero of=zeros512.bin count=1
-fi
-
 DUMP=
 CHR_DUMP=NOCHR_DUMP
 RAM_INFO=NORAM_INFO
@@ -268,7 +260,7 @@ case "$1" in
             echo Simulate up to $1 frames
         fi
         rm -f video.bin
-        rm -f *.jpg
+        rm -f video*.jpg
         VIDEO_DUMP=TRUE
         ;;
     "-load")

@@ -118,7 +118,8 @@ wire ypbpr;
         `endif
     `endif
 `else // Simulation:
-assign snd_pwm = 1'b0;
+assign snd_pwm_left = 1'b0;
+assign snd_pwm_right = 1'b0;
 `endif
 
 `ifndef SIMULATION
