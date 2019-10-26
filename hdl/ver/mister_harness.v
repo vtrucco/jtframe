@@ -55,7 +55,7 @@ initial begin
     fvideo = $fopen("video.bin","wb");
 end
 
-wire [15:0] video_dump = { 2'b0, VGA_VS, VGA_HS, VGA_R[3:0], VGA_G[3:0], VGA_B[3:0]  };
+wire [15:0] video_dump = { 2'b0, VGA_VS, VGA_HS, VGA_R[7:4], VGA_G[7:4], VGA_B[7:4]  };
 
 // Define VIDEO_START with the first frame number for which
 // video will be dumped. If undefined, it will start from frame 0

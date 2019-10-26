@@ -186,12 +186,10 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .ps2_kbd_data   ( ps2_kbd_data    ),
     .board_joystick1( joystick1       ),
     .board_joystick2( joystick2       ),
-`ifndef SIM_INPUTS
     .game_joystick1 ( game_joystick1  ),
     .game_joystick2 ( game_joystick2  ),
     .game_coin      ( game_coin       ),
     .game_start     ( game_start      ),
-`endif
     .game_service   ( game_service    ),
     // DIP and OSD settings
     .status         ( status          ),
