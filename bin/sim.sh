@@ -419,3 +419,8 @@ if [ "$VIDEO_DUMP" = TRUE ]; then
             -depth 8 RGBA:$i $filename && rm $i
     done
 fi
+
+# convert raw sound file to wav format
+if [ -e sound.raw ]; then
+    raw2wav < sound.raw
+fi
