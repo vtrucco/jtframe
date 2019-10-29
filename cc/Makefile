@@ -1,10 +1,12 @@
-all: pcb2ver bin2m bin2raw raw2wav
+all: pcb2ver bin2m bin2raw drop1 raw2wav
 
 pcb2ver:
 
 bin2m:
 
 bin2raw:
+
+drop1:
 
 WaveWritter.o:
 
