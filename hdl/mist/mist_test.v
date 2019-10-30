@@ -42,6 +42,9 @@ test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .pxl_vs      ( pxl_vs        ),
     .pxl_hs      ( pxl_hs        ),
     .downloading ( downloading   ),
+    .dwnld_busy  ( ~led          ), // LED is set low during downloading
+        // the downloading process can extend pass the downloading signal
+        // because of SDRAM content conversion
     .ioctl_addr  ( ioctl_addr    ),
     .ioctl_data  ( ioctl_data    ),
     .SPI_SCK     ( SPI_SCK       ),
@@ -107,7 +110,7 @@ wire AUDIO_L, AUDIO_R;
     `ifdef SIM_UART
     .UART_RX    ( UART_RX   ),
     .UART_TX    ( UART_TX   ),
-    `endif    
+    `endif
     // SPI interface to arm io controller
     .SPI_DO     ( SPI_DO    ),
     .SPI_DI     ( SPI_DI    ),

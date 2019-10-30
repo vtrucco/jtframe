@@ -33,6 +33,7 @@ module jtgng_sdram(
     // ROM-load interface
     input               downloading,
     input               prog_we,    // strobe
+    input               prog_rd,
     input       [21:0]  prog_addr,
     input       [ 7:0]  prog_data,
     input       [ 1:0]  prog_mask,
@@ -91,7 +92,7 @@ reg downloading_last;
 // top level timing
 
 reg set_burst, burst_done, burst_mode;
-reg writeon;
+reg writeon, readprog;
 //wire refresh_ok = !read_req;
 reg refresh_ok;
 
@@ -99,7 +100,8 @@ always @(posedge clk or posedge rst)
     if(rst) begin
         set_burst  <= 1'b0;
     end else begin
-        writeon <= downloading && prog_we;
+        writeon  <= downloading && prog_we;
+        readprog <= downloading && prog_rd;
         downloading_last <= downloading;
         if( downloading != downloading_last) begin
             set_burst <= 1'b1;
@@ -177,7 +179,7 @@ always @(posedge clk)
     end else  begin // regular operation
         if( cnt_state!=3'd0 ||
             (!downloading && (read_req || refresh_ok) ) || /* when not downloading */
-            writeon   /* when downloading */) begin
+            ( downloading && (writeon  || readprog )) /* when downloading */) begin
             if( cnt_state==3'd4 || (autorefresh_cycle&&cnt_state==3'd3) )
                 cnt_state <= 3'd0; // Autorefresh needs only 60ns
             else
@@ -210,11 +212,14 @@ always @(posedge clk)
                 cnt_state  <= 2'd3; // give one NOP cycle after changing the mode
             end else begin
                 SDRAM_CMD <= CMD_NOP;
-                if( writeon ) begin
+                if( writeon || readprog ) begin
                     SDRAM_CMD <= CMD_ACTIVATE;
-                    { SDRAM_A, col_addr } <= prog_addr[21:0];
+                    { SDRAM_A, col_addr } <= prog_addr;
                     autorefresh_cycle <= 1'b0;
-                    write_cycle       <= 1'b1;
+                    write_cycle       <= writeon;
+                    read_cycle        <= ~writeon;
+                    refresh_sr        <= 2'd0;
+                    refresh_ok        <= 1'b0;
                 end
                 else if( (read_req || refresh_ok) && !downloading ) begin
                     SDRAM_CMD <=
@@ -224,14 +229,14 @@ always @(posedge clk)
                     read_cycle        <= ~refresh_ok;
                     sdram_ack         <= ~refresh_ok;
                     write_cycle       <= 1'b0;
-                    refresh_sr        <= 'd0;
+                    refresh_sr        <= 2'd0;
                     refresh_ok        <= 1'b0;
                 end
                 else begin
                     if( !downloading && refresh_en )
                         { refresh_ok, refresh_sr } <=  { refresh_sr, 1'b1 };
                     else begin // no autorefresh during downloading
-                        refresh_sr <= 'd0;
+                        refresh_sr <= 2'd0;
                         refresh_ok <= 1'b0;
                     end
                 end

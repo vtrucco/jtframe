@@ -15,6 +15,7 @@ module mister_harness(
     input              VGA_HS,
     input              VGA_VS,    
     // SDRAM
+    input              dwnld_busy,
     inout [15:0]       SDRAM_DQ,
     inout [12:0]       SDRAM_A,
     inout              SDRAM_DQML,
@@ -116,7 +117,8 @@ mt48lc16m16a2 #(.filename(GAME_ROMNAME)) mister_sdram (
     .Ras_n      ( SDRAM_nRAS    ),
     .Cas_n      ( SDRAM_nCAS    ),
     .We_n       ( SDRAM_nWE     ),
-    .Dqm        ( {SDRAM_DQMH,SDRAM_DQML}   )
+    .Dqm        ( {SDRAM_DQMH,SDRAM_DQML}   ),
+    .downloading( dwnld_busy    )
 );
 
 endmodule // jt_1942_a_test

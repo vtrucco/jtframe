@@ -83,7 +83,9 @@ module jtframe_mist #(parameter
     input  [ 7:0]   prog_data,
     input  [ 1:0]   prog_mask,
     input           prog_we,
+    input           prog_rd,
     output          downloading,
+    input           dwnld_busy,
 //////////// board
     output          rst,      // synchronous reset
     output          rst_n,    // asynchronous reset
@@ -132,7 +134,7 @@ wire          scan2x_enb;
 
 ///////////////// LED is on while
 // downloading, PLL lock lost, OSD is shown or in reset state
-assign LED = ~( downloading | ~pll_locked | osd_shown | rst );
+assign LED = ~( downloading | dwnld_busy | ~pll_locked | osd_shown | rst );
 wire  [ 1:0]  rotate;
 
 
@@ -208,7 +210,7 @@ jtframe_board #(
     .game_rst       ( game_rst        ),
     .game_rst_n     ( game_rst_n      ),
     .rst_req        ( rst_req         ),
-    .downloading    ( downloading     ),
+    .downloading    ( dwnld_busy      ), // use busy signal from game module
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
@@ -256,6 +258,7 @@ jtframe_board #(
     .prog_data      ( prog_data       ),
     .prog_mask      ( prog_mask       ),
     .prog_we        ( prog_we         ),
+    .prog_rd        ( prog_rd         ),
     // Base video
     .osd_rotate     ( rotate          ),
     .game_r         ( game_r          ),

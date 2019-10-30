@@ -67,6 +67,7 @@ mister_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     .clk50       ( clk50     ),
     .frame_cnt   ( frame_cnt ),
     .VS          ( VGA_VS    ),
+    .dwnld_busy  ( 1'b0      ),
     // VGA
     .VGA_CLK     ( VGA_CLK   ),
     .VGA_CE      ( VGA_CE    ),

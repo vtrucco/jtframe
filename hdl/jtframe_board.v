@@ -44,6 +44,7 @@ module jtframe_board #(parameter
     input  [ 7:0]     prog_data,
     input  [ 1:0]     prog_mask,
     input             prog_we,
+    input             prog_rd,
     input             downloading,
     // SDRAM interface
     inout  [15:0]     SDRAM_DQ,       // SDRAM Data bus 16 Bits
@@ -325,6 +326,7 @@ jtgng_sdram u_sdram(
     // ROM-load interface
     .downloading    ( downloading   ),
     .prog_we        ( prog_we       ),
+    .prog_rd        ( prog_rd       ),
     .prog_addr      ( prog_addr     ),
     .prog_data      ( prog_data     ),
     .prog_mask      ( prog_mask     ),
