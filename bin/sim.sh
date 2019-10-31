@@ -75,6 +75,11 @@ if [ "$YM2203" = 1 ]; then
     PERCORE="$PERCORE $(add_dir $MODULES/jt12/hdl jt03.f)"
 fi
 
+if [ "$MSM5205" = 1 ]; then
+    echo "INFO: MSM5205 support added."
+    PERCORE="$PERCORE $(add_dir $MODULES/jt5205/hdl jt5205.f)"
+fi
+
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."
     EXTRA_VHDL=$(add_dir $MODULES/jtframe/hdl/cpu/8051 mc8051.f)
