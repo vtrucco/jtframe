@@ -398,7 +398,7 @@ ncverilog)
         -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
         $EXTRA_VHDL \
         $MODULES/jtframe/hdl/cpu/tv80/*.v \
-        $EXTRA;;
+        $EXTRA || exit $?;;
 verilator)
     $SHOWCMD verilator -I../../hdl \
         -f game.f $PERCORE \
