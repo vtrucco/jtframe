@@ -20,24 +20,33 @@
 // to a strobe in the specified cen input domain
 
 module jtframe_cencross_strobe(
+    input       rst,
     (* direct_enable *) input       cen,
     input       clk,
     input       stin,
-    output      stout
+    output reg  stout
 );
 
-reg last, st_latch, clr;
+reg  last, st_latch;
+wire st_edge = stin && !last;
 
-always @(posedge clk) begin 
-    last <= stin;
-    if( stin && !last) st_latch <= 1'b1;
-    if( clr ) st_latch <= 1'b0;
+always @(posedge clk, posedge rst) begin
+    if(rst) begin
+        last     <= 1'b0;
+        st_latch <= 1'b0;
+    end else begin 
+        last <= stin;
+        if( st_edge ) st_latch <= 1'b1;
+        if( stout ) st_latch <= 1'b0;
+    end
 end
 
-assign stout = cen & (st_latch | stin);
-
-always @(posedge clk) if(cen) begin
-    clr <= stout;
+always @(posedge clk, posedge rst) begin
+    if(rst) begin
+        stout    <= 1'b0;
+    end else  if(cen) begin
+        stout <= st_latch | st_edge;
+    end
 end
 
 endmodule
