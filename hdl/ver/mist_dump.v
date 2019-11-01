@@ -30,6 +30,7 @@ module mist_dump(
                 $dumpvars(0,mist_test);
             `else
                 $dumpvars(1,mist_test.UUT.u_game.u_main);
+                $dumpvars(1,mist_test.frame_cnt);
             `endif
             $dumpon;
         end
@@ -40,11 +41,13 @@ module mist_dump(
     `else
     initial begin
     `endif
-        $display("NC Verilog: will dump all signals");
         $shm_open("test.shm");
         `ifdef DEEPDUMP
+            $display("NC Verilog: will dump all signals");
             $shm_probe(mist_test,"AS");
         `else
+            $display("NC Verilog: will dump selected signals");
+            $shm_probe(frame_cnt);
             $shm_probe(UUT.u_game.u_prom_we,"AS");
             $shm_probe(UUT.u_base.u_sdram,"AS");
         `endif
