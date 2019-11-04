@@ -1,5 +1,4 @@
 module jtframe_mister #(parameter
-    SIGNED_SND              =1'b0,
     THREE_BUTTONS           =1'b0,
     GAME_INPUTS_ACTIVE_LOW  =1'b1,
     CONF_STR                = "",
@@ -43,7 +42,9 @@ module jtframe_mister #(parameter
     input  [ 7:0]   prog_data,
     input  [ 1:0]   prog_mask,
     input           prog_we,
+    input           prog_rd,
     output          downloading,
+    input           dwnld_busy,
     // ROM access from game
     input           sdram_req,
     output          sdram_ack,
@@ -102,7 +103,7 @@ module jtframe_mister #(parameter
     output   [3:0]  gfx_en
 );
 
-assign LED  = downloading;
+assign LED  = downloading | dwnld_busy;
 
 // control
 wire [15:0]   joystick1, joystick2;
@@ -176,7 +177,7 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .game_rst       ( game_rst        ),
     .game_rst_n     ( game_rst_n      ),
     .rst_req        ( rst_req         ),
-    .downloading    ( downloading     ),
+    .downloading    ( dwnld_busy      ),
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
@@ -245,6 +246,7 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .prog_data      ( prog_data       ),
     .prog_mask      ( prog_mask       ),
     .prog_we        ( prog_we         ),
+    .prog_rd        ( prog_rd         ),
     // Base video
     .osd_rotate     ( rotate          ),
     .game_r         ( game_r          ),

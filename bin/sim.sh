@@ -28,10 +28,27 @@ function add_dir {
         echo "ERROR: add_dir (sim.sh) failed because $1 is not a directory"
         exit 1
     fi
+    processF=no
+    echo "Adding dir $1 $2" >&2
     for i in $(cat $1/$2); do
         if [ "$i" = "-sv" ]; then 
             # ignore statements that iVerilog cannot understand
             continue; 
+        fi
+        if [ "$processF" = yes ]; then
+            processF=no
+            # echo $(dirname $i) >&2
+            # echo $(basename $i) >&2
+            dn=$(dirname $i)
+            if [ "$dn" = . ]; then
+                dn=$1
+            fi
+            add_dir $dn $(basename $i)
+            continue
+        fi
+        if [[ "$i" = -F || "$i" == -f ]]; then
+            processF=yes
+            continue
         fi
         fn="$1/$i"
         if [ ! -e "$fn" ]; then
@@ -381,7 +398,7 @@ fi
 case $SIMULATOR in
 iverilog)
     $SHOWCMD iverilog -g2005-sv $MIST \
-        -f game.f $PERCORE \
+        $(add_dir . game.f) $PERCORE \
         $(add_dir $MODULES/jtframe/hdl/ver $SIMFILE ) \
         $MODULES/jtframe/hdl/cpu/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
