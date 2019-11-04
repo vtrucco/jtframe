@@ -560,6 +560,48 @@ generate
             assign hdmi_vs    = scan2x_vs;
             assign hdmi_sl    = sl[1:0];
         end
+        3: begin // MiSTer cleaner, use for interlaced games
+            wire [1:0] nc_r, nc_g, nc_b;
+            localparam HALF_DEPTH = COLORW==4;
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
+            video_cleaner u_cleaner (
+                .clk_vid    ( clk_sys    ),
+                .ce_pix     ( pxl2_cen   ),
+
+                .R          ( mr_mixer_r ),
+                .G          ( mr_mixer_g ),
+                .B          ( mr_mixer_b ),
+
+                .HSync      ( hs         ),
+                .VSync      ( vs         ),
+                .HBlank     ( ~LHBL      ),
+                .VBlank     ( ~LVBL      ),
+
+                // video output signals
+                .VGA_R      ( scan2x_r   ),
+                .VGA_G      ( scan2x_g   ),
+                .VGA_B      ( scan2x_b   ),
+                .VGA_HS     ( scan2x_hs  ),
+                .VGA_VS     ( scan2x_vs  ),
+                .VGA_DE     ( scan2x_de  ),
+                
+                // optional aligned blank
+                .HBlank_out (            ),
+                .VBlank_out (            )
+            );
+            assign scan2x_clk = clk_sys;
+            assign hdmi_clk   = scan2x_clk;
+            assign hdmi_cen   = scan2x_cen;
+            assign hdmi_r     = scan2x_r;
+            assign hdmi_g     = scan2x_g;
+            assign hdmi_b     = scan2x_b;
+            assign hdmi_de    = scan2x_de;
+            assign hdmi_hs    = scan2x_hs;
+            assign hdmi_vs    = scan2x_vs;
+            assign hdmi_sl    = 2'b0;
+        end
     endcase
 endgenerate
 
