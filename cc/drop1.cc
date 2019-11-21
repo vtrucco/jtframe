@@ -6,7 +6,10 @@ using namespace std;
 int main(int argc, char *argv[]) {
     int sel=1;
     for( int k=1; k<argc; k++ ) {
-        if( strcmp(argv[k],"-l")==0 ) sel=0;
+        if( strcmp(argv[k],"-l")==0 ) { sel=0; continue; }
+        cerr << "ERROR: unexpected argument " << argv[k] << '\n';
+        cerr << "Use -l to write the lower byte. Otherwise the higher byte is written\n";
+        return 1;
     }
     while( !cin.eof() ){
         char c[2];
