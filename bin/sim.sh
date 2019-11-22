@@ -53,7 +53,6 @@ function add_dir {
         fn="$1/$i"
         if [ ! -e "$fn" ]; then
             (>&2 echo "Cannot find file $fn")
-            exit 1
         fi
         echo $fn
     done
@@ -398,13 +397,14 @@ fi
 case $SIMULATOR in
 iverilog)
     $SHOWCMD iverilog -g2005-sv $MIST \
-        $(add_dir . game.f) $PERCORE \
+        -f game.f $PERCORE \
         $(add_dir $MODULES/jtframe/hdl/ver $SIMFILE ) \
         $MODULES/jtframe/hdl/cpu/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
         $MAXFRAME -DIVERILOG $EXTRA \
-    && $SHOWCMD sim -lxt;;
+    || exit 1
+    $SHOWCMD sim -lxt;;
 ncverilog)
     $SHOWCMD ncverilog +access+r +nc64bit +define+NCVERILOG \
         -f game.f $PERCORE \

@@ -59,7 +59,7 @@ module jtframe_z80 (
   output [7:0]  dout
 );
 
-
+/* verilator tracing_off */
 
 `ifdef VHDLZ80
 T80s u_cpu(
@@ -108,5 +108,6 @@ tv80s #(.Mode(0)) u_cpu (
     .halt_n ( halt_n     )
 );
 `endif
+/* verilator tracing_on */
 
 endmodule // jtframe_z80
