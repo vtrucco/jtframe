@@ -24,6 +24,6 @@ for i in video*.raw; do
         rm $i       # delete the raw file
         continue    # do not overwrite
     fi
-    echo convert $CONVERT_OPTIONS -size ${W}x${H} \
+    convert $CONVERT_OPTIONS -size ${W}x${H} \
         -depth 8 RGBA:$i $filename && rm $i
 done
