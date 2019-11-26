@@ -99,6 +99,9 @@ module hps_io #(parameter STRLEN=0, PS2DIV=2000, WIDE=0, VDNUM=1, PS2WE=0,
 // localparam AW = (WIDE) ?  7 : 8;
 // localparam VD = VDNUM-1;
 
+assign joystick_0 = 16'h0;
+assign joystick_1 = 16'h0;
+
 assign ps2_kbd_clk_out = 1'b0;
 assign ps2_kbd_data_out= 1'b0;
 assign ps2_key = 11'd0;

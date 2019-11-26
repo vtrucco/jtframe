@@ -71,6 +71,7 @@ mister_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
     // VGA
     .VGA_CLK     ( VGA_CLK   ),
     .VGA_CE      ( VGA_CE    ),
+    .VGA_DE      ( VGA_DE    ),
     .VGA_R       ( VGA_R     ),
     .VGA_G       ( VGA_G     ),
     .VGA_B       ( VGA_B     ),

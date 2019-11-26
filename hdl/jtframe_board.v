@@ -370,6 +370,10 @@ localparam ROTATE_FX=0;
 
 localparam SCAN2X_TYPE=`SCAN2X_TYPE;
 
+`ifdef SIMULATION
+initial $display("INFO: Scan 2x type =%d", SCAN2X_TYPE);
+`endif
+
 wire [COLORW*3-1:0] game_rgb = {game_r, game_g, game_b };
 wire hblank = ~LHBL;
 wire vblank = ~LVBL;
