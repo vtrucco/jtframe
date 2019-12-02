@@ -138,7 +138,7 @@ assign LED = ~( downloading | dwnld_busy | ~pll_locked | osd_shown | rst );
 wire  [ 1:0]  rotate;
 
 
-jtgng_mist_base #(
+jtframe_mist_base #(
     .CONF_STR    (CONF_STR          ),
     .CONF_STR_LEN($size(CONF_STR)/8 ),
     .SIGNED_SND  (SIGNED_SND        ),

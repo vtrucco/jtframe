@@ -28,7 +28,7 @@
 
 `timescale 1ns/1ps
 
-module jtgng_ram #(parameter dw=8, aw=10, simfile="", simhexfile="", synfile="",cen_rd=0)(
+module jtframe_ram #(parameter dw=8, aw=10, simfile="", simhexfile="", synfile="",cen_rd=0)(
     input   clk,
     input   cen /* direct_enable */,
     input   [dw-1:0] data,
@@ -77,4 +77,4 @@ always @(posedge clk) begin
     if( cen && we) mem[addr] <= data;
 end
 
-endmodule // jtgng_ram
+endmodule

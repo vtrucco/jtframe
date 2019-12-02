@@ -22,7 +22,7 @@
     // comparison is performed. Useful when the dumped file to load
     // has part of it invalid
 
-module jtgng_prom #(parameter dw=8, aw=10, simfile="", offset=0 )(
+module jtframe_prom #(parameter dw=8, aw=10, simfile="", offset=0 )(
     input   clk,
     input   cen,
     input   [dw-1:0] data,
@@ -92,4 +92,4 @@ always @(posedge clk) begin
 end
 
 
-endmodule // jtgng_ram
+endmodule // jtframe_ram

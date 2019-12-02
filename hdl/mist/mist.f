@@ -1,5 +1,5 @@
 jtframe_mist.sv
-jtgng_mist_base.v
+jtframe_mist_base.v
 ../jtframe_board.v
 ../jtframe_dip.v
 ../sound/hybrid_pwm_sd.v
@@ -13,6 +13,6 @@ data_io.v
 ../mister/sys/video_cleaner.sv
 ../mister/sys/scandoubler.v
 ../mister/hq2x_dummy.sv
-../ram/jtgng_dual_clk_ram.v
+../ram/jtframe_dual_clk_ram.v
 -sv rgb2ypbpr.sv
 osd.sv
