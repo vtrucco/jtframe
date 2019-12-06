@@ -14,13 +14,14 @@
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
-    Date: 12-5-2019 */
+    Date: 28-2-2019 */
 
 `timescale 1ns/1ps
 
 module jtframe_romrq #(parameter AW=18, DW=8, INVERT_A0=0 )(
-    input               rst_n,
+    input               rst,
     input               clk,
+    input               cen,
     input [AW-1:0]      addr,
     input               addr_ok,    // signals that value in addr is valid
     input [31:0]        din,
@@ -45,7 +46,7 @@ always @(*) begin
     case(DW)
         8:  addr_req = {addr[AW-1:2],2'b0};
         16: addr_req = {addr[AW-1:1],1'b0};
-        default: addr_req = addr;
+        32: addr_req = addr;
     endcase
     hit0 = addr_req === cached_addr0;
     hit1 = addr_req === cached_addr1;
@@ -54,8 +55,8 @@ end
 
 // reg [1:0] ok_sr;
 
-always @(posedge clk)
-    if( !rst_n ) begin
+always @(posedge clk, posedge rst)
+    if( rst ) begin
         init      <= 1'b1;
         deleterus <= 1'b0;  // signals which cached data is to be overwritten next time
     end else begin
@@ -76,16 +77,16 @@ always @(posedge clk)
                 end
                 deleterus <= ~deleterus;
             end
-            init <= 1'b0;
+            init        <= 1'b0;
         end
     end
 
 always @(*) begin
-    subaddr[1] <= addr[1];
-    if( INVERT_A0 )
-        subaddr[0] <= ~addr[0];
+    subaddr[1] = addr[1];
+    if( INVERT_A0 && DW==8 ) // only apply inverstion to 8-bit CPUs
+        subaddr[0] = ~addr[0];
     else
-        subaddr[0] <=  addr[0];
+        subaddr[0] =  addr[0];
 end
 
 // data_mux selects one of two cache registers
@@ -96,21 +97,21 @@ wire [31:0] data_mux = (we&&din_ok) ? din :
 
 generate
     if(DW==8) begin
-        always @(posedge clk)
-        if(!req) case( subaddr )
-            2'd0: dout <= data_mux[ 7: 0];
-            2'd1: dout <= data_mux[15: 8];
-            2'd2: dout <= data_mux[23:16];
-            2'd3: dout <= data_mux[31:24];
+        always @(*)
+        case( subaddr )
+            2'd0: dout = data_mux[ 7: 0];
+            2'd1: dout = data_mux[15: 8];
+            2'd2: dout = data_mux[23:16];
+            2'd3: dout = data_mux[31:24];
         endcase
     end else if(DW==16) begin
-        always @(posedge clk)
-        if(!req) case( subaddr[0] )
+        always @(*)
+        case( subaddr[0] )
                 1'd0: dout = data_mux[15:0];
                 1'd1: dout = data_mux[31:16];
         endcase
-    end else always @(posedge clk) if(!req) dout <= data_mux;
+    end else always @(*) dout = data_mux;
 endgenerate
 
 
-endmodule
+endmodule // jtframe_romrq

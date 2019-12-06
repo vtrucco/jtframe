@@ -14,59 +14,83 @@
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
-    Date: 20-2-2019 */
+    Date: 6-12-2019 */
 
 `timescale 1ns/1ps
 
 module jtframe_rom #(parameter
-    // Default values correspond to G&G
-    SND_OFFSET  = 22'h0A000,
-    CHAR_OFFSET = 22'h0E000,
-    SCR1_OFFSET = 22'h10000,
-    SCR2_OFFSET = 22'h08000, // upper byte of each tile
-    OBJ_OFFSET  = 22'h20000,
-    // Address width
-    MAIN_AW     = 17,
-    SND_AW      = 15,
-    CHAR_AW     = 13,
-    SCR1_AW     = 15,
-    SCR2_AW     = 15,
-    OBJ_AW      = 15,
-    // Data width, only byte multiples
-    MAIN_DW     = 8,
-    SND_DW      = 8,
-    CHAR_DW     = 16,
-    SCR1_DW     = 32,
-    SCR2_DW     = 32,
-    OBJ_DW      = 16
+    main_dw  = 8,
+    char_dw  = 16,
+    char_aw  = 14,
+    main_aw  = 18,
+     snd_aw  = 15,
+    snd2_aw  = 16,
+     obj_aw  = 17,
+    scr1_aw  = 17,
+    scr2_aw  = 15,
+     obj_dw  = 16,
+    map1_dw = 16,
+    map2_dw = 16,
+    map1_aw = 14,
+    map2_aw = 14,
+  snd_offset = 22'h14_000, // bm05.4k,  32kB
+ snd2_offset = 22'h14_000, // bm05.4k,  32kB
+ char_offset = 22'h18_000, // bm04.5h,  32kB
+ map1_offset = 22'h1C_000, // bm14.5f,  32kB
+ map2_offset = 22'h20_000, // bmm23.8k, 32kB
+ scr1_offset = 22'h24_000, // 10f/j, 11f/j, 12f/j, 14f/j 256kB
+ scr2_offset = 22'h44_000, // 14k/l 64kB
+  obj_offset = 22'h4C_000, // 10a/c, 11a/c, 12a/c, 14a/c 256kB
+/// Selects whether ROM goes into SDRAM or BRAM
+   BRAM_MAIN =0,
+   BRAM_SOUND=0
 )(
-    input               rst_n,
+    input               rst,
     input               clk,
-    input               LHBL,
     input               LVBL,
 
+    input               pause,
     input               main_cs,
     input               snd_cs,
-    
+    input               snd2_cs,
+
+    input       [char_aw-1:0]  char_addr, //  32 kB
+    input       [main_aw-1:0]  main_addr, // 160 kB, addressed as 8-bit words
+    input       [ snd_aw-1:0]   snd_addr, //  32 kB
+    input       [snd2_aw-1:0]  snd2_addr, //  64 kB
+    input       [ obj_aw-1:0]   obj_addr, // 256 kB
+    input       [scr1_aw-1:0]  scr1_addr, // 256 kB (16-bit words)
+    input       [scr2_aw-1:0]  scr2_addr, //  64 kB
+    input       [map1_aw-1:0]  map1_addr, //  32 kB
+    input       [map2_aw-1:0]  map2_addr, //  32 kB
+
+    // ROM download, only important if any of the BRAM parameters are set to 1
+    input       [ 7:0]  prog_data,
+    input       [ 1:0]  prog_mask,
+    input       [21:0]  prog_addr,
+    input               prog_we,  
+
+    //  output data
+    output reg [char_dw-1:0] char_dout,
+    output    [main_dw-1:0] main_dout,
+    output           [ 7:0] snd_dout,
+    output           [ 7:0] snd2_dout,
+    output reg [obj_dw-1:0] obj_dout,
+    output           [15:0] map1_dout,
+    output           [15:0] map2_dout,
+    output           [15:0] scr1_dout,
+    output           [15:0] scr2_dout,
+    output  reg             ready,
+
     output              main_ok,
     output              snd_ok,
+    output              snd2_ok,
+    output              scr1_ok,
+    output              scr2_ok,
+    output              map1_ok,
+    output              map2_ok,
     output              char_ok,
-
-    input  [MAIN_AW-1:0]  main_addr,
-    input  [ SND_AW-1:0]  snd_addr,
-    input  [CHAR_AW-1:0]  char_addr,
-    input  [SCR1_AW-1:0]  scr1_addr,
-    input  [SCR2_AW-1:0]  scr2_addr,
-    input  [ OBJ_AW-1:0]  obj_addr,
-
-    output [MAIN_DW-1:0]  main_dout,
-    output [ SND_DW-1:0]   snd_dout,
-    output [CHAR_DW-1:0]  char_dout,
-    output [SCR1_DW-1:0]  scr1_dout,
-    output [SCR2_DW-1:0]  scr2_dout,
-    output [ OBJ_DW-1:0]   obj_dout,
-    output  reg         ready,
-
+    output  reg         obj_ok,
     // SDRAM controller interface
     input               data_rdy,
     input               sdram_ack,
@@ -78,71 +102,165 @@ module jtframe_rom #(parameter
     input       [31:0]  data_read
 );
 
+wire prog_main = prog_we && (prog_mask!=2'b11) && prog_addr < snd_offset;
+wire  prog_snd = prog_we && (prog_mask!=2'b11) && prog_addr < char_offset && prog_addr>=snd_offset;
+
+// Main code
+// bme01.12d -> 32kB
+// bme02.13d, bme03.14d, -> 128kB, 8 banks of 16kB each
+// 6C_000 = ROM LEN
+
 reg [3:0] ready_cnt;
 reg [3:0] rd_state_last;
-wire main_req, snd_req, char_req, scr1_req, scr2_req, obj_req;
+wire main_req, char_req, map1_req, map2_req, scr1_req, scr2_req, obj_req, snd_req, snd2_req;
 
-localparam MAIN=0, SND=1, CHAR=2, SCR1=3, OBJ=4, SCR2=5;
-
-reg [5:0] data_sel;
-wire [MAIN_AW-1:0] main_addr_req;
-wire [ SND_AW-1:0]  snd_addr_req;
-wire [CHAR_AW-1:0] char_addr_req;
-wire [SCR1_AW-1:0] scr1_addr_req;
-wire [SCR2_AW-1:0] scr2_addr_req;
-wire [ OBJ_AW-1:0] obj_addr_req;
-
-wire scr1_ok, scr2_ok, obj_ok;
+reg  [8:0] data_sel;
+wire [main_aw-1:0] main_addr_req;
+wire [ snd_aw-1:0]  snd_addr_req;
+wire [snd2_aw-1:0]  snd2_addr_req;
+wire [char_aw-1:0] char_addr_req;
+wire [ obj_aw-1:0]  obj_addr_req;
+wire [scr1_aw-1:0] scr1_addr_req;
+wire [scr2_aw-1:0] scr2_addr_req;
+wire [map1_aw-1:0] map1_addr_req;
+wire [map2_aw-1:0] map2_addr_req;
 
 always @(posedge clk)
-    refresh_en <= &{ main_ok&main_cs, snd_ok&snd_cs, char_ok, scr1_ok, scr2_ok, obj_ok };
+    // refresh_en <= !LVBL;
+    refresh_en <= &{ main_ok&main_cs, char_ok, scr1_ok, scr2_ok, map1_ok, map2_ok, obj_ok };
 
-jtframe_romrq #(.AW(MAIN_AW),.DW(MAIN_DW),.INVERT_A0(1)) u_main(
-    .rst_n    ( rst_n           ),
-    .clk      ( clk             ),
-    .addr     ( main_addr       ),
-    .addr_ok  ( main_cs         ),
-    .addr_req ( main_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( main_dout       ),
-    .req      ( main_req        ),
-    .data_ok  ( main_ok         ),
-    .we       ( data_sel[MAIN]  )
+reg download_ok = 1'b0; // signals that the download process is completed
+
+always @(posedge clk) begin : download_watch
+    reg last_downloading;
+    last_downloading <= downloading;
+    if( !downloading && last_downloading )
+        download_ok <= 1'b1;
+end
+
+wire [22:0] prog_addr2 = { prog_addr[21:0], prog_mask[0] };
+
+jtframe_romflex #(
+    .AW(main_aw),
+    .DW(main_dw),
+    .INVERT_A0(1),
+    .USE_BRAM(BRAM_MAIN)) 
+u_main(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( main_addr              ),
+    .addr_ok   ( main_cs                ),
+    .addr_req  ( main_addr_req          ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( main_dout              ),
+    .req       ( main_req               ),
+    .data_ok   ( main_ok                ),
+    .we        ( data_sel[0]            ),
+    .prog_we   ( prog_main              ),
+    // 16-bit operation from BRAM has not been
+    // verified yet
+    .prog_data ( {(main_dw==8?1:2){prog_data}} ),
+    .prog_addr ( prog_addr2[main_aw-1:0])
 );
 
 
-jtframe_romrq #(.AW(SND_AW),.DW(SND_DW),.INVERT_A0(1)) u_snd(
-    .rst_n    ( rst_n           ),
-    .clk      ( clk             ),
-    .addr     ( snd_addr        ),
-    .addr_ok  ( snd_cs          ),
-    .addr_req ( snd_addr_req    ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( snd_dout        ),
-    .req      ( snd_req         ),
-    .data_ok  ( snd_ok          ),
-    .we       ( data_sel[SND]   )
+jtframe_romflex #(.AW(snd_aw),.INVERT_A0(1), .USE_BRAM(BRAM_SOUND)) u_snd(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( snd_addr               ),
+    .addr_ok   ( snd_cs                 ),
+    .addr_req  ( snd_addr_req           ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( snd_dout               ),
+    .req       ( snd_req                ),
+    .data_ok   ( snd_ok                 ),
+    .we        ( data_sel[7]            ),
+    .prog_we   ( prog_snd               ),
+    .prog_data ( prog_data              ),
+    .prog_addr ( prog_addr2[snd_aw-1:0] )
 );
 
-jtframe_romrq #(.AW(CHAR_AW),.DW(CHAR_DW)) u_char(
-    .rst_n    ( rst_n           ),
+jtframe_romrq #(.AW(snd2_aw),.INVERT_A0(1)) u_snd2(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( snd2_addr              ),
+    .addr_ok   ( snd2_cs                ),
+    .addr_req  ( snd2_addr_req          ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( snd2_dout              ),
+    .req       ( snd2_req               ),
+    .data_ok   ( snd2_ok                ),
+    .we        ( data_sel[8]            )
+);
+
+wire [char_dw-1:0] char_preout;
+
+jtframe_romrq #(.AW(char_aw),.DW(char_dw)) u_char(
+    .rst      ( rst             ),
     .clk      ( clk             ),
+    .cen      ( 1'b1            ),
     .addr     ( char_addr       ),
     .addr_ok  ( LVBL            ),
     .addr_req ( char_addr_req   ),
     .din      ( data_read       ),
     .din_ok   ( data_rdy        ),
-    .dout     ( char_dout       ),
+    .dout     ( char_preout     ),
     .req      ( char_req        ),
     .data_ok  ( char_ok         ),
-    .we       ( data_sel[CHAR]  )
+    .we       ( data_sel[1]     )
 );
 
-jtframe_romrq #(.AW(SCR1_AW),.DW(SCR1_DW)) u_scr1(
-    .rst_n    ( rst_n           ),
+// Provides a non-zero output for characters before SDRAM has valid data
+// This can be used to display a rudimentary message on screen
+// and prompt the user to load the ROM
+// assign char_dout = download_ok ? char_preout : 16'hAAAA;
+// This behaviour is disabled during simulation
+`ifndef SIMULATION
+always @(posedge clk) char_dout <= download_ok ? char_preout : {char_dw/2{2'b10}};
+`else
+always @(posedge clk) char_dout <= char_preout;
+`endif
+
+jtframe_romrq #(.AW(map1_aw),.DW(map1_dw)) u_map1(
+    .rst      ( rst             ),
     .clk      ( clk             ),
+    .cen      ( 1'b1            ),
+    .addr     ( map1_addr       ),
+    .addr_ok  ( LVBL            ),
+    .addr_req ( map1_addr_req   ),
+    .din      ( data_read       ),
+    .din_ok   ( data_rdy        ),
+    .dout     ( map1_dout       ),
+    .req      ( map1_req        ),
+    .data_ok  ( map1_ok         ),
+    .we       ( data_sel[2]     )
+);
+
+jtframe_romrq #(.AW(map2_aw),.DW(map2_dw)) u_map2(
+    .rst      ( rst             ),
+    .clk      ( clk             ),
+    .cen      ( 1'b1            ),
+    .addr     ( map2_addr       ),
+    .addr_ok  ( LVBL            ),
+    .addr_req ( map2_addr_req   ),
+    .din      ( data_read       ),
+    .din_ok   ( data_rdy        ),
+    .dout     ( map2_dout       ),
+    .req      ( map2_req        ),
+    .data_ok  ( map2_ok         ),
+    .we       ( data_sel[3]     )
+);
+
+jtframe_romrq #(.AW(scr1_aw),.DW(16)) u_scr1(
+    .rst      ( rst             ),
+    .clk      ( clk             ),
+    .cen      ( 1'b1            ),
     .addr     ( scr1_addr       ),
     .addr_ok  ( LVBL            ),
     .addr_req ( scr1_addr_req   ),
@@ -151,12 +269,13 @@ jtframe_romrq #(.AW(SCR1_AW),.DW(SCR1_DW)) u_scr1(
     .dout     ( scr1_dout       ),
     .req      ( scr1_req        ),
     .data_ok  ( scr1_ok         ),
-    .we       ( data_sel[SCR1]  )
+    .we       ( data_sel[4]     )
 );
 
-jtframe_romrq #(.AW(SCR2_AW),.DW(SCR1_DW)) u_scr2(
-    .rst_n    ( rst_n           ),
+jtframe_romrq #(.AW(scr2_aw),.DW(16)) u_scr2(
+    .rst      ( rst             ),
     .clk      ( clk             ),
+    .cen      ( 1'b1            ),
     .addr     ( scr2_addr       ),
     .addr_ok  ( LVBL            ),
     .addr_req ( scr2_addr_req   ),
@@ -165,22 +284,55 @@ jtframe_romrq #(.AW(SCR2_AW),.DW(SCR1_DW)) u_scr2(
     .dout     ( scr2_dout       ),
     .req      ( scr2_req        ),
     .data_ok  ( scr2_ok         ),
-    .we       ( data_sel[SCR2]  )
+    .we       ( data_sel[5]     )
 );
 
-jtframe_romrq #(.AW(OBJ_AW),.DW(OBJ_DW)) u_obj(
-    .rst_n    ( rst_n           ),
+wire [obj_dw-1:0] obj_preout;
+wire              obj_ok0;
+
+jtframe_romrq #(.AW(obj_aw),.DW(obj_dw)) u_obj(
+    .rst      ( rst             ),
     .clk      ( clk             ),
+    .cen      ( 1'b1            ),
     .addr     ( obj_addr        ),
     .addr_ok  ( 1'b1            ),
     .addr_req ( obj_addr_req    ),
     .din      ( data_read       ),
     .din_ok   ( data_rdy        ),
-    .dout     ( obj_dout        ),
+    .dout     ( obj_preout      ),
     .req      ( obj_req         ),
-    .data_ok  ( obj_ok          ),
-    .we       ( data_sel[OBJ]   )
+    .data_ok  ( obj_ok0         ),
+    .we       ( data_sel[6]     )
 );
+
+`ifdef AVATARS
+`ifdef MISTER
+`define AVATAR_ROM
+`endif
+`endif
+
+`ifdef AVATAR_ROM
+    // Alternative Objects during pause for MiSTer
+    wire [15:0] avatar_data;
+    jtframe_ram #(.dw(16), .aw(13), .synfile("avatar.hex"),.cen_rd(1)) u_avatars(
+        .clk    ( clk            ),
+        .cen    ( pause          ),  // tiny power saving when not in pause
+        .data   ( 16'd0          ),
+        .addr   ( obj_addr[12:0] ),
+        .we     ( 1'b0           ),
+        .q      ( avatar_data    )
+    );
+    always @(*) begin
+        obj_dout = pause ? avatar_data : obj_preout;
+        obj_ok   = obj_ok0;
+    end
+`else 
+    // Let the real data go through
+    always @(*) begin
+        obj_dout = obj_preout;
+        obj_ok   = obj_ok0;
+    end
+`endif
 
 `ifdef SIMULATION
 real busy_cnt=0, total_cnt=0;
@@ -193,57 +345,71 @@ always @(posedge LVBL) begin
 end
 `endif
 
-reg [5:0] valid_req;
-always @(*) begin
-    valid_req[MAIN] = main_req & ~data_sel[MAIN];
-    valid_req[ SND] = snd_req  & ~data_sel[ SND];
-    valid_req[SCR1] = scr1_req & ~data_sel[SCR1];
-    valid_req[SCR2] = scr2_req & ~data_sel[SCR2];
-    valid_req[CHAR] = char_req & ~data_sel[CHAR];
-    valid_req[ OBJ] = obj_req  & ~data_sel[ OBJ];
-end
-
 always @(posedge clk)
 if( loop_rst || downloading ) begin
-    sdram_addr <=  'd0;
+    sdram_addr <= 22'd0;
     ready_cnt <=  4'd0;
     ready     <=  1'b0;
     sdram_req <=  1'b0;
-    data_sel  <=   'd0;
+    data_sel  <=  9'd0;
 end else begin
     {ready, ready_cnt}  <= {ready_cnt, 1'b1};
+    // if( data_rdy ) begin
+    //     data_sel <= 'd0;
+    // end
     if( sdram_ack ) sdram_req <= 1'b0;
     // accept a new request
-    if( |data_sel==1'b0 || data_rdy ) begin
-        sdram_req <= |valid_req;
+    if( data_sel==9'd0 || data_rdy ) begin
+        sdram_req <= 
+           ( main_req & ~data_sel[0] )
+         | ( map1_req & ~data_sel[2] )
+         | ( map2_req & ~data_sel[3] )
+         | ( scr1_req & ~data_sel[4] )
+         | ( scr2_req & ~data_sel[5] ) 
+         | ( char_req & ~data_sel[1] ) 
+         | ( obj_req  & ~data_sel[6] )
+         | ( snd_req  & ~data_sel[7] )
+         | ( snd2_req & ~data_sel[8] );
         data_sel <= 'd0;
         case( 1'b1 )
-            valid_req[OBJ]: begin
-                sdram_addr <= OBJ_OFFSET + { {22-OBJ_AW{1'b0}}, obj_addr_req };
-                data_sel[OBJ] <= 1'b1;
+            !data_sel[7] & snd_req: begin
+                sdram_addr <= snd_offset + { {22-snd_aw{1'b0}}, snd_addr_req[snd_aw-1:1] };
+                data_sel[7] <= 1'b1;
             end
-            valid_req[SCR1]: begin
-                sdram_addr <= SCR1_OFFSET + { {22-SCR1_AW{1'b0}}, scr1_addr_req };
-                data_sel[SCR1] <= 1'b1;
+            !data_sel[4] & scr1_req: begin
+                sdram_addr <= scr1_offset + { {22-scr1_aw{1'b0}}, scr1_addr_req };
+                data_sel[4] <= 1'b1;
             end
-            valid_req[SCR2]: begin
-                sdram_addr <= SCR2_OFFSET + { {22-SCR2_AW{1'b0}}, scr2_addr_req };
-                data_sel[SCR2] <= 1'b1;
+            !data_sel[5] & scr2_req: begin
+                sdram_addr <= scr2_offset + { {22-scr2_aw{1'b0}}, scr2_addr_req };
+                data_sel[5] <= 1'b1;
             end
-            valid_req[CHAR]: begin
-                sdram_addr <= CHAR_OFFSET + { {22-CHAR_AW{1'b0}}, char_addr_req };
-                data_sel[CHAR] <= 1'b1;
+            !data_sel[2] & map1_req: begin
+                sdram_addr <= map1_offset + { {22-map1_aw{1'b0}}, map1_addr_req };
+                data_sel[2] <= 1'b1;
             end
-            valid_req[MAIN]: begin
-                sdram_addr <= { {22-MAIN_AW+1{1'b0}}, main_addr_req[MAIN_AW-1:1] };
-                data_sel[MAIN] <= 1'b1;
+            !data_sel[3] & map2_req: begin
+                sdram_addr <= map2_offset + { {22-map2_aw{1'b0}}, map2_addr_req };
+                data_sel[3] <= 1'b1;
             end
-            valid_req[SND]: begin
-                sdram_addr <= SND_OFFSET + { {22-SND_AW+1{1'b0}}, snd_addr_req[SND_AW-1:1] };
-                data_sel[SND] <= 1'b1;
+            !data_sel[6] & obj_req: begin
+                sdram_addr <= obj_offset + { {22-obj_aw{1'b0}}, obj_addr_req };
+                data_sel[6] <= 1'b1;
+            end
+            !data_sel[0] & main_req: begin
+                sdram_addr <= { {22-main_aw{1'b0}}, main_addr_req[main_aw-1:1] };
+                data_sel[0] <= 1'b1;
+            end
+            !data_sel[1] & char_req: begin
+                sdram_addr <= char_offset + { {22-char_aw{1'b0}}, char_addr_req };
+                data_sel[1] <= 1'b1;
+            end
+            !data_sel[8] & snd2_req: begin
+                sdram_addr <= snd2_offset + { {22-snd2_aw{1'b0}}, snd2_addr_req[snd2_aw-1:1] };
+                data_sel[8] <= 1'b1;
             end
         endcase
     end
 end
 
-endmodule
+endmodule // jtframe_rom
