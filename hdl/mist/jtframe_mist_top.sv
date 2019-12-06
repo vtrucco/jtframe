@@ -64,8 +64,6 @@ module `MISTTOP(
     `endif
 );
 
-localparam CLK_SPEED=48;
-
 `ifdef SIMULATION
 localparam CONF_STR="JTGNG;;";
 `else
@@ -317,7 +315,7 @@ u_frame(
 
 wire sample;
 
-`GAMETOP #(.CLK_SPEED(CLK_SPEED))
+`GAMETOP
 u_game(
     .rst         ( game_rst       ),
     .clk         ( clk_sys        ),
