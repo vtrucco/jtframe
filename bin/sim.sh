@@ -73,6 +73,7 @@ function get_named_arg {
 # Which core is this for?
 SYSNAME=$(get_named_arg -sysname $*)
 MODULES=$(get_named_arg -modules $*)
+JTFRAME=$MODULES/jtframe
 PERCORE=
 
 if [ "$MODULES" = "" ]; then
@@ -98,10 +99,10 @@ fi
 
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."
-    EXTRA_VHDL=$(add_dir $MODULES/jtframe/hdl/cpu/8051 mc8051.f)
+    EXTRA_VHDL=$(add_dir $JTFRAME/hdl/cpu/8051 mc8051.f)
     # iVerilog cannot simulate the 8051 because it's in VHDL
     if [ $SIMULATOR = iverilog ]; then
-        PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/8051/dummy_8051.v"
+        PERCORE="$PERCORE $JTFRAME/hdl/cpu/8051/dummy_8051.v"
     fi
     #echo $EXTRA_VHDL
 fi
@@ -158,21 +159,21 @@ case "$1" in
     "-mist")
         TOP=mist_test
         if [ $SIMULATOR = iverilog ]; then
-            MIST=$(add_dir $MODULES/jtframe/hdl/mist mist.f)
+            MIST=$(add_dir $JTFRAME/hdl/mist mist.f)
         else
-            MIST="-F $MODULES/jtframe/hdl/mist/mist.f"
+            MIST="-F $JTFRAME/hdl/mist/mist.f"
         fi
         if [ -e $MODULES/jtgng_mist.sv ]; then
             # jtgng cores share a common MiST top file
             MISTTOP=$MODULES/jtgng_mist.sv
         else
-            MISTTOP=../../hdl/jt${SYSNAME}_mist.sv
+            MISTTOP=$JTFRAME/hdl/mist/jtframe_mist_top.sv
         fi
-        MIST="$MODULES/jtframe/hdl/mist/mist_test.v $MISTTOP $MIST mist_dump.v"
+        MIST="$JTFRAME/hdl/mist/mist_test.v $MISTTOP $MIST mist_dump.v"
         MIST="$MIST ${MACROPREFIX}MIST"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mist_dump.v ]; then
-            cp $MODULES/jtframe/hdl/ver/mist_dump.v .
+            cp $JTFRAME/hdl/ver/mist_dump.v .
             git add -v mist_dump.v
         fi
         ;;
@@ -180,9 +181,9 @@ case "$1" in
     "-mister")
         TOP=mister_test
         if [ $SIMULATOR = iverilog ]; then
-            MIST=$(add_dir $MODULES/jtframe/hdl/mister mister.f)
+            MIST=$(add_dir $JTFRAME/hdl/mister mister.f)
         else
-            MIST="-F $MODULES/jtframe/hdl/mister/mister.f"
+            MIST="-F $JTFRAME/hdl/mister/mister.f"
         fi
         if [ -e $MODULES/jtgng_mister.sv ]; then
             # jtgng cores share a common MiST top file
@@ -197,11 +198,11 @@ case "$1" in
         else
             MISTTOP=../../hdl/jt${SYSNAME}_mister.sv
         fi
-        MIST="$MODULES/jtframe/hdl/mister/mister_test.v $MISTTOP $MIST mister_dump.v"
+        MIST="$JTFRAME/hdl/mister/mister_test.v $MISTTOP $MIST mister_dump.v"
         MIST="$MIST ${MACROPREFIX}MISTER"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mister_dump.v ]; then
-            cp $MODULES/jtframe/hdl/ver/mister_dump.v .
+            cp $JTFRAME/hdl/ver/mister_dump.v .
             git add -v mister_dump.v
         fi
         SIMFILE=sim_mister.f
@@ -381,9 +382,9 @@ if [[ $TOP = mist_test || $TOP = mister_test ]]; then
     if [ "$MIST_PLL" != "" ]; then
         # Adds the Altera file with the PLL models
         if [ $SIMULATOR = iverilog ]; then
-            MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist $MIST_PLL)"
+            MIST="$MIST $(add_dir $JTFRAME/hdl/mist $MIST_PLL)"
         else
-            MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
+            MIST="$MIST -F $JTFRAME/hdl/mist/$MIST_PLL"
         fi
     fi
     # Adds the .f file with the PLL modules
@@ -398,8 +399,8 @@ case $SIMULATOR in
 iverilog)
     $SHOWCMD iverilog -g2005-sv $MIST \
         -f game.f $PERCORE \
-        $(add_dir $MODULES/jtframe/hdl/ver $SIMFILE ) \
-        $MODULES/jtframe/hdl/cpu/tv80/*.v  \
+        $(add_dir $JTFRAME/hdl/ver $SIMFILE ) \
+        $JTFRAME/hdl/cpu/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
         $MAXFRAME -DIVERILOG $EXTRA \
@@ -408,13 +409,13 @@ iverilog)
 ncverilog)
     $SHOWCMD ncverilog +access+r +nc64bit +define+NCVERILOG \
         -f game.f $PERCORE \
-        -F $MODULES/jtframe/hdl/ver/$SIMFILE -disable_sem2009 $MIST \
+        -F $JTFRAME/hdl/ver/$SIMFILE -disable_sem2009 $MIST \
         +define+SIM_MS=$SIM_MS +define+SIMULATION \
         $DUMP $LOADROM \
         $MAXFRAME \
         -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
         $EXTRA_VHDL \
-        $MODULES/jtframe/hdl/cpu/tv80/*.v \
+        $JTFRAME/hdl/cpu/tv80/*.v \
         $EXTRA -l /dev/null || exit $?;;
 verilator)
     $SHOWCMD verilator -I../../hdl \
@@ -428,9 +429,9 @@ verilator)
 esac
 
 if [ "$VIDEO_DUMP" = TRUE ]; then
-    #$MODULES/jtframe/bin/bin2png.py $BIN2PNG_OPTIONS
+    #$JTFRAME/bin/bin2png.py $BIN2PNG_OPTIONS
     rm -f video*.raw
-    $MODULES/jtframe/bin/bin2raw
+    $JTFRAME/bin/bin2raw
     for i in video*.raw; do
         filename=$(basename $i .raw).jpg
         if [ -e "$filename" ]; then
