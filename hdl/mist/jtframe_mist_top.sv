@@ -110,7 +110,6 @@ localparam CONF_STR = {
 `undef SEPARATOR`endif
 
 wire          rst, rst_n, clk_sys, clk_rom;
-wire          cen12, cen6;
 wire [31:0]   status, joystick1, joystick2;
 wire [21:0]   sdram_addr;
 wire [31:0]   data_read;
@@ -178,10 +177,11 @@ wire [7:0] dipsw_a, dipsw_b;
 wire [1:0] dip_fxlevel;
 wire       enable_fm, enable_psg;
 wire       dip_pause, dip_flip, dip_test;
+wire       pxl_cen, pxl2_cen;
 
 `ifdef SIMULATION
 assign sim_pxl_clk = clk_sys;
-assign sim_pxl_cen = cen6;
+assign sim_pxl_cen = pxl_cen;
 assign sim_vs = ~LVBL_dly;
 assign sim_hs = ~LHBL_dly;
 `endif
@@ -213,8 +213,8 @@ u_frame(
     .LVBL           ( LVBL_dly       ),
     .hs             ( hs             ),
     .vs             ( vs             ),
-    .pxl_cen        ( cen6           ),
-    .pxl2_cen       ( cen12          ),
+    .pxl_cen        ( pxl_cen        ),
+    .pxl2_cen       ( pxl2_cen       ),
     // MiST VGA pins
     .VGA_R          ( VGA_R          ),
     .VGA_G          ( VGA_G          ),

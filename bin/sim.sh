@@ -20,6 +20,8 @@ EXTRA=
 EXTRA_VHDL=
 SHOWCMD=
 ARGNUMBER=1
+VIDEOWIDTH=256
+VIDEOHEIGHT=224
 
 rm -f test2.bin
 
@@ -285,6 +287,14 @@ case "$1" in
         rm -f video*.jpg
         VIDEO_DUMP=TRUE
         ;;
+    -videow)
+        shift
+        VIDEOWIDTH=$1
+        ;;
+    -videoh)
+        shift
+        VIDEOHEIGHT=$1
+        ;;
     "-load")
         LOADROM=${MACROPREFIX}LOADROM
         echo ROM load through SPI enabled
@@ -311,7 +321,9 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
     -mist     Use MiST setup for simulation, instead of using directly the
               game module. This is slower but more informative.
     -video    Enable video output. Can be followed by a number to get
-              the number of frames to simulate.              
+              the number of frames to simulate.
+    -videow   Define the visible screen width  (only useful if -video is also used)
+    -videoh   Define the visible screen height (only useful if -video is also used)
     -lint     Run verilator as lint tool
     -nc       Select NCVerilog as the simulator
     -load     Load the ROM file using the SPI communication. Slower.
@@ -438,7 +450,7 @@ if [ "$VIDEO_DUMP" = TRUE ]; then
             rm $i       # delete the raw file
             continue    # do not overwrite
         fi
-        convert $CONVERT_OPTIONS -size 256x224 \
+        convert $CONVERT_OPTIONS -size ${VIDEOWIDTH}x${VIDEOHEIGHT} \
             -depth 8 RGBA:$i $filename && rm $i
     done
 fi

@@ -29,7 +29,9 @@ module jtframe_cen48(
     output  reg cen1p5,
     // 180 shifted signals
     output  reg cen12b,
-    output  reg cen6b
+    output  reg cen6b,
+    output  reg cen3b,
+    output  reg cen3qb
 );
 
 reg [4:0] cencnt=5'd0;
@@ -47,7 +49,9 @@ always @(negedge clk) begin
     cen6   <= cencnt[2:0] == 3'd0;
     cen6b  <= cencnt[2:0] == 3'd4;
     cen3   <= cencnt[3:0] == 4'd0;
+    cen3b  <= cencnt[3:0] == 4'h8;
     cen3q  <= cencnt[3:0] == 4'b1100;
+    cen3qb <= cencnt[3:0] == 4'b0100;
     cen1p5 <= cencnt[4:0] == 5'd0;
 end
 
