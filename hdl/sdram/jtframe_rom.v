@@ -372,10 +372,6 @@ end else begin
          | ( snd2_req & ~data_sel[8] );
         data_sel <= 'd0;
         case( 1'b1 )
-            !data_sel[7] & snd_req: begin
-                sdram_addr <= snd_offset + { {23-snd_aw{1'b0}}, snd_addr_req[snd_aw-1:1] };
-                data_sel[7] <= 1'b1;
-            end
             !data_sel[4] & scr1_req: begin
                 sdram_addr <= scr1_offset + { {22-scr1_aw{1'b0}}, scr1_addr_req };
                 data_sel[4] <= 1'b1;
@@ -392,6 +388,13 @@ end else begin
                 sdram_addr <= map2_offset + { {22-map2_aw{1'b0}}, map2_addr_req };
                 data_sel[3] <= 1'b1;
             end
+            !data_sel[1] & char_req: begin
+                sdram_addr <= char_offset + 
+                    ( char_dw == 16 ? 
+                        { {22-char_aw{1'b0}}, char_addr_req } :
+                        { {23-char_aw{1'b0}}, char_addr_req[char_aw-1:1] }  );
+                data_sel[1] <= 1'b1;
+            end
             !data_sel[6] & obj_req: begin
                 sdram_addr <= obj_offset + { {22-obj_aw{1'b0}}, obj_addr_req };
                 data_sel[6] <= 1'b1;
@@ -400,12 +403,9 @@ end else begin
                 sdram_addr <= { {23-main_aw{1'b0}}, main_addr_req[main_aw-1:1] };
                 data_sel[0] <= 1'b1;
             end
-            !data_sel[1] & char_req: begin
-                sdram_addr <= char_offset + 
-                    ( char_dw == 16 ? 
-                        { {22-char_aw{1'b0}}, char_addr_req } :
-                        { {23-char_aw{1'b0}}, char_addr_req[char_aw-1:1] }  );
-                data_sel[1] <= 1'b1;
+            !data_sel[7] & snd_req: begin
+                sdram_addr <= snd_offset + { {23-snd_aw{1'b0}}, snd_addr_req[snd_aw-1:1] };
+                data_sel[7] <= 1'b1;
             end
             !data_sel[8] & snd2_req: begin
                 sdram_addr <= snd2_offset + { {22-snd2_aw{1'b0}}, snd2_addr_req[snd2_aw-1:1] };
