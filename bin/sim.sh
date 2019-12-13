@@ -99,6 +99,23 @@ if [ "$MSM5205" = 1 ]; then
     PERCORE="$PERCORE $(add_dir $MODULES/jt5205/hdl jt5205.f)"
 fi
 
+if [ "$HD63701" = 1 ]; then
+    echo "INFO: HD63701 support added."
+    if [ ! -e $MODULES/HD63701 ]; then
+        echo "You must manually add the submodule for HD63701 into the modules folder"
+        exit 1
+    fi
+    # Try to create symbolic links for the include files
+    if [ ! -e HD63701_defs.i ]; then
+        ln -s ../../modules/HD63701/HD63701_defs.i
+    fi
+    if [ ! -e HD63701_MCODE.i ]; then
+        ln -s ../../modules/HD63701/HD63701_MCODE.i
+    fi
+    PERCORE="$PERCORE $(add_dir $MODULES/jtframe/hdl/cpu/63701 jt63701.f)"
+fi
+
+
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."
     EXTRA_VHDL=$(add_dir $JTFRAME/hdl/cpu/8051 mc8051.f)
