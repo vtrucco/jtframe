@@ -457,5 +457,5 @@ fi
 
 # convert raw sound file to wav format
 if [ -e sound.raw ]; then
-    raw2wav < sound.raw
+    $JTFRAME/bin/raw2wav < sound.raw
 fi
