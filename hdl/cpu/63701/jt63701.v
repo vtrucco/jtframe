@@ -12,7 +12,7 @@ module jt63701
     input         RST,    // RES
     input         NMI,    // NMI
     input         IRQ,    // IRQ1
-
+    output        BA,     // Bus Available
     output        WR,     // CS2. High for writting
     output    [15:0]  AD,   //  AS ? {PO4,PO3}
     output    [7:0] DO,   // ~AS ? {PO3}
@@ -38,6 +38,8 @@ module jt63701
 `ifndef JT63701_SIMFILE
 `define JT63701_SIMFILE
 `endif
+
+assign BA = en_birom;   // Safe to stop when accessing the internal PROM
 
 // Built-In Instruction ROM
 wire en_birom = (AD[15:14]==4'b11);     // $C000-$FFFF
