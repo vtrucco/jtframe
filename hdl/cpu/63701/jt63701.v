@@ -13,7 +13,7 @@ module jt63701
     input         NMI,    // NMI
     input         IRQ,    // IRQ1
 
-    output        RW,   // CS2
+    output        WR,     // CS2. High for writting
     output    [15:0]  AD,   //  AS ? {PO4,PO3}
     output    [7:0] DO,   // ~AS ? {PO3}
     input     [7:0] DI,   //       {PI3}
@@ -54,9 +54,21 @@ jtframe_prom #(.aw(14) `JT63701_SIMFILE) u_prom(
 );
 
 // Built-In WorkRAM
-wire      en_biram;
-wire [7:0] biramd;
-HD63701_BIRAM biram( CLKx2, AD, RW, DO, en_biram, biramd );
+parameter BIRAM_START = 16'h40;
+parameter BIRAM_END   = 16'h13F;
+wire        en_biram = AD>=BIRAM_START && AD<=BIRAM_END;
+wire [7:0]  biramd;
+wire        biram_we = en_biram & WR;
+// HD63701_BIRAM biram( CLKx2, AD, WR, DO, en_biram, biramd );
+
+jtframe_ram #(.aw(8)) u_biram( // built-in RAM
+    .clk    ( CLKx2       ),
+    .cen    ( 1'b1        ),
+    .data   ( DO          ),
+    .addr   ( AD[7:0]     ),
+    .we     ( biram_we    ),
+    .q      ( biramd      )
+);
 
 
 // Built-In I/O Ports
@@ -66,7 +78,7 @@ HD63701_IOPort iopt(
     .mcu_rst    ( RST       ),
     .mcu_clx2   ( CLKx2     ),
     .mcu_ad     ( AD        ),
-    .mcu_wr     ( RW        ),
+    .mcu_wr     ( WR        ),
     .mcu_do     ( DO        ),
     .en_io      ( en_biio   ),
     .iod        ( biiod     ),
@@ -83,7 +95,7 @@ wire      irq2;
 wire [3:0] irq2v;
 wire      en_bitim;
 wire [7:0] bitimd;
-HD63701_Timer timer( RST, CLKx2, AD, RW, DO, irq2, irq2v, en_bitim, bitimd );
+HD63701_Timer timer( RST, CLKx2, AD, WR, DO, irq2, irq2v, en_bitim, bitimd );
 
 
 // Built-In Devices Data Selector
@@ -103,7 +115,7 @@ HD63701_Core core
 (
   .CLKx2(CLKx2),.RST(RST),
   .NMI(NMI),.IRQ(IRQ),.IRQ2(irq2),.IRQ2V(irq2v),
-  .RW(RW),.AD(AD),.DO(DO),.DI(biddi),
+  .RW(WR),.AD(AD),.DO(DO),.DI(biddi),
   .PH(phase[5:0])
 );
 assign phase[6] = irq2;
@@ -111,8 +123,7 @@ assign phase[6] = irq2;
 endmodule
 
 
-module HD63701_BIDSEL
-(
+module HD63701_BIDSEL(
   output [7:0] o,
 
   input e0, input [7:0] d0,
@@ -120,7 +131,7 @@ module HD63701_BIDSEL
   input e2, input [7:0] d2,
   input e3, input [7:0] d3,
 
-         input [7:0] dx
+  input [7:0] dx
 );
 
 assign o =  e0 ? d0 :
@@ -131,18 +142,17 @@ assign o =  e0 ? d0 :
 
 endmodule
 
-
-module HD63701_BIRAM
-(
-  input       mcu_clx2,
-  input [15:0]  mcu_ad,
-  input       mcu_wr,
-  input  [7:0]  mcu_do,
-  output      en_biram,
-  output reg [7:0] biramd
+/*
+module HD63701_BIRAM(
+  input             mcu_clx2,
+  input      [15:0] mcu_ad,
+  input             mcu_wr,
+  input      [ 7:0] mcu_do,
+  output            en_biram,
+  output reg [ 7:0] biramd
 );
 
-assign en_biram = (mcu_ad[15: 7]==9'b000000001);  // $0080-$00FF
+assign en_biram = (mcu_ad[15: 7]==9'b1);  // $0080-$00FF
 wire [6:0] biad = mcu_ad[6:0];
 
 reg [7:0] bimem[0:127];
@@ -152,7 +162,7 @@ always @( posedge mcu_clx2 ) begin
 end
 
 endmodule
-
+*/
 
 module HD63701_IOPort (
     input              mcu_rst,
@@ -203,67 +213,64 @@ end
 endmodule
 
 
-module HD63701_Timer
-(
-  input      mcu_rst,
-  input      mcu_clx2,
-  input [15:0] mcu_ad,
-  input      mcu_wr,
-  input  [7:0] mcu_do,
+module HD63701_Timer(
+    input           mcu_rst,
+    input           mcu_clx2,
+    input    [15:0] mcu_ad,
+    input           mcu_wr,
+    input    [ 7:0] mcu_do,
 
-  output     mcu_irq2,
-  output [3:0] mcu_irq2v,
+    output          mcu_irq2,
+    output   [ 3:0] mcu_irq2v,
 
-  output     en_timer,
-  output [7:0] timerd
+    output          en_timer,
+    output   [ 7:0] timerd
 );
 
-reg     oci, oce;
+reg        oci, oce;
 reg [15:0] ocr, icr;
 reg [16:0] frc;
-reg  [7:0] frt;
-reg  [7:0] rmc, rg5;
+reg [ 7:0] frt;
+reg [ 7:0] rmc, rg5;
 
 always @( posedge mcu_clx2 or posedge mcu_rst ) begin
-  if (mcu_rst) begin
-    oce <= 0;
-    ocr <= 16'hFFFF;
-    icr <= 16'hFFFF;
-    frc <= 0;
-    frt <= 0;
-    rmc <= 8'h40;
-    rg5 <= 0;
-  end
-  else begin
-    frc <= frc+1;
-    if (mcu_wr) begin
-      case (mcu_ad)
-        16'h05: rg5 <= mcu_do;
-        16'h08: oce <= mcu_do[3];
-        16'h09: frt <= mcu_do;
-        16'h0A: frc <= {frt,mcu_do,1'h0};
-        16'h0B: ocr[15:8] <= mcu_do;
-        16'h0C: ocr[ 7:0] <= mcu_do;
-        16'h0D: icr[15:8] <= mcu_do;
-        16'h0E: icr[ 7:0] <= mcu_do;
-        16'h14: rmc <= {mcu_do[7:6],6'h0};
-        default:;
-      endcase
+    if (mcu_rst) begin
+        oce <= 0;
+        ocr <= 16'hFFFF;
+        icr <= 16'hFFFF;
+        frc <= 0;
+        frt <= 0;
+        rmc <= 8'h40;
+        rg5 <= 0;
+    end else begin
+        frc <= frc+1;
+        if (mcu_wr) begin
+            case (mcu_ad)
+                16'h05: rg5 <= mcu_do;
+                16'h08: oce <= mcu_do[3];
+                16'h09: frt <= mcu_do;
+                16'h0A: frc <= {frt,mcu_do,1'h0};
+                16'h0B: ocr[15:8] <= mcu_do;
+                16'h0C: ocr[ 7:0] <= mcu_do;
+                16'h0D: icr[15:8] <= mcu_do;
+                16'h0E: icr[ 7:0] <= mcu_do;
+                16'h14: rmc <= {mcu_do[7:6],6'h0};
+                default:;
+            endcase
+        end
     end
-  end
 end
 
 always @( negedge mcu_clx2 or posedge mcu_rst ) begin
-  if (mcu_rst) begin
-    oci <= 0;
-  end
-  else begin
-    case (mcu_ad)
-      16'h0B: oci <= 0;
-      16'h0C: oci <= 0;
-      default: if (frc[16:1]==ocr) oci <= 1'b1;
-    endcase
-  end
+    if (mcu_rst) begin
+        oci <= 0;
+    end else begin
+        case (mcu_ad)
+            16'h0B: oci <= 0;
+            16'h0C: oci <= 0;
+            default: if (frc[16:1]==ocr) oci <= 1'b1;
+        endcase
+    end
 end
 
 assign mcu_irq2  = oci & oce;

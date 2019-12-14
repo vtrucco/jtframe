@@ -23,9 +23,9 @@ module jtframe_ff #(parameter W=1 ) (
     input       [W-1:0]  din,
     output reg  [W-1:0]  q,
     output reg  [W-1:0]  qn,
-    input  reg  [W-1:0]  set,    // active high
-    input  reg  [W-1:0]  clr,    // active high
-    input  reg  [W-1:0]  sigedge // signal whose edge will trigger the FF
+    input       [W-1:0]  set,    // active high
+    input       [W-1:0]  clr,    // active high
+    input       [W-1:0]  sigedge // signal whose edge will trigger the FF
 );
 
 reg  [W-1:0] last_edge;
