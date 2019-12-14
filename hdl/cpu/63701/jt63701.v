@@ -39,11 +39,11 @@ module jt63701
 `define JT63701_SIMFILE
 `endif
 
-assign BA = en_birom;   // Safe to stop when accessing the internal PROM
 
 // Built-In Instruction ROM
-wire en_birom = (AD[15:14]==4'b11);     // $C000-$FFFF
-wire [7:0] biromd;
+wire        en_birom = (AD[15:14]==4'b11);     // $C000-$FFFF
+wire [7:0]  biromd;
+assign      BA = en_birom;   // Safe to stop when accessing the internal PROM
 
 jtframe_prom #(.aw(14) `JT63701_SIMFILE) u_prom(
     .clk    ( CLKx2         ),
