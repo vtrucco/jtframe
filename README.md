@@ -7,7 +7,12 @@ This is a work in progress. The first version will be considered ready once the 
 
 You can show your appreciation through
     * Patreon: https://patreon.com/topapate
-    * Paypal: https://paypal.me/topapate   
+    * Paypal: https://paypal.me/topapate
+
+CPUs
+====
+
+Some CPUs are included in JTFRAME. Some of them can be found in other repositories in Github but the versions in JTFRAME include clock enable inputs and other improvements.
 
 Simulation of 74-series based schematics
 ========================================
