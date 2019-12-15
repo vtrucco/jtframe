@@ -1,76 +1,59 @@
-/******************************************************
-    HD63701V0(Mode6) Compatible Processor Core
-              Written by Tsuyoshi HASEGAWA 2013-14
+//*********************************************************
+//    HD63701V0(Mode6) Compatible Processor Core
+//
+//    By Jose Tejada 2019-2020
+//    Based on the original IP by Tsuyoshi HASEGAWA 2013-14
+//
+//*********************************************************
 
-    Modified by Jose Tejada to accept programming the PROM
+module jt63701(
+    input           rst,
+    input           clk,
+    input           cen_rise2,    // twice the intended clock speed
+    input           cen_fall2,    // twice the intended clock speed
+    input           cen_rise,
+    input           cen_fall,
 
-*******************************************************/
-module jt63701
-(
-    input         rst,
-    input         clk,
-    input         cen_rise2,    // twice the intended clock speed
-    input         cen_fall2,    // twice the intended clock speed
-    input         cen_rise,
-    input         cen_fall,
+    input           haltn,
+    input           nmi,    // NMI
+    input           irq,    // IRQ1
+    output          ba,     // Bus Available
+    output          wr,     // CS2. High for writting
+    output  [15:0]  AD,     //  AS ? {PO4,PO3}
+    output  [ 7:0]  dout,   // ~AS ? {PO3}
+    input   [ 7:0]  din,    //       {PI3}
 
-    input         NMI,    // NMI
-    input         IRQ,    // IRQ1
-    output        BA,     // Bus Available
-    output        WR,     // CS2. High for writting
-    output    [15:0]  AD,   //  AS ? {PO4,PO3}
-    output    [7:0] DO,   // ~AS ? {PO3}
-    input     [7:0] DI,   //       {PI3}
+    input   [ 7:0]  p1_din,
+    output  [ 7:0]  p1_dout,
 
-    input     [7:0] PI1,    // Port1 IN
-    output    [7:0] PO1,    //      OUT
+    input   [ 4:0]  p2_din,
+    output  [ 4:0]  p2_dout,
 
-    input     [4:0] PI2,    // Port2 IN
-    output    [4:0] PO2,    //      OUT
-
-    input     [7:0] PI6,    // Port6 IN
-    output    [7:0] PO6,    //      OUT
-    // PROM
-    // PROM programming
-    input    [13:0] prog_addr,
-    input    [ 7:0] prom_din,
-    input           prom_we,
-    // for DEBUG
-    output      [6:0] phase
+    input   [ 7:0]  p6_din,
+    output  [ 7:0]  p6_dout,
+    // PROM Access
+    output  [13:0]  rom_addr,
+    input   [ 7:0]  rom_data,
+    output          rom_cs,
+    input           rom_busy
 );
-
-`ifndef JT63701_SIMFILE
-`define JT63701_SIMFILE
-`endif
-
 
 // Built-In Instruction ROM
-wire        en_birom = (AD[15:14]==4'b11);     // $C000-$FFFF
-wire [7:0]  biromd;
-assign      BA = en_birom;   // Safe to stop when accessing the internal PROM
-
-jtframe_prom #(.aw(14) `JT63701_SIMFILE) u_prom(
-    .clk    ( clk           ),
-    .cen    ( 1'b1          ),
-    .data   ( prom_din      ),
-    .rd_addr( AD[13:0]      ),
-    .wr_addr( prog_addr     ),
-    .we     ( prom_we       ),
-    .q      ( biromd        )
-);
+assign      rom_cs = (AD[15:14]==2'b11);     // $C000-$FFFF
+assign      ba = rom_cs;   // Safe to stop when accessing the internal PROM
 
 // Built-In WorkRAM
 parameter BIRAM_START = 16'h40;
 parameter BIRAM_END   = 16'h13F;
 wire        en_biram = AD>=BIRAM_START && AD<=BIRAM_END;
 wire [7:0]  biramd;
-wire        biram_we = en_biram & WR;
-// HD63701_BIRAM biram( CLKx2, AD, WR, DO, en_biram, biramd );
+wire        biram_we = en_biram & wr;
+// HD63701_BIRAM biram( CLKx2, AD, wr, dout, en_biram, biramd );
 
 jtframe_ram #(.aw(8)) u_biram( // built-in RAM
     .clk    ( clk         ),
     .cen    ( cen_fall    ),
-    .data   ( DO          ),
+    .data   ( dout        ),
     .addr   ( AD[7:0]     ),
     .we     ( biram_we    ),
     .q      ( biramd      )
@@ -84,31 +67,31 @@ HD63701_IOPort iopt(
     .rst        ( rst       ),
     .clk        ( clk       ),
     .mcu_ad     ( AD        ),
-    .mcu_wr     ( WR        ),
-    .mcu_do     ( DO        ),
+    .mcu_wr     ( wr        ),
+    .mcu_do     ( dout      ),
     .en_io      ( en_biio   ),
     .iod        ( biiod     ),
-    .PI1        ( PI1       ),
-    .PI2        ( PI2       ),
-    .PI6        ( PI6       ),
-    .PO1        ( PO1       ),
-    .PO2        ( PO2       ),
-    .PO6        ( PO6       )
+    .PI1        ( p1_din    ),
+    .PI2        ( p2_din    ),
+    .PI6        ( p6_din    ),
+    .PO1        ( p1_dout   ),
+    .PO2        ( p2_dout   ),
+    .PO6        ( p6_dout   )
 );
 
 // Built-In Timer
-wire      irq2;
-wire [3:0] irq2v;
-wire      en_bitim;
-wire [7:0] bitimd;
-HD63701_Timer timer( //rst, clk, AD, WR, DO, irq2, irq2v, en_bitim, bitimd );
+wire        irq2;
+wire [3:0]  irq2v;
+wire        en_bitim;
+wire [7:0]  bitimd;
+HD63701_Timer timer( //rst, clk, AD, wr, dout, irq2, irq2v, en_bitim, bitimd );
     .rst         ( rst           ),
     .clk         ( clk           ),
     .cen_rise2   ( cen_rise2     ),
     .cen_fall2   ( cen_fall2     ),
     .mcu_ad      ( AD            ),
-    .mcu_wr      ( WR            ),
-    .mcu_do      ( DO            ),
+    .mcu_wr      ( wr            ),
+    .mcu_do      ( dout          ),
     .mcu_irq2    ( irq2          ),
     .mcu_irq2v   ( irq2v         ),
     .en_timer    ( en_bitim      ),
@@ -118,15 +101,16 @@ HD63701_Timer timer( //rst, clk, AD, WR, DO, irq2, irq2v, en_bitim, bitimd );
 
 // Built-In Devices Data Selector
 wire [7:0] biddi;
-HD63701_BIDSEL bidsel
-(
+HD63701_BIDSEL bidsel(
   biddi,
-  en_birom, biromd,
+  rom_cs, rom_data,
   en_biram, biramd,
   en_biio , biiod, 
   en_bitim, bitimd,
-  DI
+  din
 );
+
+wire [6:0] phase;
 
 // Processor Core
 HD63701_Core core (  
@@ -135,14 +119,14 @@ HD63701_Core core (
   .cen_fall ( cen_fall  ),
   .cen_rise ( cen_rise  ),
   
-  .NMI      ( NMI       ),
-  .IRQ      ( IRQ       ),
+  .NMI      ( nmi       ),
+  .IRQ      ( irq       ),
   .IRQ2     ( irq2      ),
   .IRQ2V    ( irq2v     ),
   
-  .RW       ( WR        ),
+  .RW       ( wr        ),
   .AD       ( AD        ),
-  .DO       ( DO        ),
+  .DO       ( dout      ),
   .DI       ( biddi     ),
   
   .PH       ( phase[5:0]),
@@ -220,10 +204,10 @@ module HD63701_IOPort (
 
     always @( posedge clk or posedge rst ) begin
         if (rst) begin
-            PO1 <= 8'hFF;
-            PO2 <= 5'h1F;
-            PO6 <= 8'hFF;
-        end else begin
+                PO1 <= 8'hFF;
+                PO2 <= 5'h1F;
+                PO6 <= 8'hFF;
+            end else begin
             if (mcu_wr) begin
                 case( mcu_ad )
                     16'h02: PO1 <= mcu_do;
@@ -238,9 +222,10 @@ module HD63701_IOPort (
 
     always @(*) begin
         case( mcu_ad[4:0] )
-            5'h02: iod = PI1;
-            5'h03: iod = {3'b111,PI2};
-            5'h17: iod = PI6;
+            5'h02:   iod = PI1;
+            5'h03:   iod = {3'b111,PI2};
+            5'h17:   iod = PI6;
+            default: iod = 8'hff;
         endcase
     end
 endmodule
