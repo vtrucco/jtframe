@@ -34,8 +34,9 @@ if [ "$JTROOT" = "" ]; then
     exit 1
 fi
 
-cd $JTROOT/bin
-JTFRAME=$JTROOT/modules/jtframe
+cd $JTROOT
+MODULES=$JTROOT/modules
+JTFRAME=$MODULES/jtframe
 
 if [ ! -e "$JTFRAME" ]; then
     echo "ERROR: cannot locate jtframe folder."
@@ -63,7 +64,7 @@ elif [ -e $JTROOT/hdl ]; then
     PRJPATH=$JTROOT
 else
     echo "ERROR: Cannot find a valid project path"
-    exit 1;;
+    exit 1
 fi
 shift
 
@@ -119,14 +120,24 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+function escape_bars {
+    echo ${1//\//\\/}
+}
+
 # qsf line to disable SOUND synthesis
 # set_global_assignment -name VERILOG_MACRO "NOSOUND=<None>"
 function copy_templates {
     datestr=$(date "+%H:%M:%S %B %e, %Y")
-    sedstr='s/${CORENAME}/'${PRJ}'/g;s/${DATE}/'${datestr}'/g'
-    sed "$sedstr" $JTROOT/modules/templates/$MIST.qpf > $PRJPATH/$MIST/jt${PRJ}.qpf
-    sed "$sedstr" $JTROOT/modules/templates/$MIST.qsf > $PRJPATH/$MIST/jt${PRJ}.qsf
+    # Replace core name and path to modules
+    sedstr='s/${CORENAME}/'${PRJ}'/g;s/${DATE}/'${datestr}'/g;s/${MODULES}/'$(escape_bars ${MODULES})'/g;s/${PRJPATH}/'$(escape_bars ${PRJPATH})'/g'
+    sed "$sedstr" $JTFRAME/hdl/$MIST/$MIST.qpf > $PRJPATH/$MIST/jt${PRJ}.qpf
+    sed "$sedstr" $JTFRAME/hdl/$MIST/$MIST.qsf > $PRJPATH/$MIST/jt${PRJ}.qsf
     # MiST's tcl is always appended
+    TCL=$PRJPATH/mist/jt${PRJ}.tcl
+    if [ ! -e $TCL ]; then
+        echo "WARNING: No project TCL file. Creating one empty."
+        touch $TCL
+    fi
     cat $PRJPATH/mist/jt${PRJ}.tcl >> $PRJPATH/$MIST/jt${PRJ}.qsf
     # MiSTer's tcl is added if it exists
     if [ $MIST = mister ]; then
@@ -144,30 +155,22 @@ else
     echo INFO: No macros.
 fi
 
+################ compilation
 if [ $SKIP_COMPILE = FALSE ]; then
-    # Create MiSTer folder if it doesn't exist
-    if [ ! -e $PRJPATH/mister ]; then
-        mkdir -p $PRJPATH/mister
-    fi
-    for i in $PRJPATH/mist/{*hex,conf_str.v}; do
-        echo $i
-        j=$PRJPATH/mister/$(basename $i)
-        if [ ! -e "$j" ]; then
-            ln -s $i $j
-        fi
-    done
+    # Create MiST(er) folders if they don't exist
+    mkdir -p $PRJPATH/mist
+    mkdir -p $PRJPATH/mister
     # Update message file
-    jt${PRJ}_msg.py || exit 1
-    # Updata Avatars
+    cd bin
+    jt${PRJ}_msg.py || echo "WARNING: No message file"
+    # Update Avatars
     if [ -e $PRJPATH/patrons/avatars ]; then
         avatar.py $PRJ > /tmp/avatar_$PRJ.log || ( cat /tmp/avatar_$PRJ.log; exit 1 )
     fi
-    if ! cd $PRJPATH/$MIST; then
-        exit 1
-    fi
-    if [ ! -e $PRJPATH/$MIST/rom_loadv.hex ]; then
-        ln -s $JTROOT/modules/rom_loadv.hex
-    fi
+    cd $PRJPATH/$MIST || exit 1
+    # if [ ! -e $PRJPATH/$MIST/rom_loadv.hex ]; then
+    #     ln -s $JTROOT/modules/rom_loadv.hex
+    # fi
     echo "Moved to folder " $(pwd)
     # Recompile
     rm -rf db incremental_db output_files
@@ -207,9 +210,11 @@ function append_if_exists {
     echo $val
 }
 
+################# Create zip file
 if [ $ZIP = TRUE ]; then
     # Rename output file
     cd $JTROOT
+    mkdir -p releases
     RELEASE=jt${PRJ}_$(date +"%Y%m%d")
     if [ $MIST = mister ]; then
         RBF=$PRJPATH/${MIST}/output_files/jt$PRJ.rbf

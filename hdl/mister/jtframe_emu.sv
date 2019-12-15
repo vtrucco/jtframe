@@ -358,7 +358,7 @@ assign sim_pxl_clk = clk_sys;
 assign sim_pxl_cen = cen6;
 `endif
 
-`GAMETOP #(.CLK_SPEED(48)) u_game
+`GAMETOP u_game
 (
     .rst          ( game_rst         ),
     .clk          ( clk_sys          ),
