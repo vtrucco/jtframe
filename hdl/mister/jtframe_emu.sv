@@ -149,7 +149,7 @@ assign VGA_F1=1'b0;
 ////////////////////   CLOCKS   ///////////////////
 
 wire clk_sys;
-wire cen12, cen6, cen3, cen1p5;
+wire pxl2_cen, pxl_cen;
 wire pll_locked;
 reg  pll_rst = 1'b0;
 
@@ -262,8 +262,8 @@ u_frame(
     .LVBL           ( LVBL_dly       ),
     .hs             ( hs             ),
     .vs             ( vs             ),
-    .pxl_cen        ( cen6           ),
-    .pxl2_cen       ( cen12          ),
+    .pxl_cen        ( pxl_cen        ),
+    .pxl2_cen       ( pxl2_cen       ),
     // SDRAM interface
     .SDRAM_CLK      ( SDRAM_CLK      ),
     .SDRAM_DQ       ( SDRAM_DQ       ),
@@ -347,7 +347,7 @@ u_frame(
 assign sim_hs = hs;
 assign sim_vs = vs;
 assign sim_pxl_clk = clk_sys;
-assign sim_pxl_cen = cen6;
+assign sim_pxl_cen = pxl_cen;
 `endif
 
 ///////////////////////////////////////////////////////////////////
@@ -355,17 +355,15 @@ assign sim_pxl_cen = cen6;
 
 `ifdef SIMULATION
 assign sim_pxl_clk = clk_sys;
-assign sim_pxl_cen = cen6;
+assign sim_pxl_cen = pxl_cen;
 `endif
 
 `GAMETOP u_game
 (
     .rst          ( game_rst         ),
     .clk          ( clk_sys          ),
-    .cen12        ( cen12            ),
-    .cen6         ( cen6             ),
-    .cen3         ( cen3             ),
-    .cen1p5       ( cen1p5           ),
+    .pxl2_cen     ( pxl2_cen         ),
+    .pxl_cen      ( pxl_cen          ),
 
     .red          ( game_r           ),
     .green        ( game_g           ),
