@@ -7,9 +7,13 @@
 *******************************************************/
 module jt63701
 (
-    input         CLKx2,  // XTAL/EXTAL (200K~2.0MHz)
+    input         rst,
+    input         clk,
+    input         cen_rise2,    // twice the intended clock speed
+    input         cen_fall2,    // twice the intended clock speed
+    input         cen_rise,
+    input         cen_fall,
 
-    input         RST,    // RES
     input         NMI,    // NMI
     input         IRQ,    // IRQ1
     output        BA,     // Bus Available
@@ -46,7 +50,7 @@ wire [7:0]  biromd;
 assign      BA = en_birom;   // Safe to stop when accessing the internal PROM
 
 jtframe_prom #(.aw(14) `JT63701_SIMFILE) u_prom(
-    .clk    ( CLKx2         ),
+    .clk    ( clk           ),
     .cen    ( 1'b1          ),
     .data   ( prom_din      ),
     .rd_addr( AD[13:0]      ),
@@ -64,8 +68,8 @@ wire        biram_we = en_biram & WR;
 // HD63701_BIRAM biram( CLKx2, AD, WR, DO, en_biram, biramd );
 
 jtframe_ram #(.aw(8)) u_biram( // built-in RAM
-    .clk    ( CLKx2       ),
-    .cen    ( 1'b1        ),
+    .clk    ( clk         ),
+    .cen    ( cen_fall    ),
     .data   ( DO          ),
     .addr   ( AD[7:0]     ),
     .we     ( biram_we    ),
@@ -77,8 +81,8 @@ jtframe_ram #(.aw(8)) u_biram( // built-in RAM
 wire      en_biio;
 wire [7:0] biiod;
 HD63701_IOPort iopt(
-    .mcu_rst    ( RST       ),
-    .mcu_clx2   ( CLKx2     ),
+    .rst        ( rst       ),
+    .clk        ( clk       ),
     .mcu_ad     ( AD        ),
     .mcu_wr     ( WR        ),
     .mcu_do     ( DO        ),
@@ -97,7 +101,19 @@ wire      irq2;
 wire [3:0] irq2v;
 wire      en_bitim;
 wire [7:0] bitimd;
-HD63701_Timer timer( RST, CLKx2, AD, WR, DO, irq2, irq2v, en_bitim, bitimd );
+HD63701_Timer timer( //rst, clk, AD, WR, DO, irq2, irq2v, en_bitim, bitimd );
+    .rst         ( rst           ),
+    .clk         ( clk           ),
+    .cen_rise2   ( cen_rise2     ),
+    .cen_fall2   ( cen_fall2     ),
+    .mcu_ad      ( AD            ),
+    .mcu_wr      ( WR            ),
+    .mcu_do      ( DO            ),
+    .mcu_irq2    ( irq2          ),
+    .mcu_irq2v   ( irq2v         ),
+    .en_timer    ( en_bitim      ),
+    .timerd      ( bitimd        )
+);
 
 
 // Built-In Devices Data Selector
@@ -113,12 +129,29 @@ HD63701_BIDSEL bidsel
 );
 
 // Processor Core
-HD63701_Core core
-(
-  .CLKx2(CLKx2),.RST(RST),
-  .NMI(NMI),.IRQ(IRQ),.IRQ2(irq2),.IRQ2V(irq2v),
-  .RW(WR),.AD(AD),.DO(DO),.DI(biddi),
-  .PH(phase[5:0])
+HD63701_Core core (  
+  .rst      ( rst       ),
+  .clk      ( clk       ),
+  .cen_fall ( cen_fall  ),
+  .cen_rise ( cen_rise  ),
+  
+  .NMI      ( NMI       ),
+  .IRQ      ( IRQ       ),
+  .IRQ2     ( irq2      ),
+  .IRQ2V    ( irq2v     ),
+  
+  .RW       ( WR        ),
+  .AD       ( AD        ),
+  .DO       ( DO        ),
+  .DI       ( biddi     ),
+  
+  .PH       ( phase[5:0]),
+  // unused
+  .MC(),
+  .REG_D(),
+  .REG_X(),
+  .REG_S(),
+  .REG_C()
 );
 assign phase[6] = irq2;
 
@@ -167,8 +200,8 @@ endmodule
 */
 
 module HD63701_IOPort (
-    input              mcu_rst,
-    input              mcu_clx2,
+    input              rst,
+    input              clk,
     input       [15:0] mcu_ad,
     input              mcu_wr,
     input        [7:0] mcu_do,
@@ -185,39 +218,39 @@ module HD63701_IOPort (
     output reg   [7:0] PO6
 );
 
-always @( posedge mcu_clx2 or posedge mcu_rst ) begin
-  if (mcu_rst) begin
-    PO1 <= 8'hFF;
-    PO2 <= 5'h1F;
-    PO6 <= 8'hFF;
-  end
-  else begin
-    if (mcu_wr) begin
-        case( mcu_ad )
-            16'h02: PO1 <= mcu_do;
-            16'h03: PO2 <= mcu_do[4:0];
-            16'h17: PO6 <= mcu_do;
+    always @( posedge clk or posedge rst ) begin
+        if (rst) begin
+            PO1 <= 8'hFF;
+            PO2 <= 5'h1F;
+            PO6 <= 8'hFF;
+        end else begin
+            if (mcu_wr) begin
+                case( mcu_ad )
+                    16'h02: PO1 <= mcu_do;
+                    16'h03: PO2 <= mcu_do[4:0];
+                    16'h17: PO6 <= mcu_do;
+                endcase
+            end
+        end
+    end
+
+    assign en_io = (mcu_ad==16'h2)|(mcu_ad==16'h3)|(mcu_ad==16'h17);
+
+    always @(*) begin
+        case( mcu_ad[4:0] )
+            5'h02: iod = PI1;
+            5'h03: iod = {3'b111,PI2};
+            5'h17: iod = PI6;
         endcase
     end
-  end
-end
-
-assign en_io = (mcu_ad==16'h2)|(mcu_ad==16'h3)|(mcu_ad==16'h17);
-
-always @(*) begin
-    case( mcu_ad[4:0] )
-        5'h02: iod = PI1;
-        5'h03: iod = {3'b111,PI2};
-        5'h17: iod = PI6;
-    endcase
-end
-
 endmodule
 
 
 module HD63701_Timer(
-    input           mcu_rst,
-    input           mcu_clx2,
+    input           rst,
+    input           clk,
+    input           cen_rise2,
+    input           cen_fall2,
     input    [15:0] mcu_ad,
     input           mcu_wr,
     input    [ 7:0] mcu_do,
@@ -235,8 +268,8 @@ reg [16:0] frc;
 reg [ 7:0] frt;
 reg [ 7:0] rmc, rg5;
 
-always @( posedge mcu_clx2 or posedge mcu_rst ) begin
-    if (mcu_rst) begin
+always @( posedge clk or posedge rst ) begin
+    if (rst) begin
         oce <= 0;
         ocr <= 16'hFFFF;
         icr <= 16'hFFFF;
@@ -244,7 +277,7 @@ always @( posedge mcu_clx2 or posedge mcu_rst ) begin
         frt <= 0;
         rmc <= 8'h40;
         rg5 <= 0;
-    end else begin
+    end else if(cen_rise2) begin
         frc <= frc+1;
         if (mcu_wr) begin
             case (mcu_ad)
@@ -263,10 +296,10 @@ always @( posedge mcu_clx2 or posedge mcu_rst ) begin
     end
 end
 
-always @( negedge mcu_clx2 or posedge mcu_rst ) begin
-    if (mcu_rst) begin
+always @( posedge clk or posedge rst ) begin
+    if (rst) begin
         oci <= 0;
-    end else begin
+    end else if(cen_fall2) begin
         case (mcu_ad)
             16'h0B: oci <= 0;
             16'h0C: oci <= 0;
