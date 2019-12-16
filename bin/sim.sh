@@ -101,18 +101,19 @@ fi
 
 if [ "$HD63701" = 1 ]; then
     echo "INFO: HD63701 support added."
-    if [ ! -e $MODULES/HD63701 ]; then
-        echo "You must manually add the submodule for HD63701 into the modules folder"
-        exit 1
-    fi
     # Try to create symbolic links for the include files
     if [ ! -e HD63701_defs.i ]; then
-        ln -s ../../modules/HD63701/HD63701_defs.i
+        ln -s ../../modules/jtframe/hdl/cpu/63701/HD63701_defs.i
     fi
     if [ ! -e HD63701_MCODE.i ]; then
-        ln -s ../../modules/HD63701/HD63701_MCODE.i
+        ln -s ../../modules/jtframe/hdl/cpu/63701/HD63701_MCODE.i
     fi
     PERCORE="$PERCORE $(add_dir $MODULES/jtframe/hdl/cpu/63701 jt63701.f)"
+fi
+
+if [ "$M6809" = 1 ]; then
+    echo "INFO: M6809 support added."
+    PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/mc6809i.v"
 fi
 
 

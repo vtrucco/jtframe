@@ -5,16 +5,16 @@
 `include "HD63701_defs.i"
 
 module HD63701_ALU (
-    input   [4:0] op,   // operation code
-    input   [7:0] cf,   // Flag register
-    input         bw,   // bit width
+    input       [4:0] op,   // operation code
+    input       [7:0] cf,   // Flag register
+    input             bw,   // bit width
 
-    input  [15:0] R0,   // operands
-    input  [15:0] R1,
-    input         C,    // input carry
+    input      [15:0] R0,   // operands
+    input      [15:0] R1,
+    input             C,    // input carry
 
-    output [15:0] RR,   // result
-    output  [5:0] RC
+    output reg [15:0] RR,   // result
+    output      [5:0] RC
 );
 
 `ifdef SIMULATION

@@ -15,9 +15,9 @@ module jt63701(
     input           cen_fall,
 
     input           haltn,
-    input           nmi,    // NMI
-    input           irq,    // IRQ1
     output          ba,     // Bus Available
+    input           nmi,    // NMI  (active high) 
+    input           irq,    // IRQ1 (active high)
     output          wr,     // CS2. High for writting
     output  [15:0]  AD,     //  AS ? {PO4,PO3}
     output  [ 7:0]  dout,   // ~AS ? {PO3}
@@ -31,16 +31,18 @@ module jt63701(
 
     input   [ 7:0]  p6_din,
     output  [ 7:0]  p6_dout,
-    // PROM Access
+    // ROM Access
     output  [13:0]  rom_addr,
     input   [ 7:0]  rom_data,
     output          rom_cs,
-    input           rom_busy
+    input           rom_ok
 );
 
 // Built-In Instruction ROM
+reg         halted_n;
 assign      rom_cs = (AD[15:14]==2'b11);     // $C000-$FFFF
-assign      ba = rom_cs;   // Safe to stop when accessing the internal PROM
+assign      ba = rom_cs || !halted_n;   // Safe to stop when accessing the internal PROM
+assign      rom_addr = AD[13:0];
 
 // Built-In WorkRAM
 parameter BIRAM_START = 16'h40;
@@ -112,12 +114,41 @@ HD63701_BIDSEL bidsel(
 
 wire [6:0] phase;
 
-// Processor Core
+// Halt procedure
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        halted_n <= 1'b1;
+    end else begin
+        if( !haltn && rom_cs ) halted_n <= 1'b0; // only halt when accessing the ROM
+        if( haltn ) halted_n <= 1'b1;
+    end
+end
+
+reg waitn;
+
+always @(posedge clk, posedge rst) begin : romcs_edge
+    reg last_romcs;
+    last_romcs <= rom_cs;
+    if( rst )
+        waitn <= 1'b1;
+    else begin
+        if( rom_cs && !last_romcs ) waitn<=1'b0;
+        else if( rom_ok ) waitn <= 1'b1;
+    end
+end
+
+reg core_cen0, core_cen1;
+
+always @(negedge clk) begin
+    core_cen0 <= cen_fall & waitn & halted_n;
+    core_cen1 <= cen_rise & waitn & halted_n;
+end
+
 HD63701_Core core (  
   .rst      ( rst       ),
   .clk      ( clk       ),
-  .cen_fall ( cen_fall  ),
-  .cen_rise ( cen_rise  ),
+  .cen_fall ( core_cen0 ),
+  .cen_rise ( core_cen1 ),
   
   .NMI      ( nmi       ),
   .IRQ      ( irq       ),
