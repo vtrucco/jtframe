@@ -161,7 +161,7 @@ HD63701_MCROM #(MCWIDTH) mcr(
     .cen_fall   ( cen_fall  ),
     .PHASE      ( PHASE     ),
     .OPCODE     ( opcodein  ),
-     .mcode     ( mcoder    )
+    .mcode      ( mcoder    )
 );
 assign mcout = mcside ? mcoder : mcode;
 
