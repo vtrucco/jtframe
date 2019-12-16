@@ -1,22 +1,23 @@
+// Edited by Jose Tejada
+// * hold changed to clock enable cen signal
+
 module m6801(   
-        input logic clk,
-        input logic rst,
-        output logic rw,
-        output logic vma,
-        output logic[15:0]address,
-        input logic[7:0] data_in,
-        output logic[7:0] data_out,
-        input logic hold,
-        input logic halt,
-        input logic irq,
-        input logic nmi,
-        input logic irq_icf,
-        input logic irq_ocf,
-        input logic irq_tof,
-        input logic irq_sci,
-        output logic[15:0] test_alu,
-        output logic[7:0] test_cc
-        );
+        input  logic        clk,
+        input  logic        rst,
+        (*direct_enable*) input logic cen,
+        output logic        rw,
+        output logic        vma,
+        output logic [15:0] address,
+        input  logic [ 7:0] data_in,
+        output logic [ 7:0] data_out,        
+        input  logic        halt,
+        input  logic        irq,
+        input  logic        nmi,
+        input  logic        irq_icf,
+        input  logic        irq_ocf,
+        input  logic        irq_tof,
+        input  logic        irq_sci
+);
 localparam SBIT = 7;
 localparam XBIT = 6;
 localparam HBIT = 5;
@@ -249,11 +250,7 @@ begin
   endcase
 end
 
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-      pc <= pc;
-    else
+always_ff @(posedge clk) if(cen) begin
       pc <= temppc + tempof;
 end
 
@@ -298,12 +295,8 @@ begin
   endcase
 end
 
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-      ea <= ea;
-    else
-      ea <= tempea + tempind;
+always_ff @(posedge clk) if (cen) begin
+  ea <= tempea + tempind;
 end
 
 //////////////////////////////////
@@ -311,23 +304,13 @@ end
 //// Accumulator A
 ////
 //////////////////////////////////
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       acca <= acca;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (acca_ctrl)
-    reset_acca:
-       acca <= 8'b00000000;
-     load_acca:
-       acca <= out_alu[7:0];
-     load_hi_acca:
-       acca <= out_alu[15:8];
-     pull_acca:
-       acca <= data_in;
-     default:
-//   latch_acca:
-       acca <= acca;
+      reset_acca:   acca <= 8'b00000000;
+      load_acca:    acca <= out_alu[7:0];
+      load_hi_acca: acca <= out_alu[15:8];
+      pull_acca:    acca <= data_in;
+      default:;
     endcase
 end
 
@@ -336,21 +319,12 @@ end
 //// Accumulator B
 ////
 //////////////////////////////////
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       accb <= accb;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (accb_ctrl)
-    reset_accb:
-       accb <= 8'b00000000;
-     load_accb:
-       accb <= out_alu[7:0];
-     pull_accb:
-       accb <= data_in;
-     default:
-//   latch_accb:
-       accb <= accb;
+      reset_accb: accb <= 8'b00000000;
+      load_accb:  accb <= out_alu[7:0];
+      pull_accb:  accb <= data_in;
+      default:;
     endcase
 end
 
@@ -359,23 +333,13 @@ end
 //// X Index register
 ////
 //////////////////////////////////
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       xreg <= xreg;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (ix_ctrl)
-    reset_ix:
-       xreg <= 16'b0000000000000000;
-     load_ix:
-       xreg <= out_alu[15:0];
-     pull_hi_ix:
-       xreg[15:8] <= data_in;
-     pull_lo_ix:
-       xreg[7:0] <= data_in;
-     default:
-//   latch_ix:
-       xreg <= xreg;
+      reset_ix:   xreg <= 16'b0000000000000000;
+      load_ix:    xreg <= out_alu[15:0];
+      pull_hi_ix: xreg[15:8] <= data_in;
+      pull_lo_ix: xreg[7:0] <= data_in;
+      default:;
     endcase
 end
 
@@ -384,11 +348,7 @@ end
 //// stack pointer
 ////
 //////////////////////////////////
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       sp <= sp;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (sp_ctrl)
     reset_sp:
        sp <= 16'b0000000000000000;
@@ -405,11 +365,7 @@ end
 //// Memory Data
 ////
 //////////////////////////////////
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       md <= md;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (md_ctrl)
     reset_md:
        md <= 16'b0000000000000000;
@@ -443,21 +399,12 @@ end
 ////
 ////////////////////////////////////
 
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       cc <= cc;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (cc_ctrl)
-     reset_cc:
-       cc <= 8'b11000000;
-     load_cc:
-       cc <= cc_out;
-     pull_cc:
-      cc <= data_in;
-     default:
-//  latch_cc:
-      cc <= cc;
+      reset_cc: cc <= 8'b11000000;
+      load_cc:  cc <= cc_out;
+      pull_cc:  cc <= data_in;
+      default:;
     endcase
 end
 
@@ -467,30 +414,17 @@ end
 ////
 ////////////////////////////////////
 
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       iv <= iv;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (iv_ctrl)
-     reset_iv:
-       iv <= 3'b111;
-     nmi_iv:
-      iv <= 3'b110;
-     swi_iv:
-      iv <= 3'b101;
-     irq_iv:
-      iv <= 3'b100;
-     icf_iv:
-       iv <= 3'b011;
-     ocf_iv:
-      iv <= 3'b010;
-     tof_iv:
-      iv <= 3'b001;
-     sci_iv:
-      iv <= 3'b000;
-     default:
-       iv <= iv;
+      reset_iv: iv <= 3'b111;
+      nmi_iv:   iv <= 3'b110;
+      swi_iv:   iv <= 3'b101;
+      irq_iv:   iv <= 3'b100;
+      icf_iv:   iv <= 3'b011;
+      ocf_iv:   iv <= 3'b010;
+      tof_iv:   iv <= 3'b001;
+      sci_iv:   iv <= 3'b000;
+      default:;
     endcase
 end
 
@@ -500,19 +434,11 @@ end
 ////
 ////////////////////////////////////
 
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       op_code <= op_code;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (op_ctrl)
-     reset_op:
-       op_code <= 8'b00000001; // nop
-     fetch_op:
-      op_code <= data_in;
-     default:
-//   latch_op:
-       op_code <= op_code;
+      reset_op: op_code <= 8'b00000001; // nop
+      fetch_op: op_code <= data_in;
+      default:;
     endcase
 end
 
@@ -558,15 +484,10 @@ end
 always_comb
 begin
   case (right_ctrl)
-     zero_right:
-       right = 16'b0000000000000000;
-     plus_one_right:
-       right = 16'b0000000000000001;
-     accb_right:
-       right = {8'b00000000, accb};
-     default:
-//   md_right:
-       right = md;
+      zero_right:    right = 16'b0;
+      plus_one_right:right = 16'b1;
+      accb_right:    right = {8'b0, accb};
+      default:       right = md;
     endcase
 end
 
@@ -581,7 +502,6 @@ logic carry_in;
 logic[7:0] daa_reg;
 always_comb
 begin
-
   case (alu_ctrl)
      alu_adc, alu_sbc,
           alu_rol8, alu_ror8:
@@ -837,8 +757,8 @@ end
      end
      endcase
 
-     test_alu = out_alu;
-     test_cc  = cc_out;
+     // test_alu = out_alu;
+     // test_cc  = cc_out;
 end
 
 ////////////////////////////////////
@@ -847,18 +767,15 @@ end
 //
 ////////////////////////////////////
 
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       nmi_req <= nmi_req;
-     else if (rst==1'b1)
+always_ff @(posedge clk, posedge rst) begin
+    if (rst==1'b1)
        nmi_req <= 1'b0;
-    else if (nmi==1'b1 && nmi_ack==1'b0)
-        nmi_req <= 1'b1;
-     else if (nmi==1'b0 && nmi_ack==1'b1)
-        nmi_req <= 1'b0;
-     else
-        nmi_req <= nmi_req;
+    else if(cen) begin
+      if (nmi==1'b1 && nmi_ack==1'b0)
+          nmi_req <= 1'b1;
+      else if (nmi==1'b0 && nmi_ack==1'b1)
+          nmi_req <= 1'b0;
+    end
 end
 
 ////////////////////////////////////
@@ -867,20 +784,12 @@ end
 //
 ////////////////////////////////////
 
-always_ff @(posedge clk)
-begin
-    if (hold == 1'b1)
-       nmi_ack <= nmi_ack;
-     else
+always_ff @(posedge clk) if(cen) begin
     case (nmi_ctrl)
-     set_nmi:
-      nmi_ack <= 1'b1;
-     reset_nmi:
-       nmi_ack <= 1'b0;
-     default:
-//  when latch_nmi =>
-       nmi_ack <= nmi_ack;
-     endcase
+      set_nmi:   nmi_ack <= 1'b1;
+      reset_nmi: nmi_ack <= 1'b0;
+      default:;
+    endcase
 end
 
 ////////////////////////////////////
@@ -4351,32 +4260,31 @@ always_comb
              next_state = vect_hi_state;
             end
 
-              halt_state: // halt CPU.
-              begin
-                 // default
-             acca_ctrl  = latch_acca;
-             accb_ctrl  = latch_accb;
-             ix_ctrl    = latch_ix;
-             sp_ctrl    = latch_sp;
-             pc_ctrl    = latch_pc;
-             md_ctrl    = latch_md;
-             iv_ctrl    = latch_iv;
+              halt_state: begin // halt CPU.
+                // default
+                acca_ctrl  = latch_acca;
+                accb_ctrl  = latch_accb;
+                ix_ctrl    = latch_ix;
+                sp_ctrl    = latch_sp;
+                pc_ctrl    = latch_pc;
+                md_ctrl    = latch_md;
+                iv_ctrl    = latch_iv;
                 op_ctrl    = latch_op;
-                 nmi_ctrl   = latch_nmi;
-             ea_ctrl    = latch_ea;
-                 // do nothing in ALU
-             left_ctrl  = acca_left;
-             right_ctrl = zero_right;
-             alu_ctrl   = alu_nop;
-             cc_ctrl    = latch_cc;
-                 // idle bus cycle
-             addr_ctrl  = idle_ad;
-             dout_ctrl  = md_lo_dout;
-                 if (halt == 1'b1)
+                nmi_ctrl   = latch_nmi;
+                ea_ctrl    = latch_ea;
+                // do nothing in ALU
+                left_ctrl  = acca_left;
+                right_ctrl = zero_right;
+                alu_ctrl   = alu_nop;
+                cc_ctrl    = latch_cc;
+                // idle bus cycle
+                addr_ctrl  = idle_ad;
+                dout_ctrl  = md_lo_dout;
+                if (halt == 1'b1)
                   next_state = halt_state;
-                 else
-                   next_state = fetch_state;
-                 end
+                else
+                  next_state = fetch_state;
+              end
 
               default: // error state halt on undefine states
               begin
@@ -4410,13 +4318,10 @@ end
 //
 ////////////////////////////////
 
-always_ff @(posedge clk)
-begin
+always_ff @(posedge clk, posedge rst) begin
     if (rst == 1'b1)
         state <= reset_state;
-    else if (hold == 1'b1)
-        state <= state;
-    else
+    if (cen)
         state <= next_state;
 end
 endmodule

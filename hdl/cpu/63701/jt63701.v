@@ -1,18 +1,14 @@
 //*********************************************************
-//    HD63701V0(Mode6) Compatible Processor Core
+//    HD63701V0 Compatible Processor Core
 //
 //    By Jose Tejada 2019-2020
-//    Based on the original IP by Tsuyoshi HASEGAWA 2013-14
 //
 //*********************************************************
 
 module jt63701(
     input           rst,
     input           clk,
-    input           cen_rise2,    // twice the intended clock speed
-    input           cen_fall2,    // twice the intended clock speed
-    input           cen_rise,
-    input           cen_fall,
+    input           cen,
 
     input           haltn,
     output          ba,     // Bus Available
