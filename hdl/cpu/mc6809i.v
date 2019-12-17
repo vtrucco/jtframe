@@ -585,30 +585,27 @@ begin
 end
 
 
-reg rnRESET=0; // The latched version of /RESET, useful 1 clock after it's latched
-always @(posedge clk) if(cen_E)
-begin
-    rnRESET <= nRESET;
-    
-    NMISample2 <= NMISample;
-    
-    IRQSample2 <= IRQSample;
-    IRQLatched <= IRQSample2;
-
-    FIRQSample2 <= FIRQSample;
-    FIRQLatched <= FIRQSample2;
-
-    HALTSample2 <= HALTSample;
-    HALTLatched <= HALTSample2;
-
-    DMABREQSample2 <= DMABREQSample;
-    DMABREQLatched <= DMABREQSample2;
-
-
-    if (rnRESET == 1)
-    begin
+always @(posedge clk, negedge nRESET) begin
+    if (!nRESET) begin
+        CpuState <= CPUSTATE_RESET; 
+        NMIMask <= 1'b1; // Mask NMI until S is loaded.
+        NMIClear <= 1'b0; // Mark us as not having serviced NMI
+    end else if(cen_E) begin
         CpuState <= CpuState_nxt;
+
+        NMISample2 <= NMISample;
         
+        IRQSample2 <= IRQSample;
+        IRQLatched <= IRQSample2;
+
+        FIRQSample2 <= FIRQSample;
+        FIRQLatched <= FIRQSample2;
+
+        HALTSample2 <= HALTSample;
+        HALTLatched <= HALTSample2;
+
+        DMABREQSample2 <= DMABREQSample;
+        DMABREQLatched <= DMABREQSample2;        
         // Don't interpret this next item as "The Next State"; it's a special case 'after this 
         // generic state, go to this programmable state', so that a single state 
         // can be shared for many tasks. [Specifically, the stack push/pull code, which is used
@@ -640,12 +637,6 @@ begin
         
         if (s != s_nxt)                 // Once S changes at all (default is '0'), release the NMI Mask.
             NMIMask <= 1'b0;
-    end
-    else
-    begin
-        CpuState <= CPUSTATE_RESET; 
-        NMIMask <= 1'b1; // Mask NMI until S is loaded.
-        NMIClear <= 1'b0; // Mark us as not having serviced NMI
     end
 end
 

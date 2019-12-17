@@ -4,7 +4,7 @@
 module m6801(   
         input  logic        clk,
         input  logic        rst,
-        (*direct_enable*) input logic cen,
+        (*direct_enable*) input cen,
         output logic        rw,
         output logic        vma,
         output logic [15:0] address,
@@ -768,12 +768,12 @@ end
 ////////////////////////////////////
 
 always_ff @(posedge clk, posedge rst) begin
-    if (rst==1'b1)
+    if (rst)
        nmi_req <= 1'b0;
     else if(cen) begin
-      if (nmi==1'b1 && nmi_ack==1'b0)
+      if (nmi && !nmi_ack)
           nmi_req <= 1'b1;
-      else if (nmi==1'b0 && nmi_ack==1'b1)
+      else if ( !nmi && nmi_ack)
           nmi_req <= 1'b0;
     end
 end
@@ -4310,9 +4310,9 @@ end
 ////////////////////////////////
 
 always_ff @(posedge clk, posedge rst) begin
-    if (rst == 1'b1)
+    if (rst)
         state <= reset_state;
-    if (cen)
+    else if (cen)
         state <= next_state;
 end
 endmodule
