@@ -235,6 +235,7 @@ endfunction
     initial begin : read_sim_inputs
         integer c;
         for( c=0; c<16384; c=c+1 ) sim_inputs[c] = 8'h0;
+        $display("INFO: input simulation enabled");
         $readmemh( "sim_inputs.hex", sim_inputs );
     end
     always @(negedge LVBL, posedge rst) begin
