@@ -116,6 +116,10 @@ if [ "$M6809" = 1 ]; then
     PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/mc6809i.v"
 fi
 
+if [ "$M6801" = 1 ]; then
+    echo "INFO: M6801 support added."
+    PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/6801_core.sv"
+fi
 
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."

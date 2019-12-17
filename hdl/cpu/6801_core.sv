@@ -1314,49 +1314,40 @@ always_comb
                      end
               endcase
              md_ctrl    = latch_md;
-                 // fetch the op code
+                // fetch the op code
                 op_ctrl    = fetch_op;
-             ea_ctrl    = reset_ea;
-             addr_ctrl  = fetch_ad;
-             dout_ctrl  = md_lo_dout;
+                ea_ctrl    = reset_ea;
+                addr_ctrl  = fetch_ad;
+                dout_ctrl  = md_lo_dout;
                 iv_ctrl    = latch_iv;
-                if (halt == 1'b1)
-                begin
-                    pc_ctrl    = latch_pc;
-                   nmi_ctrl   = latch_nmi;
+                if (halt == 1'b1) begin
+                  pc_ctrl    = latch_pc;
+                  nmi_ctrl   = latch_nmi;
                   next_state = halt_state;
                 end
                 // service non maskable interrupts
-               else if (nmi_req == 1'b1 && nmi_ack == 1'b0)
-                begin
-               pc_ctrl    = latch_pc;
-                   nmi_ctrl   = set_nmi;
+                else if (nmi_req == 1'b1 && nmi_ack == 1'b0) begin
+                  pc_ctrl    = latch_pc;
+                  nmi_ctrl   = set_nmi;
                   next_state = int_pcl_state;
                 end
                 // service maskable interrupts
-               else
-                begin
-                    //
-                    // nmi request is not cleared until nmi input goes low
-                    //
-                   if(nmi_req == 1'b0 && nmi_ack==1'b1)
-                     nmi_ctrl = reset_nmi;
-                    else
-                      nmi_ctrl = latch_nmi;
-                    //
-                    // IRQ is level sensitive
-                    //
-                   if ((irq == 1'b1 || irq_icf == 1'b1 || irq_ocf == 1'b1 || irq_tof == 1'b1 || irq_sci == 1'b1) && cc[IBIT] == 1'b0)
-                    begin
-                 pc_ctrl    = latch_pc;
-                    next_state = int_pcl_state;
-                    end
-               else
-                    begin
-                   // Advance the PC to fetch next instruction byte
-                 pc_ctrl    = inc_pc;
-                    next_state = decode_state;
-                    end
+               else begin
+                  // nmi request is not cleared until nmi input goes low
+                if(nmi_req == 1'b0 && nmi_ack==1'b1)
+                  nmi_ctrl = reset_nmi;
+                else
+                  nmi_ctrl = latch_nmi;
+                // IRQ is level sensitive
+                if ((irq == 1'b1 || irq_icf == 1'b1 || irq_ocf == 1'b1 
+                  || irq_tof == 1'b1 || irq_sci == 1'b1) && cc[IBIT] == 1'b0) begin
+                  pc_ctrl    = latch_pc;
+                  next_state = int_pcl_state;
+                end else begin
+                  // Advance the PC to fetch next instruction byte
+                  pc_ctrl    = inc_pc;
+                  next_state = decode_state;
+                end
                 end
             end
              //
