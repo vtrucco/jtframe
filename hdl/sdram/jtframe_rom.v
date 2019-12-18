@@ -46,6 +46,7 @@ module jtframe_rom #(parameter
 )(
     input               rst,
     input               clk,
+    input               vblank,
 
     input  [SLOT0_AW-1:0] slot0_addr, //  32 kB
     input  [SLOT1_AW-1:0] slot1_addr, // 160 kB, addressed as 8-bit words
@@ -125,9 +126,20 @@ assign slot6_ok = ok[6];
 assign slot7_ok = ok[7];
 assign slot8_ok = ok[8];
 
-always @(posedge clk) begin
-    refresh_en <= &ok;
-end
+wire [8:0] cs;
+assign cs[0] = slot0_cs;
+assign cs[1] = slot1_cs;
+assign cs[2] = slot2_cs;
+assign cs[3] = slot3_cs;
+assign cs[4] = slot4_cs;
+assign cs[5] = slot5_cs;
+assign cs[6] = slot6_cs;
+assign cs[7] = slot7_cs;
+assign cs[8] = slot8_cs;
+
+// always @(posedge clk) begin
+//     refresh_en <= &((ok|~cs)|rfsh_mask) & vblank;
+// end
 
 jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.OFFSET(SLOT0_OFFSET)) u_slot0(
     .rst       ( rst                    ),
@@ -219,6 +231,21 @@ jtframe_romrq #(.AW(SLOT5_AW),.DW(SLOT5_DW),.OFFSET(SLOT5_OFFSET)) u_slot5(
     .we        ( data_sel[5]            )
 );
 
+jtframe_romrq #(.AW(SLOT6_AW),.DW(SLOT6_DW),.OFFSET(SLOT6_OFFSET)) u_slot6(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot6_addr             ),
+    .addr_ok   ( slot6_cs               ),
+    .sdram_addr( slot6_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot6_dout             ),
+    .req       ( req[6]                 ),
+    .data_ok   ( ok[6]                  ),
+    .we        ( data_sel[6]            )
+);
+
 jtframe_romrq #(.AW(SLOT7_AW),.DW(SLOT7_DW),.OFFSET(SLOT7_OFFSET)) u_slot7(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
@@ -262,6 +289,7 @@ if( loop_rst || downloading ) begin
 end else begin
     {ready, ready_cnt}  <= {ready_cnt, 1'b1};
     if( sdram_ack ) sdram_req <= 1'b0;
+    refresh_en <= 1'b0;
     // accept a new request
     if( data_sel==9'd0 || data_rdy ) begin
         sdram_req <= |active;
@@ -303,6 +331,7 @@ end else begin
                 sdram_addr <= slot8_addr_req;
                 data_sel[8] <= 1'b1;
             end
+            default: refresh_en <= vblank;
         endcase
     end
 end
