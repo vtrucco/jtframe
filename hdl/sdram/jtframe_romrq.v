@@ -18,7 +18,7 @@
 
 `timescale 1ns/1ps
 
-module jtframe_romrq #(parameter AW=18, DW=8, INVERT_A0=0 )(
+module jtframe_romrq #(parameter AW=18, DW=8, OFFSET=22'd0 )(
     input               rst,
     input               clk,
     input               cen,
@@ -29,9 +29,11 @@ module jtframe_romrq #(parameter AW=18, DW=8, INVERT_A0=0 )(
     input               we,
     output reg          req,
     output reg          data_ok,    // strobe that signals that data is ready
-    output reg [AW-1:0] addr_req,
+    output     [21:0]   sdram_addr,
     output reg [DW-1:0] dout
 );
+
+reg [AW-1:0] addr_req;
 
 reg [AW-1:0] cached_addr0;
 reg [AW-1:0] cached_addr1;
@@ -41,6 +43,9 @@ reg deleterus;
 reg [1:0]    subaddr;
 reg init;
 reg hit0, hit1;
+
+wire  [21:0] size_ext = { {22-AW{1'b0}}, addr_req };
+assign sdram_addr = (DW==8?(size_ext>>1):size_ext ) + OFFSET;
 
 always @(*) begin
     case(DW)
@@ -83,10 +88,7 @@ always @(posedge clk, posedge rst)
 
 always @(*) begin
     subaddr[1] = addr[1];
-    if( INVERT_A0 && DW==8 ) // only apply inverstion to 8-bit CPUs
-        subaddr[0] = ~addr[0];
-    else
-        subaddr[0] =  addr[0];
+    subaddr[0] =  addr[0];
 end
 
 // data_mux selects one of two cache registers
