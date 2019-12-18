@@ -29,8 +29,8 @@
 `timescale 1ns/1ps
 
 module jtframe_dual_ram #(parameter dw=8, aw=10, simfile="", simhexfile="", synfile="",cen_rd=0)(
-    input   clk,
-    input   cen /* direct_enable */,
+    input   clk0,
+    input   clk1,
     // Port 0
     input   [dw-1:0] data0,
     input   [aw-1:0] addr0,
@@ -78,15 +78,14 @@ initial if(synfile!="" )$readmemh(synfile,mem);
 /* verilator lint_on WIDTH */
 `endif
 
-always @(posedge clk) begin
-    if( !cen_rd || cen ) begin
-        q0 <= mem[addr0];
-        q1 <= mem[addr1];
-    end
-    if( cen ) begin
-        if(we0) mem[addr0] <= data0;
-        if(we1) mem[addr1] <= data1;
-    end
+always @(posedge clk0) begin
+    q0 <= mem[addr0];
+    if(we0) mem[addr0] <= data0;
+end
+
+always @(posedge clk1) begin
+    q1 <= mem[addr1];
+    if(we1) mem[addr1] <= data1;
 end
 
 endmodule
