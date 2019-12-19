@@ -22,6 +22,7 @@ SHOWCMD=
 ARGNUMBER=1
 VIDEOWIDTH=256
 VIDEOHEIGHT=224
+SAMPLING_RATE=
 
 rm -f test2.bin
 
@@ -99,18 +100,6 @@ if [ "$MSM5205" = 1 ]; then
     PERCORE="$PERCORE $(add_dir $MODULES/jt5205/hdl jt5205.f)"
 fi
 
-if [ "$HD63701" = 1 ]; then
-    echo "INFO: HD63701 support added."
-    # Try to create symbolic links for the include files
-    if [ ! -e HD63701_defs.i ]; then
-        ln -s ../../modules/jtframe/hdl/cpu/63701/HD63701_defs.i
-    fi
-    if [ ! -e HD63701_MCODE.i ]; then
-        ln -s ../../modules/jtframe/hdl/cpu/63701/HD63701_MCODE.i
-    fi
-    PERCORE="$PERCORE $(add_dir $MODULES/jtframe/hdl/cpu/63701 jt63701.f)"
-fi
-
 if [ "$M6809" = 1 ]; then
     echo "INFO: M6809 support added."
     PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/mc6809i.v"
@@ -178,6 +167,14 @@ case "$1" in
         fi
         MAXFRAME="${MACROPREFIX}MAXFRAME=$1"
         echo Simulate up to $1 frames
+        ;;
+    -srate)
+        shift
+        if [ "$1" = "" ]; then
+            echo "Must specify the sampling rate"
+            exit 1
+        fi
+        SAMPLING_RATE="-s $1"
         ;;
     #################### MiST setup
     "-mist")
@@ -338,31 +335,6 @@ case "$1" in
     "-help")
         cat << EOF
 JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
-    -sysname  Specify the name of the core
-    -modules  Location of the modules folder with respect to the simulation folder
-    -mist     Use MiST setup for simulation, instead of using directly the
-              game module. This is slower but more informative.
-    -video    Enable video output. Can be followed by a number to get
-              the number of frames to simulate.
-    -videow   Define the visible screen width  (only useful if -video is also used)
-    -videoh   Define the visible screen height (only useful if -video is also used)
-    -lint     Run verilator as lint tool
-    -nc       Select NCVerilog as the simulator
-    -load     Load the ROM file using the SPI communication. Slower.
-    -t        Compile and load test file for main CPU. It can be used with the
-              name of an assembly language file.
-    -t2       Same as -t but for the sound CPU
-    -nochar   Disable CHAR hardware. Faster simulation.
-    -noscr    Disable SCROLL hardware. Faster simulation.
-    -nosnd    Disable SOUND hardware. Speeds up simulation a lot!
-    -w        Save a small set of signals for scope verification
-    -deep     Save all signals for scope verification
-    -frame    Number of frames to simulate
-    -time     Number of milliseconds to simulate
-    -test     Enable test DIP setting. Same as -d DIP_TEST
-    -pause    Enable pause DIP setting. Same as -d DIP_PAUSE
-    -slowpll  Simulate using Altera's model for PLLs
-    -showcmd  Display the simulation command only. Do not run any simulation.
     -d        Add specific Verilog macros for the simulation. Common options
         VIDEO_START=X   video output will start on frame X
         DUMP_START=X    waveform dump will start on frame X
@@ -381,6 +353,32 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
         SIMULATE_OSD    Simulate OSD display
         SIMINFO         Show simulation options available thorugh define commands
         SCANDOUBLER_DISABLE=1   Disables the scan doubler module
+    -deep     Save all signals for scope verification
+    -frame    Number of frames to simulate
+    -lint     Run verilator as lint tool
+    -load     Load the ROM file using the SPI communication. Slower.
+    -modules  Location of the modules folder with respect to the simulation folder
+    -mist     Use MiST setup for simulation, instead of using directly the
+              game module. This is slower but more informative.
+    -nc       Select NCVerilog as the simulator
+    -nochar   Disable CHAR hardware. Faster simulation.
+    -noscr    Disable SCROLL hardware. Faster simulation.
+    -nosnd    Disable SOUND hardware. Speeds up simulation a lot!
+    -pause    Enable pause DIP setting. Same as -d DIP_PAUSE
+    -srate    Sampling rate of the .wav file
+    -t        Compile and load test file for main CPU. It can be used with the
+              name of an assembly language file.
+    -t2       Same as -t but for the sound CPU
+    -time     Number of milliseconds to simulate
+    -test     Enable test DIP setting. Same as -d DIP_TEST
+    -slowpll  Simulate using Altera's model for PLLs
+    -showcmd  Display the simulation command only. Do not run any simulation.
+    -sysname  Specify the name of the core
+    -video    Enable video output. Can be followed by a number to get
+              the number of frames to simulate.
+    -videow   Define the visible screen width  (only useful if -video is also used)
+    -videoh   Define the visible screen height (only useful if -video is also used)
+    -w        Save a small set of signals for scope verification
 EOF
         exit 0
         ;;
@@ -479,5 +477,5 @@ fi
 
 # convert raw sound file to wav format
 if [ -e sound.raw ]; then
-    $JTFRAME/bin/raw2wav < sound.raw
+    $JTFRAME/bin/raw2wav $SAMPLING_RATE < sound.raw
 fi

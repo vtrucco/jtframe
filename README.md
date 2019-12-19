@@ -46,3 +46,16 @@ bit         meaning
 7
 8           Button 1
 9           Button 2
+
+Modules with simulation files added automatically
+=================================================
+Define and export the following environgment variables to have these
+modules added to your simulation when using sim.sh
+
+YM2203
+YM2149
+YM2151
+MSM5205
+M6801
+M6809
+I8051
