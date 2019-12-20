@@ -11,6 +11,7 @@ module m6801(
         input  logic [ 7:0] data_in,
         output logic [ 7:0] data_out,        
         input  logic        halt,
+        output logic        halted,
         input  logic        irq,
         input  logic        nmi,
         input  logic        irq_icf,
@@ -113,6 +114,8 @@ nmi_type nmi_ctrl;
 //// Address bus multiplexer
 ////
 ////////////////////////////////////
+
+always @(posedge clk) halted <= state == halt_state;
 
 always_comb
 begin
