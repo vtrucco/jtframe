@@ -18,79 +18,77 @@
 
 `timescale 1ns/1ps
 
+// 9 slots for SDRAM read-only access
+// slot 0 --> maximum priority
+// slot 8 --> minimum priority
+// Each slot can be used for 8, 16 or 32 bit access
+// Small 4 byte cache used for each slot
+
 module jtframe_rom #(parameter
-    main_dw  = 8,
-    char_dw  = 16,
-    char_aw  = 14,
-    main_aw  = 18,
-     snd_aw  = 15,
-    snd2_aw  = 16,
-     obj_aw  = 17,
-    scr1_aw  = 17,
-    scr2_aw  = 15,
-     obj_dw  = 16,
-    map1_dw = 16,
-    map2_dw = 16,
-    map1_aw = 14,
-    map2_aw = 14,
-  snd_offset = 22'h14_000, // bm05.4k,  32kB
- snd2_offset = 22'h14_000, // bm05.4k,  32kB
- char_offset = 22'h18_000, // bm04.5h,  32kB
- map1_offset = 22'h1C_000, // bm14.5f,  32kB
- map2_offset = 22'h20_000, // bmm23.8k, 32kB
- scr1_offset = 22'h24_000, // 10f/j, 11f/j, 12f/j, 14f/j 256kB
- scr2_offset = 22'h44_000, // 14k/l 64kB
-  obj_offset = 22'h4C_000, // 10a/c, 11a/c, 12a/c, 14a/c 256kB
-/// Selects whether ROM goes into SDRAM or BRAM
-   BRAM_MAIN =0,
-   BRAM_SOUND=0
+    SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8, SLOT3_DW = 8,
+    SLOT4_DW = 8, SLOT5_DW = 8, SLOT6_DW = 8, SLOT7_DW = 8, SLOT8_DW = 8,
+
+    SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8, SLOT3_AW = 8,
+    SLOT4_AW = 8, SLOT5_AW = 8, SLOT6_AW = 8, SLOT7_AW = 8, SLOT8_AW = 8,
+
+    SLOT0_OFFSET = 22'h0,
+    SLOT1_OFFSET = 22'h0,
+    SLOT2_OFFSET = 22'h0,
+    SLOT3_OFFSET = 22'h0,
+    SLOT4_OFFSET = 22'h0,
+    SLOT5_OFFSET = 22'h0,
+    SLOT6_OFFSET = 22'h0,
+    SLOT7_OFFSET = 22'h0,
+    SLOT8_OFFSET = 22'h0
+
+    // SLOT0_BRAM   = 0,
+    // SLOT1_BRAM   = 0
 )(
     input               rst,
     input               clk,
-    input               LVBL,
+    input               vblank,
 
-    input               pause,
-    input               main_cs,
-    input               snd_cs,
-    input               snd2_cs,
-
-    input       [char_aw-1:0]  char_addr, //  32 kB
-    input       [main_aw-1:0]  main_addr, // 160 kB, addressed as 8-bit words
-    input       [ snd_aw-1:0]   snd_addr, //  32 kB
-    input       [snd2_aw-1:0]  snd2_addr, //  64 kB
-    input       [ obj_aw-1:0]   obj_addr, // 256 kB
-    input       [scr1_aw-1:0]  scr1_addr, // 256 kB (16-bit words)
-    input       [scr2_aw-1:0]  scr2_addr, //  64 kB
-    input       [map1_aw-1:0]  map1_addr, //  32 kB
-    input       [map2_aw-1:0]  map2_addr, //  32 kB
-
-    // ROM download, only important if any of the BRAM parameters are set to 1
-    input       [ 7:0]  prog_data,
-    input       [ 1:0]  prog_mask,
-    input       [21:0]  prog_addr,
-    input               prog_we,  
+    input  [SLOT0_AW-1:0] slot0_addr, //  32 kB
+    input  [SLOT1_AW-1:0] slot1_addr, // 160 kB, addressed as 8-bit words
+    input  [SLOT2_AW-1:0] slot2_addr, //  32 kB
+    input  [SLOT3_AW-1:0] slot3_addr, //  64 kB
+    input  [SLOT4_AW-1:0] slot4_addr, // 256 kB
+    input  [SLOT5_AW-1:0] slot5_addr, // 256 kB (16-bit words)
+    input  [SLOT6_AW-1:0] slot6_addr, //  64 kB
+    input  [SLOT7_AW-1:0] slot7_addr, //  32 kB
+    input  [SLOT8_AW-1:0] slot8_addr, //  32 kB
 
     //  output data
-    output reg [char_dw-1:0] char_dout,
-    output    [main_dw-1:0] main_dout,
-    output           [ 7:0] snd_dout,
-    output           [ 7:0] snd2_dout,
-    output reg [obj_dw-1:0] obj_dout,
-    output           [15:0] map1_dout,
-    output           [15:0] map2_dout,
-    output           [15:0] scr1_dout,
-    output           [15:0] scr2_dout,
-    output  reg             ready,
+    output [SLOT0_DW-1:0] slot0_dout,
+    output [SLOT1_DW-1:0] slot1_dout,
+    output [SLOT2_DW-1:0] slot2_dout,
+    output [SLOT3_DW-1:0] slot3_dout,
+    output [SLOT4_DW-1:0] slot4_dout,
+    output [SLOT5_DW-1:0] slot5_dout,
+    output [SLOT6_DW-1:0] slot6_dout,
+    output [SLOT7_DW-1:0] slot7_dout,
+    output [SLOT8_DW-1:0] slot8_dout,
+    output  reg         ready,
 
-    output              main_ok,
-    output              snd_ok,
-    output              snd2_ok,
-    output              scr1_ok,
-    output              scr2_ok,
-    output              map1_ok,
-    output              map2_ok,
-    output              char_ok,
-    output  reg         obj_ok,
+    input               slot0_cs,
+    input               slot1_cs,
+    input               slot2_cs,
+    input               slot3_cs,
+    input               slot4_cs,
+    input               slot5_cs,
+    input               slot6_cs,
+    input               slot7_cs,
+    input               slot8_cs,
+
+    output              slot0_ok,
+    output              slot1_ok,
+    output              slot2_ok,
+    output              slot3_ok,
+    output              slot4_ok,
+    output              slot5_ok,
+    output              slot6_ok,
+    output              slot7_ok,
+    output              slot8_ok,
     // SDRAM controller interface
     input               data_rdy,
     input               sdram_ack,
@@ -102,248 +100,184 @@ module jtframe_rom #(parameter
     input       [31:0]  data_read
 );
 
-wire prog_main = prog_we && (prog_mask!=2'b11) && prog_addr < snd_offset;
-wire  prog_snd = prog_we && (prog_mask!=2'b11) && prog_addr < char_offset && prog_addr>=snd_offset;
 
-// Main code
-// bme01.12d -> 32kB
-// bme02.13d, bme03.14d, -> 128kB, 8 banks of 16kB each
-// 6C_000 = ROM LEN
+reg  [ 3:0] ready_cnt;
+reg  [ 3:0] rd_state_last;
+wire [ 8:0] req, ok;
 
-reg [3:0] ready_cnt;
-reg [3:0] rd_state_last;
-wire main_req, char_req, map1_req, map2_req, scr1_req, scr2_req, obj_req, snd_req, snd2_req;
+reg  [ 8:0] data_sel;
+wire [21:0] slot0_addr_req,
+            slot1_addr_req,
+            slot2_addr_req,
+            slot3_addr_req,
+            slot4_addr_req,
+            slot5_addr_req,
+            slot6_addr_req,
+            slot7_addr_req,
+            slot8_addr_req;
 
-reg  [8:0] data_sel;
-wire [main_aw-1:0] main_addr_req;
-wire [ snd_aw-1:0]  snd_addr_req;
-wire [snd2_aw-1:0]  snd2_addr_req;
-wire [char_aw-1:0] char_addr_req;
-wire [ obj_aw-1:0]  obj_addr_req;
-wire [scr1_aw-1:0] scr1_addr_req;
-wire [scr2_aw-1:0] scr2_addr_req;
-wire [map1_aw-1:0] map1_addr_req;
-wire [map2_aw-1:0] map2_addr_req;
+assign slot0_ok = ok[0];
+assign slot1_ok = ok[1];
+assign slot2_ok = ok[2];
+assign slot3_ok = ok[3];
+assign slot4_ok = ok[4];
+assign slot5_ok = ok[5];
+assign slot6_ok = ok[6];
+assign slot7_ok = ok[7];
+assign slot8_ok = ok[8];
 
-always @(posedge clk)
-    // refresh_en <= !LVBL;
-    refresh_en <= &{ main_ok&main_cs, char_ok, scr1_ok, scr2_ok, map1_ok, map2_ok, obj_ok };
+wire [8:0] cs;
+assign cs[0] = slot0_cs;
+assign cs[1] = slot1_cs;
+assign cs[2] = slot2_cs;
+assign cs[3] = slot3_cs;
+assign cs[4] = slot4_cs;
+assign cs[5] = slot5_cs;
+assign cs[6] = slot6_cs;
+assign cs[7] = slot7_cs;
+assign cs[8] = slot8_cs;
 
-reg download_ok = 1'b0; // signals that the download process is completed
+// always @(posedge clk) begin
+//     refresh_en <= &((ok|~cs)|rfsh_mask) & vblank;
+// end
 
-always @(posedge clk) begin : download_watch
-    reg last_downloading;
-    last_downloading <= downloading;
-    if( !downloading && last_downloading )
-        download_ok <= 1'b1;
-end
-
-wire [22:0] prog_addr2 = { prog_addr[21:0], prog_mask[0] };
-
-jtframe_romflex #(
-    .AW(main_aw),
-    .DW(main_dw),
-    .INVERT_A0(1),
-    .USE_BRAM(BRAM_MAIN)) 
-u_main(
+jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.OFFSET(SLOT0_OFFSET)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .cen       ( 1'b1                   ),
-    .addr      ( main_addr              ),
-    .addr_ok   ( main_cs                ),
-    .addr_req  ( main_addr_req          ),
+    .addr      ( slot0_addr             ),
+    .addr_ok   ( slot0_cs               ),
+    .sdram_addr( slot0_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
-    .dout      ( main_dout              ),
-    .req       ( main_req               ),
-    .data_ok   ( main_ok                ),
-    .we        ( data_sel[0]            ),
-    .prog_we   ( prog_main              ),
-    // 16-bit operation from BRAM has not been
-    // verified yet
-    .prog_data ( {(main_dw==8?1:2){prog_data}} ),
-    .prog_addr ( prog_addr2[main_aw-1:0])
+    .dout      ( slot0_dout             ),
+    .req       ( req[0]                 ),
+    .data_ok   ( ok[0]                  ),
+    .we        ( data_sel[0]            )
+);
+
+jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.OFFSET(SLOT1_OFFSET)) u_slot1(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot1_addr             ),
+    .addr_ok   ( slot1_cs               ),
+    .sdram_addr( slot1_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot1_dout             ),
+    .req       ( req[1]                 ),
+    .data_ok   ( ok[1]                  ),
+    .we        ( data_sel[1]            )
+);
+
+jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW),.OFFSET(SLOT2_OFFSET)) u_slot2(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot2_addr             ),
+    .addr_ok   ( slot2_cs               ),
+    .sdram_addr( slot2_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot2_dout             ),
+    .req       ( req[2]                 ),
+    .data_ok   ( ok[2]                  ),
+    .we        ( data_sel[2]            )
+);
+
+jtframe_romrq #(.AW(SLOT3_AW),.DW(SLOT3_DW),.OFFSET(SLOT3_OFFSET)) u_slot3(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot3_addr             ),
+    .addr_ok   ( slot3_cs               ),
+    .sdram_addr( slot3_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot3_dout             ),
+    .req       ( req[3]                 ),
+    .data_ok   ( ok[3]                  ),
+    .we        ( data_sel[3]            )
+);
+
+jtframe_romrq #(.AW(SLOT4_AW),.DW(SLOT4_DW),.OFFSET(SLOT4_OFFSET)) u_slot4(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot4_addr             ),
+    .addr_ok   ( slot4_cs               ),
+    .sdram_addr( slot4_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot4_dout             ),
+    .req       ( req[4]                 ),
+    .data_ok   ( ok[4]                  ),
+    .we        ( data_sel[4]            )
+);
+
+jtframe_romrq #(.AW(SLOT5_AW),.DW(SLOT5_DW),.OFFSET(SLOT5_OFFSET)) u_slot5(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot5_addr             ),
+    .addr_ok   ( slot5_cs               ),
+    .sdram_addr( slot5_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot5_dout             ),
+    .req       ( req[5]                 ),
+    .data_ok   ( ok[5]                  ),
+    .we        ( data_sel[5]            )
+);
+
+jtframe_romrq #(.AW(SLOT6_AW),.DW(SLOT6_DW),.OFFSET(SLOT6_OFFSET)) u_slot6(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot6_addr             ),
+    .addr_ok   ( slot6_cs               ),
+    .sdram_addr( slot6_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot6_dout             ),
+    .req       ( req[6]                 ),
+    .data_ok   ( ok[6]                  ),
+    .we        ( data_sel[6]            )
+);
+
+jtframe_romrq #(.AW(SLOT7_AW),.DW(SLOT7_DW),.OFFSET(SLOT7_OFFSET)) u_slot7(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot7_addr             ),
+    .addr_ok   ( slot7_cs               ),
+    .sdram_addr( slot7_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot7_dout             ),
+    .req       ( req[7]                 ),
+    .data_ok   ( ok[7]                  ),
+    .we        ( data_sel[7]            )
 );
 
 
-jtframe_romflex #(.AW(snd_aw),.INVERT_A0(1), .USE_BRAM(BRAM_SOUND)) u_snd(
+jtframe_romrq #(.AW(SLOT8_AW),.DW(SLOT8_DW),.OFFSET(SLOT8_OFFSET)) u_slot8(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .cen       ( 1'b1                   ),
-    .addr      ( snd_addr               ),
-    .addr_ok   ( snd_cs                 ),
-    .addr_req  ( snd_addr_req           ),
+    .addr      ( slot8_addr             ),
+    .addr_ok   ( slot8_cs               ),
+    .sdram_addr( slot8_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
-    .dout      ( snd_dout               ),
-    .req       ( snd_req                ),
-    .data_ok   ( snd_ok                 ),
-    .we        ( data_sel[7]            ),
-    .prog_we   ( prog_snd               ),
-    .prog_data ( prog_data              ),
-    .prog_addr ( prog_addr2[snd_aw-1:0] )
-);
-
-jtframe_romrq #(.AW(snd2_aw),.INVERT_A0(1)) u_snd2(
-    .rst       ( rst                    ),
-    .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
-    .addr      ( snd2_addr              ),
-    .addr_ok   ( snd2_cs                ),
-    .addr_req  ( snd2_addr_req          ),
-    .din       ( data_read              ),
-    .din_ok    ( data_rdy               ),
-    .dout      ( snd2_dout              ),
-    .req       ( snd2_req               ),
-    .data_ok   ( snd2_ok                ),
+    .dout      ( slot8_dout             ),
+    .req       ( req[8]                 ),
+    .data_ok   ( ok[8]                  ),
     .we        ( data_sel[8]            )
 );
 
-wire [char_dw-1:0] char_preout;
-
-jtframe_romrq #(.AW(char_aw),.DW(char_dw)) u_char(
-    .rst      ( rst             ),
-    .clk      ( clk             ),
-    .cen      ( 1'b1            ),
-    .addr     ( char_addr       ),
-    .addr_ok  ( LVBL            ),
-    .addr_req ( char_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( char_preout     ),
-    .req      ( char_req        ),
-    .data_ok  ( char_ok         ),
-    .we       ( data_sel[1]     )
-);
-
-// Provides a non-zero output for characters before SDRAM has valid data
-// This can be used to display a rudimentary message on screen
-// and prompt the user to load the ROM
-// assign char_dout = download_ok ? char_preout : 16'hAAAA;
-// This behaviour is disabled during simulation
-`ifndef SIMULATION
-always @(posedge clk) char_dout <= download_ok ? char_preout : {char_dw/2{2'b10}};
-`else
-always @(posedge clk) char_dout <= char_preout;
-`endif
-
-jtframe_romrq #(.AW(map1_aw),.DW(map1_dw)) u_map1(
-    .rst      ( rst             ),
-    .clk      ( clk             ),
-    .cen      ( 1'b1            ),
-    .addr     ( map1_addr       ),
-    .addr_ok  ( LVBL            ),
-    .addr_req ( map1_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( map1_dout       ),
-    .req      ( map1_req        ),
-    .data_ok  ( map1_ok         ),
-    .we       ( data_sel[2]     )
-);
-
-jtframe_romrq #(.AW(map2_aw),.DW(map2_dw)) u_map2(
-    .rst      ( rst             ),
-    .clk      ( clk             ),
-    .cen      ( 1'b1            ),
-    .addr     ( map2_addr       ),
-    .addr_ok  ( LVBL            ),
-    .addr_req ( map2_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( map2_dout       ),
-    .req      ( map2_req        ),
-    .data_ok  ( map2_ok         ),
-    .we       ( data_sel[3]     )
-);
-
-jtframe_romrq #(.AW(scr1_aw),.DW(16)) u_scr1(
-    .rst      ( rst             ),
-    .clk      ( clk             ),
-    .cen      ( 1'b1            ),
-    .addr     ( scr1_addr       ),
-    .addr_ok  ( LVBL            ),
-    .addr_req ( scr1_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( scr1_dout       ),
-    .req      ( scr1_req        ),
-    .data_ok  ( scr1_ok         ),
-    .we       ( data_sel[4]     )
-);
-
-jtframe_romrq #(.AW(scr2_aw),.DW(16)) u_scr2(
-    .rst      ( rst             ),
-    .clk      ( clk             ),
-    .cen      ( 1'b1            ),
-    .addr     ( scr2_addr       ),
-    .addr_ok  ( LVBL            ),
-    .addr_req ( scr2_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( scr2_dout       ),
-    .req      ( scr2_req        ),
-    .data_ok  ( scr2_ok         ),
-    .we       ( data_sel[5]     )
-);
-
-wire [obj_dw-1:0] obj_preout;
-wire              obj_ok0;
-
-jtframe_romrq #(.AW(obj_aw),.DW(obj_dw)) u_obj(
-    .rst      ( rst             ),
-    .clk      ( clk             ),
-    .cen      ( 1'b1            ),
-    .addr     ( obj_addr        ),
-    .addr_ok  ( 1'b1            ),
-    .addr_req ( obj_addr_req    ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( obj_preout      ),
-    .req      ( obj_req         ),
-    .data_ok  ( obj_ok0         ),
-    .we       ( data_sel[6]     )
-);
-
-`ifdef AVATARS
-`ifdef MISTER
-`define AVATAR_ROM
-`endif
-`endif
-
-`ifdef AVATAR_ROM
-    // Alternative Objects during pause for MiSTer
-    wire [15:0] avatar_data;
-    jtframe_ram #(.dw(16), .aw(13), .synfile("avatar.hex"),.cen_rd(1)) u_avatars(
-        .clk    ( clk            ),
-        .cen    ( pause          ),  // tiny power saving when not in pause
-        .data   ( 16'd0          ),
-        .addr   ( obj_addr[12:0] ),
-        .we     ( 1'b0           ),
-        .q      ( avatar_data    )
-    );
-    always @(*) begin
-        obj_dout = pause ? avatar_data : obj_preout;
-        obj_ok   = obj_ok0;
-    end
-`else 
-    // Let the real data go through
-    always @(*) begin
-        obj_dout = obj_preout;
-        obj_ok   = obj_ok0;
-    end
-`endif
-
-`ifdef SIMULATION
-real busy_cnt=0, total_cnt=0;
-always @(posedge clk) begin
-    total_cnt <= total_cnt + 1;
-    if( |data_sel ) busy_cnt <= busy_cnt+1;
-end
-always @(posedge LVBL) begin
-    $display("INFO: frame ROM stats: %.0f %%", 100.0*busy_cnt/total_cnt);
-end
-`endif
+wire [8:0] active = ~data_sel & req;
 
 always @(posedge clk)
 if( loop_rst || downloading ) begin
@@ -354,63 +288,50 @@ if( loop_rst || downloading ) begin
     data_sel  <=  9'd0;
 end else begin
     {ready, ready_cnt}  <= {ready_cnt, 1'b1};
-    // if( data_rdy ) begin
-    //     data_sel <= 'd0;
-    // end
     if( sdram_ack ) sdram_req <= 1'b0;
+    refresh_en <= 1'b0;
     // accept a new request
     if( data_sel==9'd0 || data_rdy ) begin
-        sdram_req <= 
-           ( main_req & ~data_sel[0] )
-         | ( map1_req & ~data_sel[2] )
-         | ( map2_req & ~data_sel[3] )
-         | ( scr1_req & ~data_sel[4] )
-         | ( scr2_req & ~data_sel[5] ) 
-         | ( char_req & ~data_sel[1] ) 
-         | ( obj_req  & ~data_sel[6] )
-         | ( snd_req  & ~data_sel[7] )
-         | ( snd2_req & ~data_sel[8] );
-        data_sel <= 'd0;
+        sdram_req <= |active;
+        data_sel  <= 9'd0;
         case( 1'b1 )
-            !data_sel[4] & scr1_req: begin
-                sdram_addr <= scr1_offset + { {22-scr1_aw{1'b0}}, scr1_addr_req };
-                data_sel[4] <= 1'b1;
-            end
-            !data_sel[5] & scr2_req: begin
-                sdram_addr <= scr2_offset + { {22-scr2_aw{1'b0}}, scr2_addr_req };
-                data_sel[5] <= 1'b1;
-            end
-            !data_sel[2] & map1_req: begin
-                sdram_addr <= map1_offset + { {22-map1_aw{1'b0}}, map1_addr_req };
-                data_sel[2] <= 1'b1;
-            end
-            !data_sel[3] & map2_req: begin
-                sdram_addr <= map2_offset + { {22-map2_aw{1'b0}}, map2_addr_req };
-                data_sel[3] <= 1'b1;
-            end
-            !data_sel[1] & char_req: begin
-                sdram_addr <= char_offset + 
-                    ( char_dw == 16 ? 
-                        { {22-char_aw{1'b0}}, char_addr_req } :
-                        { {23-char_aw{1'b0}}, char_addr_req[char_aw-1:1] }  );
-                data_sel[1] <= 1'b1;
-            end
-            !data_sel[6] & obj_req: begin
-                sdram_addr <= obj_offset + { {22-obj_aw{1'b0}}, obj_addr_req };
-                data_sel[6] <= 1'b1;
-            end
-            !data_sel[0] & main_req: begin
-                sdram_addr <= { {23-main_aw{1'b0}}, main_addr_req[main_aw-1:1] };
+            active[0]: begin
+                sdram_addr <= slot0_addr_req;
                 data_sel[0] <= 1'b1;
             end
-            !data_sel[7] & snd_req: begin
-                sdram_addr <= snd_offset + { {23-snd_aw{1'b0}}, snd_addr_req[snd_aw-1:1] };
+            active[1]: begin
+                sdram_addr <= slot1_addr_req;
+                data_sel[1] <= 1'b1;
+            end
+            active[2]: begin
+                sdram_addr <= slot2_addr_req;
+                data_sel[2] <= 1'b1;
+            end
+            active[3]: begin
+                sdram_addr <= slot3_addr_req;
+                data_sel[3] <= 1'b1;
+            end
+            active[4]: begin
+                sdram_addr <= slot4_addr_req;
+                data_sel[4] <= 1'b1;
+            end
+            active[5]: begin
+                sdram_addr <= slot5_addr_req;
+                data_sel[5] <= 1'b1;
+            end
+            active[6]: begin
+                sdram_addr <= slot6_addr_req;
+                data_sel[6] <= 1'b1;
+            end
+            active[7]: begin
+                sdram_addr <= slot7_addr_req;
                 data_sel[7] <= 1'b1;
             end
-            !data_sel[8] & snd2_req: begin
-                sdram_addr <= snd2_offset + { {22-snd2_aw{1'b0}}, snd2_addr_req[snd2_aw-1:1] };
+            active[8]: begin
+                sdram_addr <= slot8_addr_req;
                 data_sel[8] <= 1'b1;
             end
+            default: refresh_en <= vblank;
         endcase
     end
 end

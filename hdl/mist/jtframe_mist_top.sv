@@ -1,16 +1,16 @@
-/*  This file is part of JT_GNG.
-    JT_GNG program is free software: you can redistribute it and/or modify
+/*  This file is part of JTFRAME.
+    JTFRAME program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    JT_GNG program is distributed in the hope that it will be useful,
+    JTFRAME program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with JT_GNG.  If not, see <http://www.gnu.org/licenses/>.
+    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
@@ -157,7 +157,7 @@ wire refresh_en;
 // PLL's
 // 24 MHz or 12 MHz base clock
 wire clk_vga_in, clk_vga, pll_locked;
-jtgng_pll0 u_pll_game (
+jtframe_pll0 u_pll_game (
     .inclk0 ( CLOCK_27[0] ),
     .c1     ( clk_rom     ), // 48 MHz
     .c2     ( SDRAM_CLK   ),
@@ -168,7 +168,7 @@ jtgng_pll0 u_pll_game (
 // assign SDRAM_CLK = clk_rom;
 assign clk_sys   = clk_rom;
 
-jtgng_pll1 u_pll_vga (
+jtframe_pll1 u_pll_vga (
     .inclk0 ( clk_vga_in ),
     .c0     ( clk_vga    ) // 25
 );
