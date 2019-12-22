@@ -56,7 +56,7 @@ case "$PRJ" in
         show_usage;;
 esac
 
-if [ -e $JTROOT/cores/PRJ ]; then
+if [ -e $JTROOT/cores/$PRJ ]; then
     PRJPATH=$JTROOT/cores/$PRJ
 elif [ -e $JTROOT/$PRJ ]; then
     PRJPATH=$JTROOT/$PRJ
