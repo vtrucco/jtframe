@@ -16,12 +16,15 @@ module Hq2x #(parameter LENGTH=32,  HALF_DEPTH=0,  // arbitrary default values
     DWIDTH = HALF_DEPTH ? 11 : 23
 )(
 	input             clk,
-	input             ce_x4,
+
+	input             ce_in,
 	input  [DWIDTH:0] inputpixel,
 	input             mono,
 	input             disable_hq2x,
 	input             reset_frame,
 	input             reset_line,
+
+	input             ce_out,
 	input       [1:0] read_y,
 	input             hblank,
 	output [DWIDTH:0] outpixel

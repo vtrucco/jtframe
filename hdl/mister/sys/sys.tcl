@@ -101,6 +101,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SDRAM_*
 set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to SDRAM_*
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_*
 set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
+set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 set_instance_assignment -name ALLOW_SYNCH_CTRL_USAGE OFF -to *|SDRAM_*
 
 #============================================================
@@ -224,3 +225,4 @@ set_location_assignment FRACTIONALPLL_X89_Y1_N0 -to emu:emu|pll:pll|pll_0002:pll
 set_global_assignment -name CDF_FILE jtag.cdf
 #set_global_assignment -name QIP_FILE sys.qip
 
+set_global_assignment -name VERILOG_MACRO "USE_SDRAM=1"

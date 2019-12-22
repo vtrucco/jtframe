@@ -13,7 +13,7 @@ SIMULATOR=iverilog
 TOP=game_test
 MIST=
 MIST_PLL=
-PLL_FILE=fast_pll.f
+PLL_FILE=$JTROOT/modules/jtframe/hdl/clocking/fast_pll.v
 SIMFILE=sim.f
 MACROPREFIX=-D
 EXTRA=
@@ -199,16 +199,19 @@ case "$1" in
         fi
         ;;
     #################### MiSTer setup
-    "-mister")
+    -mister|-mr)
         TOP=mister_test
         if [ $SIMULATOR = iverilog ]; then
             MIST=$(add_dir $JTFRAME/hdl/mister mister.f)
         else
             MIST="-F $JTFRAME/hdl/mister/mister.f"
         fi
-        if [ -e $MODULES/jtgng_mister.sv ]; then
+
+        if [ -e $JTROOT/hdl/jt${SYSNAME}.sv ]; then
+            MISTTOP=../../hdl/jt${SYSNAME}_mister.sv
+        else
             # jtgng cores share a common MiST top file
-            MISTTOP=$MODULES/jtgng_mister.sv
+            MISTTOP=$MODULES/jtframe/hdl/mister/jtframe_emu.sv
             # Check if the conf_str.v file is present
             # and try to link to it if it is not here
             if [ ! -e conf_str.v ]; then
@@ -216,8 +219,6 @@ case "$1" in
                     ln -s ../../mist/conf_str.v
                 fi
             fi
-        else
-            MISTTOP=../../hdl/jt${SYSNAME}_mister.sv
         fi
         MIST="$JTFRAME/hdl/mister/mister_test.v $MISTTOP $MIST mister_dump.v"
         MIST="$MIST ${MACROPREFIX}MISTER"
@@ -227,7 +228,7 @@ case "$1" in
             git add -v mister_dump.v
         fi
         SIMFILE=sim_mister.f
-        PLL_FILE=fast_pll_mister.f
+        PLL_FILE=$JTROOT/modules/jtframe/hdl/mister/mister_pll48.v
         # Generate a fake build_id.v file
         echo "\`define BUILD_DATE \"190311\"" > build_id.v
         echo "\`define BUILD_TIME \"190311\"" >> build_id.v
@@ -420,11 +421,7 @@ if [[ $TOP = mist_test || $TOP = mister_test ]]; then
         fi
     fi
     # Adds the .f file with the PLL modules
-    if [ $SIMULATOR = iverilog ]; then
-        MIST="$MIST $(add_dir . $PLL_FILE)"
-    else
-        MIST="$MIST -F $PLL_FILE"
-    fi
+    MIST="$MIST $PLL_FILE"
 fi
 
 case $SIMULATOR in

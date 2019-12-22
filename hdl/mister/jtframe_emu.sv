@@ -32,7 +32,7 @@ module emu
     input         RESET,
 
     //Must be passed to hps_io module
-    inout  [44:0] HPS_BUS,
+    inout  [45:0] HPS_BUS,
 
     //Base video clock. Usually equals to CLK_SYS.
     output        VGA_CLK,
@@ -80,8 +80,6 @@ module emu
     output [15:0] AUDIO_R,
     output        AUDIO_S,   // 1 - signed audio samples, 0 - unsigned
 
-    output  [1:0] ROTATE,
-
     //SDRAM interface with lower latency
     output        SDRAM_CLK,
     output        SDRAM_CKE,
@@ -93,7 +91,15 @@ module emu
     output        SDRAM_nCS,
     output        SDRAM_nCAS,
     output        SDRAM_nRAS,
-    output        SDRAM_nWE
+    output        SDRAM_nWE,
+
+    // Open-drain User port.
+    // 0 - D+/RX
+    // 1 - D-/TX
+    // 2..6 - USR2..USR6
+    // Set USER_OUT to 1 to read from USER_IN.
+    input   [6:0] USER_IN,
+    output  [6:0] USER_OUT
     `ifdef SIMULATION
     ,output         sim_pxl_cen,
     output          sim_pxl_clk,
@@ -145,6 +151,7 @@ localparam CONF_STR = {
 `undef SEPARATOR
 
 assign VGA_F1=1'b0;
+assign USER_OUT  = '1;
 
 ////////////////////   CLOCKS   ///////////////////
 
@@ -317,7 +324,7 @@ u_frame(
     .dip_flip       ( dip_flip       ),
     .dip_fxlevel    ( dip_fxlevel    ),
     // screen
-    .rotate         ( ROTATE         ),
+    .rotate         (                ),
     // HDMI
     .hdmi_r         ( HDMI_R         ),
     .hdmi_g         ( HDMI_G         ),

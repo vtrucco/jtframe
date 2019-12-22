@@ -1110,7 +1110,7 @@ sync_fix sync_v(clk_vid, vs_emu, vs_fix);
 sync_fix sync_h(clk_vid, hs_emu, hs_fix);
 
 assign audio_mix = 0;
-assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = {39{1'bZ}};
+// assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = {39{1'bZ}};
 `ifdef DUAL_SDRAM
 	assign {SDRAM2_DQ, SDRAM2_A, SDRAM2_BA, SDRAM2_CLK, SDRAM2_nWE, SDRAM2_nCAS, SDRAM2_nRAS, SDRAM2_nCS} = {36{1'bZ}};
 `endif
@@ -1153,6 +1153,19 @@ emu emu
 	.AUDIO_L(audio_ls),
 	.AUDIO_R(audio_rs),
 	.AUDIO_S(audio_s),
+
+    .SDRAM_DQ(SDRAM_DQ),
+    .SDRAM_A(SDRAM_A),
+    .SDRAM_DQML(SDRAM_DQML),
+    .SDRAM_DQMH(SDRAM_DQMH),
+    .SDRAM_BA(SDRAM_BA),
+    .SDRAM_nCS(SDRAM_nCS),
+    .SDRAM_nWE(SDRAM_nWE),
+    .SDRAM_nRAS(SDRAM_nRAS),
+    .SDRAM_nCAS(SDRAM_nCAS),
+    .SDRAM_CLK(SDRAM_CLK),
+    .SDRAM_CKE(SDRAM_CKE),
+
 	.USER_OUT(user_out),
 	.USER_IN(user_in)
 );
@@ -1161,34 +1174,6 @@ endmodule
 
 /////////////////////////////////////////////////////////////////////
 
-module sync_fix
-(
-	input clk,
-	
-	input sync_in,
-	output sync_out
-);
-
-assign sync_out = sync_in ^ pol;
-
-reg pol;
-always @(posedge clk) begin
-	integer pos = 0, neg = 0, cnt = 0;
-	reg s1,s2;
-
-	s1 <= sync_in;
-	s2 <= s1;
-
-	if(~s2 & s1) neg <= cnt;
-	if(s2 & ~s1) pos <= cnt;
-
-	cnt <= cnt + 1;
-	if(s2 != s1) cnt <= 0;
-
-	pol <= pos > neg;
-end
-
-endmodule
 
 /////////////////////////////////////////////////////////////////////
 
