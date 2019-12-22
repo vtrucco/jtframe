@@ -1,76 +1,61 @@
 // A simple OSD implementation. Can be hooked up between a cores
 // VGA output and the physical VGA pins
 
-// The OSD has two possible modes
-//      information display
-//      OSD Menu
-//      The information display can be configured in run time
-//      for specific coordinates and area
-//      OSD menu location is determined at compile time
-
-module osd(
+module osd
+(
     input         clk_sys,
-
     input         io_osd,
     input         io_strobe,
     input  [15:0] io_din,
 
-    input  [1:0]  rotate, //[0] - rot [1] - left or right
-
     input         clk_video,
     input  [23:0] din,
-    output [23:0] dout,
     input         de_in,
+    input         vs_in,
+    input         hs_in,
+    output [23:0] dout,
     output reg    de_out,
+    output reg    vs_out,
+    output reg    hs_out,
+
     output reg    osd_status
 );
 
-wire [1:0] rot = 2'b00; // rotation is not ready yet
+parameter  OSD_COLOR    =  3'd4;
 
-parameter [11:0] OSD_X_OFFSET = 12'd0;
-parameter [11:0] OSD_Y_OFFSET = 12'd0;
-parameter [ 2:0] OSD_COLOR    = 3'b111;
-
-localparam OSD_WIDTH    = 12'd256; //256
+localparam OSD_WIDTH    = 12'd256;
 localparam OSD_HEIGHT   = 12'd64;
 
-// wire [11:0] osd_width  = OSD_WIDTH;
-// wire [11:0] osd_height = OSD_HEIGHT;
-
-reg [11:0] osd_width, osd_height;
-
-always @(posedge clk_sys) begin
-    osd_width  <= rot[0] ? 12'd128 : 12'd256;
-    osd_height <= rot[0] ? 12'd96 : 12'd64;
-end
+`ifdef OSD_HEADER
+localparam OSD_HDR      = 12'd24;
+`else
+localparam OSD_HDR      = 12'd0;
+`endif
 
 reg        osd_enable;
-(* ramstyle = "no_rw_check" *) reg  [7:0] osd_buffer[4096];
-
-`ifdef SIMULATION
-integer cnt;
-initial begin : clear_mem
-    $display("OSD memory cleared");
-    for( cnt=0; cnt<4096; cnt=cnt+1 ) osd_buffer[cnt]=8'h00;
-end
-`endif
+(* ramstyle="no_rw_check" *) reg  [7:0] osd_buffer[OSD_HDR ? (4096+1024) : 4096];
 
 reg        info = 0;
 reg  [8:0] infoh;
 reg  [8:0] infow;
 reg [11:0] infox;
 reg [21:0] infoy;
-reg [21:0] hrheight;
+reg [21:0] osd_h;
+reg [21:0] osd_t;
+reg [21:0] osd_w;
 
-//////////// SPI RX
-reg        highres = 0;
-always@(posedge clk_sys) begin : SPIRX
-    reg [11:0] bcnt;
+reg  [1:0] rot = 0;
+
+always@(posedge clk_sys) begin
+    reg [12:0] bcnt;
     reg  [7:0] cmd;
     reg        has_cmd;
     reg        old_strobe;
+    reg        highres = 0;
 
-    hrheight <= info ? infoh : (osd_height<<highres);
+    osd_t <= rot[0] ? OSD_WIDTH : (OSD_HEIGHT<<1);
+    osd_h <= rot[0] ? (info ? infow : OSD_WIDTH) : info ? infoh : (OSD_HEIGHT<<highres);
+    osd_w <= rot[0] ? (info ? infoh : (OSD_HEIGHT<<highres)) : (info ? infow : OSD_WIDTH);
 
     old_strobe <= io_strobe;
 
@@ -82,42 +67,31 @@ always@(posedge clk_sys) begin : SPIRX
     end else begin
         if(~old_strobe & io_strobe) begin
             if(!has_cmd) begin
-                // Grab the command code first
-                // Once the command is set, you need to
-                // set io_osd down again before sending a new
-                // command
                 has_cmd <= 1;
                 cmd <= io_din[7:0];
                 // command 0x40: OSDCMDENABLE, OSDCMDDISABLE
-                // 0x4? set display coordinates
-                // 0x41 enable OSD
-                // 0x42 enable INFO display
                 if(io_din[7:4] == 4) begin
                     if(!io_din[0]) {osd_status,highres} <= 0;
                     else {osd_status,info} <= {~io_din[2],io_din[2]};
-                    bcnt <= 0;
+                    bcnt  <= 0;
                 end
                 // command 0x20: OSDCMDWRITE
-                // 0x2? set video memory command
-                // 0x24 enable high resolution
-                if(io_din[7:4] == 2) begin
+                if(io_din[7:5] == 'b001) begin
                     if(io_din[3]) highres <= 1;
-                    bcnt <= {io_din[3:0], 8'h00};
+                    bcnt <= {io_din[4:0], 8'h00};
                 end
             end else begin
-                // with the command code previously acquired
-                // get extra pieces of information
                 // command 0x40: OSDCMDENABLE, OSDCMDDISABLE
                 if(cmd[7:4] == 4) begin
                     if(bcnt == 0) infox <= io_din[11:0];
                     if(bcnt == 1) infoy <= io_din[11:0];
                     if(bcnt == 2) infow <= {io_din[5:0], 3'b000};
                     if(bcnt == 3) infoh <= {io_din[5:0], 3'b000};
+                    if(bcnt == 4) rot   <= io_din[1:0];
                 end
 
                 // command 0x20: OSDCMDWRITE
-                // fill OSD video memory
-                if(cmd[7:4] == 2) osd_buffer[bcnt] <= io_din[7:0];
+                if(cmd[7:5] == 'b001) osd_buffer[bcnt] <= io_din[7:0];
 
                 bcnt <= bcnt + 1'd1;
             end
@@ -125,38 +99,37 @@ always@(posedge clk_sys) begin : SPIRX
     end
 end
 
-// CE_CTRL
 (* direct_enable *) reg ce_pix;
-integer pxcnt = 0;
-always @(negedge clk_video) begin : CE_CTRL
-    integer pixsz, pixcnt;
+always @(posedge clk_video) begin
+    reg [21:0] cnt = 0;
+    reg [21:0] pixsz, pixcnt;
     reg deD;
 
-    pxcnt <= pxcnt + 1;
+    cnt <= cnt + 1'd1;
     deD <= de_in;
 
-    pixcnt <= pixcnt + 1;
+    pixcnt <= pixcnt + 1'd1;
     if(pixcnt == pixsz) pixcnt <= 0;
     ce_pix <= !pixcnt;
 
-    if(~deD && de_in) pxcnt <= 0;
+    if(~deD && de_in) cnt <= 0;
 
     if(deD && ~de_in) begin
-        pixsz  <= (((pxcnt+1'b1) >> 9) > 1) ? (((pxcnt+1'b1) >> 9) - 1) : 0;
+        pixsz  <= (((cnt+1'b1) >> (9-rot[0])) > 1) ? (((cnt+1'b1) >> (9-rot[0])) - 1'd1) : 22'd0;
         pixcnt <= 0;
     end
 end
 
-reg [ 2:0] osd_de;
+reg  [2:0] osd_de;
 reg        osd_pixel;
-reg [21:0] next_v_cnt;
-
-reg v_cnt_below320, v_cnt_below640, v_cnt_below960;
-
 reg [21:0] v_cnt;
-reg [21:0] v_osd_start_320, v_osd_start_640, v_osd_start_960, v_osd_start_other;
 
-reg [11:0] osd_buffer_addr;
+reg v_cnt_half, v_cnt_single, v_cnt_double, v_cnt_triple;
+
+reg [21:0] v_osd_start_h, v_osd_start_s, v_osd_start_d, v_osd_start_t, v_osd_start_q;
+
+wire [21:0] osd_h_hdr = (info || rot) ? osd_h : (osd_h + OSD_HDR);
+
 reg [10:0] back_buffer_addr;
 
 `ifndef OSD_NOBCK
@@ -169,13 +142,16 @@ wire       back_pixel = 1'b1;
 
 // pipeline the comparisons a bit
 always @(posedge clk_video) if(ce_pix) begin
-    v_cnt_below320 <= next_v_cnt < 320;
-    v_cnt_below640 <= next_v_cnt < 640;
-    v_cnt_below960 <= next_v_cnt < 960;
-    v_osd_start_320   <= ((next_v_cnt-hrheight)>>1) + OSD_Y_OFFSET;
-    v_osd_start_640   <= ((next_v_cnt-(hrheight<<1))>>1) + OSD_Y_OFFSET;
-    v_osd_start_960   <= ((next_v_cnt-(hrheight + (hrheight<<1)))>>1) + OSD_Y_OFFSET;
-    v_osd_start_other <= ((next_v_cnt-(hrheight<<2))>>1) + OSD_Y_OFFSET;
+    v_cnt_half    <= v_cnt < osd_t;
+    v_cnt_single  <= v_cnt < 320;
+    v_cnt_double  <= v_cnt < 640;
+    v_cnt_triple  <= v_cnt < 960;
+
+    v_osd_start_h <= ((v_cnt-(osd_h_hdr>>1))>>1);
+    v_osd_start_s <= ((v_cnt-osd_h_hdr)>>1);
+    v_osd_start_d <= ((v_cnt-(osd_h_hdr<<1))>>1);
+    v_osd_start_t <= ((v_cnt-(osd_h_hdr + (osd_h_hdr<<1)))>>1);
+    v_osd_start_q <= ((v_cnt-(osd_h_hdr<<2))>>1);
 end
 
 always @(posedge clk_video) begin : GEOMETRY
@@ -189,9 +165,11 @@ always @(posedge clk_video) begin : GEOMETRY
     reg [21:0] h_osd_start;
     reg [21:0] v_osd_start;
     reg [21:0] osd_hcnt;
+    reg [21:0] osd_hcnt2;
     reg        osd_de1,osd_de2;
     reg  [1:0] osd_en;
-    reg  [2:0] osd_idx;
+    reg        f1;
+    reg        half;
     `ifndef OSD_NOBCK
     reg  [2:0] back_idx;
     `endif
@@ -201,12 +179,20 @@ always @(posedge clk_video) begin : GEOMETRY
         deD <= de_in;
         if(~&h_cnt) h_cnt <= h_cnt + 1'd1;
 
-        if(~&osd_hcnt) osd_hcnt <= osd_hcnt + 1'd1;
+        if(~&osd_hcnt)  osd_hcnt  <= osd_hcnt + 1'd1;
+        if(~&osd_hcnt2) osd_hcnt2 <= osd_hcnt2 + 1'd1;
+
         if (h_cnt == h_osd_start) begin
-            osd_de[0] <= osd_en[1] && hrheight && (osd_vcnt < hrheight);
+            osd_de[0] <= osd_en[1] && osd_h && (
+                          osd_vcnt[11] ? (osd_vcnt[7] && (osd_vcnt[6:0] >= 4) && (osd_vcnt[6:0] < 19)) :
+                                (info && (rot == 3)) ? !osd_vcnt[21:8] :
+                           (osd_vcnt < osd_h)
+                                );
             osd_hcnt <= 0;
+            osd_hcnt2 <= 0;
+            if(info && rot == 1) osd_hcnt2 <= 22'd128-infoh;
         end
-        if (osd_hcnt+1 == (info ? infow : osd_width)) osd_de[0] <= 0;
+        if (osd_hcnt+1 == osd_w) osd_de[0] <= 0;
 
         // falling edge of de
         if(!de_in && deD) dsp_width <= h_cnt[21:0];
@@ -214,54 +200,58 @@ always @(posedge clk_video) begin : GEOMETRY
         // rising edge of de
         if(de_in && !deD) begin
             h_cnt <= 0;
-            v_cnt <= next_v_cnt;
-            next_v_cnt <= next_v_cnt+1'd1; 
-            h_osd_start <= info ? infox : (((dsp_width - osd_width)>>1) + OSD_X_OFFSET - 2'd2);
+            v_cnt <= v_cnt + 1'd1;
+            h_osd_start <= info ? (rot[0] ? infoy : infox) : (((dsp_width - osd_w)>>1) - 2'd2);
 
             if(h_cnt > {dsp_width, 2'b00}) begin
-                v_cnt <= 0;
-                next_v_cnt <= 'd1;
+                v_cnt <= 1;
+                f1 <= ~f1; // skip every other frame for interlace compatibility.
+                if(~f1) begin
 
-                osd_en <= (osd_en << 1) | osd_enable;
-                if(~osd_enable) osd_en <= 0;
+                    osd_en <= (osd_en << 1) | osd_enable;
+                    if(~osd_enable) osd_en <= 0;
 
-                if(v_cnt_below320) begin
-                    multiscan <= 0;
-                    v_osd_start <= info ? infoy : v_osd_start_320;
-                end
-                else if(v_cnt_below640) begin
-                    multiscan <= 1;
-                    v_osd_start <= info ? (infoy<<1) : v_osd_start_640;
-                end
-                else if(v_cnt_below960) begin
-                    multiscan <= 2;
-                    v_osd_start <= info ? (infoy + (infoy << 1)) : v_osd_start_960;
-                end
-                else begin
-                    multiscan <= 3;
-                    v_osd_start <= info ? (infoy<<2) : v_osd_start_other;
+                    half <= 0;
+                    if(v_cnt_half) begin
+                        multiscan <= 0;
+                        v_osd_start <= info ? (rot[0] ? infox : infoy) : v_osd_start_h;
+                        half <= 1;
+                    end
+                    else if(v_cnt_single | (rot[0] & v_cnt_double)) begin
+                        multiscan <= 0;
+                        v_osd_start <= info ? (rot[0] ? infox : infoy) : v_osd_start_s;
+                    end
+                    else if(rot[0] ? v_cnt_triple : v_cnt_double) begin
+                        multiscan <= 1;
+                        v_osd_start <= info ? (rot[0] ? (infox<<1) : (infoy<<1)) : v_osd_start_d;
+                    end
+                    else if(v_cnt_triple | rot[0]) begin
+                        multiscan <= 2;
+                        v_osd_start <= info ? (rot[0] ? (infox + (infox << 1)) : (infoy + (infoy << 1))) : v_osd_start_t;
+                    end
+                    else begin
+                        multiscan <= 3;
+                        v_osd_start <= info ? (rot[0] ? (infox<<2) : (infoy<<2)) : v_osd_start_q;
+                    end
                 end
             end
 
             osd_div <= osd_div + 1'd1;
             if(osd_div == multiscan) begin
                 osd_div <= 0;
-                if(~&osd_vcnt) osd_vcnt <= osd_vcnt + 1'd1;
+                if(~osd_vcnt[10]) osd_vcnt <= osd_vcnt + 1'd1 + half;
+                if(osd_vcnt == 'b100010011111 && ~info) osd_vcnt <= 0;
             end
-            if(v_osd_start == next_v_cnt) {osd_div, osd_vcnt} <= 0;
+            if(v_osd_start == v_cnt) begin
+                {osd_div,osd_vcnt} <= 0;
+                if(info && rot == 3) osd_vcnt <= 22'd256-infow;
+                else if(OSD_HDR && !rot) osd_vcnt <= {~info, 3'b000, ~info, 7'b0000000};
+            end
         end
 
-        // pixels
-        osd_buffer_addr <= rot[0] ?
-                    ({ osd_hcnt[7:4], osd_vcnt[7:0] } ^ { {4{~rot[1]}}, {8{rot[1]}} }) :
-                    // no rotation
-                    {osd_vcnt[6:3], osd_hcnt[7:0]};
-        osd_byte  <= osd_buffer[osd_buffer_addr];
-        osd_idx   <= rot[0] ?
-                    ( osd_hcnt[2:0] ^ {3{~rot[1]}} )
-                    // no rotation
-                    : osd_vcnt[2:0];
-        osd_pixel <= osd_byte[ osd_idx ];
+        osd_byte  <= osd_buffer[rot[0] ? ({osd_hcnt2[6:3], osd_vcnt[7:0]} ^ { {4{~rot[1]}}, {8{rot[1]}} }) : {osd_vcnt[7:3], osd_hcnt[7:0]}];
+        osd_pixel <= osd_byte[rot[0] ? ((osd_hcnt2[2:0]-1'd1) ^ {3{~rot[1]}}) : osd_vcnt[2:0]];
+        osd_de[2:1] <= osd_de[1:0];
         `ifndef OSD_NOBCK
         back_buffer_addr <= rot[0] ?
                     ({ osd_hcnt[6:4], osd_vcnt[7:0] } ^ { {3{~rot[1]}}, {8{rot[1]}} }) :
@@ -273,28 +263,36 @@ always @(posedge clk_video) begin : GEOMETRY
                     osd_vcnt[3:1];
         back_pixel <= info ? 1'b0 : back_byte[ back_idx ]; // do not use background for the info box
         `endif
-
-        osd_de[2:1] <= osd_de[1:0];
-
     end
 end
 
 reg [23:0] rdout;
 assign dout = rdout;
 
-reg [23:0] osd_rdout, normal_rdout;
-reg osd_mux;
-reg de_dly;
-
 always @(posedge clk_video) begin
-    normal_rdout <= din;
-    osd_rdout <= {{ {1{osd_pixel}}, {2{OSD_COLOR[2]&~back_pixel}}, din[23:19]},// 23:16
+    reg [23:0] ordout1, nrdout1, rdout2, rdout3;
+    reg de1,de2,de3;
+    reg osd_mux;
+    reg vs1,vs2,vs3;
+    reg hs1,hs2,hs3;
+
+    nrdout1 <= din;
+    ordout1 <= {{ {1{osd_pixel}}, {2{OSD_COLOR[2]&~back_pixel}}, din[23:19]},// 23:16
                   { {1{osd_pixel}}, {2{OSD_COLOR[1]&~back_pixel}}, din[15:11]},// 15:8
                   { {1{osd_pixel}}, {2{OSD_COLOR[0]&~back_pixel}}, din[7:3]}}; //  7:0
+
     osd_mux <= ~osd_de[2];
-    rdout  <= osd_mux ? normal_rdout : osd_rdout;
-    de_dly <= de_in;
-    de_out <= de_dly;
+    rdout2  <= osd_mux ? nrdout1 : ordout1;
+    rdout3  <= rdout2;
+
+    de1 <= de_in; de2 <= de1; de3 <= de2;
+    hs1 <= hs_in; hs2 <= hs1; hs3 <= hs2;
+    vs1 <= vs_in; vs2 <= vs1; vs3 <= vs2;
+
+    rdout   <= rdout3;
+    de_out  <= de3;
+    hs_out  <= hs3;
+    vs_out  <= vs3;
 end
 
 initial begin
@@ -432,5 +430,6 @@ back_buffer = '{ 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00,
 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00 };
 `endif
 end
+
 
 endmodule

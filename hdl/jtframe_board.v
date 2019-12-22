@@ -94,6 +94,7 @@ module jtframe_board #(parameter
     input             pxl_cen,
     input             pxl2_cen,
     // HDMI outputs (only for MiSTer)
+    input     [21:0]  gamma_bus,
     output            hdmi_clk,
     output            hdmi_cen,
     output    [ 7:0]  hdmi_r,
@@ -146,6 +147,7 @@ always @(posedge clk_sys)
 reg soft_rst;
 reg last_dip_flip;
 reg [7:0] game_rst_cnt=8'd0;
+
 always @(negedge clk_sys) begin
     last_dip_flip <= dip_flip;
     if( downloading | rst | rst_req | (last_dip_flip!=dip_flip) | soft_rst ) begin
@@ -529,11 +531,12 @@ generate
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
+
             video_mixer #(
                 .LINE_LENGTH(256),
                 .HALF_DEPTH(HALF_DEPTH)) 
             u_video_mixer (
-                .clk_sys        ( clk_sys       ),
+                .clk_vid        ( clk_sys       ),
                 .ce_pix         ( pxl_cen       ),
                 .ce_pix_out     ( scan2x_cen    ),
                 .scandoubler    ( ~scan2x_enb   ),        
@@ -543,6 +546,7 @@ generate
                 .G              ( mr_mixer_g    ),
                 .B              ( mr_mixer_b    ),
                 .mono           ( 1'b0          ),
+                .gamma_bus      ( gamma_bus     ),
                 .HSync          ( hs            ),
                 .VSync          ( vs            ),
                 .HBlank         ( ~LHBL         ),
