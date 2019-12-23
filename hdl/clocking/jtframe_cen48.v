@@ -31,7 +31,8 @@ module jtframe_cen48(
     output  reg cen12b,
     output  reg cen6b,
     output  reg cen3b,
-    output  reg cen3qb
+    output  reg cen3qb,
+    output  reg cen1p5b
 );
 
 reg [4:0] cencnt=5'd0;
@@ -53,10 +54,11 @@ always @(negedge clk) begin
     cen3q  <= cencnt[3:0] == 4'b1100;
     cen3qb <= cencnt[3:0] == 4'b0100;
     cen1p5 <= cencnt[4:0] == 5'd0;
+    cen1p5b<= cencnt[4:0] == 5'h10;
 end
-
 endmodule
 
+////////////////////////////////////////////////////////////////////
 // Generates a 3.57 MHz clock enable signal for a 48MHz clock
 // Result: 105/1408 = 3,579,545.5 MHz, off by 0.5Hz (0.14ppm) :-)
 
@@ -98,5 +100,52 @@ always @(negedge clk) begin
         cencnt <= next;
     end
 end
-
 endmodule
+
+////////////////////////////////////////////////////////////////////
+// 384kHz clock enable
+module jtframe_cenp384(
+    input      clk,       // 48 MHz
+    output reg cen_p384
+);
+
+reg  [6:0] cencnt=7'd0;
+
+always @(negedge clk) begin
+    cen_p384 <= 1'b0;
+    cencnt <= cencnt+7'd1;
+    if( cencnt >= 7'd124 ) begin
+        cencnt   <= 7'd0;
+        cen_p384 <= 1'b1;
+    end
+end
+endmodule
+
+////////////////////////////////////////////////////////////////////
+// 10MHz clock enable
+module jtframe_cen10(
+    input   clk,    // 48MHz only
+    output  reg cen10,
+    // 180 shifted signals
+    output  reg cen10b
+);
+
+reg [2:0] cencnt=3'd0;
+reg [2:0] muxcnt=3'd0;
+reg [2:0] next=3'd4, nextb=3'd2;
+
+always @(*) begin
+    next = muxcnt[2] ? 3'd3 : 3'd4;
+    nextb= muxcnt[2] ? 3'd1 : 3'd2;
+end
+
+always @(negedge clk) begin
+    cencnt <= cencnt+3'd1;
+    cen10  <= cencnt == next;
+    cen10b <= cencnt == nextb;
+    if( cencnt==next ) begin
+        cencnt <= 3'd0;
+        muxcnt <= muxcnt[2] ? 3'd1 : muxcnt + 3'b1;
+    end
+end
+endmodule // jtgng_cen

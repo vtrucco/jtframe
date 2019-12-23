@@ -126,21 +126,6 @@ assign slot6_ok = ok[6];
 assign slot7_ok = ok[7];
 assign slot8_ok = ok[8];
 
-wire [8:0] cs;
-assign cs[0] = slot0_cs;
-assign cs[1] = slot1_cs;
-assign cs[2] = slot2_cs;
-assign cs[3] = slot3_cs;
-assign cs[4] = slot4_cs;
-assign cs[5] = slot5_cs;
-assign cs[6] = slot6_cs;
-assign cs[7] = slot7_cs;
-assign cs[8] = slot8_cs;
-
-// always @(posedge clk) begin
-//     refresh_en <= &((ok|~cs)|rfsh_mask) & vblank;
-// end
-
 jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.OFFSET(SLOT0_OFFSET)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
