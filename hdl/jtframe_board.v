@@ -95,6 +95,7 @@ module jtframe_board #(parameter
     input             pxl2_cen,
     // HDMI outputs (only for MiSTer)
     input     [21:0]  gamma_bus,
+    input             direct_video,
     output            hdmi_clk,
     output            hdmi_cen,
     output    [ 7:0]  hdmi_r,
@@ -436,9 +437,12 @@ generate
             .HDMI_VS    (  hdmi_vs      ),
             .HDMI_DE    (  hdmi_de      ),
             .HDMI_SL    (  hdmi_sl      ),
+            .gamma_bus  ( gamma_bus     ),
+
         
             .fx                ( scanlines   ),
             .forced_scandoubler( ~scan2x_enb ),
+            .direct_video      ( direct_video),
             .no_rotate         ( rotate[0]   ) // the no_rotate name
                 // is misleading. A low value in no_rotate will actually
                 // rotate the game video. If the game is vertical, a low value
@@ -531,15 +535,22 @@ generate
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
-
+            wire scandoubler = ~scan2x_enb;
+            wire mixer_ce = pxl_cen | (~scandoubler & ~gamma_bus[19] & ~direct_video);
+            `ifdef MISTER
+            `define GAMMA 1
+            `else
+            `define GAMMA 0
+            `endif
             video_mixer #(
-                .LINE_LENGTH(256),
-                .HALF_DEPTH(HALF_DEPTH)) 
+                .LINE_LENGTH(256+4),
+                .HALF_DEPTH(HALF_DEPTH),
+                .GAMMA(`GAMMA)) 
             u_video_mixer (
                 .clk_vid        ( clk_sys       ),
                 .ce_pix         ( pxl_cen       ),
                 .ce_pix_out     ( scan2x_cen    ),
-                .scandoubler    ( ~scan2x_enb   ),        
+                .scandoubler    ( scandoubler   ),        
                 .scanlines      ( sl            ),
                 .hq2x           ( hq2x_en       ),
                 .R              ( mr_mixer_r    ),

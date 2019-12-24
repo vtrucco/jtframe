@@ -206,6 +206,7 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .dip_fxlevel    ( dip_fxlevel     ),
     // screen
     .gamma_bus      ( gamma_bus       ),
+    .direct_video   ( direct_video    ),
     .hdmi_r         ( hdmi_r          ),
     .hdmi_g         ( hdmi_g          ),
     .hdmi_b         ( hdmi_b          ),
