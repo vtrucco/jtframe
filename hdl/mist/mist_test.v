@@ -34,7 +34,7 @@ mist_dump u_dump(
 );
 //887808
 test_harness #(.sdram_instance(0),.GAME_ROMNAME(`GAME_ROM_PATH),
-    .TX_LEN(`GAME_ROM_LEN), .CLK_SPEED(48) ) u_harness(
+    .TX_LEN(`GAME_ROM_LEN) ) u_harness(
     .rst         ( rst           ),
     .clk27       ( clk27         ),
     .pxl_clk     ( pxl_clk       ),

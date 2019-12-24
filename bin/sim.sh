@@ -13,13 +13,16 @@ SIMULATOR=iverilog
 TOP=game_test
 MIST=
 MIST_PLL=
-PLL_FILE=fast_pll.f
+PLL_FILE=$JTROOT/modules/jtframe/hdl/clocking/fast_pll.v
 SIMFILE=sim.f
 MACROPREFIX=-D
 EXTRA=
 EXTRA_VHDL=
 SHOWCMD=
 ARGNUMBER=1
+VIDEOWIDTH=256
+VIDEOHEIGHT=224
+SAMPLING_RATE=
 
 rm -f test2.bin
 
@@ -73,6 +76,7 @@ function get_named_arg {
 # Which core is this for?
 SYSNAME=$(get_named_arg -sysname $*)
 MODULES=$(get_named_arg -modules $*)
+JTFRAME=$MODULES/jtframe
 PERCORE=
 
 if [ "$MODULES" = "" ]; then
@@ -96,12 +100,22 @@ if [ "$MSM5205" = 1 ]; then
     PERCORE="$PERCORE $(add_dir $MODULES/jt5205/hdl jt5205.f)"
 fi
 
+if [ "$M6809" = 1 ]; then
+    echo "INFO: M6809 support added."
+    PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/mc6809i.v"
+fi
+
+if [ "$M6801" = 1 ]; then
+    echo "INFO: M6801 support added."
+    PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/6801_core.sv"
+fi
+
 if [ "$I8051" = 1 ]; then
     echo "INFO: i8051 support added."
-    EXTRA_VHDL=$(add_dir $MODULES/jtframe/hdl/cpu/8051 mc8051.f)
+    EXTRA_VHDL=$(add_dir $JTFRAME/hdl/cpu/8051 mc8051.f)
     # iVerilog cannot simulate the 8051 because it's in VHDL
     if [ $SIMULATOR = iverilog ]; then
-        PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/8051/dummy_8051.v"
+        PERCORE="$PERCORE $JTFRAME/hdl/cpu/8051/dummy_8051.v"
     fi
     #echo $EXTRA_VHDL
 fi
@@ -154,39 +168,50 @@ case "$1" in
         MAXFRAME="${MACROPREFIX}MAXFRAME=$1"
         echo Simulate up to $1 frames
         ;;
+    -srate)
+        shift
+        if [ "$1" = "" ]; then
+            echo "Must specify the sampling rate"
+            exit 1
+        fi
+        SAMPLING_RATE="-s $1"
+        ;;
     #################### MiST setup
     "-mist")
         TOP=mist_test
         if [ $SIMULATOR = iverilog ]; then
-            MIST=$(add_dir $MODULES/jtframe/hdl/mist mist.f)
+            MIST=$(add_dir $JTFRAME/hdl/mist mist.f)
         else
-            MIST="-F $MODULES/jtframe/hdl/mist/mist.f"
+            MIST="-F $JTFRAME/hdl/mist/mist.f"
         fi
         if [ -e $MODULES/jtgng_mist.sv ]; then
             # jtgng cores share a common MiST top file
             MISTTOP=$MODULES/jtgng_mist.sv
         else
-            MISTTOP=../../hdl/jt${SYSNAME}_mist.sv
+            MISTTOP=$JTFRAME/hdl/mist/jtframe_mist_top.sv
         fi
-        MIST="$MODULES/jtframe/hdl/mist/mist_test.v $MISTTOP $MIST mist_dump.v"
+        MIST="$JTFRAME/hdl/mist/mist_test.v $MISTTOP $MIST mist_dump.v"
         MIST="$MIST ${MACROPREFIX}MIST"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mist_dump.v ]; then
-            cp $MODULES/jtframe/hdl/ver/mist_dump.v .
+            cp $JTFRAME/hdl/ver/mist_dump.v .
             git add -v mist_dump.v
         fi
         ;;
     #################### MiSTer setup
-    "-mister")
+    -mister|-mr)
         TOP=mister_test
         if [ $SIMULATOR = iverilog ]; then
-            MIST=$(add_dir $MODULES/jtframe/hdl/mister mister.f)
+            MIST=$(add_dir $JTFRAME/hdl/mister mister.f)
         else
-            MIST="-F $MODULES/jtframe/hdl/mister/mister.f"
+            MIST="-F $JTFRAME/hdl/mister/mister.f"
         fi
-        if [ -e $MODULES/jtgng_mister.sv ]; then
+
+        if [ -e $JTROOT/hdl/jt${SYSNAME}.sv ]; then
+            MISTTOP=../../hdl/jt${SYSNAME}_mister.sv
+        else
             # jtgng cores share a common MiST top file
-            MISTTOP=$MODULES/jtgng_mister.sv
+            MISTTOP=$MODULES/jtframe/hdl/mister/jtframe_emu.sv
             # Check if the conf_str.v file is present
             # and try to link to it if it is not here
             if [ ! -e conf_str.v ]; then
@@ -194,18 +219,16 @@ case "$1" in
                     ln -s ../../mist/conf_str.v
                 fi
             fi
-        else
-            MISTTOP=../../hdl/jt${SYSNAME}_mister.sv
         fi
-        MIST="$MODULES/jtframe/hdl/mister/mister_test.v $MISTTOP $MIST mister_dump.v"
+        MIST="$JTFRAME/hdl/mister/mister_test.v $MISTTOP $MIST mister_dump.v"
         MIST="$MIST ${MACROPREFIX}MISTER"
         # Add a local copy of mist_dump if it doesn't exist
         if [ ! -e mister_dump.v ]; then
-            cp $MODULES/jtframe/hdl/ver/mister_dump.v .
+            cp $JTFRAME/hdl/ver/mister_dump.v .
             git add -v mister_dump.v
         fi
         SIMFILE=sim_mister.f
-        PLL_FILE=fast_pll_mister.f
+        PLL_FILE=$JTROOT/modules/jtframe/hdl/mister/mister_pll48.v
         # Generate a fake build_id.v file
         echo "\`define BUILD_DATE \"190311\"" > build_id.v
         echo "\`define BUILD_TIME \"190311\"" >> build_id.v
@@ -284,6 +307,14 @@ case "$1" in
         rm -f video*.jpg
         VIDEO_DUMP=TRUE
         ;;
+    -videow)
+        shift
+        VIDEOWIDTH=$1
+        ;;
+    -videoh)
+        shift
+        VIDEOHEIGHT=$1
+        ;;
     "-load")
         LOADROM=${MACROPREFIX}LOADROM
         echo ROM load through SPI enabled
@@ -305,29 +336,6 @@ case "$1" in
     "-help")
         cat << EOF
 JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
-    -sysname  Specify the name of the core
-    -modules  Location of the modules folder with respect to the simulation folder
-    -mist     Use MiST setup for simulation, instead of using directly the
-              game module. This is slower but more informative.
-    -video    Enable video output. Can be followed by a number to get
-              the number of frames to simulate.              
-    -lint     Run verilator as lint tool
-    -nc       Select NCVerilog as the simulator
-    -load     Load the ROM file using the SPI communication. Slower.
-    -t        Compile and load test file for main CPU. It can be used with the
-              name of an assembly language file.
-    -t2       Same as -t but for the sound CPU
-    -nochar   Disable CHAR hardware. Faster simulation.
-    -noscr    Disable SCROLL hardware. Faster simulation.
-    -nosnd    Disable SOUND hardware. Speeds up simulation a lot!
-    -w        Save a small set of signals for scope verification
-    -deep     Save all signals for scope verification
-    -frame    Number of frames to simulate
-    -time     Number of milliseconds to simulate
-    -test     Enable test DIP setting. Same as -d DIP_TEST
-    -pause    Enable pause DIP setting. Same as -d DIP_PAUSE
-    -slowpll  Simulate using Altera's model for PLLs
-    -showcmd  Display the simulation command only. Do not run any simulation.
     -d        Add specific Verilog macros for the simulation. Common options
         VIDEO_START=X   video output will start on frame X
         DUMP_START=X    waveform dump will start on frame X
@@ -346,6 +354,32 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
         SIMULATE_OSD    Simulate OSD display
         SIMINFO         Show simulation options available thorugh define commands
         SCANDOUBLER_DISABLE=1   Disables the scan doubler module
+    -deep     Save all signals for scope verification
+    -frame    Number of frames to simulate
+    -lint     Run verilator as lint tool
+    -load     Load the ROM file using the SPI communication. Slower.
+    -modules  Location of the modules folder with respect to the simulation folder
+    -mist     Use MiST setup for simulation, instead of using directly the
+              game module. This is slower but more informative.
+    -nc       Select NCVerilog as the simulator
+    -nochar   Disable CHAR hardware. Faster simulation.
+    -noscr    Disable SCROLL hardware. Faster simulation.
+    -nosnd    Disable SOUND hardware. Speeds up simulation a lot!
+    -pause    Enable pause DIP setting. Same as -d DIP_PAUSE
+    -srate    Sampling rate of the .wav file
+    -t        Compile and load test file for main CPU. It can be used with the
+              name of an assembly language file.
+    -t2       Same as -t but for the sound CPU
+    -time     Number of milliseconds to simulate
+    -test     Enable test DIP setting. Same as -d DIP_TEST
+    -slowpll  Simulate using Altera's model for PLLs
+    -showcmd  Display the simulation command only. Do not run any simulation.
+    -sysname  Specify the name of the core
+    -video    Enable video output. Can be followed by a number to get
+              the number of frames to simulate.
+    -videow   Define the visible screen width  (only useful if -video is also used)
+    -videoh   Define the visible screen height (only useful if -video is also used)
+    -w        Save a small set of signals for scope verification
 EOF
         exit 0
         ;;
@@ -381,25 +415,21 @@ if [[ $TOP = mist_test || $TOP = mister_test ]]; then
     if [ "$MIST_PLL" != "" ]; then
         # Adds the Altera file with the PLL models
         if [ $SIMULATOR = iverilog ]; then
-            MIST="$MIST $(add_dir $MODULES/jtframe/hdl/mist $MIST_PLL)"
+            MIST="$MIST $(add_dir $JTFRAME/hdl/mist $MIST_PLL)"
         else
-            MIST="$MIST -F $MODULES/jtframe/hdl/mist/$MIST_PLL"
+            MIST="$MIST -F $JTFRAME/hdl/mist/$MIST_PLL"
         fi
     fi
     # Adds the .f file with the PLL modules
-    if [ $SIMULATOR = iverilog ]; then
-        MIST="$MIST $(add_dir . $PLL_FILE)"
-    else
-        MIST="$MIST -F $PLL_FILE"
-    fi
+    MIST="$MIST $PLL_FILE"
 fi
 
 case $SIMULATOR in
 iverilog)
     $SHOWCMD iverilog -g2005-sv $MIST \
         -f game.f $PERCORE \
-        $(add_dir $MODULES/jtframe/hdl/ver $SIMFILE ) \
-        $MODULES/jtframe/hdl/cpu/tv80/*.v  \
+        $(add_dir $JTFRAME/hdl/ver $SIMFILE ) \
+        $JTFRAME/hdl/cpu/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
         $MAXFRAME -DIVERILOG $EXTRA \
@@ -408,13 +438,13 @@ iverilog)
 ncverilog)
     $SHOWCMD ncverilog +access+r +nc64bit +define+NCVERILOG \
         -f game.f $PERCORE \
-        -F $MODULES/jtframe/hdl/ver/$SIMFILE -disable_sem2009 $MIST \
+        -F $JTFRAME/hdl/ver/$SIMFILE -disable_sem2009 $MIST \
         +define+SIM_MS=$SIM_MS +define+SIMULATION \
         $DUMP $LOADROM \
         $MAXFRAME \
-        -ncvhdl_args,-V93 $MODULES/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
+        -ncvhdl_args,-V93 $JTFRAME/hdl/cpu/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
         $EXTRA_VHDL \
-        $MODULES/jtframe/hdl/cpu/tv80/*.v \
+        $JTFRAME/hdl/cpu/tv80/*.v \
         $EXTRA -l /dev/null || exit $?;;
 verilator)
     $SHOWCMD verilator -I../../hdl \
@@ -428,21 +458,21 @@ verilator)
 esac
 
 if [ "$VIDEO_DUMP" = TRUE ]; then
-    #$MODULES/jtframe/bin/bin2png.py $BIN2PNG_OPTIONS
+    #$JTFRAME/bin/bin2png.py $BIN2PNG_OPTIONS
     rm -f video*.raw
-    $MODULES/jtframe/bin/bin2raw
+    $JTFRAME/bin/bin2raw
     for i in video*.raw; do
         filename=$(basename $i .raw).jpg
         if [ -e "$filename" ]; then
             rm $i       # delete the raw file
             continue    # do not overwrite
         fi
-        convert $CONVERT_OPTIONS -size 256x224 \
+        convert $CONVERT_OPTIONS -size ${VIDEOWIDTH}x${VIDEOHEIGHT} \
             -depth 8 RGBA:$i $filename && rm $i
     done
 fi
 
 # convert raw sound file to wav format
 if [ -e sound.raw ]; then
-    raw2wav < sound.raw
+    $JTFRAME/bin/raw2wav $SAMPLING_RATE < sound.raw
 fi

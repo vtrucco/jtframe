@@ -114,7 +114,7 @@ reg wr_vga;
 //     rgb_dly <= {red,green,blue};
 wire [COLORW*3-1:0] rgb_dly = {red,green,blue};
 
-jtgng_dual_clk_ram #(.dw(COLORW*3),.aw(8)) ram0 (
+jtframe_dual_clk_ram #(.dw(COLORW*3),.aw(8)) ram0 (
     .addr_a  ( wr_addr            ),
     .addr_b  ( rd_addr            ),
     .clka    ( clk_rgb            ),
@@ -129,7 +129,7 @@ jtgng_dual_clk_ram #(.dw(COLORW*3),.aw(8)) ram0 (
     .q_a     (                    )
 );
 
-jtgng_dual_clk_ram #(.dw(COLORW*3),.aw(8)) ram1 (
+jtframe_dual_clk_ram #(.dw(COLORW*3),.aw(8)) ram1 (
     .addr_a  ( wr_addr            ),
     .addr_b  ( rd_addr            ),
     .clka    ( clk_rgb            ),

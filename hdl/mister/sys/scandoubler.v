@@ -19,10 +19,10 @@
 
 // TODO: Delay vsync one line
 
-module scandoubler #(parameter LENGTH=100, HALF_DEPTH=50, DWIDTH = HALF_DEPTH ? 3 : 7)
+module scandoubler #(parameter LENGTH=10, HALF_DEPTH=10)
 (
 	// system interface
-	input             clk_sys,
+	input             clk_vid,
 	input             ce_pix,
 	output            ce_pix_out,
 
@@ -49,49 +49,27 @@ module scandoubler #(parameter LENGTH=100, HALF_DEPTH=50, DWIDTH = HALF_DEPTH ? 
 	output [DWIDTH:0] b_out
 );
 
-
-// localparam DWIDTH = HALF_DEPTH ? 3 : 7;
-
-reg [DWIDTH:0] r_d;
-reg [DWIDTH:0] g_d;
-reg [DWIDTH:0] b_d;
-
-reg [1:0] sd_line;
-reg [3:0] vbo;
-reg [3:0] vso;
-reg [8:0] hbo;
-
-reg req_line_reset;
-reg ce_x4, ce_x2, ce_x1;
-
-assign vs_out = vso[3];
-assign ce_pix_out = hq2x ? ce_x4 : ce_x2;
-
-//Compensate picture shift after HQ2x
-assign vb_out = vbo[3];
-assign hb_out = hbo[6];
+localparam DWIDTH = HALF_DEPTH ? 3 : 7;
 
 reg  [7:0] pix_len = 0;
-reg  [7:0] pix_cnt = 0;
 wire [7:0] pl = pix_len + 1'b1;
-wire [7:0] pc = pix_cnt + 1'b1;
 
-always @(negedge clk_sys) begin : unnamed0
+reg  [7:0] pix_in_cnt = 0;
+wire [7:0] pc_in = pix_in_cnt + 1'b1;
+reg  [7:0] pixsz, pixsz2, pixsz4 = 0;
+
+reg ce_x4i, ce_x1i;
+always @(posedge clk_vid) begin
 	reg old_ce, valid, hs;
-	reg [2:0] ce_cnt;
-
-	reg [7:0] pixsz, pixsz2, pixsz4; // = 0;
 
 	if(~&pix_len) pix_len <= pl;
-	if(~&pix_cnt) pix_cnt <= pc;
+	if(~&pix_in_cnt) pix_in_cnt <= pc_in;
 
-	ce_x4 <= 0;
-	ce_x2 <= 0;
-	ce_x1 <= 0;
+	ce_x4i <= 0;
+	ce_x1i <= 0;
 
 	// use such odd comparison to place ce_x4 evenly if master clock isn't multiple of 4.
-	if((pc == pixsz4) || (pc == pixsz2) || (pc == (pixsz2+pixsz4))) ce_x4 <= 1;
-	if( pc == pixsz2) ce_x2 <= 1;
+	if((pc_in == pixsz4) || (pc_in == pixsz2) || (pc_in == (pixsz2+pixsz4))) ce_x4i <= 1;
 
 	old_ce <= ce_pix;
 	if(~old_ce & ce_pix) begin
@@ -104,32 +82,74 @@ always @(negedge clk_sys) begin : unnamed0
 		valid <= 1;
 	end
 
-	if(hb_in | vb_in) valid <= 0;
+	hs <= hs_in;
+	if((~hs & hs_in) || (pc_in >= pixsz)) begin
+		ce_x4i <= 1;
+		ce_x1i <= 1;
+		pix_in_cnt <= 0;
+	end
 
-	hs <= hs_out;
-	if((~hs & hs_out) || (pc >= pixsz)) begin
-		ce_x2 <= 1;
-		ce_x4 <= 1;
-		ce_x1 <= 1;
-		pix_cnt <= 0;
+	if(hb_in | vb_in) valid <= 0;
+end
+
+reg req_line_reset;
+reg [DWIDTH:0] r_d, g_d, b_d;
+always @(posedge clk_vid) begin
+	if(ce_x1i) begin
+		req_line_reset <= hb_in;
+		r_d <= r_in;
+		g_d <= g_in;
+		b_d <= b_in;
 	end
 end
 
+reg ce_x4o, ce_x2o;
+reg [1:0] sd_line;
+
 Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 (
-	.clk(clk_sys),
-	.ce_x4(ce_x4),
+	.clk(clk_vid),
+
+	.ce_in(ce_x4i),
 	.inputpixel({b_d,g_d,r_d}),
 	.mono(mono),
 	.disable_hq2x(~hq2x),
 	.reset_frame(vb_in),
 	.reset_line(req_line_reset),
+
+	.ce_out(ce_x4o),
 	.read_y(sd_line),
 	.hblank(hbo[0]&hbo[8]),
 	.outpixel({b_out,g_out,r_out})
 );
 
-always @(posedge clk_sys) begin : unnamed1
+reg  [7:0] pix_out_cnt = 0;
+wire [7:0] pc_out = pix_out_cnt + 1'b1;
+
+always @(posedge clk_vid) begin
+	reg hs;
+
+	if(~&pix_out_cnt) pix_out_cnt <= pc_out;
+
+	ce_x4o <= 0;
+	ce_x2o <= 0;
+
+	// use such odd comparison to place ce_x4 evenly if master clock isn't multiple of 4.
+	if((pc_out == pixsz4) || (pc_out == pixsz2) || (pc_out == (pixsz2+pixsz4))) ce_x4o <= 1;
+	if( pc_out == pixsz2) ce_x2o <= 1;
+
+	hs <= hs_out;
+	if((~hs & hs_out) || (pc_out >= pixsz)) begin
+		ce_x2o <= 1;
+		ce_x4o <= 1;
+		pix_out_cnt <= 0;
+	end
+end
+
+reg [3:0] vbo;
+reg [3:0] vso;
+reg [8:0] hbo;
+always @(posedge clk_vid) begin
 
 	reg [31:0] hcnt;
 	reg [30:0] sd_hcnt;
@@ -138,7 +158,7 @@ always @(posedge clk_sys) begin : unnamed1
 
 	reg hs, hb;
 
-	if(ce_x4) begin
+	if(ce_x4o) begin
 		hbo[8:1] <= hbo[7:0];
 	end
 
@@ -165,13 +185,6 @@ always @(posedge clk_sys) begin : unnamed1
 	hs <= hs_in;
 	hb <= hb_in;
 
-	if(ce_x1) begin
-		req_line_reset <= hb_in;
-		r_d <= r_in;
-		g_d <= g_in;
-		b_d <= b_in;
-	end
-
 	hcnt <= hcnt + 1'd1;
 	if(hb && !hb_in) begin
 		hde_start <= hcnt[31:1];
@@ -192,5 +205,12 @@ always @(posedge clk_sys) begin : unnamed1
 	// save position of rising edge
 	if(!hs && hs_in) hs_start <= hcnt[31:1];
 end
+
+assign vs_out = vso[3];
+assign ce_pix_out = hq2x ? ce_x4o : ce_x2o;
+
+//Compensate picture shift after HQ2x
+assign vb_out = vbo[3];
+assign hb_out = hbo[6];
 
 endmodule

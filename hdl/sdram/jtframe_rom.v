@@ -14,59 +14,81 @@
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
-    Date: 20-2-2019 */
+    Date: 6-12-2019 */
 
 `timescale 1ns/1ps
 
+// 9 slots for SDRAM read-only access
+// slot 0 --> maximum priority
+// slot 8 --> minimum priority
+// Each slot can be used for 8, 16 or 32 bit access
+// Small 4 byte cache used for each slot
+
 module jtframe_rom #(parameter
-    // Default values correspond to G&G
-    SND_OFFSET  = 22'h0A000,
-    CHAR_OFFSET = 22'h0E000,
-    SCR1_OFFSET = 22'h10000,
-    SCR2_OFFSET = 22'h08000, // upper byte of each tile
-    OBJ_OFFSET  = 22'h20000,
-    // Address width
-    MAIN_AW     = 17,
-    SND_AW      = 15,
-    CHAR_AW     = 13,
-    SCR1_AW     = 15,
-    SCR2_AW     = 15,
-    OBJ_AW      = 15,
-    // Data width, only byte multiples
-    MAIN_DW     = 8,
-    SND_DW      = 8,
-    CHAR_DW     = 16,
-    SCR1_DW     = 32,
-    SCR2_DW     = 32,
-    OBJ_DW      = 16
+    SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8, SLOT3_DW = 8,
+    SLOT4_DW = 8, SLOT5_DW = 8, SLOT6_DW = 8, SLOT7_DW = 8, SLOT8_DW = 8,
+
+    SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8, SLOT3_AW = 8,
+    SLOT4_AW = 8, SLOT5_AW = 8, SLOT6_AW = 8, SLOT7_AW = 8, SLOT8_AW = 8,
+
+    SLOT0_OFFSET = 22'h0,
+    SLOT1_OFFSET = 22'h0,
+    SLOT2_OFFSET = 22'h0,
+    SLOT3_OFFSET = 22'h0,
+    SLOT4_OFFSET = 22'h0,
+    SLOT5_OFFSET = 22'h0,
+    SLOT6_OFFSET = 22'h0,
+    SLOT7_OFFSET = 22'h0,
+    SLOT8_OFFSET = 22'h0
+
+    // SLOT0_BRAM   = 0,
+    // SLOT1_BRAM   = 0
 )(
-    input               rst_n,
+    input               rst,
     input               clk,
-    input               LHBL,
-    input               LVBL,
+    input               vblank,
 
-    input               main_cs,
-    input               snd_cs,
-    
-    output              main_ok,
-    output              snd_ok,
-    output              char_ok,
+    input  [SLOT0_AW-1:0] slot0_addr, //  32 kB
+    input  [SLOT1_AW-1:0] slot1_addr, // 160 kB, addressed as 8-bit words
+    input  [SLOT2_AW-1:0] slot2_addr, //  32 kB
+    input  [SLOT3_AW-1:0] slot3_addr, //  64 kB
+    input  [SLOT4_AW-1:0] slot4_addr, // 256 kB
+    input  [SLOT5_AW-1:0] slot5_addr, // 256 kB (16-bit words)
+    input  [SLOT6_AW-1:0] slot6_addr, //  64 kB
+    input  [SLOT7_AW-1:0] slot7_addr, //  32 kB
+    input  [SLOT8_AW-1:0] slot8_addr, //  32 kB
 
-    input  [MAIN_AW-1:0]  main_addr,
-    input  [ SND_AW-1:0]  snd_addr,
-    input  [CHAR_AW-1:0]  char_addr,
-    input  [SCR1_AW-1:0]  scr1_addr,
-    input  [SCR2_AW-1:0]  scr2_addr,
-    input  [ OBJ_AW-1:0]  obj_addr,
-
-    output [MAIN_DW-1:0]  main_dout,
-    output [ SND_DW-1:0]   snd_dout,
-    output [CHAR_DW-1:0]  char_dout,
-    output [SCR1_DW-1:0]  scr1_dout,
-    output [SCR2_DW-1:0]  scr2_dout,
-    output [ OBJ_DW-1:0]   obj_dout,
+    //  output data
+    output [SLOT0_DW-1:0] slot0_dout,
+    output [SLOT1_DW-1:0] slot1_dout,
+    output [SLOT2_DW-1:0] slot2_dout,
+    output [SLOT3_DW-1:0] slot3_dout,
+    output [SLOT4_DW-1:0] slot4_dout,
+    output [SLOT5_DW-1:0] slot5_dout,
+    output [SLOT6_DW-1:0] slot6_dout,
+    output [SLOT7_DW-1:0] slot7_dout,
+    output [SLOT8_DW-1:0] slot8_dout,
     output  reg         ready,
 
+    input               slot0_cs,
+    input               slot1_cs,
+    input               slot2_cs,
+    input               slot3_cs,
+    input               slot4_cs,
+    input               slot5_cs,
+    input               slot6_cs,
+    input               slot7_cs,
+    input               slot8_cs,
+
+    output              slot0_ok,
+    output              slot1_ok,
+    output              slot2_ok,
+    output              slot3_ok,
+    output              slot4_ok,
+    output              slot5_ok,
+    output              slot6_ok,
+    output              slot7_ok,
+    output              slot8_ok,
     // SDRAM controller interface
     input               data_rdy,
     input               sdram_ack,
@@ -78,172 +100,225 @@ module jtframe_rom #(parameter
     input       [31:0]  data_read
 );
 
-reg [3:0] ready_cnt;
-reg [3:0] rd_state_last;
-wire main_req, snd_req, char_req, scr1_req, scr2_req, obj_req;
 
-localparam MAIN=0, SND=1, CHAR=2, SCR1=3, OBJ=4, SCR2=5;
+reg  [ 3:0] ready_cnt;
+reg  [ 3:0] rd_state_last;
+wire [ 8:0] req, ok;
 
-reg [5:0] data_sel;
-wire [MAIN_AW-1:0] main_addr_req;
-wire [ SND_AW-1:0]  snd_addr_req;
-wire [CHAR_AW-1:0] char_addr_req;
-wire [SCR1_AW-1:0] scr1_addr_req;
-wire [SCR2_AW-1:0] scr2_addr_req;
-wire [ OBJ_AW-1:0] obj_addr_req;
+reg  [ 8:0] data_sel;
+wire [21:0] slot0_addr_req,
+            slot1_addr_req,
+            slot2_addr_req,
+            slot3_addr_req,
+            slot4_addr_req,
+            slot5_addr_req,
+            slot6_addr_req,
+            slot7_addr_req,
+            slot8_addr_req;
 
-wire scr1_ok, scr2_ok, obj_ok;
+assign slot0_ok = ok[0];
+assign slot1_ok = ok[1];
+assign slot2_ok = ok[2];
+assign slot3_ok = ok[3];
+assign slot4_ok = ok[4];
+assign slot5_ok = ok[5];
+assign slot6_ok = ok[6];
+assign slot7_ok = ok[7];
+assign slot8_ok = ok[8];
 
-always @(posedge clk)
-    refresh_en <= &{ main_ok&main_cs, snd_ok&snd_cs, char_ok, scr1_ok, scr2_ok, obj_ok };
+jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.OFFSET(SLOT0_OFFSET)) u_slot0(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot0_addr             ),
+    .addr_ok   ( slot0_cs               ),
+    .sdram_addr( slot0_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot0_dout             ),
+    .req       ( req[0]                 ),
+    .data_ok   ( ok[0]                  ),
+    .we        ( data_sel[0]            )
+);
 
-jtframe_romrq #(.AW(MAIN_AW),.DW(MAIN_DW),.INVERT_A0(1)) u_main(
-    .rst_n    ( rst_n           ),
-    .clk      ( clk             ),
-    .addr     ( main_addr       ),
-    .addr_ok  ( main_cs         ),
-    .addr_req ( main_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( main_dout       ),
-    .req      ( main_req        ),
-    .data_ok  ( main_ok         ),
-    .we       ( data_sel[MAIN]  )
+jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.OFFSET(SLOT1_OFFSET)) u_slot1(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot1_addr             ),
+    .addr_ok   ( slot1_cs               ),
+    .sdram_addr( slot1_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot1_dout             ),
+    .req       ( req[1]                 ),
+    .data_ok   ( ok[1]                  ),
+    .we        ( data_sel[1]            )
+);
+
+jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW),.OFFSET(SLOT2_OFFSET)) u_slot2(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot2_addr             ),
+    .addr_ok   ( slot2_cs               ),
+    .sdram_addr( slot2_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot2_dout             ),
+    .req       ( req[2]                 ),
+    .data_ok   ( ok[2]                  ),
+    .we        ( data_sel[2]            )
+);
+
+jtframe_romrq #(.AW(SLOT3_AW),.DW(SLOT3_DW),.OFFSET(SLOT3_OFFSET)) u_slot3(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot3_addr             ),
+    .addr_ok   ( slot3_cs               ),
+    .sdram_addr( slot3_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot3_dout             ),
+    .req       ( req[3]                 ),
+    .data_ok   ( ok[3]                  ),
+    .we        ( data_sel[3]            )
+);
+
+jtframe_romrq #(.AW(SLOT4_AW),.DW(SLOT4_DW),.OFFSET(SLOT4_OFFSET)) u_slot4(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot4_addr             ),
+    .addr_ok   ( slot4_cs               ),
+    .sdram_addr( slot4_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot4_dout             ),
+    .req       ( req[4]                 ),
+    .data_ok   ( ok[4]                  ),
+    .we        ( data_sel[4]            )
+);
+
+jtframe_romrq #(.AW(SLOT5_AW),.DW(SLOT5_DW),.OFFSET(SLOT5_OFFSET)) u_slot5(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot5_addr             ),
+    .addr_ok   ( slot5_cs               ),
+    .sdram_addr( slot5_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot5_dout             ),
+    .req       ( req[5]                 ),
+    .data_ok   ( ok[5]                  ),
+    .we        ( data_sel[5]            )
+);
+
+jtframe_romrq #(.AW(SLOT6_AW),.DW(SLOT6_DW),.OFFSET(SLOT6_OFFSET)) u_slot6(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot6_addr             ),
+    .addr_ok   ( slot6_cs               ),
+    .sdram_addr( slot6_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot6_dout             ),
+    .req       ( req[6]                 ),
+    .data_ok   ( ok[6]                  ),
+    .we        ( data_sel[6]            )
+);
+
+jtframe_romrq #(.AW(SLOT7_AW),.DW(SLOT7_DW),.OFFSET(SLOT7_OFFSET)) u_slot7(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot7_addr             ),
+    .addr_ok   ( slot7_cs               ),
+    .sdram_addr( slot7_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot7_dout             ),
+    .req       ( req[7]                 ),
+    .data_ok   ( ok[7]                  ),
+    .we        ( data_sel[7]            )
 );
 
 
-jtframe_romrq #(.AW(SND_AW),.DW(SND_DW),.INVERT_A0(1)) u_snd(
-    .rst_n    ( rst_n           ),
-    .clk      ( clk             ),
-    .addr     ( snd_addr        ),
-    .addr_ok  ( snd_cs          ),
-    .addr_req ( snd_addr_req    ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( snd_dout        ),
-    .req      ( snd_req         ),
-    .data_ok  ( snd_ok          ),
-    .we       ( data_sel[SND]   )
+jtframe_romrq #(.AW(SLOT8_AW),.DW(SLOT8_DW),.OFFSET(SLOT8_OFFSET)) u_slot8(
+    .rst       ( rst                    ),
+    .clk       ( clk                    ),
+    .cen       ( 1'b1                   ),
+    .addr      ( slot8_addr             ),
+    .addr_ok   ( slot8_cs               ),
+    .sdram_addr( slot8_addr_req         ),
+    .din       ( data_read              ),
+    .din_ok    ( data_rdy               ),
+    .dout      ( slot8_dout             ),
+    .req       ( req[8]                 ),
+    .data_ok   ( ok[8]                  ),
+    .we        ( data_sel[8]            )
 );
 
-jtframe_romrq #(.AW(CHAR_AW),.DW(CHAR_DW)) u_char(
-    .rst_n    ( rst_n           ),
-    .clk      ( clk             ),
-    .addr     ( char_addr       ),
-    .addr_ok  ( LVBL            ),
-    .addr_req ( char_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( char_dout       ),
-    .req      ( char_req        ),
-    .data_ok  ( char_ok         ),
-    .we       ( data_sel[CHAR]  )
-);
-
-jtframe_romrq #(.AW(SCR1_AW),.DW(SCR1_DW)) u_scr1(
-    .rst_n    ( rst_n           ),
-    .clk      ( clk             ),
-    .addr     ( scr1_addr       ),
-    .addr_ok  ( LVBL            ),
-    .addr_req ( scr1_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( scr1_dout       ),
-    .req      ( scr1_req        ),
-    .data_ok  ( scr1_ok         ),
-    .we       ( data_sel[SCR1]  )
-);
-
-jtframe_romrq #(.AW(SCR2_AW),.DW(SCR1_DW)) u_scr2(
-    .rst_n    ( rst_n           ),
-    .clk      ( clk             ),
-    .addr     ( scr2_addr       ),
-    .addr_ok  ( LVBL            ),
-    .addr_req ( scr2_addr_req   ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( scr2_dout       ),
-    .req      ( scr2_req        ),
-    .data_ok  ( scr2_ok         ),
-    .we       ( data_sel[SCR2]  )
-);
-
-jtframe_romrq #(.AW(OBJ_AW),.DW(OBJ_DW)) u_obj(
-    .rst_n    ( rst_n           ),
-    .clk      ( clk             ),
-    .addr     ( obj_addr        ),
-    .addr_ok  ( 1'b1            ),
-    .addr_req ( obj_addr_req    ),
-    .din      ( data_read       ),
-    .din_ok   ( data_rdy        ),
-    .dout     ( obj_dout        ),
-    .req      ( obj_req         ),
-    .data_ok  ( obj_ok          ),
-    .we       ( data_sel[OBJ]   )
-);
-
-`ifdef SIMULATION
-real busy_cnt=0, total_cnt=0;
-always @(posedge clk) begin
-    total_cnt <= total_cnt + 1;
-    if( |data_sel ) busy_cnt <= busy_cnt+1;
-end
-always @(posedge LVBL) begin
-    $display("INFO: frame ROM stats: %.0f %%", 100.0*busy_cnt/total_cnt);
-end
-`endif
-
-reg [5:0] valid_req;
-always @(*) begin
-    valid_req[MAIN] = main_req & ~data_sel[MAIN];
-    valid_req[ SND] = snd_req  & ~data_sel[ SND];
-    valid_req[SCR1] = scr1_req & ~data_sel[SCR1];
-    valid_req[SCR2] = scr2_req & ~data_sel[SCR2];
-    valid_req[CHAR] = char_req & ~data_sel[CHAR];
-    valid_req[ OBJ] = obj_req  & ~data_sel[ OBJ];
-end
+wire [8:0] active = ~data_sel & req;
 
 always @(posedge clk)
 if( loop_rst || downloading ) begin
-    sdram_addr <=  'd0;
+    sdram_addr <= 22'd0;
     ready_cnt <=  4'd0;
     ready     <=  1'b0;
     sdram_req <=  1'b0;
-    data_sel  <=   'd0;
+    data_sel  <=  9'd0;
 end else begin
     {ready, ready_cnt}  <= {ready_cnt, 1'b1};
     if( sdram_ack ) sdram_req <= 1'b0;
+    refresh_en <= 1'b0;
     // accept a new request
-    if( |data_sel==1'b0 || data_rdy ) begin
-        sdram_req <= |valid_req;
-        data_sel <= 'd0;
+    if( data_sel==9'd0 || data_rdy ) begin
+        sdram_req <= |active;
+        data_sel  <= 9'd0;
         case( 1'b1 )
-            valid_req[OBJ]: begin
-                sdram_addr <= OBJ_OFFSET + { {22-OBJ_AW{1'b0}}, obj_addr_req };
-                data_sel[OBJ] <= 1'b1;
+            active[0]: begin
+                sdram_addr <= slot0_addr_req;
+                data_sel[0] <= 1'b1;
             end
-            valid_req[SCR1]: begin
-                sdram_addr <= SCR1_OFFSET + { {22-SCR1_AW{1'b0}}, scr1_addr_req };
-                data_sel[SCR1] <= 1'b1;
+            active[1]: begin
+                sdram_addr <= slot1_addr_req;
+                data_sel[1] <= 1'b1;
             end
-            valid_req[SCR2]: begin
-                sdram_addr <= SCR2_OFFSET + { {22-SCR2_AW{1'b0}}, scr2_addr_req };
-                data_sel[SCR2] <= 1'b1;
+            active[2]: begin
+                sdram_addr <= slot2_addr_req;
+                data_sel[2] <= 1'b1;
             end
-            valid_req[CHAR]: begin
-                sdram_addr <= CHAR_OFFSET + { {22-CHAR_AW{1'b0}}, char_addr_req };
-                data_sel[CHAR] <= 1'b1;
+            active[3]: begin
+                sdram_addr <= slot3_addr_req;
+                data_sel[3] <= 1'b1;
             end
-            valid_req[MAIN]: begin
-                sdram_addr <= { {22-MAIN_AW+1{1'b0}}, main_addr_req[MAIN_AW-1:1] };
-                data_sel[MAIN] <= 1'b1;
+            active[4]: begin
+                sdram_addr <= slot4_addr_req;
+                data_sel[4] <= 1'b1;
             end
-            valid_req[SND]: begin
-                sdram_addr <= SND_OFFSET + { {22-SND_AW+1{1'b0}}, snd_addr_req[SND_AW-1:1] };
-                data_sel[SND] <= 1'b1;
+            active[5]: begin
+                sdram_addr <= slot5_addr_req;
+                data_sel[5] <= 1'b1;
             end
+            active[6]: begin
+                sdram_addr <= slot6_addr_req;
+                data_sel[6] <= 1'b1;
+            end
+            active[7]: begin
+                sdram_addr <= slot7_addr_req;
+                data_sel[7] <= 1'b1;
+            end
+            active[8]: begin
+                sdram_addr <= slot8_addr_req;
+                data_sel[8] <= 1'b1;
+            end
+            default: refresh_en <= vblank;
         endcase
     end
 end
 
-endmodule
+endmodule // jtframe_rom

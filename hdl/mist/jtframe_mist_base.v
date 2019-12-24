@@ -18,7 +18,7 @@
 
 `timescale 1ns/1ps
 
-module jtgng_mist_base #(parameter
+module jtframe_mist_base #(parameter
     CONF_STR        = "CORE",
     CONF_STR_LEN    = 4,
     SIGNED_SND      = 1'b0,
@@ -268,4 +268,4 @@ assign VIDEO_HS = hs;
 assign VIDEO_VS = vs;
 `endif
 
-endmodule // jtgng_mist_base
+endmodule

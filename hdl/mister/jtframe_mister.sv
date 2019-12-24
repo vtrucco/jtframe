@@ -10,7 +10,7 @@ module jtframe_mister #(parameter
     input           pll_locked,
     // interface with microcontroller
     output [31:0]   status,
-    inout  [44:0]   HPS_BUS,
+    inout  [45:0]   HPS_BUS,
     output [ 1:0]   buttons,
     // Base video
     input [COLORW-1:0] game_r,
@@ -109,7 +109,7 @@ assign LED  = downloading | dwnld_busy;
 wire [15:0]   joystick1, joystick2;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire [2:0]    hpsio_nc; // top 3 bits of ioctl_addr are ignored
-wire          force_scan2x;
+wire          force_scan2x, direct_video;
 
 wire [7:0]    pre_scan2x_r;
 wire [7:0]    pre_scan2x_g;
@@ -144,8 +144,9 @@ always @(*) begin
     end
 end
 
+wire [21:0] gamma_bus;
 
-hps_io #(.STRLEN($size(CONF_STR)/8)) u_hps_io
+hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
 (
     .clk_sys         ( clk_sys      ),
     .HPS_BUS         ( HPS_BUS      ),
@@ -153,6 +154,9 @@ hps_io #(.STRLEN($size(CONF_STR)/8)) u_hps_io
 
     .buttons         ( buttons      ),
     .status          ( status       ),
+    .status_menumask ( direct_video ),
+    .gamma_bus       ( gamma_bus    ),
+    .direct_video    ( direct_video ),
     .forced_scandoubler(force_scan2x),
 
     .ioctl_download  ( downloading  ),
@@ -201,6 +205,7 @@ jtframe_board #(.THREE_BUTTONS(THREE_BUTTONS),
     .dip_flip       ( dip_flip        ),
     .dip_fxlevel    ( dip_fxlevel     ),
     // screen
+    .gamma_bus      ( gamma_bus       ),
     .hdmi_r         ( hdmi_r          ),
     .hdmi_g         ( hdmi_g          ),
     .hdmi_b         ( hdmi_b          ),

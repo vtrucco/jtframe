@@ -54,7 +54,6 @@ module test_harness(
 
 parameter sdram_instance = 1, GAME_ROMNAME="_PASS ROM NAME to test_harness_";
 parameter TX_LEN = 207;
-parameter CLK_SPEED=12;
 
 ////////////////////////////////////////////////////////////////////
 // video output dump

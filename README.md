@@ -7,7 +7,12 @@ This is a work in progress. The first version will be considered ready once the 
 
 You can show your appreciation through
     * Patreon: https://patreon.com/topapate
-    * Paypal: https://paypal.me/topapate   
+    * Paypal: https://paypal.me/topapate
+
+CPUs
+====
+
+Some CPUs are included in JTFRAME. Some of them can be found in other repositories in Github but the versions in JTFRAME include clock enable inputs and other improvements.
 
 Simulation of 74-series based schematics
 ========================================
@@ -41,3 +46,16 @@ bit         meaning
 7
 8           Button 1
 9           Button 2
+
+Modules with simulation files added automatically
+=================================================
+Define and export the following environgment variables to have these
+modules added to your simulation when using sim.sh
+
+YM2203
+YM2149
+YM2151
+MSM5205
+M6801
+M6809
+I8051

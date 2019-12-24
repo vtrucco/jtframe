@@ -16,7 +16,7 @@
     Version: 1.0
     Date: 27-10-2017 */
 
-// Generic RAM with clock enable
+// Generic dual port RAM with clock enable
 // parameters:
 //      dw      => Data bit width, 8 for byte-based memories
 //      aw      => Address bit width, 10 for 1kB
@@ -28,13 +28,19 @@
 
 `timescale 1ns/1ps
 
-module jtgng_ram #(parameter dw=8, aw=10, simfile="", simhexfile="", synfile="",cen_rd=0)(
-    input   clk,
-    input   cen /* direct_enable */,
-    input   [dw-1:0] data,
-    input   [aw-1:0] addr,
-    input   we,
-    output reg [dw-1:0] q
+module jtframe_dual_ram #(parameter dw=8, aw=10, simfile="", simhexfile="", synfile="",cen_rd=0)(
+    input   clk0,
+    input   clk1,
+    // Port 0
+    input   [dw-1:0] data0,
+    input   [aw-1:0] addr0,
+    input   we0,
+    output reg [dw-1:0] q0,
+    // Port 1
+    input   [dw-1:0] data1,
+    input   [aw-1:0] addr1,
+    input   we1,
+    output reg [dw-1:0] q1
 );
 
 (* ramstyle = "no_rw_check" *) reg [dw-1:0] mem[0:(2**aw)-1];
@@ -72,9 +78,14 @@ initial if(synfile!="" )$readmemh(synfile,mem);
 /* verilator lint_on WIDTH */
 `endif
 
-always @(posedge clk) begin
-    if( !cen_rd || cen ) q <= mem[addr];
-    if( cen && we) mem[addr] <= data;
+always @(posedge clk0) begin
+    q0 <= mem[addr0];
+    if(we0) mem[addr0] <= data0;
 end
 
-endmodule // jtgng_ram
+always @(posedge clk1) begin
+    q1 <= mem[addr1];
+    if(we1) mem[addr1] <= data1;
+end
+
+endmodule
