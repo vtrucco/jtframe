@@ -115,7 +115,7 @@ generate
     if (sdram_instance==1) begin
         assign #5 SDRAM_CLK = clk_rom;
 
-        jtgng_sdram u_sdram(
+        jtframe_sdram u_sdram(
             .rst            ( rst           ),
             .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
             .cen12          ( cen12         ),

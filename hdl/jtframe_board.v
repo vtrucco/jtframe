@@ -319,7 +319,7 @@ assign       SDRAM_DQMH = sdram_a[12] | sdram_dqmh;
 assign       SDRAM_A[11] = SDRAM_DQML;
 assign       SDRAM_A[12] = SDRAM_DQMH;
 
-jtgng_sdram u_sdram(
+jtframe_sdram u_sdram(
     .rst            ( rst           ),
     .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
     .loop_rst       ( loop_rst      ),
@@ -379,8 +379,6 @@ initial $display("INFO: Scan 2x type =%d", SCAN2X_TYPE);
 `endif
 
 wire [COLORW*3-1:0] game_rgb = {game_r, game_g, game_b };
-wire hblank = ~LHBL;
-wire vblank = ~LVBL;
 
 function [7:0] extend8;
     input [COLORW-1:0] a;
@@ -408,6 +406,9 @@ endfunction
 
 generate    
     if( ROTATE_FX ) begin
+        wire hblank = ~LHBL;
+        wire vblank = ~LVBL;
+
         arcade_rotate_fx #(.WIDTH(256),.HEIGHT(224),.DW(COLORW*3),.CCW(1)) 
         u_rotate_fx(
             .clk_video  ( clk_sys       ),
@@ -461,7 +462,7 @@ generate
                 .base_pxl   ( game_rgb     ),
                 .x2_pxl     ( rgbx2        ),
                 .HS         ( hs           ),
-                .x2_HS      ( scan2x_hs )
+                .x2_HS      ( scan2x_hs    )
             );
             assign scan2x_vs = vs;
             assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );

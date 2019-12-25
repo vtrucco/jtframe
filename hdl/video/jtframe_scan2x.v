@@ -36,16 +36,20 @@ always@(posedge clk or negedge rst_n)
         if(HS_posedge ) waitHS  <= 1'b0;
     end
 
+reg alt_pxl; // this is needed in case basex2_cen and base_cen are not aligned.
+
 always@(posedge clk or negedge rst_n)
     if( !rst_n ) begin
         wraddr  <= {AW{1'b0}};
         rdaddr  <= {AW{1'b0}};
         oddline <= 1'b0;
+        alt_pxl <= 1'b0;
     end else if(basex2_cen) begin
     if( !waitHS ) begin
-        rdaddr <= rdaddr < (HLEN-1) ? (rdaddr+1) : 0;
-        x2_pxl <= oddline ? mem0[rdaddr] : mem1[rdaddr];
-        if( base_cen ) begin
+        rdaddr  <= rdaddr < (HLEN-1) ? (rdaddr+1) : 0;
+        x2_pxl  <= x2_HS ? {DW{1'b0}} : oddline ? mem0[rdaddr] : mem1[rdaddr];
+        alt_pxl <= ~alt_pxl;
+        if( alt_pxl ) begin
             if( HSbase_posedge ) oddline <= ~oddline;
             wraddr <= HSbase_posedge ? 0 : (wraddr+1);
             if( oddline )

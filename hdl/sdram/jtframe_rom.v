@@ -90,13 +90,13 @@ module jtframe_rom #(parameter
     output              slot7_ok,
     output              slot8_ok,
     // SDRAM controller interface
-    input               data_rdy,
-    input               sdram_ack,
     input               downloading,
     input               loop_rst,
+    input               sdram_ack,
     output  reg         sdram_req,
     output  reg         refresh_en,
     output  reg [21:0]  sdram_addr,
+    input               data_rdy,
     input       [31:0]  data_read
 );
 

@@ -19,7 +19,7 @@
 // Each read takes 8 clock cycles
 // clk should be 8*clk_slow
 
-module jtgng_sdram(
+module jtframe_sdram(
     input               rst,
     input               clk, // same as game core
     // Game interface
@@ -268,4 +268,4 @@ always @(posedge clk)
         end
         endcase
     end
-endmodule // jtgng_sdram
+endmodule
