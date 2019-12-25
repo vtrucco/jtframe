@@ -77,7 +77,7 @@ arcade_vga #(DW) vga
 );
 
 wire [DW-1:0] RGB_out;
-wire rhs,rvs,rhblank,rvblank;
+wire rhs,rvs,rhblank,rvblank, scandoubler;
 
 screen_rotate #(WIDTH,HEIGHT,DW,4,CCW) rotator
 (
@@ -127,7 +127,7 @@ always @(posedge VGA_CLK) norot <= no_rotate | direct_video;
 assign HDMI_CLK = VGA_CLK;
 assign HDMI_SL  = (no_rotate & ~direct_video) ? 2'd0 : sl[1:0];
 wire [2:0] sl = fx ? fx - 1'd1 : 3'd0;
-wire scandoubler = fx || forced_scandoubler;
+assign scandoubler = fx || forced_scandoubler;
 
 video_mixer #(WIDTH+4, 1, GAMMA) video_mixer
 (
@@ -278,7 +278,7 @@ endmodule
 
 //////////////////////////////////////////////////////////
 
-module arcade_vga #(parameter DW)
+module arcade_vga #(parameter DW=12)
 (
 	input          clk_video,
 	input          ce_pix,

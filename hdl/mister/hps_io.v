@@ -4,7 +4,7 @@ module hps_io #(parameter STRLEN=0, PS2DIV=2000, WIDE=0, VDNUM=1, PS2WE=0,
      DW = (WIDE) ? 15 : 7, AW = (WIDE) ?  7 : 8, VD = VDNUM-1 )
 (
     input             clk_sys,
-    inout      [44:0] HPS_BUS,
+    inout      [45:0] HPS_BUS,
 
     // parameter STRLEN and the actual length of conf_str have to match
     input [(8*STRLEN)-1:0] conf_str,
@@ -24,10 +24,13 @@ module hps_io #(parameter STRLEN=0, PS2DIV=2000, WIDE=0, VDNUM=1, PS2WE=0,
 
     output      [1:0] buttons,
     output            forced_scandoubler,
+    output            direct_video=0,
 
     output     [31:0] status,
     // input      [31:0] status_in,
     // input             status_set,
+    input      [15:0] status_menumask,
+
 
     //toggle to force notify of video mode change
     // input             new_vmode,
@@ -92,7 +95,10 @@ module hps_io #(parameter STRLEN=0, PS2DIV=2000, WIDE=0, VDNUM=1, PS2WE=0,
     output     [10:0] ps2_key,
 
     // [24] - toggles with every event
-    output     [24:0] ps2_mouse
+    output     [24:0] ps2_mouse,
+    output reg [15:0] ps2_mouse_ext = 0, // 15:8 - reserved(additional buttons), 7:0 - wheel movements
+
+    inout      [21:0] gamma_bus
 );
 
 // localparam DW = (WIDE) ? 15 : 7;

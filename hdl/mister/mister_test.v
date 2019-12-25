@@ -27,7 +27,7 @@ wire        LED_USER;
 wire  [1:0] LED_POWER;
 wire  [1:0] LED_DISK;
 
-wire  [44:0] HPS_BUS;
+wire  [45:0] HPS_BUS;
 
 // VGA signals
 wire        VGA_CLK;

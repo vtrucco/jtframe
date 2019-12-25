@@ -150,8 +150,13 @@ localparam CONF_STR = {
 
 `undef SEPARATOR
 
+`ifndef JTFRAME_INTERLACED
 assign VGA_F1=1'b0;
-assign USER_OUT  = '1;
+`else
+wire   field;
+assign VGA_F1=field;
+`endif
+assign USER_OUT  = 7'd1;
 
 ////////////////////   CLOCKS   ///////////////////
 
@@ -379,6 +384,9 @@ assign sim_pxl_cen = pxl_cen;
     .LVBL_dly     ( LVBL_dly         ),
     .HS           ( hs               ),
     .VS           ( vs               ),
+`ifdef JTFRAME_INTERLACED
+    .field        ( field            ),
+`endif
 
     .start_button ( game_start       ),
     .coin_input   ( game_coin        ),
