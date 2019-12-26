@@ -30,7 +30,7 @@ module osd (
 
 parameter OSD_X_OFFSET = 10'd0;
 parameter OSD_Y_OFFSET = 10'd0;
-parameter OSD_COLOR    = 3'd0;
+parameter [5:0] OSD_COLOR = ~6'b0;
 
 localparam OSD_WIDTH   = 10'd256;
 localparam OSD_HEIGHT  = 10'd128;
@@ -222,9 +222,9 @@ always @(posedge clk_sys) begin
                                   // no rotation:
                                   back_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
         `endif
-        R_out <= !osd_de ? R_in : { {2{osd_pixel}}, {2{OSD_COLOR[2]&back_pixel}}, R_in[5:4]};
-        G_out <= !osd_de ? G_in : { {2{osd_pixel}}, {2{OSD_COLOR[1]&back_pixel}}, G_in[5:4]};
-        B_out <= !osd_de ? B_in : { {2{osd_pixel}}, {2{OSD_COLOR[0]&back_pixel}}, B_in[5:4]};
+        R_out <= !osd_de ? R_in : { {2{osd_pixel}}, {OSD_COLOR[5:4]&back_pixel}, R_in[5:4]};
+        G_out <= !osd_de ? G_in : { {2{osd_pixel}}, {OSD_COLOR[3:2]&back_pixel}, G_in[5:4]};
+        B_out <= !osd_de ? B_in : { {2{osd_pixel}}, {OSD_COLOR[1:0]&back_pixel}, B_in[5:4]};
 	end
 end
 

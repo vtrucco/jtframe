@@ -47,6 +47,18 @@ bit         meaning
 8           Button 1
 9           Button 2
 
+OSD colours
+===========
+The macro JTFRAME_OSDCOLOR should be defined with a 6-bit value encoding an RGB tone. This is used for
+the OSD background. The meanins are:
+
+Value | Meaning                 | Colour
+======|=========================|========
+6'h3f | Mature core             | Gray
+6'h1e | Almost done             | Green
+6'h3c | Playable with problems  | Yellow
+6'h35 | Very early core         | Red
+
 Modules with simulation files added automatically
 =================================================
 Define and export the following environgment variables to have these

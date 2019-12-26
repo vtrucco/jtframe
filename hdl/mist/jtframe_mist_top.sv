@@ -198,7 +198,14 @@ jtframe_mist #(
     .CONF_STR     ( CONF_STR       ),
     .SIGNED_SND   ( `SIGNED_SND    ),
     .THREE_BUTTONS( `THREE_BUTTONS ),
-    .COLORW       ( COLORW         ))
+    .COLORW       ( COLORW         )
+    `ifdef VIDEO_WIDTH
+    ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
+    `endif
+    `ifdef VIDEO_HEIGHT
+    ,.VIDEO_HEIGHT  ( `VIDEO_HEIGHT  )
+    `endif
+)
 u_frame(
     .clk_sys        ( clk_sys        ),
     .clk_rom        ( clk_rom        ),

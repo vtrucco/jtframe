@@ -253,10 +253,18 @@ assign AUDIO_S = `SIGNED_SND;
 `define THREE_BUTTONS 1'b1
 `endif
 
+
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
     .THREE_BUTTONS ( `THREE_BUTTONS ),
-    .COLORW        ( COLORW         ))
+    .COLORW        ( COLORW         )
+    `ifdef VIDEO_WIDTH
+    ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
+    `endif
+    `ifdef VIDEO_HEIGHT
+    ,.VIDEO_HEIGHT  ( `VIDEO_HEIGHT  )
+    `endif
+)
 u_frame(
     .clk_sys        ( clk_sys        ),
     .clk_rom        ( clk_sys        ),

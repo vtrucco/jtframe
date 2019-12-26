@@ -784,9 +784,13 @@ scanlines #(1) HDMI_scanlines
 	.de_out(hdmi_de_sl)
 );
 
+`ifndef JTFRAME_OSDCOLOR
+`define JTFRAME_OSDCOLOR ~6'b0;
+`endif
+
 wire [23:0] hdmi_data_osd;
 wire        hdmi_de_osd, hdmi_vs_osd, hdmi_hs_osd;
-osd hdmi_osd
+osd #(`JTFRAME_OSDCOLOR) hdmi_osd
 (
 	.clk_sys(clk_sys),
 
@@ -927,7 +931,7 @@ scanlines #(0) VGA_scanlines
 
 wire [23:0] vga_data_osd;
 wire        vga_vs_osd, vga_hs_osd;
-osd vga_osd
+osd #(`JTFRAME_OSDCOLOR) vga_osd
 (
 	.clk_sys(clk_sys),
 

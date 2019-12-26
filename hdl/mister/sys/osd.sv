@@ -21,7 +21,7 @@ module osd
     output reg    osd_status
 );
 
-parameter  OSD_COLOR    =  3'd4;
+parameter [5:0] OSD_COLOR    =  ~6'd0;
 
 localparam OSD_WIDTH    = 12'd256;
 localparam OSD_HEIGHT   = 12'd64;
@@ -277,9 +277,9 @@ always @(posedge clk_video) begin
     reg hs1,hs2,hs3;
 
     nrdout1 <= din;
-    ordout1 <= {{ {1{osd_pixel}}, {2{OSD_COLOR[2]&~back_pixel}}, din[23:19]},// 23:16
-                  { {1{osd_pixel}}, {2{OSD_COLOR[1]&~back_pixel}}, din[15:11]},// 15:8
-                  { {1{osd_pixel}}, {2{OSD_COLOR[0]&~back_pixel}}, din[7:3]}}; //  7:0
+    ordout1 <= {{ {1{osd_pixel}},   {OSD_COLOR[5:4]&~back_pixel}, din[23:19]},// 23:16
+                  { {1{osd_pixel}}, {OSD_COLOR[3:2]&~back_pixel}, din[15:11]},// 15:8
+                  { {1{osd_pixel}}, {OSD_COLOR[1:0]&~back_pixel}, din[7:3]}}; //  7:0
 
     osd_mux <= ~osd_de[2];
     rdout2  <= osd_mux ? nrdout1 : ordout1;

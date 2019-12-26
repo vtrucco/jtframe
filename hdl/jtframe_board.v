@@ -19,7 +19,9 @@
 module jtframe_board #(parameter
     THREE_BUTTONS           = 0,
     GAME_INPUTS_ACTIVE_LOW  = 1'b1,
-    COLORW                  = 4
+    COLORW                  = 4,
+    VIDEO_WIDTH             = 384,
+    VIDEO_HEIGHT            = 224
 )(
     output  reg       rst,      // use as synchrnous reset
     output  reg       rst_n,    // use as asynchronous reset
@@ -409,7 +411,7 @@ generate
         wire hblank = ~LHBL;
         wire vblank = ~LVBL;
 
-        arcade_rotate_fx #(.WIDTH(256),.HEIGHT(224),.DW(COLORW*3),.CCW(1)) 
+        arcade_rotate_fx #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(COLORW*3),.CCW(1)) 
         u_rotate_fx(
             .clk_video  ( clk_sys       ),
             .ce_pix     ( pxl_cen       ),
@@ -454,7 +456,7 @@ generate
         default: begin // JTFRAME easy going scaler
             wire [COLORW*3-1:0] rgbx2;
 
-            jtframe_scan2x #(.DW(COLORW*3), .HLEN(9'd384)) u_scan2x(
+            jtframe_scan2x #(.DW(COLORW*3), .HLEN(VIDEO_WIDTH)) u_scan2x(
                 .rst_n      ( rst_n        ),
                 .clk        ( clk_sys      ),
                 .base_cen   ( pxl_cen      ),
@@ -544,7 +546,7 @@ generate
             `define GAMMA 0
             `endif
             video_mixer #(
-                .LINE_LENGTH(256+4),
+                .LINE_LENGTH(VIDEO_WIDTH+4),
                 .HALF_DEPTH(HALF_DEPTH),
                 .GAMMA(`GAMMA)) 
             u_video_mixer (
