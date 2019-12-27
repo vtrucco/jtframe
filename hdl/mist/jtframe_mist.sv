@@ -23,7 +23,9 @@ module jtframe_mist #(parameter
     THREE_BUTTONS          = 1'b0,
     GAME_INPUTS_ACTIVE_LOW = 1'b1,
     CONF_STR               = "",
-    COLORW                 = 4
+    COLORW                 = 4,
+    VIDEO_WIDTH            = 384,
+    VIDEO_HEIGHT           = 224
 )(
     input           clk_sys,
     input           clk_rom,
@@ -203,7 +205,9 @@ jtframe_mist_base #(
 jtframe_board #(
     .THREE_BUTTONS         ( THREE_BUTTONS         ),
     .GAME_INPUTS_ACTIVE_LOW( GAME_INPUTS_ACTIVE_LOW),
-    .COLORW                ( COLORW                )
+    .COLORW                ( COLORW                ),
+    .VIDEO_WIDTH           ( VIDEO_WIDTH           ),
+    .VIDEO_HEIGHT          ( VIDEO_HEIGHT          )
 ) u_board(
     .rst            ( rst             ),
     .rst_n          ( rst_n           ),
