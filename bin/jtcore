@@ -232,6 +232,19 @@ if [ $ZIP = TRUE ]; then
         if [ "$MIST" = mist ]; then
             cp releases/$MIST/${RELEASE}.zip $JTROOT/../jtbin/$MIST
         else
+            # MiSTer
+            # Add MRA files
+            if [ -e $JTROOT/rom/mra/${PRJ}.list ]; then
+                IFSold=$IFS
+                list_file=$JTROOT/rom/mra/${PRJ}.list
+                while IFS= read -r line; do 
+                    echo $line
+                    zip --update --junk-paths releases/$MIST/${RELEASE}.zip \
+                        "$JTROOT/rom/mra/${line}" 
+                done < $list_file 
+                IFS=$IFSold
+            fi
+            # copy to folder
             mkdir -p $JTROOT/../jtbin/mister/$PRJ/releases
             cp $RELEASE.rbf $JTROOT/../jtbin/$MIST/$PRJ/releases
             cp releases/$MIST/${RELEASE}.zip $JTROOT/../jtbin/$MIST/$PRJ
