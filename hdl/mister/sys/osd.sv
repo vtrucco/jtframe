@@ -21,7 +21,11 @@ module osd
     output reg    osd_status
 );
 
-parameter [5:0] OSD_COLOR    =  ~6'd0;
+`ifndef JTFRAME_OSDCOLOR
+`define JTFRAME_OSDCOLOR (~6'b0)
+`endif
+
+parameter [5:0] OSD_COLOR = `JTFRAME_OSDCOLOR;
 
 localparam OSD_WIDTH    = 12'd256;
 localparam OSD_HEIGHT   = 12'd64;

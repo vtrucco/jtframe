@@ -153,17 +153,15 @@ wire [DWIDTH_SD:0] rt  = (scandoubler ? R_sd : R_gamma);
 wire [DWIDTH_SD:0] gt  = (scandoubler ? G_sd : G_gamma);
 wire [DWIDTH_SD:0] bt  = (scandoubler ? B_sd : B_gamma);
 
-
-wire [7:0] r, g, b;
 generate
 	if(!GAMMA && HALF_DEPTH) begin
-		assign r  = mono ? {gt,rt} : {rt,rt};
-		assign g  = mono ? {gt,rt} : {gt,gt};
-		assign b  = mono ? {gt,rt} : {bt,bt};
+		wire [7:0] r  = mono ? {gt,rt} : {rt,rt};
+		wire [7:0] g  = mono ? {gt,rt} : {gt,gt};
+		wire [7:0] b  = mono ? {gt,rt} : {bt,bt};
 	end else begin
-		assign r  = rt;
-		assign g  = gt;
-		assign b  = bt;
+		wire [7:0] r  = rt;
+		wire [7:0] g  = gt;
+		wire [7:0] b  = bt;
 	end
 endgenerate
 

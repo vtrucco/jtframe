@@ -12,3 +12,4 @@ sys/scandoubler.v
 ../video/jtgng_vgapxl.v
 ../video/jtframe_scan2x.v
 hq2x_dummy.sv
+sync_fix.sv

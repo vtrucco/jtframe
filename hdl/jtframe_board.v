@@ -129,6 +129,12 @@ wire key_reset, key_pause, rot_control;
 reg [7:0] rst_cnt=8'd0;
 reg       game_pause;
 
+`ifdef JTFRAME_MISTER_VIDEO_DW
+localparam arcade_fx_dw = `JTFRAME_MISTER_VIDEO_DW;
+`else 
+localparam arcade_fx_dw = COLORW*3;
+`endif
+
 always @(posedge clk_sys)
     if( rst_cnt != ~8'b0 ) begin
         rst <= 1'b1;
@@ -540,15 +546,9 @@ generate
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
             wire scandoubler = ~scan2x_enb;
             wire mixer_ce = pxl_cen | (~scandoubler & ~gamma_bus[19] & ~direct_video);
-            `ifdef MISTER
-            `define GAMMA 1
-            `else
-            `define GAMMA 0
-            `endif
             video_mixer #(
                 .LINE_LENGTH(VIDEO_WIDTH+4),
-                .HALF_DEPTH(HALF_DEPTH),
-                .GAMMA(`GAMMA)) 
+                .HALF_DEPTH(HALF_DEPTH)) 
             u_video_mixer (
                 .clk_vid        ( clk_sys       ),
                 .ce_pix         ( pxl_cen       ),
@@ -624,6 +624,41 @@ generate
             assign hdmi_hs    = scan2x_hs;
             assign hdmi_vs    = scan2x_vs;
             assign hdmi_sl    = 2'b0;
+        end
+        4: begin // MiSTer arcade_fx
+            arcade_fx #(.WIDTH(VIDEO_WIDTH),.DW(arcade_fx_dw)) u_fx(
+                .clk_video      ( clk_sys       ),
+                .ce_pix         ( pxl_cen       ),
+
+                .RGB_in         ( {game_r, game_g, game_b } ),
+                .HSync          ( hs            ),
+                .VSync          ( vs            ),
+                .HBlank         ( ~LHBL         ),
+                .VBlank         ( ~LVBL         ),
+
+                .VGA_CLK        ( scan2x_clk    ),
+                .VGA_CE         ( scan2x_cen    ),
+                .VGA_R          ( scan2x_r      ),
+                .VGA_G          ( scan2x_g      ),
+                .VGA_B          ( scan2x_b      ),
+                .VGA_HS         ( scan2x_hs     ),
+                .VGA_VS         ( scan2x_vs     ),
+                .VGA_DE         ( scan2x_de     ),
+
+                .HDMI_CLK       ( hdmi_clk      ),
+                .HDMI_CE        ( hdmi_cen      ),
+                .HDMI_R         ( hdmi_r        ),
+                .HDMI_G         ( hdmi_g        ),
+                .HDMI_B         ( hdmi_b        ),
+                .HDMI_HS        ( hdmi_hs       ),
+                .HDMI_VS        ( hdmi_vs       ),
+                .HDMI_DE        ( hdmi_de       ),
+                .HDMI_SL        ( hdmi_sl       ),
+
+                .fx             ( scanlines     ),
+                .forced_scandoubler( scandoubler),
+                .gamma_bus      ( gamma_bus     )
+            );
         end
     endcase
 endgenerate
