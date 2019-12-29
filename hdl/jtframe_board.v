@@ -96,7 +96,7 @@ module jtframe_board #(parameter
     input             pxl_cen,
     input             pxl2_cen,
     // HDMI outputs (only for MiSTer)
-    input     [21:0]  gamma_bus,
+    inout     [21:0]  gamma_bus,
     input             direct_video,
     output            hdmi_clk,
     output            hdmi_cen,

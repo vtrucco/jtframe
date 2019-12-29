@@ -142,8 +142,9 @@ localparam CONF_STR = {
     `endif
     `SEPARATOR
     `CORE_OSD
-    `CORE_KEYMAP
+    `SEPARATOR
     "R0,Reset;",
+    `CORE_KEYMAP
     "V,v",`BUILD_DATE," patreon.com/topapate;"
 };
 `endif
