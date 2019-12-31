@@ -136,7 +136,7 @@ wire          scan2x_enb;
 
 ///////////////// LED is on while
 // downloading, PLL lock lost, OSD is shown or in reset state
-assign LED = ~( downloading | dwnld_busy | ~pll_locked | osd_shown | rst );
+assign LED = ~( downloading | dwnld_busy | ~pll_locked | osd_shown | rst | (|(~gfx_en)));
 wire  [ 1:0]  rotate;
 
 
