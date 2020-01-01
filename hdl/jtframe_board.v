@@ -123,6 +123,8 @@ module jtframe_board #(parameter
 
 wire  [ 2:0]  scanlines;
 wire          en_mixing;
+wire          scandoubler = ~scan2x_enb;
+
 
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
 wire key_reset, key_pause, rot_control;
@@ -544,7 +546,6 @@ generate
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
             wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
-            wire scandoubler = ~scan2x_enb;
             wire mixer_ce = pxl_cen | (~scandoubler & ~gamma_bus[19] & ~direct_video);
             video_mixer #(
                 .LINE_LENGTH(VIDEO_WIDTH+4),
