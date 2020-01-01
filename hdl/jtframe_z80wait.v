@@ -37,8 +37,10 @@ assign gate = !(rom_cs_posedge || locked );
 wire bus_ok = rom_ok||!rom_cs;
 
 
-always @(posedge clk)
+always @(posedge clk) begin
     cen_out <= cen_in & gate;
+    if( !gate && cen_in) $display("XX");
+end
 
 always @(posedge clk or negedge rst_n) begin
     if( !rst_n ) begin
