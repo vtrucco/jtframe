@@ -43,7 +43,7 @@ always @(posedge clk) begin
     cencnt6 <= cencnt6==3'd5 ? 3'd0 : (cencnt6+3'd1);
 end
 
-always @(negedge clk) begin
+always @(posedge clk) begin
     cen12  <= cencnt[1:0] == 2'd0;
     cen12b <= cencnt[1:0] == 2'd2;
     cen8   <= cencnt6     == 3'd0;
@@ -83,7 +83,7 @@ end
 
 reg alt=1'b0;
 
-always @(negedge clk) begin
+always @(posedge clk) begin
     cen_3p57 <= 1'b0;
     cen_1p78 <= 1'b0;
     if( cencnt >= absmax ) begin
@@ -111,7 +111,7 @@ module jtframe_cenp384(
 
 reg  [6:0] cencnt=7'd0;
 
-always @(negedge clk) begin
+always @(posedge clk) begin
     cen_p384 <= 1'b0;
     cencnt <= cencnt+7'd1;
     if( cencnt >= 7'd124 ) begin
@@ -139,7 +139,7 @@ always @(*) begin
     nextb= muxcnt[2] ? 3'd1 : 3'd2;
 end
 
-always @(negedge clk) begin
+always @(posedge clk) begin
     cencnt <= cencnt+3'd1;
     cen10  <= cencnt == next;
     cen10b <= cencnt == nextb;

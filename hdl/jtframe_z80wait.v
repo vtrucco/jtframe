@@ -16,6 +16,47 @@
     Version: 1.0
     Date: 1-1-2020 */
 
+module jtframe_rom_wait(
+    input       rst_n,
+    input       clk,
+    input       cen_in,
+    output  reg cen_out,
+    output      gate,
+    // manage access to ROM data from SDRAM
+    input       rom_cs,
+    input       rom_ok
+);
+
+/////////////////////////////////////////////////////////////////
+// wait_n generation
+reg last_rom_cs;
+wire rom_cs_posedge = !last_rom_cs && rom_cs;
+
+reg       locked;
+assign gate = !(rom_cs_posedge || locked );
+wire bus_ok = rom_ok||!rom_cs;
+
+
+always @(posedge clk)
+    cen_out <= cen_in & gate;
+
+always @(posedge clk or negedge rst_n) begin
+    if( !rst_n ) begin
+        last_rom_cs <= 1'b1;
+        locked      <= 1'b0;
+    end else begin
+        last_rom_cs <= rom_cs;
+        if(rom_cs_posedge ) begin
+            locked  <= 1'b1;
+        end
+        else if( bus_ok ) begin
+            locked <= 1'b0;
+        end
+    end
+end
+
+endmodule
+
 module jtframe_dual_wait #(parameter devcnt=2)(
     input       rst_n,
     input       clk,
@@ -31,7 +72,7 @@ module jtframe_dual_wait #(parameter devcnt=2)(
 
 /////////////////////////////////////////////////////////////////
 // wait_n generation
-reg last_rom_cs, last_chwait;
+reg last_rom_cs;
 wire rom_cs_posedge = !last_rom_cs && rom_cs;
 
 reg [1:0] mark, gated_at;
@@ -39,7 +80,7 @@ reg       locked, latched;
 assign gate = !(rom_cs_posedge || dev_busy || locked || latched);
 wire bus_ok = (rom_ok||!rom_cs) && !dev_busy;
 
-always @(negedge clk, negedge rst_n) begin
+always @(posedge clk, negedge rst_n) begin
     if( !rst_n ) begin
         gated_at <= 1'b0;
         latched  <= 1'b0;
@@ -58,7 +99,7 @@ always @(negedge clk, negedge rst_n) begin
     end
 end
 
-always @(negedge clk)
+always @(posedge clk)
     cen_out <= cen_in & {2{gate}};
 
 
@@ -77,14 +118,14 @@ always @(posedge clk or negedge rst_n) begin
     end
 end
 
-endmodule // jtframe_z80wait
+endmodule
 
 module jtframe_z80wait #(parameter devcnt=2)(
     input       rst_n,
     input       clk,
     input       cen_in,
     output reg  cen_out,
-    output reg  gate,
+    output      gate,
     // manage access to shared memory
     input  [devcnt-1:0] dev_busy,
     // manage access to ROM data from SDRAM
@@ -94,27 +135,30 @@ module jtframe_z80wait #(parameter devcnt=2)(
 
 /////////////////////////////////////////////////////////////////
 // wait_n generation
-reg last_rom_cs, last_chwait;
+reg last_rom_cs;
 wire rom_cs_posedge = !last_rom_cs && rom_cs;
 
-wire anydev_busy = |dev_busy;
-wire bad_rom = rom_cs && !rom_ok;
+reg       locked;
+assign gate = !(rom_cs_posedge || dev_busy || locked );
+wire bus_ok = (rom_ok||!rom_cs) && !dev_busy;
 
-reg waitn;
+always @(posedge clk)
+    cen_out <= cen_in & gate;
 
-always @(negedge clk or negedge rst_n) begin
+always @(posedge clk or negedge rst_n) begin
     if( !rst_n ) begin
-        cen_out     <= 1'b1;
-        last_rom_cs <= 1'b0;
-        gate        <= 1'b1;
+        last_rom_cs <= 1'b1;
+        locked      <= 1'b0;
     end else begin
         last_rom_cs <= rom_cs;
-        if(rom_cs_posedge) 
-            waitn<=1'b0;
-        else if(rom_ok||!rom_cs) waitn <= 1'b1;
-        cen_out <= cen_in & waitn & ~anydev_busy;
-        gate    <= waitn & ~anydev_busy;
+        if(rom_cs_posedge || dev_busy) begin
+            locked  <= 1'b1;
+        end
+        else if( bus_ok ) begin
+            locked <= 1'b0;
+        end
     end
 end
+
 
 endmodule // jtframe_z80wait

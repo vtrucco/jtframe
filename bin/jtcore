@@ -322,30 +322,15 @@ if [ $ZIP = TRUE ]; then
         ZIPFOLDER=sidi
     fi
     mkdir -p releases/$ZIPFOLDER
-    zip --update --junk-paths releases/$ZIPFOLDER/${RELEASE}.zip ${RELEASE}.rbf README.txt $* \
-        $(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
+    # zip --update --junk-paths releases/$ZIPFOLDER/${RELEASE}.zip ${RELEASE}.rbf README.txt $* \
+    #     $(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
     if [ -e $JTROOT/../jtbin ]; then
-        if [ "$MIST" = mist ]; then
-            mkdir -p $JTROOT/../jtbin/$ZIPFOLDER
-            cp releases/$ZIPFOLDER/${RELEASE}.zip $JTROOT/../jtbin/$ZIPFOLDER
-        else
-            # MiSTer
-            # Add MRA files
-            if [ -e $JTROOT/rom/mra/${PRJ}.list ]; then
-                IFSold=$IFS
-                list_file=$JTROOT/rom/mra/${PRJ}.list
-                while IFS= read -r line; do 
-                    echo $line
-                    zip --update --junk-paths releases/$MIST/${RELEASE}.zip \
-                        "$JTROOT/rom/mra/${line}" 
-                done < $list_file 
-                IFS=$IFSold
-            fi
-            # copy to folder
-            mkdir -p $JTROOT/../jtbin/mister/$PRJ/releases
-            cp $RELEASE.rbf $JTROOT/../jtbin/$MIST/$PRJ/releases
-            cp releases/$MIST/${RELEASE}.zip $JTROOT/../jtbin/$MIST/$PRJ
-        fi
+        BINFOLDER=$JTROOT/../jtbin/$ZIPFOLDER/$PRJ
+        mkdir -p $BINFOLDER
+        mkdir -p $BINFOLDER/releases
+        cp $RELEASE.rbf $BINFOLDER/releases
+        OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
+        if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
     fi
     rm $RELEASE.rbf
 fi

@@ -30,7 +30,7 @@ reg  [W-1:0] edgecnt = {W{1'b0}};
 wire [W-1:0] next_edgecnt = edgecnt + 1'b1;
 wire [W-1:0] toggle = next_edgecnt & ~edgecnt;
 
-always @(negedge clk) begin
+always @(posedge clk) begin
     cen  <= {W{1'b0}};
     cenb <= {W{1'b0}};
 
