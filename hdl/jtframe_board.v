@@ -23,10 +23,10 @@ module jtframe_board #(parameter
     VIDEO_WIDTH             = 384,
     VIDEO_HEIGHT            = 224
 )(
-    output  reg       rst,      // use as synchrnous reset
-    output  reg       rst_n,    // use as asynchronous reset
-    output  reg       game_rst,
-    output  reg       game_rst_n,
+    output  reg       rst=1'b0,      // use as synchrnous reset
+    output  reg       rst_n=1'b1,    // use as asynchronous reset
+    output  reg       game_rst=1'b0,
+    output  reg       game_rst_n=1'b1,
     // reset forcing signals:
     input             rst_req,
 

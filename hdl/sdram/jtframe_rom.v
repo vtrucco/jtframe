@@ -68,7 +68,7 @@ module jtframe_rom #(parameter
     output [SLOT6_DW-1:0] slot6_dout,
     output [SLOT7_DW-1:0] slot7_dout,
     output [SLOT8_DW-1:0] slot8_dout,
-    output  reg         ready,
+    output  reg         ready=1'b0,
 
     input               slot0_cs,
     input               slot1_cs,

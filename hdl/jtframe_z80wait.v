@@ -26,38 +26,24 @@ module jtframe_rom_wait(
     input       rom_cs,
     input       rom_ok
 );
-
-/////////////////////////////////////////////////////////////////
-// wait_n generation
-reg last_rom_cs;
-wire rom_cs_posedge = !last_rom_cs && rom_cs;
-
-reg       locked;
-assign gate = !(rom_cs_posedge || locked );
-wire bus_ok = rom_ok||!rom_cs;
-
-
-always @(posedge clk) begin
-    cen_out <= cen_in & gate;
-    if( !gate && cen_in) $display("XX");
-end
-
-always @(posedge clk or negedge rst_n) begin
-    if( !rst_n ) begin
-        last_rom_cs <= 1'b1;
-        locked      <= 1'b0;
-    end else begin
-        last_rom_cs <= rom_cs;
-        if(rom_cs_posedge ) begin
-            locked  <= 1'b1;
-        end
-        else if( bus_ok ) begin
-            locked <= 1'b0;
-        end
-    end
-end
-
+    jtframe_z80wait #(1) u_wait(
+        .rst_n      ( rst_n     ),
+        .clk        ( clk       ),
+        .cen_in     ( cen_in    ),
+        .cen_out    ( cen_out   ),
+        .gate       ( gate      ),
+        // manage access to shared memory
+        .dev_busy   ( 1'b0      ),
+        // manage access to ROM data from SDRAM
+        .rom_cs     ( rom_cs    ),
+        .rom_ok     ( rom_ok    )
+    );
 endmodule
+
+/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
 
 module jtframe_dual_wait #(parameter devcnt=2)(
     input       rst_n,
@@ -76,10 +62,11 @@ module jtframe_dual_wait #(parameter devcnt=2)(
 // wait_n generation
 reg last_rom_cs;
 wire rom_cs_posedge = !last_rom_cs && rom_cs;
+wire rom_bad = rom_cs && !rom_ok || rom_cs_posedge;
 
 reg [1:0] mark, gated_at;
 reg       locked, latched;
-assign gate = !(rom_cs_posedge || dev_busy || locked || latched);
+assign gate = !( rom_bad || dev_busy || locked || latched);
 wire bus_ok = (rom_ok||!rom_cs) && !dev_busy;
 
 always @(posedge clk, negedge rst_n) begin
@@ -111,10 +98,10 @@ always @(posedge clk or negedge rst_n) begin
         locked      <= 1'b0;
     end else begin
         last_rom_cs <= rom_cs;
-        if(rom_cs_posedge || dev_busy) begin
+        if( rom_bad || dev_busy) begin
             locked  <= 1'b1;
         end
-        else if( bus_ok ) begin
+        else begin
             locked <= 1'b0;
         end
     end
@@ -141,8 +128,9 @@ reg last_rom_cs;
 wire rom_cs_posedge = !last_rom_cs && rom_cs;
 
 reg       locked;
-assign gate = !(rom_cs_posedge || dev_busy || locked );
+assign gate = !(rom_bad || dev_busy || locked );
 wire bus_ok = (rom_ok||!rom_cs) && !dev_busy;
+wire rom_bad = rom_cs && !rom_ok || rom_cs_posedge;
 
 always @(posedge clk)
     cen_out <= cen_in & gate;
@@ -153,10 +141,10 @@ always @(posedge clk or negedge rst_n) begin
         locked      <= 1'b0;
     end else begin
         last_rom_cs <= rom_cs;
-        if(rom_cs_posedge || dev_busy) begin
+        if(rom_bad || dev_busy) begin
             locked  <= 1'b1;
         end
-        else if( bus_ok ) begin
+        else begin
             locked <= 1'b0;
         end
     end

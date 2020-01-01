@@ -8,7 +8,7 @@
 `timescale 1ns/1ps
 
 module test_harness(
-    output  reg      rst,
+    output  reg      rst = 1'b0,
     output  reg      clk27,
     input            pxl_cen,
     input            pxl_clk, 
