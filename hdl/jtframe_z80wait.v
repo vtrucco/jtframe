@@ -20,7 +20,7 @@ module jtframe_rom_wait(
     input       rst_n,
     input       clk,
     input       cen_in,
-    output  reg cen_out,
+    output      cen_out,
     output      gate,
     // manage access to ROM data from SDRAM
     input       rom_cs,
