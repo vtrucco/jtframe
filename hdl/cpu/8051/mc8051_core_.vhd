@@ -75,6 +75,7 @@ use work.mc8051_p.all;
 entity mc8051_core is
     
   port (clk        : in std_logic;   -- system clock
+        cen        : in std_logic;   -- system clock enable
         reset      : in std_logic;   -- system reset
         rom_data_i : in std_logic_vector(7 downto 0);  -- data input from ROM 
         ram_data_i : in std_logic_vector(7 downto 0);  -- data input from

@@ -71,7 +71,8 @@ use IEEE.std_logic_arith.all;
 entity mc8051_tmrctr is
 
   port (clk        : in  std_logic;  			--< system clock
-        reset      : in  std_logic;  			--< system reset
+        cen        : in  std_logic;  			--< system clock enable
+        reset      : in  std_logic;             --< system reset
         int0_i     : in  std_logic;  			--< interrupt 0
         int1_i     : in  std_logic;  			--< interrupt 1
         t0_i       : in  std_logic;  			--< external clock for

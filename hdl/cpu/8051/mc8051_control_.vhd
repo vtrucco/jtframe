@@ -95,6 +95,7 @@ entity mc8051_control is
         new_ov_i   : in  std_logic;  	-- OV result of ALU
         reset      : in  std_logic;  	-- reset signal
         clk        : in  std_logic;  	-- clock signal
+        cen        : in  std_logic;     -- clock enable signal
         int0_i     : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);  -- ext.Int
         int1_i     : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);  -- ext.Int
 

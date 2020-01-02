@@ -71,7 +71,8 @@ use IEEE.std_logic_arith.all;
 entity mc8051_siu is
 
   port (clk     : in std_logic;  		    --< system clock
-        reset   : in std_logic;  		    --< system reset
+        cen     : in std_logic;  		    --< system clock enable
+        reset   : in std_logic;             --< system reset
         tf_i    : in std_logic;  		    --< timer1 overflow flag
         trans_i : in std_logic;  		    --< 1 activates transm.
         rxd_i   : in std_logic;  		    --< serial data input

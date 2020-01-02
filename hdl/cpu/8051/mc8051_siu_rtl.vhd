@@ -129,8 +129,7 @@ begin                 -- architecture rtl
   
   s_tf <= '1' when (s_ff0 = '1' and s_ff1 = '0') else '0';      
 
-  p_sample_tf: process (clk,
-                        reset)
+  p_sample_tf: process (clk, reset)
       
     begin
 
@@ -139,7 +138,7 @@ begin                 -- architecture rtl
         s_ff1 <= '0';
         s_trans <= '0';
       else
-        if clk'event and clk = '1' then
+        if clk'event and clk = '1' and cen='1' then
           s_ff0 <= tf_i;
           s_ff1 <= s_ff0;
           
@@ -211,7 +210,7 @@ begin                 -- architecture rtl
         s_txm13_ff0 <= '0';
         s_txm13_ff1 <= '0';
       else
-        if clk'event and clk='1' then
+        if clk'event and clk='1' and cen='1' then
             
           s_rxm13_ff1 <= s_rxm13_ff0;
           s_txm13_ff1 <= s_txm13_ff0;
@@ -294,9 +293,7 @@ begin                 -- architecture rtl
                         (s_rxd_ff0 = '1' and s_rxd_ff2 = '1') or
                         (s_rxd_ff1 = '1' and s_rxd_ff2 = '1') else '0';
                
-  p_sample_rx: process (clk,
-                        reset)
-    
+  p_sample_rx: process (clk, reset)
   begin
     if reset = '1' then
       s_rxd_ff0 <= '0';
@@ -305,7 +302,7 @@ begin                 -- architecture rtl
       s_det_ff0 <= '0';
       s_det_ff1 <= '0';
     else
-      if clk'event and clk='1' then          
+      if clk'event and clk='1' and cen='1' then          
         if s_recv_state = conv_unsigned(0,4) then   -- state "0000" means
           if s_ren = '1' then                       -- to listen for a 1 to 0
             case s_mode is                          -- transition
@@ -414,7 +411,7 @@ begin                 -- architecture rtl
       rxd_o   <= '1';
       rxdwr_o <= '0';
     else
-      if clk'event and clk = '1' then
+      if clk'event and clk = '1' and cen='1' then
 
         -- Set default behavior
         v_txstep := "00";
@@ -807,9 +804,7 @@ begin                 -- architecture rtl
 -- This is the finit state machine for the receive shift register
 -------------------------------------------------------------------------------
       
-  p_receive: process (clk,
-                      reset)
-    
+  p_receive: process (clk, reset)    
     variable v_rxstep : std_logic_vector(1 downto 0);
     
     begin
@@ -821,7 +816,7 @@ begin                 -- architecture rtl
         s_recv_done <= '0';
         s_rb8 <= '0';
       else
-        if clk'event and clk = '1' then
+        if clk'event and clk = '1' and cen='1' then
 
 -------------------------------------------------------------------------------
 -- MODE 0

@@ -1,23 +1,23 @@
 /*  This file is part of JTFRAME.
-    JTFRAME program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+      JTFRAME program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
 
-    JTFRAME program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+      JTFRAME program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
+      You should have received a copy of the GNU General Public License
+      along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
 
-    Author: Jose Tejada Gomez. Twitter: @topapate
-    Version: 1.0
-    Date: 24-4-2019 
+      Author: Jose Tejada Gomez. Twitter: @topapate
+      Version: 1.0
+      Date: 24-4-2019 
 
-    Originally based on a file from:
-        Milkymist VJ SoC, Sebastien Bourdeauducq and Das Labor
+      Originally based on a file from:
+          Milkymist VJ SoC, Sebastien Bourdeauducq and Das Labor
 */
 
 // This is a wrapper to select the right Z80
@@ -30,33 +30,94 @@
 `ifndef TV80S
 
 `ifdef SIMULATION
-    `define TV80S
+      `define TV80S
 `else
-    `define VHDLZ80
+      `define VHDLZ80
 `endif
 
 `endif
 `endif
+
+module jtframe_z80_wait (
+    input         rst_n,
+    input         clk,
+    input         cen,
+    input         int_n,
+    input         nmi_n,
+    input         busrq_n,
+    output        m1_n,
+    output        mreq_n,
+    output        iorq_n,
+    output        rd_n,
+    output        wr_n,
+    output        rfsh_n,
+    output        halt_n,
+    output        busak_n,
+    output [15:0] A,
+    input  [7:0]  din,
+    output [7:0]  dout,
+    // ROM access
+    input         rom_cs,
+    input         rom_ok
+);
+
+wire cen_out;
+
+jtframe_rom_wait u_wait(
+    .rst_n    ( rst_n     ),
+    .clk      ( clk       ),
+    .cen_in   ( cen       ),
+    .cen_out  ( cen_out   ),
+    .gate     (           ),
+      // manage access to ROM data from SDRAM
+    .rom_cs   ( rom_cs    ),
+    .rom_ok   ( rom_ok    )
+);
+
+jtframe_z80 u_cpu(
+    .rst_n    ( rst_n     ),
+    .clk      ( clk       ),
+    .cen      ( cen_out   ),
+    .wait_n   ( 1'b1      ),
+    .int_n    ( int_n     ),
+    .nmi_n    ( nmi_n     ),
+    .busrq_n  ( busrq_n   ),
+    .m1_n     ( m1_n      ),
+    .mreq_n   ( mreq_n    ),
+    .iorq_n   ( iorq_n    ),
+    .rd_n     ( rd_n      ),
+    .wr_n     ( wr_n      ),
+    .rfsh_n   ( rfsh_n    ),
+    .halt_n   ( halt_n    ),
+    .busak_n  ( busak_n   ),
+    .A        ( A         ),
+    .din      ( din       ),
+    .dout     ( dout      )
+);
+
+endmodule
+
+/////////////////////////////////////////////////////////////////////
 
 module jtframe_z80 (
-  input         rst_n,
-  input         clk,
-  input         cen,
-  input         wait_n,
-  input         int_n,
-  input         nmi_n,
-  input         busrq_n,
-  output        m1_n,
-  output        mreq_n,
-  output        iorq_n,
-  output        rd_n,
-  output        wr_n,
-  output        rfsh_n,
-  output        halt_n,
-  output        busak_n,
-  output [15:0] A,
-  input  [7:0]  din,
-  output [7:0]  dout
+    input         rst_n,
+    input         clk,
+    input         cen,
+    input         wait_n,
+    input         int_n,
+    input         nmi_n,
+    input         busrq_n,
+    output        m1_n,
+    output        mreq_n,
+    output        iorq_n,
+    output        rd_n,
+    output        wr_n,
+    output        rfsh_n,
+    output        halt_n,
+    output        busak_n,
+    output [15:0] A,
+    input  [7:0]  din,
+    output [7:0]  dout
 );
 
 /* verilator tracing_off */

@@ -551,7 +551,7 @@ for_siu_edge:
       s_ti_h2 <= (others => '0');
       s_intblock_o <= '0';                          -- CK, CV: changed s_inblock_o to s_intblock_o for internal use
     -- activities triggered by rising edge of clock 
-    elsif clk'event and clk = '1' then
+    elsif clk'event and clk = '1' and cen = '1' then
       s_intblock_o <= s_intblock;                   -- CK, CV: changed s_inblock_o to s_intblock_o for internal use
       for i in 0 to C_IMPL_N_EXT-1 loop
         s_int0_h1(i) <= int0_i(i);              -- external INT0 
@@ -763,7 +763,7 @@ for_siu_edge:
       s_ext1isr_d <= '0';
       s_ext1isrh_d <= '0';
     else
-      if Rising_Edge(clk) then  
+      if Rising_Edge(clk) and clk='1' and cen='1' then  
 
         state <= s_nextstate;                        -- update current state
 
@@ -946,7 +946,7 @@ for_siu_edge:
     else 
       ram_en_o <= '1'; 
 
-      if Rising_Edge(clk) then  
+      if Rising_Edge(clk) and cen='1' then  
         all_wt_en_o <= ( others => '0' );              -- default values 
         all_trans_o <= ( others => '0' ); 
         psw(0) <= s_p; 

@@ -126,6 +126,7 @@ begin                 -- architecture structural
              new_ov_i       => s_ovb,
              reset          => reset,
              clk            => clk,
+             cen            => cen,
              int0_i         => int0_i,
              int1_i         => int1_i,
              p0_i           => p0_i,
@@ -178,6 +179,7 @@ begin                 -- architecture structural
   gen_mc8051_siu : for i in c_impl_n_siu-1 downto 0 generate
     i_mc8051_siu : mc8051_siu
       port map (clk       => clk,        -- SIUs inputs
+                cen       => cen,
                 reset     => reset,
                 tf_i      => s_all_tf1(i),
                 trans_i   => s_all_trans(i),
@@ -197,6 +199,7 @@ begin                 -- architecture structural
   gen_mc8051_tmrctr : for i in c_impl_n_tmr-1 downto 0 generate
     i_mc8051_tmrctr : mc8051_tmrctr
       port map (clk        => clk,       -- tmr_ctr inputs
+                cen        => cen,
                 reset      => reset,
                 int0_i     => int0_i(i),
                 int1_i     => int1_i(i), 

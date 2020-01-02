@@ -143,7 +143,7 @@ begin                 -- architecture rtl
         s_int0_sync <= "00";
         s_int1_sync <= "00";
       else
-        if clk'event and clk='1' then
+        if clk'event and clk='1' and cen='1' then
           s_pre_count <= s_pre_count + conv_unsigned(1,1);
           if s_pre_count = conv_unsigned(11,4) then
             s_pre_count <= conv_unsigned(0,4);
@@ -175,7 +175,7 @@ begin                 -- architecture rtl
         s_t0ff2 <= '0';
       else
             
-        if clk'event and clk = '1' then
+        if clk'event and clk = '1' and cen='1' then
           if s_pre_count = conv_unsigned(6,3) then
             if s_c_t0 = '1' then
               s_t0ff0 <= t0_i;
@@ -199,7 +199,7 @@ begin                 -- architecture rtl
         s_t1ff1 <= '0';
         s_t1ff2 <= '0';
       else
-        if clk'event and clk = '1' then
+        if clk'event and clk = '1' and cen='1' then
           if s_pre_count = conv_unsigned(6,3) then
             if s_c_t1 = '1' then
               s_t1ff0 <= t1_i;
@@ -238,7 +238,7 @@ begin                 -- architecture rtl
         
     else
         
-      if clk'event and clk = '1' then
+      if clk'event and clk = '1' and cen='1' then
       s_tf1    <= '0';
       s_tf0    <= '0';
           

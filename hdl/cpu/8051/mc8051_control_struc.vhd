@@ -186,6 +186,7 @@ begin                 -- architecture structural
              new_ov_i       => new_ov_i,
              reset          => reset,
              clk            => clk,
+             cen            => cen,
              int0_i         => int0_i,
              int1_i         => int1_i,
              p0_i           => p0_i,

@@ -85,7 +85,7 @@ package mc8051_p is
   -- Default: 1
   constant C_IMPL_DIV : integer := 1;
   -----------------------------------------------------------------------------
-				   
+           
   -----------------------------------------------------------------------------
   -- Select whether to implement (1) or skip (0) the decimal adjustment command
   -- Default: 1
@@ -100,10 +100,10 @@ package mc8051_p is
 
   -----------------------------------------------------------------------------
   -- Select how many serial interface units should be implemented
-  -- Default: C_IMPL_N_TMR ---(DO NOT CHANGE!)---		     
+  -- Default: C_IMPL_N_TMR ---(DO NOT CHANGE!)---        
   constant C_IMPL_N_SIU : integer := C_IMPL_N_TMR;
   -----------------------------------------------------------------------------
-				     
+             
   -----------------------------------------------------------------------------
   -- Select how many external interrupt-inputs should be implemented
   -- Default: C_IMPL_N_TMR ---(DO NOT CHANGE!)---
@@ -518,6 +518,7 @@ package mc8051_p is
 
   component mc8051_siu
     port (clk     : in  std_logic;
+          cen     : in  std_logic;
           reset   : in  std_logic;
           tf_i    : in  std_logic;
           trans_i : in  std_logic;
@@ -535,6 +536,7 @@ package mc8051_p is
 
   component mc8051_tmrctr
     port (clk        : in  std_logic;
+          cen        : in  std_logic;
           reset      : in  std_logic;
           int0_i     : in  std_logic;
           int1_i     : in  std_logic;
@@ -624,6 +626,7 @@ package mc8051_p is
           new_ov_i       : in  std_logic;
           reset          : in  std_logic;
           clk            : in  std_logic;
+          cen            : in  std_logic;
           int0_i         : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);
           int1_i         : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);
           p0_i           : in  std_logic_vector(7 downto 0);
@@ -721,6 +724,7 @@ package mc8051_p is
           new_ov_i       : in  std_logic;
           reset          : in  std_logic;
           clk            : in  std_logic;
+          cen            : in  std_logic;
           int0_i         : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);
           int1_i         : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);
           datax_i        : in  std_logic_vector (7 downto 0);
@@ -759,6 +763,7 @@ package mc8051_p is
 
   component mc8051_core
     port (clk         : in  std_logic;
+          cen         : in  std_logic;
           reset       : in  std_logic;
           rom_data_i  : in  std_logic_vector(7 downto 0);
           ram_data_i  : in  std_logic_vector(7 downto 0);
@@ -793,6 +798,7 @@ package mc8051_p is
 
   component mc8051_top
     port (clk         : in  std_logic;
+          cen         : in  std_logic;
           reset       : in  std_logic;
           int0_i      : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);
           int1_i      : in  std_logic_vector(C_IMPL_N_EXT-1 downto 0);
@@ -818,8 +824,9 @@ package mc8051_p is
   -----------------------------------------------------------------------------
   component mc8051_ram
     port (clk        : in  std_logic;
-	  reset      : in  std_logic;
-	  ram_data_i : in  std_logic_vector(7 downto 0);
+          cen        : in  std_logic;
+          reset      : in  std_logic;
+          ram_data_i : in  std_logic_vector(7 downto 0);
           ram_data_o : out std_logic_vector(7 downto 0);
           ram_adr_i  : in  std_logic_vector(6 downto 0);
           ram_wr_i   : in  std_logic;
@@ -829,8 +836,9 @@ package mc8051_p is
 
   component mc8051_ramx
     port (clk        : in  std_logic;
-	  reset      : in  std_logic;
-	  ram_data_i : in  std_logic_vector(7 downto 0);
+          cen        : in  std_logic;
+          reset      : in  std_logic;
+          ram_data_i : in  std_logic_vector(7 downto 0);
           ram_data_o : out std_logic_vector(7 downto 0);
           ram_adr_i  : in  std_logic_vector(15 downto 0);
           ram_wr_i   : in  std_logic);
@@ -839,8 +847,9 @@ package mc8051_p is
 
   component mc8051_rom
     port (clk        : in  std_logic;
-	  reset      : in  std_logic;
-	  rom_data_o : out std_logic_vector(7 downto 0); 
+          cen        : in  std_logic;
+          reset      : in  std_logic;
+          rom_data_o : out std_logic_vector(7 downto 0); 
           rom_adr_i  : in  std_logic_vector(15 downto 0));
     
   end component;
