@@ -141,18 +141,16 @@ function copy_templates {
     sedstr='s/${CORENAME}/'${PRJ}'/g;s/${DATE}/'${datestr}'/g;s/${MODULES}/'$(escape_bars ${MODULES})'/g;s/${PRJPATH}/'$(escape_bars ${PRJPATH})'/g'
     sed "$sedstr" $JTFRAME/hdl/$MIST/$MIST.qpf > $PRJPATH/$MIST/jt${PRJ}.qpf
     sed "$sedstr" $JTFRAME/hdl/$MIST/$MIST.qsf > $PRJPATH/$MIST/jt${PRJ}.qsf
-    # MiST's tcl is always appended
-    TCL=$PRJPATH/mist/jt${PRJ}.tcl
+    # TCL in HDL folder is always appended
+    TCL=$PRJPATH/hdl/jt${PRJ}.tcl
     if [ ! -e $TCL ]; then
         echo "WARNING: No project TCL file. Creating one empty."
         touch $TCL
     fi
-    cat $PRJPATH/mist/jt${PRJ}.tcl >> $PRJPATH/$MIST/jt${PRJ}.qsf
-    # MiSTer's tcl is added if it exists
-    if [ $MIST = mister ]; then
-        if [ -e $PRJPATH/mister/jt${PRJ}.tcl ]; then
-            cat $PRJPATH/mister/jt${PRJ}.tcl >> $PRJPATH/mister/jt${PRJ}.qsf            
-        fi
+    cat $TCL >> $PRJPATH/$MIST/jt${PRJ}.qsf
+    # TCL in platform folder is added if it exists
+    if [ -e $PRJPATH/$MIST/jt${PRJ}.tcl ]; then
+        cat $PRJPATH/$MIST/jt${PRJ}.tcl >> $PRJPATH/$MIST/jt${PRJ}.qsf            
     fi
 }
 
