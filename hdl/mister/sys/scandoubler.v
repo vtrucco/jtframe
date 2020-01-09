@@ -19,7 +19,12 @@
 
 // TODO: Delay vsync one line
 
-module scandoubler #(parameter LENGTH=256, parameter HALF_DEPTH=1)
+module scandoubler #(
+        parameter LENGTH=256, 
+        parameter HALF_DEPTH=1,
+        // Do not modify DWIDTH:
+        parameter DWIDTH = HALF_DEPTH ? 3 : 7
+)
 (
 	// system interface
 	input             clk_vid,
@@ -48,8 +53,6 @@ module scandoubler #(parameter LENGTH=256, parameter HALF_DEPTH=1)
 	output [DWIDTH:0] g_out,
 	output [DWIDTH:0] b_out
 );
-
-localparam DWIDTH = HALF_DEPTH ? 3 : 7;
 
 reg  [7:0] pix_len = 0;
 wire [7:0] pl = pix_len + 1'b1;
@@ -105,6 +108,9 @@ end
 
 reg ce_x4o, ce_x2o;
 reg [1:0] sd_line;
+reg [3:0] vbo;
+reg [3:0] vso;
+reg [8:0] hbo;
 
 Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 (
@@ -146,9 +152,6 @@ always @(posedge clk_vid) begin
 	end
 end
 
-reg [3:0] vbo;
-reg [3:0] vso;
-reg [8:0] hbo;
 always @(posedge clk_vid) begin
 
 	reg [31:0] hcnt;
