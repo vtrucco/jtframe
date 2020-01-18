@@ -111,6 +111,7 @@ while [ $# -gt 0 ]; do
             SIM=TRUE;;
         -seed)
             SEED=$1
+            shift
             echo "Using seed $SEED";;
         -gngvga)
             MACROS="JTFRAME_VGA SCAN2X_TYPE=1 $MACROS";;
