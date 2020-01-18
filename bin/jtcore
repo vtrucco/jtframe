@@ -110,9 +110,8 @@ while [ $# -gt 0 ]; do
         -sim)
             SIM=TRUE;;
         -seed)
-            SEED=$1
             shift
-            echo "Using seed $SEED";;
+            SEED=$1;;
         -gngvga)
             MACROS="JTFRAME_VGA SCAN2X_TYPE=1 $MACROS";;
         -d)
@@ -239,7 +238,7 @@ function sidi_pins {
 }
 
 echo ==============================================
-echo jt$PRJ $MIST compilation starts at $(date +%T)
+echo jt$PRJ $MIST compilation starts at $(date +%T) with seed $SEED
 if [ "$MACROS" != "" ]; then
     echo INFO: Macros used: $MACROS
 else
@@ -276,7 +275,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
     for m in $MACROS; do
         echo -e "\n" set_global_assignment -name VERILOG_MACRO \"$m\" >> jt$PRJ.qsf
     done
-    echo -e "\n set_global_assignment -name SEED $SEED" >> jt$PRJ.qsf
+    echo -e "\nset_global_assignment -name seed $SEED" >> jt$PRJ.qsf
     if [ $SIM = FALSE ]; then
         # Compilation
         quartus_sh --flow compile jt$PRJ > "$LOG"
