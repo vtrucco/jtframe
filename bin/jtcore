@@ -79,6 +79,7 @@ SKIP_COMPILE=FALSE
 
 # Verilog macros
 MACROS=
+SEED=1
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -108,6 +109,9 @@ while [ $# -gt 0 ]; do
             break;;
         -sim)
             SIM=TRUE;;
+        -seed)
+            SEED=$1
+            echo "Using seed $SEED";;
         -gngvga)
             MACROS="JTFRAME_VGA SCAN2X_TYPE=1 $MACROS";;
         -d)
@@ -271,6 +275,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
     for m in $MACROS; do
         echo -e "\n" set_global_assignment -name VERILOG_MACRO \"$m\" >> jt$PRJ.qsf
     done
+    echo -e "\n set_global_assignment -name SEED $SEED" >> jt$PRJ.qsf
     if [ $SIM = FALSE ]; then
         # Compilation
         quartus_sh --flow compile jt$PRJ > "$LOG"
@@ -279,6 +284,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
             echo "ERROR while compiling the project. Aborting"
             exit 1
         fi
+        grep Worst-case "$LOG"
     else
         # Simulation
         echo Preparing simulation netlist. Logfile:
