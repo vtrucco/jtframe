@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Fractional clock enable signal
+// W refers to the number of divided down cen signals available
+// each one is divided by 2
 
 module jtframe_frac_cen #(parameter W=2)(
     input         clk,
