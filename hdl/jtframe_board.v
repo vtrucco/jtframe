@@ -414,6 +414,7 @@ function [7:0] extend8b;    // the input width is COLORW+1
     endcase
 endfunction
 
+`ifndef NOVIDEO
 generate    
     if( ROTATE_FX ) begin
         wire hblank = ~LHBL;
@@ -663,5 +664,6 @@ generate
         end
     endcase
 endgenerate
+`endif
 
 endmodule // jtgng_board

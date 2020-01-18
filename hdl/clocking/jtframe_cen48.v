@@ -24,6 +24,7 @@ module jtframe_cen48(
     output  reg cen12,
     output  reg cen8,
     output  reg cen6,
+    output  reg cen4,
     output  reg cen3,
     output  reg cen3q, // 1/4 advanced with respect to cen3
     output  reg cen1p5,
@@ -37,16 +38,19 @@ module jtframe_cen48(
 
 reg [4:0] cencnt=5'd0;
 reg [2:0] cencnt6=3'd0;
+reg       cencnt12=1'd0;
 
 always @(posedge clk) begin
     cencnt  <= cencnt+5'd1;
     cencnt6 <= cencnt6==3'd5 ? 3'd0 : (cencnt6+3'd1);
+    cencnt12<= cencnt12 ^^ (cencnt6==3'd5);
 end
 
 always @(posedge clk) begin
     cen12  <= cencnt[1:0] == 2'd0;
     cen12b <= cencnt[1:0] == 2'd2;
     cen8   <= cencnt6     == 3'd0;
+    cen4   <= cencnt6     == 3'd0 && cencnt12;
     cen6   <= cencnt[2:0] == 3'd0;
     cen6b  <= cencnt[2:0] == 3'd4;
     cen3   <= cencnt[3:0] == 4'd0;

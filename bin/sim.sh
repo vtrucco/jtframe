@@ -130,6 +130,11 @@ if [ "$YM2151" = 1 ]; then
     PERCORE="$PERCORE $(add_dir $MODULES/jt51/hdl jt51.f)"
 fi
 
+if [ "$MSM6295" = 1 ]; then
+    echo "INFO: MSM6295 support added."
+    PERCORE="$PERCORE $(add_dir $MODULES/jt6295/hdl jt6295.f)"
+fi
+
 case "$SYSNAME" in
     "")
         echo "ERROR: Needs system name. Use -sysname"
