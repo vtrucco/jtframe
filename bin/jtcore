@@ -15,6 +15,7 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
                     JTFRAME_SCAN2X      uses simple scan doubler from JTFRAME
     -git        adds the release file to git
     -mister     compiles MiSTer version. Default is MiST.
+    -seed       sets random seed for compilation
     -sidi       compiles SIDI version. This uses MiST's folders and settings but different pinout
     -prog       programs the FPGA
     -prog-only  skips compilations and directly programs the FPGA
@@ -90,18 +91,11 @@ while [ $# -gt 0 ]; do
             PROG=TRUE
             SKIP_COMPILE=TRUE;;
         -mister | -mr)
-            MIST=mister
-            if ! (which quartus_sh|grep 17 -q); then
-                PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:.
-                PATH=$PATH:$HOME/intelFPGA_lite/17.1/quartus/bin
-                export PATH
-            fi;;
+            MIST=mister;;
         -mist)
-            MIST=mist
-            PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:.
-            PATH=$PATH:$HOME/altera/13.1/quartus/bin
-            export PATH;;
+            MIST=mist;;
         -sidi)
+            MIST=mist
             SIDI=1;;            
         -add)
             ZIP=TRUE
@@ -109,7 +103,7 @@ while [ $# -gt 0 ]; do
             break;;
         -sim)
             SIM=TRUE;;
-        -seed)
+        -seed | -s)
             shift
             SEED=$1;;
         -gngvga)
@@ -127,6 +121,22 @@ while [ $# -gt 0 ]; do
     esac
     shift
 done
+
+# Check Quartus path
+case $MIST in
+    mister)
+        if ! (which quartus_sh|grep 17 -q); then
+            PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:.
+            PATH=$PATH:$HOME/intelFPGA_lite/17.1/quartus/bin
+            export PATH
+        fi;;
+    mist)
+        if ! (which quartus_sh|grep 13 -q); then
+            PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:.
+            PATH=$PATH:$HOME/altera/13.1/quartus/bin
+            export PATH
+        fi;;
+esac
 
 if [[ "$SIDI" = 1 && "MIST" = mister ]]; then
     echo "ERROR: You cannot select MiSTer and SIDI at the same time"
