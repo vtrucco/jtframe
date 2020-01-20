@@ -25,7 +25,7 @@ module jtframe_sdram(
     // Game interface
     output              loop_rst,
     input               read_req,    // read strobe
-    output reg  [31:0]  data_read,
+    output      [31:0]  data_read,
     input       [21:0]  sdram_addr,
     output reg          data_rdy,    // output data is valid
     output reg          sdram_ack,
@@ -66,6 +66,11 @@ localparam  CMD_LOAD_MODE   = 4'b0000, // 0
 
 assign SDRAM_BA   = 2'b0;
 assign SDRAM_CKE  = 1'b1;
+
+(*keep*) reg [15:0] dq_ff;
+reg [15:0] dq_ff0;
+
+assign data_read = { dq_ff, dq_ff0 };
 
 reg SDRAM_WRITE;
 reg [7:0] write_data;
@@ -254,14 +259,14 @@ always @(posedge clk)
         end
         3'd3: begin
             if( read_cycle) begin
-                data_read[31:16] <= SDRAM_DQ;
+                dq_ff <= SDRAM_DQ;
             end
             SDRAM_CMD <= CMD_NOP;
         end
         3'd4: begin
             if( read_cycle) begin
-                data_read[15: 0] <= data_read[31:16];
-                data_read[31:16] <= SDRAM_DQ;
+                dq_ff0 <= dq_ff;
+                dq_ff  <= SDRAM_DQ;
                 data_rdy         <= 1'b1;
             end
             SDRAM_CMD <= CMD_NOP;
