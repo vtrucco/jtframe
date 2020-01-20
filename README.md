@@ -59,6 +59,13 @@ Value | Meaning                 | Colour
 6'h3c | Playable with problems  | Yellow
 6'h35 | Very early core         | Red
 
+SDRAM Controller
+================
+
+**jtframe_sdram** is a generic SDRAM controller that runs upto 48MHz because it is designed for CL=2. It mainly serves for reading ROMs from the SDRAM but it has some support for writting (apart from the initial ROM download process).
+
+This module may result in timing errors in MiSTer because sometimes the compiler does not assign the input flip flops from SDRAM_DQ at the pads. In order to avoid this, you can define the macro **JTFRAME_SDRAM_REPACK**. This will add one extra stage of data latching, which seems to allow the fitter to use the pad flip flops. This does delay data availability by one clock cycle. Some cores in MiSTer do synthesize with pad FF without the need of this option. Use it if you find setup timing violation about the SDRAM_DQ pins.
+
 Modules with simulation files added automatically
 =================================================
 Define and export the following environgment variables to have these
