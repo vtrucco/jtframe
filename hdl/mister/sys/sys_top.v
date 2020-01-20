@@ -45,7 +45,7 @@ module sys_top
 
 	//////////// SDR ///////////
 	output [12:0] SDRAM_A,
-	inout  [15:0] SDRAM_DQ,
+	inout  [15:0] SDRAM_DQ /* synthesis syn_useioff=1 */,
 	output        SDRAM_DQML,
 	output        SDRAM_DQMH,
 	output        SDRAM_nWE,

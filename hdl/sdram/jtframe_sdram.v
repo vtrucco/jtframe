@@ -64,8 +64,32 @@ localparam  CMD_LOAD_MODE   = 4'b0000, // 0
             CMD_NOP         = 4'b0111, // 7
             CMD_INHIBIT     = 4'b1000; // 8
 
+`ifdef JTFRAME_SDRAM_REPACK
+localparam REPACK = 1;
+`else 
+localparam REPACK = 0;
+`endif
+
 assign SDRAM_BA   = 2'b0;
 assign SDRAM_CKE  = 1'b1;
+
+reg [15:0] dq_ff;
+reg [15:0] dq_ff0;
+reg        dq_rdy;
+
+generate
+    if (REPACK==1) begin : data_repacking
+        always @(posedge clk) begin
+            data_read <= { dq_ff, dq_ff0 };
+            data_rdy  <= dq_rdy;
+        end
+    end else begin : data_transparent
+        always @(*) begin
+            data_read = { dq_ff, dq_ff0 };
+            data_rdy  = dq_rdy;
+        end
+    end
+endgenerate
 
 reg SDRAM_WRITE;
 reg [7:0] write_data;
@@ -128,7 +152,7 @@ always @(posedge clk)
         // Main loop
         burst_done <= 1'b0;
         cnt_state  <= 2'd0; //Starts after the precharge
-        data_rdy   <= 1'b0;
+        dq_rdy     <= 1'b0;
         sdram_ack  <= 1'b0;
         refresh_sr <=  'd0;
         refresh_ok <= 1'b0;
@@ -198,10 +222,10 @@ always @(posedge clk)
             //if( read_cycle) begin
             //    data_read[15: 0] <= data_read[31:16];
             //    data_read[31:16] <= SDRAM_DQ;
-            //    data_rdy         <= 1'b1;
+            //    dq_rdy           <= 1'b1;
             //end
             //else
-            data_rdy <= 1'b0;
+            dq_rdy   <= 1'b0;
             {SDRAM_DQMH, SDRAM_DQML } <= 2'b00;
             if( set_burst ) begin
                 SDRAM_CMD <= CMD_LOAD_MODE;
@@ -250,19 +274,19 @@ always @(posedge clk)
             SDRAM_WRITE <= write_cycle;
             SDRAM_CMD   <= write_cycle ? CMD_WRITE :
                 refresh_cycle ? CMD_NOP : CMD_READ;
-            data_rdy    <= 1'b0;
+            dq_rdy      <= 1'b0;
         end
         3'd3: begin
             if( read_cycle) begin
-                data_read[31:16] <= SDRAM_DQ;
+                dq_ff <= SDRAM_DQ;
             end
             SDRAM_CMD <= CMD_NOP;
         end
         3'd4: begin
             if( read_cycle) begin
-                data_read[15: 0] <= data_read[31:16];
-                data_read[31:16] <= SDRAM_DQ;
-                data_rdy         <= 1'b1;
+                dq_ff0   <= dq_ff;
+                dq_ff    <= SDRAM_DQ;
+                dq_rdy   <= 1'b1;
             end
             SDRAM_CMD <= CMD_NOP;
         end

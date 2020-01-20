@@ -157,7 +157,7 @@ assign VGA_F1=1'b0;
 wire   field;
 assign VGA_F1=field;
 `endif
-assign USER_OUT  = 7'd1;
+assign USER_OUT  = '1; // = 7'b111_1111;
 
 ////////////////////   CLOCKS   ///////////////////
 
