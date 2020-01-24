@@ -257,6 +257,11 @@ fi
 
 ################ compilation
 if [ $SKIP_COMPILE = FALSE ]; then
+    if ! which quartus_sh; then 
+        echo "ERROR: cannot find quartus_sh in the path. Please add the correct path"
+        echo "to the PATH environment variable"
+        exit 1
+    fi
     # Create MiST(er) folders if they don't exist
     mkdir -p $PRJPATH/mist
     mkdir -p $PRJPATH/mister
