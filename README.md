@@ -78,3 +78,11 @@ MSM5205
 M6801
 M6809
 I8051
+
+# JTCORE
+
+jtcore is the script used to compile the cores.
+
+## JTAG Programming
+
+jtcore can also program the FPGA (MiST or MiSTer) with the ```-p``` option. In order to use an USB Blaster cable in Ubuntu you need to setup two urules files. The script **jtblaster** does that for you.

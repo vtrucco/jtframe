@@ -57,14 +57,20 @@ parameter TX_LEN = 207;
 
 ////////////////////////////////////////////////////////////////////
 // video output dump
+// this is a binary bile with 32 bits per pixel. First 8 bits are the alpha, and set to 0xFF
+// The rest are RGB in 8-bit format
+// There is no dump while blanking. The inputs pxl_hs and pxl_vs are assume to represent the
+// blanking and not just the sync pulses
+// The linux tool "convert" can process the raw stream and separate it into individual frames
+// automatically
 
 `ifdef DUMP_VIDEO
 integer fvideo;
 initial begin
-    fvideo = $fopen("video.bin","wb");
+    fvideo = $fopen("video.raw","wb");
 end
 
-wire [15:0] video_dump = { 2'b0,pxl_vs,pxl_hs, red, green, blue  };
+wire [31:0] video_dump = { 8'hff, {2{red}}, {2{green}}, {2{blue}} };
 
 // Define VIDEO_START with the first frame number for which
 // video will be dumped. If undefined, it will start from frame 0
@@ -73,7 +79,7 @@ wire [15:0] video_dump = { 2'b0,pxl_vs,pxl_hs, red, green, blue  };
 `endif
 
 always @(posedge pxl_clk) if(pxl_cen && frame_cnt>=`VIDEO_START && !downloading) begin
-    $fwrite(fvideo,"%u", video_dump);
+    if( !pxl_hs && !pxl_vs ) $fwrite(fvideo,"%u", video_dump);
 end
 
 `endif
