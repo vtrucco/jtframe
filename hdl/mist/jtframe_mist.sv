@@ -78,7 +78,7 @@ module jtframe_mist #(parameter
     input           SPI_SS4,
     input           CONF_DATA0,
     // ROM load from SPI
-    output [21:0]   ioctl_addr,
+    output [22:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
     output          ioctl_wr,
     input  [21:0]   prog_addr,
