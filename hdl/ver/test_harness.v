@@ -21,7 +21,7 @@ module test_harness(
     input            H0,
     output           downloading,
     input            dwnld_busy,
-    output    [21:0] ioctl_addr,
+    output    [22:0] ioctl_addr,
     output    [ 7:0] ioctl_data,
     output           ioctl_wr,
     // Video dumping
@@ -227,7 +227,7 @@ spitx #(.filename(GAME_ROMNAME), .TX_LEN(TX_LEN) )
     .spi_done   ( spi_done   )
 );
 
-data_io #(.aw(22)) datain (
+data_io datain (
     .sck        (SPI_SCK      ),
     .ss         (SPI_SS2      ),
     .sdi        (SPI_DI       ),

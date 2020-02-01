@@ -9,7 +9,7 @@ wire VGA_HS, VGA_VS;
 wire led;
 
 wire            downloading;
-wire    [21:0]  ioctl_addr;
+wire    [22:0]  ioctl_addr;
 wire    [ 7:0]  ioctl_data;
 wire clk27, rst;
 wire [21:0]  sdram_addr;

@@ -42,6 +42,7 @@ always @(posedge clk) begin
     end else
     if( halfway ) begin
         half <= 1'b1;
+        cenb[0] <= 1'b1;
     end
     if( over ) begin
         cencnt <= next2;

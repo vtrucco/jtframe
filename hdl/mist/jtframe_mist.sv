@@ -69,6 +69,10 @@ module jtframe_mist #(parameter
     output          data_rdy,
     output          loop_rst,
     input           refresh_en,
+    // Write back to SDRAM
+    input  [ 1:0]   sdram_wrmask,
+    input           sdram_rnw,
+    input  [15:0]   data_write,
     // SPI interface to arm io controller
     output          SPI_DO,
     input           SPI_DI,
@@ -263,6 +267,11 @@ jtframe_board #(
     .prog_mask      ( prog_mask       ),
     .prog_we        ( prog_we         ),
     .prog_rd        ( prog_rd         ),
+    // write back support
+    .sdram_wrmask   ( sdram_wrmask    ),
+    .sdram_rnw      ( sdram_rnw       ),
+    .data_write     ( data_write      ),
+
     // Base video
     .osd_rotate     ( rotate          ),
     .game_r         ( game_r          ),

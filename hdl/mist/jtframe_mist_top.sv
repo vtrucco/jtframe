@@ -119,6 +119,16 @@ wire [22:0]   ioctl_addr;
 wire [ 7:0]   ioctl_data;
 wire          ioctl_wr;
 
+wire [ 1:0]   sdram_wrmask;
+wire          sdram_rnw;
+wire [15:0]   data_write;
+
+`ifndef JTFRAME_WRITEBACK
+assign sdram_wrmask = 2'b11;
+assign sdram_rnw    = 1'b1;
+assign data_write   = 16'h00;
+`endif
+
 wire rst_req   = status[0];
 wire join_joys = status[32'he];
 
@@ -267,6 +277,10 @@ u_frame(
     .data_read      ( data_read      ),
     .data_rdy       ( data_rdy       ),
     .refresh_en     ( refresh_en     ),
+    // write support
+    .sdram_wrmask   ( sdram_wrmask   ),
+    .sdram_rnw      ( sdram_rnw      ),
+    .data_write     ( data_write     ),
 //////////// board
     .rst            ( rst            ),
     .rst_n          ( rst_n          ), // unused
@@ -338,8 +352,8 @@ u_game(
 
     .start_button( game_start     ),
     .coin_input  ( game_coin      ),
-    .joystick1   ( game_joy1[6:0] ),
-    .joystick2   ( game_joy2[6:0] ),
+    .joystick1   ( game_joy1[7:0] ),
+    .joystick2   ( game_joy2[7:0] ),
 
     // Sound control
     .enable_fm   ( enable_fm      ),
@@ -364,6 +378,11 @@ u_game(
     .sdram_ack   ( sdram_ack      ),
     .data_rdy    ( data_rdy       ),
     .refresh_en  ( refresh_en     ),
+    `ifdef JTFRAME_WRITEBACK
+    .sdram_wrmask( sdram_wrmask   ),
+    .sdram_rnw   ( sdram_rnw      ),
+    .data_write  ( data_write     ),
+    `endif
 
     // DIP switches
     .status      ( status         ),
