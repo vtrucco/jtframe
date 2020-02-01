@@ -146,14 +146,15 @@ end
 // this saves one clock cycle at the expense of more LUTs
 wire [31:0] data_mux;
 
-if (TYPE==0) begin // read only
-    assign data_mux = (we&&din_ok) ? din :
-        (hit[0] ? cached_data0 : cached_data1);
-end else begin
-    assign data_mux = hit[0] ? cached_data0 : cached_data1;
-end
 
 generate
+    if (TYPE==0) begin // read only
+        assign data_mux = (we&&din_ok) ? din :
+            (hit[0] ? cached_data0 : cached_data1);
+    end else begin
+        assign data_mux = hit[0] ? cached_data0 : cached_data1;
+    end
+    
     if(DW==8) begin
         always @(*)
         case( subaddr )

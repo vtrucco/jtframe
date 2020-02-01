@@ -266,8 +266,12 @@ if [ $SKIP_COMPILE = FALSE ]; then
     mkdir -p $PRJPATH/mist
     mkdir -p $PRJPATH/mister
     # Update message file
-    cd bin
-    jt${PRJ}_msg.py || echo "WARNING: No message file"
+    if [ -d bin ]; then
+        cd bin
+        jt${PRJ}_msg.py || echo "WARNING: No message file"
+    else
+        mkdir bin
+    fi
     # Update Avatars
     if [ -e $PRJPATH/patrons/avatars ]; then
         avatar.py $PRJ > /tmp/avatar_$PRJ.log || ( cat /tmp/avatar_$PRJ.log; exit 1 )
