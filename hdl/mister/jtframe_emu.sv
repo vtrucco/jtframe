@@ -438,6 +438,11 @@ assign sim_pxl_cen = pxl_cen;
     .sdram_ack    ( sdram_ack        ),
     .data_rdy     ( data_rdy         ),
     .refresh_en   ( refresh_en       ),
+    `ifdef JTFRAME_WRITEBACK
+    .sdram_wrmask ( sdram_wrmask     ),
+    .sdram_rnw    ( sdram_rnw        ),
+    .data_write   ( data_write       ),
+    `endif
 
     // DIP switches
     .status       ( status           ),

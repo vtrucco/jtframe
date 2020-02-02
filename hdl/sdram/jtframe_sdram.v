@@ -64,7 +64,7 @@ localparam  CMD_LOAD_MODE   = 4'b0000, // 0
             CMD_ACTIVATE    = 4'b0011, // 3
             CMD_WRITE       = 4'b0100, // 4
             CMD_READ        = 4'b0101, // 5
-            CMD_STOP        = 4'b0110, // 6
+            CMD_STOP        = 4'b0110, // 6 Burst terminate
             CMD_NOP         = 4'b0111, // 7
             CMD_INHIBIT     = 4'b1000; // 8
 
@@ -286,17 +286,22 @@ always @(posedge clk)
             dq_rdy      <= 1'b0;
         end
         3'd3: begin
+            SDRAM_CMD <= CMD_NOP;
             if( read_cycle) begin
                 dq_ff <= SDRAM_DQ;
             end
-            SDRAM_CMD <= CMD_NOP;
+            if( write_cycle ) begin
+                SDRAM_CMD <= CMD_STOP; // do not burst!
+                dq_rdy    <= 1'b1;
+                cnt_state <= 3'd0;
+            end
         end
         3'd4: begin
             if( read_cycle) begin
                 dq_ff0   <= dq_ff;
                 dq_ff    <= SDRAM_DQ;
+                dq_rdy   <= 1'b1;   // data_ready marks that new data is ready
             end
-            if( read_cycle || write_cycle ) dq_rdy <= 1'b1;   // data_ready marks that new data is ready
                 // or that the data was written
             SDRAM_CMD <= CMD_NOP;
         end

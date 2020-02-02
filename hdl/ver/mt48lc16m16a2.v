@@ -185,8 +185,14 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, dow
     // Write Burst Mode
     wire      Write_burst_mode = Mode_reg[9];
 
-    wire      Debug            = 1'b0;                          // Debug messages : 1 = On
+    wire      Debug; // Debug messages : 1 = On, see JTFRAME_SDRAM_DEBUG below
     wire      Dq_chk           = Sys_clk & Data_in_enable;      // Check setup/hold time for DQ
+
+    `ifdef JTFRAME_SDRAM_DEBUG
+    assign Debug=1;
+    `else 
+    assign Debug=0;
+    `endif
 
     // Added x ns delay for MiST
     localparam tMiST = 0;

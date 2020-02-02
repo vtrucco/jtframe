@@ -278,7 +278,7 @@ endmodule
 
 //////////////////////////////////////////////////////////
 
-module arcade_vga #(parameter DW)
+module arcade_vga #(parameter DW=12)
 (
 	input          clk_video,
 	input          ce_pix,

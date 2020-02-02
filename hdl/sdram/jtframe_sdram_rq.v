@@ -52,11 +52,12 @@ reg  [31:0]   cached_data0;
 reg  [31:0]   cached_data1;
 reg           deleterus;
 reg  [1:0]    subaddr;
+reg           served, last_addr_ok;
 wire          init;
 reg  [1:0]    hit, valid;
 
 assign init = valid==2'b00;
-wire data_match = dout === wrdata || init;
+wire data_match = dout === wrdata && !init;
 
 always @(*) begin
     case(DW)
@@ -74,16 +75,16 @@ always @(*) begin
     case(TYPE)
         0: begin // read only
             req_rnw = 1'b1;
-            req = init || ( !(hit[0] || hit[1]) && addr_ok && !we);
+            req = init || ( !(hit[0] || hit[1]) && addr_ok && !served && !we);
         end
         1: begin // write only
             req_rnw = 1'b0;
-            req = addr_ok;  // ignores cache
+            req = addr_ok && !served;  // ignores cache
         end
         2: begin // R/W
             req_rnw = ~wrin; // writes thru. Cache only used for reads
             req     = init || ( // request at initialization
-                    addr_ok &&  // request only if address is valid
+                    (addr_ok && !served) &&  // request only if address is valid
                         ( wrin ||  // for write requests
                         ( !(hit[0] || hit[1])  && !we))); // and non cached data
         end
@@ -98,9 +99,14 @@ always @(posedge clk, posedge rst)
         cached_data0 <= 32'd0;
         cached_data1 <= 32'd0;
         valid        <= 2'b0;
+        last_addr_ok <= 1'b0;
+        served       <= 1'b1;
     end else begin
+        last_addr_ok <= addr_ok;
+        if( addr_ok && !last_addr_ok ) served <= 1'b0;
         data_ok <= !init && addr_ok && ( hit[0] || hit[1] || (din_ok&&we));
         if( we && din_ok ) begin
+            served <= 1'b1;
             if( init ) begin
                 cached_data0 <= cache_din;
                 cached_addr0 <= addr_req;
