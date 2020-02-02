@@ -296,7 +296,7 @@ always @(posedge clk)
                 dq_ff0   <= dq_ff;
                 dq_ff    <= SDRAM_DQ;
             end
-            dq_rdy   <= 1'b1;   // data_ready marks that new data is ready
+            if( read_cycle || write_cycle ) dq_rdy <= 1'b1;   // data_ready marks that new data is ready
                 // or that the data was written
             SDRAM_CMD <= CMD_NOP;
         end
