@@ -73,9 +73,11 @@ always @(*) begin
         hit[1] = addr_req === cached_addr1 && valid[1];    
     end
     case(TYPE)
-        0: begin // read only
+        0: begin // read only. "served" not used here
+            // served requires the addr_ok signal to toggle per request
+            // that is not needed now
             req_rnw = 1'b1;
-            req = init || ( !(hit[0] || hit[1]) && addr_ok && !served && !we);
+            req = init || ( !(hit[0] || hit[1]) && addr_ok && !we);
         end
         1: begin // write only
             req_rnw = 1'b0;
