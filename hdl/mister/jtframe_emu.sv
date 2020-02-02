@@ -230,6 +230,16 @@ wire         data_rdy;
 wire         sdram_ack;
 wire         refresh_en;
 
+wire [ 1:0]   sdram_wrmask;
+wire          sdram_rnw;
+wire [15:0]   data_write;
+
+`ifndef JTFRAME_WRITEBACK
+assign sdram_wrmask = 2'b11;
+assign sdram_rnw    = 1'b1;
+assign data_write   = 16'h00;
+`endif
+
 wire         prog_we, prog_rd;
 wire [21:0]  prog_addr;
 wire [ 7:0]  prog_data;
@@ -316,6 +326,10 @@ u_frame(
     .data_read      ( data_read      ),
     .data_rdy       ( data_rdy       ),
     .refresh_en     ( refresh_en     ),
+    // write support
+    .sdram_wrmask   ( sdram_wrmask   ),
+    .sdram_rnw      ( sdram_rnw      ),
+    .data_write     ( data_write     ),
 //////////// board
     .rst            ( rst            ),
     .rst_n          ( rst_n          ), // unused
