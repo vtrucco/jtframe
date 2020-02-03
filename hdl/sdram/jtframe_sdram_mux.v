@@ -36,7 +36,9 @@ module jtframe_sdram_mux #(parameter
     SLOT5_AW = 8, SLOT6_AW = 8, SLOT7_AW = 8, SLOT8_AW = 8, SLOT9_AW = 8,
 
     SLOT0_TYPE = 0, SLOT1_TYPE = 0, SLOT2_TYPE = 0, SLOT3_TYPE = 0, SLOT4_TYPE = 0,
-    SLOT5_TYPE = 0, SLOT6_TYPE = 0, SLOT7_TYPE = 0, SLOT8_TYPE = 0, SLOT9_TYPE = 0
+    SLOT5_TYPE = 0, SLOT6_TYPE = 0, SLOT7_TYPE = 0, SLOT8_TYPE = 0, SLOT9_TYPE = 0,
+
+    SLOT1_BIG  = 0
 )(
     input               rst,
     input               clk,
@@ -147,7 +149,7 @@ jtframe_sdram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.TYPE(SLOT0_TYPE)) u_slot0(
     .we        ( slot_we[0]             )
 );
 
-jtframe_sdram_rq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.TYPE(SLOT1_TYPE)) u_slot1(
+jtframe_sdram_rq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.TYPE(SLOT1_TYPE),.BIG(SLOT1_BIG)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .cen       ( 1'b1                   ),

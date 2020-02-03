@@ -23,7 +23,7 @@
 // 1 = write only
 // 2 = R/W
 
-module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0 )(
+module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0, BIG=0 )(
     input               rst,
     input               clk,
     input               cen,
@@ -61,8 +61,10 @@ wire data_match = dout === wrdata && !init;
 
 always @(*) begin
     case(DW)
-        8:  addr_req = {addr[AW-1:2],2'b0};
-        16: addr_req = {addr[AW-1:1],1'b0};
+        // For reads, use the burst to get 4 bytes so the address must be aligned accordingly
+        // for writes, the address must be matched
+        8:  addr_req = req_rnw ? {addr[AW-1:2],2'b0} : addr; 
+        16: addr_req = req_rnw ? {addr[AW-1:1],1'b0} : addr;
         32: addr_req = addr;
     endcase
     if( TYPE==1 ) begin
@@ -93,8 +95,6 @@ always @(*) begin
     endcase
 end
 
-wire [31:0] cache_din = TYPE==0 ? din : wrdata;
-
 always @(posedge clk, posedge rst)
     if( rst ) begin
         deleterus <= 1'b0;  // signals which cached data is to be overwritten next time
@@ -110,35 +110,31 @@ always @(posedge clk, posedge rst)
         if( we && din_ok ) begin
             served <= 1'b1;
             if( init ) begin
-                cached_data0 <= cache_din;
+                cached_data0 <= din;
                 cached_addr0 <= addr_req;
-                cached_data1 <= cache_din;
+                cached_data1 <= din;
                 cached_addr1 <= addr_req;
                 valid        <= 2'b11;
             end else begin // update cache
                 if( TYPE==0 || !wrin ) begin
                     // only for read operations
                     if( deleterus ) begin
-                        cached_data1 <= cache_din;
+                        cached_data1 <= din;
                         cached_addr1 <= addr_req;
                         valid[1]     <= 1'b1;
                     end else begin
-                        cached_data0 <= cache_din;
+                        cached_data0 <= din;
                         cached_addr0 <= addr_req;
                         valid[0]     <= 1'b1;
                     end
                     deleterus <= ~deleterus;
                 end
                 if( wrin ) begin
-                    // only for write operations
-                    if(cached_addr0==addr_req) begin
-                        valid[0]  <= 1'b0;
-                        deleterus <= 1'b0;
-                    end
-                    if(cached_addr1==addr_req) begin
-                        valid[1]  <= 1'b0;
-                        deleterus <= 1'b1;
-                    end
+                    // any write operation will clear the cache
+                    // because comparing the full address for writes
+                    // (to determine whether to clear or not)
+                    // is probably not worth it
+                    valid <= 2'b00; 
                 end
             end
         end
@@ -156,12 +152,8 @@ wire [31:0] data_mux;
 
 
 generate
-    if (TYPE==0) begin // read only
-        assign data_mux = (we&&din_ok) ? din :
-            (hit[0] ? cached_data0 : cached_data1);
-    end else begin
-        assign data_mux = hit[0] ? cached_data0 : cached_data1;
-    end
+    assign data_mux = (we&&din_ok) ? din :
+        (hit[0] ? cached_data0 : cached_data1);
     
     if(DW==8) begin
         always @(*)
@@ -174,8 +166,8 @@ generate
     end else if(DW==16) begin
         always @(*)
         case( subaddr[0] )
-                1'd0: dout = data_mux[15:0];
-                1'd1: dout = data_mux[31:16];
+                1'd0: dout = /*BIG ? data_mux[31:16] :*/ data_mux[15:0];
+                1'd1: dout = /*BIG ? data_mux[15: 0] :*/ data_mux[31:16];
         endcase
     end else always @(*) dout = data_mux;
 endgenerate
