@@ -57,17 +57,20 @@ if( TYPE==2 ) begin : rw_type
 
     reg    last_cs;
     wire   cs_posedge = addr_ok && !last_cs;
+    wire   cs_negedge = !addr_ok && last_cs;
 
     always @(posedge clk, posedge rst) begin
         if( rst ) begin
             last_cs <= 1'b0;
             req     <= 1'b0;
+            data_ok <= 1'b0;
         end else begin
             last_cs <= addr_ok;
             if( cs_posedge ) req <= 1'b1;
+            if( cs_negedge ) data_ok <= 1'b0;
             if( we ) req <= 1'b0;
             if( req ) data_ok <= 1'b0;
-            if( din_ok) begin
+            if( din_ok && we ) begin
                 data_ok <= 1'b1;
                 dout    <= din;
             end
