@@ -95,9 +95,9 @@ generate
     end
 endgenerate
 
-reg        SDRAM_WRITE;
 reg [15:0] dq_out;
-assign SDRAM_DQ =  SDRAM_WRITE ? dq_out     : 16'hzzzz;
+reg write_cycle, read_cycle;
+assign SDRAM_DQ =  write_cycle ? dq_out     : 16'hzzzz;
 
 reg [8:0] col_addr;
 
@@ -110,7 +110,6 @@ reg [ 2:0] cnt_state;
 reg [ 2:0] init_state;
 reg       initialize;
 
-reg write_cycle=1'b0, read_cycle=1'b0;
 
 assign loop_rst = initialize;
 
@@ -145,7 +144,6 @@ reg [1:0] refresh_sr;
 always @(posedge clk)
     if( rst ) begin
         // initialization of SDRAM
-        SDRAM_WRITE<= 1'b0;
         SDRAM_CMD  <= CMD_NOP;
         SDRAM_DQMH <= 1'b0;
         SDRAM_DQML <= 1'b0;
@@ -161,6 +159,8 @@ always @(posedge clk)
         sdram_ack  <= 1'b0;
         refresh_sr <=  'd0;
         refresh_ok <= 1'b0;
+        write_cycle <= 1'b0;
+        read_cycle  <= 1'b0;
     end else if( initialize ) begin
         if( |wait_cnt ) begin
             wait_cnt <= wait_cnt-14'd1;
@@ -280,7 +280,6 @@ always @(posedge clk)
             {SDRAM_DQMH, SDRAM_DQML } <= write_cycle ? 
                 ( downloading ? prog_mask : sdram_wrmask )
                 : 2'b00; // reads always take the two bytes in
-            SDRAM_WRITE <= write_cycle;
             SDRAM_CMD   <= write_cycle ? CMD_WRITE :
                 refresh_cycle ? CMD_NOP : CMD_READ;
             dq_rdy      <= 1'b0;
