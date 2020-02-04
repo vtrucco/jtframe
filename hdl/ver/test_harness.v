@@ -12,8 +12,8 @@ module test_harness(
     output  reg      clk27,
     input            pxl_cen,
     input            pxl_clk, 
-    input            pxl_vs,
-    input            pxl_hs,
+    input            pxl_vb,
+    input            pxl_hb,
     input   [21:0]   sdram_addr,
     output  [15:0]   data_read,
     output           loop_rst,
@@ -59,8 +59,7 @@ parameter TX_LEN = 207;
 // video output dump
 // this is a binary bile with 32 bits per pixel. First 8 bits are the alpha, and set to 0xFF
 // The rest are RGB in 8-bit format
-// There is no dump while blanking. The inputs pxl_hs and pxl_vs are assume to represent the
-// blanking and not just the sync pulses
+// There is no dump while blanking. The inputs pxl_hb and pxl_vb are high during blanking
 // The linux tool "convert" can process the raw stream and separate it into individual frames
 // automatically
 
@@ -79,21 +78,21 @@ wire [31:0] video_dump = { 8'hff, {2{red}}, {2{green}}, {2{blue}} };
 `endif
 
 always @(posedge pxl_clk) if(pxl_cen && frame_cnt>=`VIDEO_START && !downloading) begin
-    if( !pxl_hs && !pxl_vs ) $fwrite(fvideo,"%u", video_dump);
+    if( !pxl_hb && !pxl_vb ) $fwrite(fvideo,"%u", video_dump);
 end
 
 `endif
 
 ////////////////////////////////////////////////////////////////////
 initial frame_cnt=0;
-always @(posedge pxl_vs ) begin
+always @(posedge pxl_vb ) begin
     frame_cnt<=frame_cnt+1;
     $display("New frame %d", frame_cnt);
 end
 
 `ifdef MAXFRAME
 reg frames_done=1'b0;
-always @(negedge pxl_vs)
+always @(negedge pxl_vb)
     if( frame_cnt == `MAXFRAME ) frames_done <= 1'b1;
 `else
 reg frames_done=1'b1;

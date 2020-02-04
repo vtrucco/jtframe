@@ -59,8 +59,8 @@ module `MISTTOP(
     `ifdef SIMULATION
     ,output         sim_pxl_cen,
     output          sim_pxl_clk,
-    output          sim_vs,
-    output          sim_hs
+    output          sim_vb,
+    output          sim_hb
     `endif
 );
 
@@ -192,8 +192,8 @@ wire       pxl_cen, pxl2_cen;
 `ifdef SIMULATION
 assign sim_pxl_clk = clk_sys;
 assign sim_pxl_cen = pxl_cen;
-assign sim_vs = ~LVBL_dly;
-assign sim_hs = ~LHBL_dly;
+assign sim_vb = ~LVBL_dly;
+assign sim_hb = ~LHBL_dly;
 `endif
 
 `ifndef SIGNED_SND
@@ -329,8 +329,8 @@ u_frame(
     assign game_coin[1]  = 1'b1;
     assign game_joystick2 = ~10'd0;
     assign game_joystick1[9:7] = 3'b111;
-    assign sim_vs = vs;
-    assign sim_hs = hs;
+    assign sim_vb = vs;
+    assign sim_hb = hs;
 `endif
 `endif
 

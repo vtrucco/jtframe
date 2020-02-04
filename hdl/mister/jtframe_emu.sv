@@ -103,8 +103,8 @@ module emu
     `ifdef SIMULATION
     ,output         sim_pxl_cen,
     output          sim_pxl_clk,
-    output          sim_vs,
-    output          sim_hs
+    output          sim_vb,
+    output          sim_hb
     `endif
 );
 
@@ -379,8 +379,8 @@ u_frame(
 );
 
 `ifdef SIMULATION
-assign sim_hs = hs;
-assign sim_vs = vs;
+assign sim_hb = ~LHBL_dly;
+assign sim_vb = ~LVBL_dly;
 assign sim_pxl_clk = clk_sys;
 assign sim_pxl_cen = pxl_cen;
 `endif
