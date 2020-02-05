@@ -37,7 +37,7 @@ module jtframe_mister #(parameter
     input           SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
     // ROM load
-    output [21:0]   ioctl_addr,
+    output [22:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
     output          ioctl_wr,
     input  [21:0]   prog_addr,
@@ -167,7 +167,7 @@ hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
 
     .ioctl_download  ( downloading  ),
     .ioctl_wr        ( ioctl_wr     ),
-    .ioctl_addr      ( {hpsio_nc, ioctl_addr } ),
+    .ioctl_addr      ( ioctl_addr   ),
     .ioctl_dout      ( ioctl_data   ),
 
     .joystick_0      ( joystick1    ),

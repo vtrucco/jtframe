@@ -23,7 +23,7 @@
 // 1 = write only
 // 2 = R/W
 
-module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0, BIG=0 )(
+module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0)(
     input               rst,
     input               clk,
     input               cen,
@@ -34,12 +34,12 @@ module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0, BIG=0 )(
     input               din_ok,
     input               wrin,   
     input               we,
-    output reg          req,
-    output reg          req_rnw,
-    output reg          data_ok,    // strobe that signals that data is ready
+    output              req,
+    output              req_rnw,
+    output              data_ok,    // strobe that signals that data is ready
     output     [21:0]   sdram_addr,
-    input [DW-1:0]      wrdata,
-    output reg [DW-1:0] dout        // sends SDRAM data back to requester
+    input    [DW-1:0]   wrdata,
+    output   [DW-1:0]   dout        // sends SDRAM data back to requester
 );
 
 
@@ -51,134 +51,48 @@ generate
 /////// It requires addr_ok signal to toggle for each request
 ////////////////////////////////////////////////////////////
 if( TYPE==2 ) begin : rw_type
-    wire  [21:0] size_ext   = { {22-AW{1'b0}}, addr };
-    assign sdram_addr = size_ext + offset;
-
-    reg    last_cs;
-    wire   cs_posedge = addr_ok && !last_cs;
-    wire   cs_negedge = !addr_ok && last_cs;
-
-    always @(posedge clk, posedge rst) begin
-        if( rst ) begin
-            last_cs <= 1'b0;
-            req     <= 1'b0;
-            data_ok <= 1'b0;
-        end else begin
-            last_cs <= addr_ok;
-            if( cs_posedge ) begin
-                req      <= 1'b1;
-                req_rnw  <= ~wrin; 
-            end
-            if( cs_negedge ) data_ok <= 1'b0;
-            if( we ) req <= 1'b0;
-            if( req ) data_ok <= 1'b0;
-            if( din_ok && we ) begin
-                data_ok <= 1'b1;
-                dout    <= din;
-            end
-        end
-    end
+    jtframe_ram_rq #(.AW(AW), .DW(DW) ) u_rw(
+        .rst        ( rst           ),
+        .clk        ( clk           ),
+        .cen        ( cen           ),
+        .addr       ( addr          ),
+        .offset     ( offset        ),     // It is not supposed to change during game play
+        .addr_ok    ( addr_ok       ),    // signals that value in addr is valid
+        .din        ( din           ),        // data read from SDRAM
+        .din_ok     ( din_ok        ),
+        .wrin       ( wrin          ),   
+        .we         ( we            ),
+        .req        ( req           ),
+        .req_rnw    ( req_rnw       ),
+        .data_ok    ( data_ok       ),    // strobe that signals that data is ready
+        .sdram_addr ( sdram_addr    ),
+        .wrdata     ( wrdata        ),
+        .dout       ( dout          )        // sends SDRAM data back to requester
+    );
 end
 
 ////////////////////////////////////////////////////////////
 /////// read only type
 ////////////////////////////////////////////////////////////
 if( TYPE==0) begin : ro_type
-reg [AW-1:0] addr_req;
-wire  [21:0] size_ext   = { {22-AW{1'b0}}, addr_req };
-assign sdram_addr = (DW==8?(size_ext>>1):size_ext ) + offset;
 
-reg  [AW-1:0] cached_addr0;
-reg  [AW-1:0] cached_addr1;
-reg  [31:0]   cached_data0;
-reg  [31:0]   cached_data1;
-reg           deleterus;
-reg  [1:0]    subaddr;
-reg           served, last_addr_ok;
-wire          init;
-reg  [1:0]    hit, valid;
+    assign req_rnw = 1'b1;
 
-assign init    = valid==2'b00;
-wire data_match = dout === wrdata && !init;
-
-always @(*) begin
-    req_rnw = 1'b1;
-    case(DW)
-        // For reads, use the burst to get 4 bytes so the address must be aligned accordingly
-        // for writes, the address must be matched
-        8:  addr_req = { addr[AW-1:2],2'b0 };
-        16: addr_req = { addr[AW-1:1],1'b0 };
-        32: addr_req = addr;
-    endcase
-    hit[0] = addr_req === cached_addr0 && valid[0];
-    hit[1] = addr_req === cached_addr1 && valid[1];    
-    req = init || ( !(hit[0] || hit[1]) && addr_ok && !we);
-end
-
-always @(posedge clk, posedge rst)
-    if( rst ) begin
-        deleterus <= 1'b0;  // signals which cached data is to be overwritten next time
-        cached_data0 <= 32'd0;
-        cached_data1 <= 32'd0;
-        valid        <= 2'b0;
-        last_addr_ok <= 1'b0;
-        served       <= 1'b1;
-    end else begin
-        last_addr_ok <= addr_ok;
-        if( addr_ok && !last_addr_ok ) served <= 1'b0;
-        data_ok <= !init && addr_ok && ( hit[0] || hit[1] || (din_ok&&we));
-        if( we && din_ok ) begin
-            served <= 1'b1;
-            if( init ) begin
-                cached_data0 <= din;
-                cached_addr0 <= addr_req;
-                cached_data1 <= din;
-                cached_addr1 <= addr_req;
-                valid        <= 2'b11;
-            end else begin // update cache
-                // only for read operations
-                if( deleterus ) begin
-                    cached_data1 <= din;
-                    cached_addr1 <= addr_req;
-                    valid[1]     <= 1'b1;
-                end else begin
-                    cached_data0 <= din;
-                    cached_addr0 <= addr_req;
-                    valid[0]     <= 1'b1;
-                end
-                deleterus <= ~deleterus;
-            end
-        end
-    end
-
-always @(*) begin
-    subaddr[1] = addr[1];
-    subaddr[0] =  addr[0];
-end
-
-// data_mux selects one of two cache registers
-// but if we are getting fresh data, it selects directly the new data
-// this saves one clock cycle at the expense of more LUTs
-wire [31:0] data_mux;
-
-assign data_mux = (we&&din_ok) ? din :
-    (hit[0] ? cached_data0 : cached_data1);
-
-if(DW==8) begin
-    always @(*)
-    case( subaddr )
-        2'd0: dout = data_mux[ 7: 0];
-        2'd1: dout = data_mux[15: 8];
-        2'd2: dout = data_mux[23:16];
-        2'd3: dout = data_mux[31:24];
-    endcase
-end else if(DW==16) begin
-    always @(*)
-    case( subaddr[0] )
-            1'd0: dout = /*BIG ? data_mux[31:16] :*/ data_mux[15:0];
-            1'd1: dout = /*BIG ? data_mux[15: 0] :*/ data_mux[31:16];
-    endcase
-end else always @(*) dout = data_mux;
+    jtframe_romrq #(.AW(AW),.DW(DW) )u_ro(
+        .rst        ( rst       ),
+        .clk        ( clk       ),
+        .cen        ( cen       ),
+        .offset     ( offset    ),
+        .addr       ( addr      ),
+        .addr_ok    ( addr_ok   ),    // signals that value in addr is valid
+        .din        ( din       ),
+        .din_ok     ( din_ok    ),
+        .we         ( we        ),
+        .req        ( req       ),
+        .data_ok    ( data_ok   ),    // strobe that signals that data is ready
+        .sdram_addr ( sdram_addr),
+        .dout       ( dout      )
+    );
 end
 
 endgenerate

@@ -207,7 +207,7 @@ wire       enable_fm, enable_psg;
 wire       dip_pause, dip_flip, dip_test;
 
 wire        ioctl_wr;
-wire [21:0] ioctl_addr;
+wire [22:0] ioctl_addr;
 wire [ 7:0] ioctl_data;
 
 wire [ 9:0] game_joy1, game_joy2;
@@ -420,7 +420,7 @@ assign sim_pxl_cen = pxl_cen;
     .enable_fm    ( enable_fm        ),
     .enable_psg   ( enable_psg       ),
     // PROM programming
-    .ioctl_addr   ( ioctl_addr[21:0] ),
+    .ioctl_addr   ( ioctl_addr       ),
     .ioctl_data   ( ioctl_data       ),
     .ioctl_wr     ( ioctl_wr         ),
     .prog_addr    ( prog_addr        ),
