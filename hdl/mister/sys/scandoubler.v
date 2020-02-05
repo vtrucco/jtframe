@@ -62,7 +62,7 @@ wire [7:0] pc_in = pix_in_cnt + 1'b1;
 reg  [7:0] pixsz, pixsz2, pixsz4 = 0;
 
 reg ce_x4i, ce_x1i;
-always @(posedge clk_vid) begin
+always @(posedge clk_vid) begin : block1
 	reg old_ce, valid, hs;
 
 	if(~&pix_len) pix_len <= pl;
@@ -132,7 +132,7 @@ Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 reg  [7:0] pix_out_cnt = 0;
 wire [7:0] pc_out = pix_out_cnt + 1'b1;
 
-always @(posedge clk_vid) begin
+always @(posedge clk_vid) begin : block2
 	reg hs;
 
 	if(~&pix_out_cnt) pix_out_cnt <= pc_out;
@@ -152,7 +152,7 @@ always @(posedge clk_vid) begin
 	end
 end
 
-always @(posedge clk_vid) begin
+always @(posedge clk_vid) begin : block0
 
 	reg [31:0] hcnt;
 	reg [30:0] sd_hcnt;

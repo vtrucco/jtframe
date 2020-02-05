@@ -24,7 +24,7 @@ module hps_io #(parameter STRLEN=0, PS2DIV=2000, WIDE=0, VDNUM=1, PS2WE=0,
 
     output      [1:0] buttons,
     output            forced_scandoubler,
-    output            direct_video=0,
+    output            direct_video,
 
     output     [31:0] status,
     // input      [31:0] status_in,
@@ -120,5 +120,7 @@ assign status = 32'd0;
 assign forced_scandoubler = 1'b0;
 
 assign buttons = 2'b0;
+
+assign direct_video = 1'b0;
 
 endmodule // hps_io

@@ -30,7 +30,7 @@ module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0, BIG=0 )(
     input [AW-1:0]      addr,
     input [  21:0]      offset,     // It is not supposed to change during game play
     input               addr_ok,    // signals that value in addr is valid
-    input [31:0]        din,
+    input [31:0]        din,        // data read from SDRAM
     input               din_ok,
     input               wrin,   
     input               we,
@@ -39,7 +39,7 @@ module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0, BIG=0 )(
     output reg          data_ok,    // strobe that signals that data is ready
     output     [21:0]   sdram_addr,
     input [DW-1:0]      wrdata,
-    output reg [DW-1:0] dout
+    output reg [DW-1:0] dout        // sends SDRAM data back to requester
 );
 
 
@@ -52,7 +52,6 @@ generate
 ////////////////////////////////////////////////////////////
 if( TYPE==2 ) begin : rw_type
     wire  [21:0] size_ext   = { {22-AW{1'b0}}, addr };
-    assign req_rnw  = ~wrin; 
     assign sdram_addr = size_ext + offset;
 
     reg    last_cs;
@@ -66,7 +65,10 @@ if( TYPE==2 ) begin : rw_type
             data_ok <= 1'b0;
         end else begin
             last_cs <= addr_ok;
-            if( cs_posedge ) req <= 1'b1;
+            if( cs_posedge ) begin
+                req      <= 1'b1;
+                req_rnw  <= ~wrin; 
+            end
             if( cs_negedge ) data_ok <= 1'b0;
             if( we ) req <= 1'b0;
             if( req ) data_ok <= 1'b0;
@@ -97,10 +99,10 @@ wire          init;
 reg  [1:0]    hit, valid;
 
 assign init    = valid==2'b00;
-assign req_rnw = 1'b1;
 wire data_match = dout === wrdata && !init;
 
 always @(*) begin
+    req_rnw = 1'b1;
     case(DW)
         // For reads, use the burst to get 4 bytes so the address must be aligned accordingly
         // for writes, the address must be matched
