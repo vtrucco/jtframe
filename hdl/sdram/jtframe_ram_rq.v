@@ -59,11 +59,11 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
             if( cs_posedge ) begin
                 req      <= 1'b1;
                 req_rnw  <= ~wrin; 
+                data_ok  <= 1'b0;
             end
             if( cs_negedge ) data_ok <= 1'b0;
-            if( we ) req <= 1'b0;
-            if( req ) data_ok <= 1'b0;
             if( din_ok && we ) begin
+                req <= 1'b0;
                 data_ok <= 1'b1;
                 dout    <= din;
             end

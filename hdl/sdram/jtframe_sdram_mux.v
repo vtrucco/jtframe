@@ -337,12 +337,11 @@ end else begin
         wait_cycle<= |active;
         data_sel  <= 10'd0;
         sdram_wrmask <= 2'b11;
+        sdram_rnw    <= 1'b1;
         case( 1'b1 )
             active[0]: begin
                 sdram_addr <= slot0_addr_req;
-                if( SLOT0_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT0_TYPE != 0) begin
                     data_write <= slot0_din;
                     sdram_rnw  <= req_rnw[0];
                 end
@@ -350,9 +349,7 @@ end else begin
             end
             active[1]: begin
                 sdram_addr <= slot1_addr_req;
-                if( SLOT1_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT1_TYPE != 0) begin
                     data_write   <= slot1_din;
                     sdram_rnw    <= req_rnw[1];
                     sdram_wrmask <= slot1_wrmask;
@@ -361,9 +358,7 @@ end else begin
             end
             active[2]: begin
                 sdram_addr <= slot2_addr_req;
-                if( SLOT2_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT2_TYPE != 0) begin
                     data_write <= slot2_din;
                     sdram_rnw  <= req_rnw[2];
                 end
@@ -371,9 +366,7 @@ end else begin
             end
             active[3]: begin
                 sdram_addr <= slot3_addr_req;
-                if( SLOT3_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT3_TYPE != 0) begin
                     data_write <= slot3_din;
                     sdram_rnw  <= req_rnw[3];
                 end
@@ -381,9 +374,7 @@ end else begin
             end
             active[4]: begin
                 sdram_addr <= slot4_addr_req;
-                if( SLOT4_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT4_TYPE != 0) begin
                     data_write <= slot4_din;
                     sdram_rnw  <= req_rnw[4];
                 end
@@ -391,9 +382,7 @@ end else begin
             end
             active[5]: begin
                 sdram_addr <= slot5_addr_req;
-                if( SLOT5_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT5_TYPE != 0) begin
                     data_write <= slot5_din;
                     sdram_rnw  <= req_rnw[5];
                 end
@@ -401,9 +390,7 @@ end else begin
             end
             active[6]: begin
                 sdram_addr <= slot6_addr_req;
-                if( SLOT6_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT6_TYPE != 0) begin
                     data_write <= slot6_din;
                     sdram_rnw  <= req_rnw[6];
                 end
@@ -411,9 +398,7 @@ end else begin
             end
             active[7]: begin
                 sdram_addr <= slot7_addr_req;
-                if( SLOT7_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT7_TYPE != 0) begin
                     data_write <= slot7_din;
                     sdram_rnw  <= req_rnw[7];
                 end
@@ -421,9 +406,7 @@ end else begin
             end
             active[8]: begin
                 sdram_addr <= slot8_addr_req;
-                if( SLOT8_TYPE == 0)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT8_TYPE != 0) begin
                     data_write <= slot8_din;
                     sdram_rnw  <= req_rnw[8];
                 end
@@ -431,9 +414,7 @@ end else begin
             end
             active[9]: begin
                 sdram_addr <= slot9_addr_req;
-                if( SLOT0_TYPE == 9)
-                    sdram_rnw <= 1'b1;
-                else begin
+                if( SLOT0_TYPE != 9) begin
                     data_write <= slot9_din;
                     sdram_rnw  <= req_rnw[9];
                 end
