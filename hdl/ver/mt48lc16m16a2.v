@@ -39,7 +39,8 @@
 
 `timescale 1ns / 1ps
 
-module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, downloading);
+module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, 
+    downloading, VS, frame_cnt );
 
     parameter addr_bits =      13;
     parameter data_bits =      16;
@@ -59,6 +60,8 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, dow
     input                         We_n;
     input                 [1 : 0] Dqm;
     input                         downloading;
+    input                         VS;
+    input     [31:0]              frame_cnt;
 
     reg       [data_bits - 1 : 0] Bank0 [0 : mem_sizes];
     reg       [data_bits - 1 : 0] Bank1 [0 : mem_sizes];
@@ -126,6 +129,24 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, dow
             $display("INFO: SDRAM memory content dumped to sdram.hex at %t",$time);
         end
         `endif
+    `endif
+
+    `ifdef JTFRAME_SAVESDRAM
+
+        initial begin
+            $display("INFO: SDRAM memory will be dumped at the end of each frame in file sdram_last.hex");
+        end
+        always @(negedge VS)
+        `ifdef DUMP_START
+        if( frame_cnt==`DUMP_START )
+        `endif
+        begin : dump_contents_frame
+            integer dumpcnt,f;
+            f=$fopen("sdram_last.hex","w");
+            for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
+                $fwrite(f,"%h\n",Bank0[dumpcnt]);
+            $fclose(f);
+        end
     `endif
 
     reg                   [1 : 0] Bank_addr [0 : 3];                // Bank Address Pipeline
