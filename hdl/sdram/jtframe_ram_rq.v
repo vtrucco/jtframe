@@ -37,13 +37,12 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
     output reg          req,
     output reg          req_rnw,
     output reg          data_ok,    // strobe that signals that data is ready
-    output     [21:0]   sdram_addr,
+    output reg [21:0]   sdram_addr,
     input [DW-1:0]      wrdata,
     output reg [DW-1:0] dout        // sends SDRAM data back to requester
 );
 
     wire  [21:0] size_ext   = { {22-AW{1'b0}}, addr };
-    assign sdram_addr = size_ext + offset;
 
     reg    last_cs;
     wire   cs_posedge = addr_ok && !last_cs;
@@ -57,13 +56,15 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
         end else begin
             last_cs <= addr_ok;
             if( cs_posedge ) begin
-                req      <= 1'b1;
-                req_rnw  <= ~wrin; 
-                data_ok  <= 1'b0;
+                req        <= 1'b1;
+                req_rnw    <= ~wrin; 
+                data_ok    <= 1'b0;
+                sdram_addr <= size_ext + offset;
             end
             if( cs_negedge ) data_ok <= 1'b0;
             if( din_ok && we ) begin
-                req <= 1'b0;
+                req     <= 1'b0;
+                req_rnw <= 1'b1;
                 data_ok <= 1'b1;
                 dout    <= din;
             end

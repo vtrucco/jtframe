@@ -290,9 +290,9 @@ always @(posedge clk)
                 dq_ff <= SDRAM_DQ;
             end
             if( write_cycle ) begin
-                SDRAM_CMD <= CMD_STOP; // do not burst!
-                dq_rdy    <= 1'b1;
-                cnt_state <= 3'd0;
+                dq_rdy      <= 1'b1;
+                cnt_state   <= 3'd0;
+                write_cycle <= 1'b0;
             end
         end
         3'd4: begin
