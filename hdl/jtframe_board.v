@@ -671,6 +671,16 @@ generate
                 .gamma_bus      ( gamma_bus     )
             );
         end
+        5: begin // by pass
+            assign scan2x_r    = game_r;
+            assign scan2x_g    = game_g;
+            assign scan2x_b    = game_b;
+            assign scan2x_hs   = hs;
+            assign scan2x_vs   = vs;
+            assign scan2x_clk  = clk_sys;
+            assign scan2x_cen  = pxl_cen;
+            assign scan2x_de   = LVBL && LHBL;
+        end
     endcase
 endgenerate
 `endif

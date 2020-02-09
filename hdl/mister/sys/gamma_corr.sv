@@ -26,12 +26,16 @@ reg [7:0] gamma;
 always @(posedge clk_sys) if (gamma_wr) gamma_curve[gamma_wr_addr] <= gamma_value;
 always @(posedge clk_vid) gamma <= gamma_curve[gamma_index];
 
+reg [1:0] ctr;
+
+`ifdef SIMULATION
+initial ctr = 2'b0;
+`endif
 
 always @(posedge clk_vid) begin
 	reg [7:0] R_in, G_in, B_in;
 	reg [7:0] R_gamma, G_gamma;
 	reg       hs,vs,hb,vb;
-	static reg [1:0] ctr = 0;
 
 	if(ce_pix) begin
 		{R_in,G_in,B_in} <= RGB_in;

@@ -499,7 +499,6 @@ wire         vbuf_write;
 wire  [23:0] hdmi_data;
 wire         hdmi_vs, hdmi_hs, hdmi_de;
 
-`ifndef MISTER_NOHDMI
 ascal 
 #(
 	.RAMBASE(32'h20000000),
@@ -577,7 +576,6 @@ ascal
 	.avl_read         (vbuf_read),
 	.avl_byteenable   (vbuf_byteenable)
 );
-`endif
 
 reg        FB_EN     = 0;
 reg        FB_FLT    = 0;
@@ -691,7 +689,7 @@ fbpal fbpal
 
 
 /////////////////////////  HDMI output  /////////////////////////////////
-`ifndef MISTER_NOHDMI
+
 wire hdmi_clk_out;
 pll_hdmi pll_hdmi
 (
@@ -701,9 +699,6 @@ pll_hdmi pll_hdmi
 	.reconfig_from_pll(reconfig_from_pll),
 	.outclk_0(hdmi_clk_out)
 );
-`else 
-assign hdmi_clk_out = 1'b0;
-`endif
 
 //1920x1080@60 PCLK=148.5MHz CEA
 reg  [11:0] WIDTH  = 1920;
@@ -725,7 +720,6 @@ reg         adj_write;
 reg   [5:0] adj_address;
 reg  [31:0] adj_data;
 
-`ifndef MISTER_NOHDMI
 pll_cfg pll_cfg
 (
 	.mgmt_clk(FPGA_CLK1_50),
@@ -739,7 +733,6 @@ pll_cfg pll_cfg
 	.reconfig_to_pll(reconfig_to_pll),
 	.reconfig_from_pll(reconfig_from_pll)
 );
-`endif
 
 reg cfg_ready = 0;
 
@@ -772,7 +765,6 @@ always @(posedge FPGA_CLK1_50) begin
 end
 
 wire hdmi_config_done;
-`ifndef MISTER_NOHDMI
 hdmi_config hdmi_config
 (
 	.iCLK(FPGA_CLK1_50),
@@ -787,9 +779,6 @@ hdmi_config hdmi_config
 	.limited(hdmi_limited),
 	.ypbpr(ypbpr_en & direct_video)
 );
-`else
-assign hdmi_config_done = 1'b1;
-`endif
 
 wire [23:0] hdmi_data_sl;
 wire        hdmi_de_sl, hdmi_vs_sl, hdmi_hs_sl;
@@ -811,7 +800,6 @@ scanlines #(1) HDMI_scanlines
 
 wire [23:0] hdmi_data_osd;
 wire        hdmi_de_osd, hdmi_vs_osd, hdmi_hs_osd;
-`ifndef MISTER_NOHDMI
 osd hdmi_osd
 (
 	.clk_sys(clk_sys),
@@ -831,7 +819,6 @@ osd hdmi_osd
 	.vs_out(hdmi_vs_osd),
 	.de_out(hdmi_de_osd)
 );
-`endif
 
 reg [23:0] dv_data;
 reg        dv_hs, dv_vs, dv_de;
@@ -874,7 +861,6 @@ always @(posedge clk_vid) begin
 	dv_vs  <= dv_vs2;
 end
 
-`ifndef MISTER_NOHDMI
 wire hdmi_tx_clk;
 cyclonev_clkselect hdmi_clk_sw
 ( 
@@ -932,7 +918,6 @@ assign HDMI_TX_HS = hdmi_out_hs;
 assign HDMI_TX_VS = hdmi_out_vs;
 assign HDMI_TX_DE = hdmi_out_de;
 assign HDMI_TX_D  = hdmi_out_d;
-`endif
 
 /////////////////////////  VGA output  //////////////////////////////////
 
@@ -1075,7 +1060,6 @@ wire        aram_read;
 
 wire [15:0] alsa_l, alsa_r;
 
-`ifndef MISTER_NOHDMI
 alsa alsa
 (
 	.reset(reset),
@@ -1097,10 +1081,6 @@ alsa alsa
 	.pcm_l(alsa_l),
 	.pcm_r(alsa_r)
 );
-`else
-assign alsa_l = 16'd0;
-assign alsa_r = 16'd0;
-`endif
 
 
 ////////////////  User I/O (USB 3.0 connector) /////////////////////////
