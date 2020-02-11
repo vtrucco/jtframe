@@ -40,12 +40,14 @@ bit         meaning
 1           coin 2
 2           1P start
 3           2P start
-4
-5
-6
-7
+4           right   (may vary with each game)
+5           left    (may vary with each game)
+6           down    (may vary with each game)
+7           up      (may vary with each game)
 8           Button 1
 9           Button 2
+
+Each line will be applied on a new frame.
 
 OSD colours
 ===========
