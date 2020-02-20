@@ -321,10 +321,11 @@ jtframe_sdram_rq #(.AW(SLOT9_AW),.DW(SLOT9_DW),.TYPE(SLOT9_TYPE)) u_slot9(
 always @(posedge clk)
 if( loop_rst || downloading ) begin
     sdram_addr <= 22'd0;
-    ready_cnt <=  4'd0;
-    ready     <=  1'b0;
-    sdram_req <=  1'b0;
-    data_sel  <=  10'd0;
+    ready_cnt  <=  4'd0;
+    ready      <=  1'b0;
+    sdram_req  <=  1'b0;
+    data_sel   <= 10'd0;
+    refresh_en <=  1'b1;
 end else begin
     {ready, ready_cnt}  <= {ready_cnt, 1'b1};
     if( sdram_ack ) sdram_req <= 1'b0;

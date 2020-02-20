@@ -251,6 +251,7 @@ always @(posedge clk)
                     read_cycle    <= ~writeon;
                     refresh_sr    <= 2'd0;
                     refresh_ok    <= 1'b0;
+                    sdram_ack     <= 1'b1;
                 end
                 else if( (read_req || refresh_ok) && !downloading ) begin
                     SDRAM_CMD <=
@@ -264,9 +265,9 @@ always @(posedge clk)
                     refresh_ok    <= 1'b0;
                 end
                 else begin
-                    if( !downloading && refresh_en )
+                    if( refresh_en )
                         { refresh_ok, refresh_sr } <=  { refresh_sr, 1'b1 };
-                    else begin // no autorefresh during downloading
+                    else begin
                         refresh_sr <= 2'd0;
                         refresh_ok <= 1'b0;
                     end
