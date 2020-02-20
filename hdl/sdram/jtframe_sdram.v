@@ -208,9 +208,9 @@ always @(posedge clk)
     end else begin 
     //////////////////////////////////////////////////////////////////////////////////
     // regular operation
-        if( cnt_state!=3'd0 || 
-            (!downloading && (read_req || refresh_ok) ) || /* when not downloading */
-            ( downloading && (writeon || readprog) ) /* when downloading */) begin
+        if( cnt_state!=3'd0 || refresh_ok ||
+            (!downloading && read_req  ) || /* when not downloading */
+            ( downloading && (writeon || readprog ) ) /* when downloading */) begin
             if( cnt_state==3'd4 || (refresh_cycle&&cnt_state==3'd3) )
                 cnt_state <= 3'd0; // Autorefresh needs only 60ns
             else
@@ -253,7 +253,7 @@ always @(posedge clk)
                     refresh_ok    <= 1'b0;
                     sdram_ack     <= 1'b1;
                 end
-                else if( (read_req || refresh_ok) && !downloading ) begin
+                else if( (read_req || refresh_ok) ) begin
                     SDRAM_CMD <=
                         !read_req ? CMD_AUTOREFRESH : CMD_ACTIVATE;
                     { SDRAM_A, col_addr } <= sdram_addr;

@@ -561,6 +561,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             // Auto Refresh to Activate
             if ($time - RFC_chk < tRFC) begin
                 $display ("%m : at time %t ERROR: tRFC violation during Activate bank = %d", $time, Ba);
+                #1000 $finish;
             end
 
             // Load Mode Register to Active
