@@ -96,8 +96,14 @@ generate
 endgenerate
 
 reg [15:0] dq_out;
-reg write_cycle, read_cycle;
-assign SDRAM_DQ =  write_cycle ? dq_out     : 16'hzzzz;
+reg write_cycle, read_cycle, hold_bus;
+
+// SDRAM bus held down during idle cycles help prevent errors in some SDRAM MiSTer modules
+// MiSTer FPGA doesn't have pull downs, only pull up. The pull up didn't show performance
+// improvement
+// For a 32MB memory of mine, the difference between holding the bus and not holding it
+// means adding at least 6ns of usable shift range: from 3ns to 10ns
+assign SDRAM_DQ = write_cycle ? dq_out : ( hold_bus ? 16'h0 : 16'hzzzz);
 
 reg [8:0] col_addr;
 
@@ -161,6 +167,7 @@ always @(posedge clk)
         refresh_ok <= 1'b0;
         write_cycle <= 1'b0;
         read_cycle  <= 1'b0;
+        hold_bus    <= 1'b1;
     end else if( initialize ) begin
         if( |wait_cnt ) begin
             wait_cnt <= wait_cnt-14'd1;
@@ -226,6 +233,7 @@ always @(posedge clk)
             read_cycle     <= 1'b0;
             refresh_cycle  <= 1'b0;
             burst_done     <= 1'b0;
+            hold_bus       <= 1'b1;
             //if( read_cycle) begin
             //    data_read[15: 0] <= data_read[31:16];
             //    data_read[31:16] <= SDRAM_DQ;
@@ -285,6 +293,10 @@ always @(posedge clk)
                 refresh_cycle ? CMD_NOP : CMD_READ;
             dq_rdy      <= 1'b0;
         end
+        3'd2: begin
+            SDRAM_CMD <= CMD_NOP;
+            if( read_cycle ) hold_bus <= 1'b0;
+        end
         3'd3: begin
             SDRAM_CMD <= CMD_NOP;
             if( read_cycle) begin
@@ -301,8 +313,8 @@ always @(posedge clk)
                 dq_ff0   <= dq_ff;
                 dq_ff    <= SDRAM_DQ;
                 dq_rdy   <= 1'b1;   // data_ready marks that new data is ready
+                hold_bus <= 1'b1;
             end
-                // or that the data was written
             SDRAM_CMD <= CMD_NOP;
         end
         endcase
