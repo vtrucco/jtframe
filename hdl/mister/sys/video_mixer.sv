@@ -73,7 +73,7 @@ module video_mixer
 
 localparam DWIDTH_SD = GAMMA ? 7 : DWIDTH;
 localparam HALF_DEPTH_SD = GAMMA ? 0 : HALF_DEPTH;
-localparam RGB_WIDTH = GAMMA && HALF_DEPTH ? 8 : DWIDTH;
+localparam RGB_WIDTH = GAMMA && HALF_DEPTH ? 8 : DWIDTH+1;
 wire [RGB_WIDTH-1:0] R_in, G_in, B_in;
 
 generate

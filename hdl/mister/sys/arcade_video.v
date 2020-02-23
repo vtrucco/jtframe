@@ -173,6 +173,7 @@ endmodule
 //  8 : 3R 3G 2B
 //  9 : 3R 3G 3B
 // 12 : 4R 4G 4B
+// 24 : 8R 8G 8B
 
 module arcade_fx #(parameter WIDTH=320, DW=8, GAMMA=1)
 (
@@ -241,7 +242,9 @@ wire scandoubler = fx || forced_scandoubler;
 assign HDMI_CLK = VGA_CLK;
 assign HDMI_SL  = sl[1:0];
 
-video_mixer #(WIDTH+4, 1, GAMMA) video_mixer
+localparam HALF_DEPTH = DW!=24;
+
+video_mixer #(WIDTH+4, HALF_DEPTH, GAMMA) video_mixer
 (
 	.clk_vid(HDMI_CLK),
 	.ce_pix(CE),
@@ -251,9 +254,9 @@ video_mixer #(WIDTH+4, 1, GAMMA) video_mixer
 	.hq2x(fx==1),
 	.gamma_bus(gamma_bus),
 
-	.R(R[7:4]),
-	.G(G[7:4]),
-	.B(B[7:4]),
+	.R( HALF_DEPTH ? R[7:4] : R ),
+	.G( HALF_DEPTH ? G[7:4] : G ),
+	.B( HALF_DEPTH ? B[7:4] : B ),
 
 	.HSync(HS),
 	.VSync(VS),
@@ -343,6 +346,9 @@ generate
 		assign VGA_R = {RGB_fix[8:6],RGB_fix[8:6],RGB_fix[8:7]};
 		assign VGA_G = {RGB_fix[5:3],RGB_fix[5:3],RGB_fix[5:4]};
 		assign VGA_B = {RGB_fix[2:0],RGB_fix[2:0],RGB_fix[2:1]};
+	end
+	else if(DW == 24) begin
+		assign { VGA_R, VGA_G, VGA_B } = RGB_fix;
 	end
 	else begin
 		assign VGA_R = {RGB_fix[11:8],RGB_fix[11:8]};
