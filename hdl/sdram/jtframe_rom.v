@@ -31,15 +31,15 @@ module jtframe_rom #(parameter
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8, SLOT3_AW = 8,
     SLOT4_AW = 8, SLOT5_AW = 8, SLOT6_AW = 8, SLOT7_AW = 8, SLOT8_AW = 8,
 
-    SLOT0_OFFSET = 22'h0,
-    SLOT1_OFFSET = 22'h0,
-    SLOT2_OFFSET = 22'h0,
-    SLOT3_OFFSET = 22'h0,
-    SLOT4_OFFSET = 22'h0,
-    SLOT5_OFFSET = 22'h0,
-    SLOT6_OFFSET = 22'h0,
-    SLOT7_OFFSET = 22'h0,
-    SLOT8_OFFSET = 22'h0
+    [21:0] SLOT0_OFFSET = 22'h0,
+    [21:0] SLOT1_OFFSET = 22'h0,
+    [21:0] SLOT2_OFFSET = 22'h0,
+    [21:0] SLOT3_OFFSET = 22'h0,
+    [21:0] SLOT4_OFFSET = 22'h0,
+    [21:0] SLOT5_OFFSET = 22'h0,
+    [21:0] SLOT6_OFFSET = 22'h0,
+    [21:0] SLOT7_OFFSET = 22'h0,
+    [21:0] SLOT8_OFFSET = 22'h0
 
     // SLOT0_BRAM   = 0,
     // SLOT1_BRAM   = 0
