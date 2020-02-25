@@ -109,13 +109,8 @@ module jtframe_mist #(parameter
     output   [9:0]  game_joystick2,
     output   [1:0]  game_coin,
     output   [1:0]  game_start,
-    output          game_pause,
     output          game_service,
     // DIP and OSD settings
-    output  [ 7:0]  hdmi_arx,
-    output  [ 7:0]  hdmi_ary,
-    output          vertical_n,
-
     output          enable_fm,
     output          enable_psg,
 

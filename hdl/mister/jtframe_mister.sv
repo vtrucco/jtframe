@@ -128,9 +128,9 @@ joy_db15 joy_db15
   .joystick2 ( joydb15_2 )	  
 );
 
+wire [15:0]   joystick_USB_1,  joystick_USB_2;
 wire [15:0]   joystick1 = |status[31:30] ? {joydb15_1[11:10],joydb15_1[9],joydb15_1[7],joydb15_1[8],joydb15_1[5+THREE_BUTTONS:0]} : joystick_USB_1;
 wire [15:0]   joystick2 =  status[31]    ? {joydb15_2[11:10],joydb15_2[9],joydb15_2[8],joydb15_2[7],joydb15_2[5+THREE_BUTTONS:0]} : status[30] ? joystick_USB_1 : joystick_USB_2;
-wire [15:0]   joystick_USB_1,  joystick_USB_2;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire [2:0]    hpsio_nc; // top 3 bits of ioctl_addr are ignored
 wire          force_scan2x, direct_video;

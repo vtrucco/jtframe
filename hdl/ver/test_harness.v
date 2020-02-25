@@ -63,25 +63,17 @@ parameter TX_LEN = 207;
 // The linux tool "convert" can process the raw stream and separate it into individual frames
 // automatically
 
-`ifdef DUMP_VIDEO
-integer fvideo;
-initial begin
-    fvideo = $fopen("video.raw","wb");
-end
-
-wire [31:0] video_dump = { 8'hff, {2{red}}, {2{green}}, {2{blue}} };
-
-// Define VIDEO_START with the first frame number for which
-// video will be dumped. If undefined, it will start from frame 0
-`ifndef VIDEO_START
-`define VIDEO_START 0
-`endif
-
-always @(posedge pxl_clk) if(pxl_cen && frame_cnt>=`VIDEO_START && !downloading) begin
-    if( !pxl_hb && !pxl_vb ) $fwrite(fvideo,"%u", video_dump);
-end
-
-`endif
+video_dump u_dump(
+    .pxl_clk    ( pxl_clk       ),
+    .pxl_cen    ( pxl_cen       ),
+    .pxl_hb     ( pxl_hb        ),
+    .pxl_vb     ( pxl_vb        ),
+    .red        ( red           ),
+    .green      ( green         ),
+    .blue       ( blue          ),
+    .frame_cnt  ( frame_cnt     )
+    //input        downloading
+);
 
 ////////////////////////////////////////////////////////////////////
 initial frame_cnt=0;

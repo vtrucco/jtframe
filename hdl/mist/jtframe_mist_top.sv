@@ -308,12 +308,7 @@ u_frame(
     .dip_flip       ( dip_flip       ),
     .dip_fxlevel    ( dip_fxlevel    ),
     // Debug
-    .gfx_en         ( gfx_en         ),
-    // Unused
-    .game_pause     (                ),
-    .hdmi_arx       (                ),
-    .hdmi_ary       (                ),
-    .vertical_n     (                )
+    .gfx_en         ( gfx_en         )
 );
 
 `ifdef SIMULATION

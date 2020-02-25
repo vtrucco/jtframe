@@ -167,10 +167,8 @@ wire   field;
 assign VGA_F1=field;
 `endif
 
-assign USER_OUT = |status[31:30] ? {5'b11111,JOY_CLK,JOY_LOAD} : '1;
 wire JOY_CLK, JOY_LOAD;
 wire JOY_DATA = USER_IN[5];
-assign USER_MODE = |status[31:30] ;
 
 ////////////////////   CLOCKS   ///////////////////
 
@@ -233,6 +231,9 @@ wire        rst_req   = RESET | status[0] | buttons[1];
 
 assign LED_DISK  = 2'b0;
 assign LED_POWER = 2'b0;
+
+assign USER_OUT  = |status[31:30] ? {5'b11111,JOY_CLK,JOY_LOAD} : '1;
+assign USER_MODE = |status[31:30];
 
 // SDRAM
 wire         loop_rst;
