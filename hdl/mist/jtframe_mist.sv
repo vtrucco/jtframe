@@ -20,7 +20,7 @@
 
 module jtframe_mist #(parameter
     SIGNED_SND             = 1'b0,
-    THREE_BUTTONS          = 1'b0,
+    BUTTONS                = 2,
     GAME_INPUTS_ACTIVE_LOW = 1'b1,
     CONF_STR               = "",
     COLORW                 = 4,
@@ -202,7 +202,7 @@ jtframe_mist_base #(
 );
 
 jtframe_board #(
-    .THREE_BUTTONS         ( THREE_BUTTONS         ),
+    .BUTTONS               ( BUTTONS               ),
     .GAME_INPUTS_ACTIVE_LOW( GAME_INPUTS_ACTIVE_LOW),
     .COLORW                ( COLORW                ),
     .VIDEO_WIDTH           ( VIDEO_WIDTH           ),

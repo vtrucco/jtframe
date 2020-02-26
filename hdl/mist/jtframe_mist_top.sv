@@ -200,14 +200,14 @@ assign sim_hb = ~LHBL_dly;
 `define SIGNED_SND 1'b1
 `endif
 
-`ifndef THREE_BUTTONS
-`define THREE_BUTTONS 1'b1
+`ifndef BUTTONS
+`define BUTTONS 2
 `endif
 
 jtframe_mist #( 
     .CONF_STR     ( CONF_STR       ),
     .SIGNED_SND   ( `SIGNED_SND    ),
-    .THREE_BUTTONS( `THREE_BUTTONS ),
+    .BUTTONS      ( `BUTTONS       ),
     .COLORW       ( COLORW         )
     `ifdef VIDEO_WIDTH
     ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )

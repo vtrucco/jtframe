@@ -17,7 +17,8 @@
     Date: 25-9-2019 */
 
 module jtframe_board #(parameter
-    THREE_BUTTONS           = 0,
+    BUTTONS                 = 2, // number of buttons used by the game
+    // coin and start buttons will be mapped.
     GAME_INPUTS_ACTIVE_LOW  = 1'b1,
     COLORW                  = 4,
     VIDEO_WIDTH             = 384,
@@ -225,10 +226,10 @@ always @(posedge clk_sys) begin
     joy2_sync <= board_joystick2;
 end
 
-localparam START1_BIT = 6+THREE_BUTTONS;
-localparam START2_BIT = 7+THREE_BUTTONS;
-localparam COIN_BIT   = 8+THREE_BUTTONS;
-localparam PAUSE_BIT  = 9+THREE_BUTTONS;
+localparam START1_BIT = 6+(BUTTONS-2);
+localparam START2_BIT = 7+(BUTTONS-2);
+localparam COIN_BIT   = 8+(BUTTONS-2);
+localparam PAUSE_BIT  = 9+(BUTTONS-2);
 
 reg last_pause, last_joypause, last_reset;
 reg [3:0] last_gfx;

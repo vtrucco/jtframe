@@ -274,14 +274,14 @@ assign AUDIO_S = 1'b1; // Assume signed by default
 assign AUDIO_S = `SIGNED_SND;
 `endif
 
-`ifndef THREE_BUTTONS
-`define THREE_BUTTONS 1'b1
+`ifndef BUTTONS
+`define BUTTONS 2
 `endif
 
 
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
-    .THREE_BUTTONS ( `THREE_BUTTONS ),
+    .BUTTONS       ( `BUTTONS       ),
     .COLORW        ( COLORW         )
     `ifdef VIDEO_WIDTH
     ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )

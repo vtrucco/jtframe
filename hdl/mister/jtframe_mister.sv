@@ -1,5 +1,5 @@
 module jtframe_mister #(parameter
-    THREE_BUTTONS           =1'b0,
+    BUTTONS                 = 2,
     GAME_INPUTS_ACTIVE_LOW  =1'b1,
     CONF_STR                = "",
     COLORW                  = 4,
@@ -129,8 +129,8 @@ joy_db15 joy_db15
 );
 
 wire [15:0]   joystick_USB_1,  joystick_USB_2;
-wire [15:0]   joystick1 = |status[31:30] ? {joydb15_1[11:10],joydb15_1[9],joydb15_1[7],joydb15_1[8],joydb15_1[5+THREE_BUTTONS:0]} : joystick_USB_1;
-wire [15:0]   joystick2 =  status[31]    ? {joydb15_2[11:10],joydb15_2[9],joydb15_2[8],joydb15_2[7],joydb15_2[5+THREE_BUTTONS:0]} : status[30] ? joystick_USB_1 : joystick_USB_2;
+wire [15:0]   joystick1 = |status[31:30] ? {joydb15_1[11:10],joydb15_1[9],joydb15_1[7],joydb15_1[8],joydb15_1[3+BUTTONS:0]} : joystick_USB_1;
+wire [15:0]   joystick2 =  status[31]    ? {joydb15_2[11:10],joydb15_2[9],joydb15_2[8],joydb15_2[7],joydb15_2[3+BUTTONS:0]} : status[30] ? joystick_USB_1 : joystick_USB_2;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire [2:0]    hpsio_nc; // top 3 bits of ioctl_addr are ignored
 wire          force_scan2x, direct_video;
@@ -172,31 +172,31 @@ wire [21:0] gamma_bus;
 
 hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
 (
-    .clk_sys         ( clk_sys      ),
-    .HPS_BUS         ( HPS_BUS      ),
-    .conf_str        ( CONF_STR     ),
+    .clk_sys         ( clk_sys        ),
+    .HPS_BUS         ( HPS_BUS        ),
+    .conf_str        ( CONF_STR       ),
 
-    .buttons         ( buttons      ),
-    .status          ( status       ),
-    .status_menumask ( direct_video ),
-    .gamma_bus       ( gamma_bus    ),
-    .direct_video    ( direct_video ),
-    .forced_scandoubler(force_scan2x),
+    .buttons         ( buttons        ),
+    .status          ( status         ),
+    .status_menumask ( direct_video   ),
+    .gamma_bus       ( gamma_bus      ),
+    .direct_video    ( direct_video   ),
+    .forced_scandoubler(force_scan2x  ),
 
-    .ioctl_download  ( downloading  ),
-    .ioctl_wr        ( ioctl_wr     ),
-    .ioctl_addr      ( ioctl_addr   ),
-    .ioctl_dout      ( ioctl_data   ),
+    .ioctl_download  ( downloading    ),
+    .ioctl_wr        ( ioctl_wr       ),
+    .ioctl_addr      ( ioctl_addr     ),
+    .ioctl_dout      ( ioctl_data     ),
 
-    .joystick_0      ( joystick_USB_1    ),
-    .joystick_1      ( joystick_USB_2    ),
-    .ps2_kbd_clk_out ( ps2_kbd_clk  ),
-    .ps2_kbd_data_out( ps2_kbd_data )
+    .joystick_0      ( joystick_USB_1 ),
+    .joystick_1      ( joystick_USB_2 ),
+    .ps2_kbd_clk_out ( ps2_kbd_clk    ),
+    .ps2_kbd_data_out( ps2_kbd_data   )
     //.ps2_key       ( ps2_key       )
 );
 
 jtframe_board #(
-    .THREE_BUTTONS         (THREE_BUTTONS         ),
+    .THREE_BUTTONS         ( BUTTONS              ),
     .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW),
     .COLORW                ( COLORW               ),
     .VIDEO_WIDTH           ( VIDEO_WIDTH          ),
