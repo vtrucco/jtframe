@@ -196,7 +196,7 @@ hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
 );
 
 jtframe_board #(
-    .THREE_BUTTONS         ( BUTTONS              ),
+    .BUTTONS               ( BUTTONS              ),
     .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW),
     .COLORW                ( COLORW               ),
     .VIDEO_WIDTH           ( VIDEO_WIDTH          ),
