@@ -362,7 +362,6 @@ u_game(
     .prog_mask   ( prog_mask      ),
     .prog_we     ( prog_we        ),
     .prog_rd     ( prog_rd        ),
-
     // ROM load
     .downloading ( downloading    ),
     .dwnld_busy  ( dwnld_busy     ),

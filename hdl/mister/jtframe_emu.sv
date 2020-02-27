@@ -431,8 +431,8 @@ assign sim_pxl_cen = pxl_cen;
 
     .start_button ( game_start       ),
     .coin_input   ( game_coin        ),
-    .joystick1    ( game_joy1[6:0]   ),
-    .joystick2    ( game_joy2[6:0]   ),
+    .joystick1    ( game_joy1[7:0]   ),
+    .joystick2    ( game_joy2[7:0]   ),
 
     // Sound control
     .enable_fm    ( enable_fm        ),
