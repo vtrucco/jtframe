@@ -1,5 +1,25 @@
+/*  This file is part of JTFRAME.
+    JTFRAME program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    JTFRAME program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
+
+    Author: Jose Tejada Gomez. Twitter: @topapate
+    Version: 1.0
+    Date: 7-3-2019 */
+
+`timescale 1ns/1ps
+
 module jtframe_mister #(parameter
-    THREE_BUTTONS           =1'b0,
+    BUTTONS                 = 2,
     GAME_INPUTS_ACTIVE_LOW  =1'b1,
     CONF_STR                = "",
     COLORW                  = 4,
@@ -37,9 +57,9 @@ module jtframe_mister #(parameter
     input           SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
     // ROM load
-    output [21:0]   ioctl_addr,
+    output [22:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
-    output          ioctl_wr,
+    output          ioctl_rom_wr,
     input  [21:0]   prog_addr,
     input  [ 7:0]   prog_data,
     input  [ 1:0]   prog_mask,
@@ -55,6 +75,10 @@ module jtframe_mister #(parameter
     output          data_rdy,
     output          loop_rst,
     input           refresh_en,
+    // Write back to SDRAM
+    input  [ 1:0]   sdram_wrmask,
+    input           sdram_rnw,
+    input  [15:0]   data_write,
 //////////// board
     output          rst,      // synchronous reset
     output          rst_n,    // asynchronous reset
@@ -65,8 +89,10 @@ module jtframe_mister #(parameter
     // joystick
     output  [ 9:0]  game_joystick1,
     output  [ 9:0]  game_joystick2,
-    output  [ 1:0]  game_coin,
-    output  [ 1:0]  game_start,
+    output  [ 9:0]  game_joystick3,
+    output  [ 9:0]  game_joystick4,
+    output  [ 3:0]  game_coin,
+    output  [ 3:0]  game_start,
     output          game_service,
     // DIP and OSD settings
     output  [ 7:0]  hdmi_arx,
@@ -97,18 +123,40 @@ module jtframe_mister #(parameter
     output            hdmi_de,   // = ~(VBlank | HBlank)
     output    [ 1:0]  hdmi_sl,   // scanlines fx   
     // non standard:
-    output          dip_pause,
-    output          dip_flip,     // A change in dip_flip implies a reset
-    output  [ 1:0]  dip_fxlevel,
+    output            dip_pause,
+    output            dip_flip,     // A change in dip_flip implies a reset
+    output    [ 1:0]  dip_fxlevel,
+    output    [31:0]  dipsw,
+    //DB15 
+    output            JOY_CLK,
+    output            JOY_LOAD,
+    input             JOY_DATA,
+    output            USER_OSD,
     // Debug
-    output          LED,
-    output   [3:0]  gfx_en
+    output            LED,
+    output   [3:0]    gfx_en
 );
 
 assign LED  = downloading | dwnld_busy;
+assign USER_OSD = joydb15_1[10] & joydb15_1[6];
 
 // control
-wire [15:0]   joystick1, joystick2;
+reg [15:0] joydb15_1,joydb15_2;
+joy_db15 joy_db15
+(
+  .clk       ( clk_sys   ), //48MHz
+  .JOY_CLK   ( JOY_CLK   ),
+  .JOY_DATA  ( JOY_DATA  ),
+  .JOY_LOAD  ( JOY_LOAD  ),
+  .joystick1 ( joydb15_1 ),
+  .joystick2 ( joydb15_2 )    
+);
+
+wire [15:0]   joystick_USB_1, joystick_USB_2, joystick_USB_3, joystick_USB_4;
+wire [15:0]   joystick1 = |status[31:30] ? {BUTTONS<6 ? joydb15_1[9] : 1'b0,joydb15_1[11],joydb15_1[10],joydb15_1[3+BUTTONS:0]} : joystick_USB_1;
+wire [15:0]   joystick2 =  status[31]    ? {BUTTONS<6 ? joydb15_2[9] : 1'b0,joydb15_2[11],joydb15_2[10],joydb15_2[3+BUTTONS:0]} : status[30] ? joystick_USB_1 : joystick_USB_2;
+wire [15:0]   joystick3 =  status[31]    ? joystick_USB_1 : status[30] ? joystick_USB_2 : joystick_USB_3;
+wire [15:0]   joystick4 =  status[31]    ? joystick_USB_2 : status[30] ? joystick_USB_3 : joystick_USB_4;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire [2:0]    hpsio_nc; // top 3 bits of ioctl_addr are ignored
 wire          force_scan2x, direct_video;
@@ -148,34 +196,56 @@ end
 
 wire [21:0] gamma_bus;
 
+wire [ 7:0] ioctl_index;
+wire        ioctl_wr;
+
+`ifndef JTFRAME_MRA_DIP
+// DIP switches through regular OSD options
+assign ioctl_rom_wr = ioctl_wr;
+assign dipsw        = status;
+`else
+// Dip switches through MRA file
+// Support for 32 bits only for now.
+reg  [ 7:0] dsw[4];
+assign dipsw        = {dsw[3],dsw[2],dsw[1],dsw[0]};
+assign ioctl_rom_wr = (ioctl_wr && ioctl_index==8'd0);
+
+always @(posedge clk_sys) begin
+    if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[21:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
+end
+`endif
+
 hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
 (
-    .clk_sys         ( clk_sys      ),
-    .HPS_BUS         ( HPS_BUS      ),
-    .conf_str        ( CONF_STR     ),
+    .clk_sys         ( clk_sys        ),
+    .HPS_BUS         ( HPS_BUS        ),
+    .conf_str        ( CONF_STR       ),
 
-    .buttons         ( buttons      ),
-    .status          ( status       ),
-    .status_menumask ( direct_video ),
-    .gamma_bus       ( gamma_bus    ),
-    .direct_video    ( direct_video ),
-    .forced_scandoubler(force_scan2x),
+    .buttons         ( buttons        ),
+    .status          ( status         ),
+    .status_menumask ( direct_video   ),
+    .gamma_bus       ( gamma_bus      ),
+    .direct_video    ( direct_video   ),
+    .forced_scandoubler(force_scan2x  ),
 
-    .ioctl_download  ( downloading  ),
-    .ioctl_wr        ( ioctl_wr     ),
-    .ioctl_addr      ( {hpsio_nc, ioctl_addr } ),
-    .ioctl_dout      ( ioctl_data   ),
+    .ioctl_download  ( downloading    ),
+    .ioctl_wr        ( ioctl_wr       ),
+    .ioctl_addr      ( ioctl_addr     ),
+    .ioctl_dout      ( ioctl_data     ),
+    .ioctl_index     ( ioctl_index    ),
 
-    .joystick_0      ( joystick1    ),
-    .joystick_1      ( joystick2    ),
-    .ps2_kbd_clk_out ( ps2_kbd_clk  ),
-    .ps2_kbd_data_out( ps2_kbd_data )
+    .joy_raw         ( joydb15_1[5:0] ),   
+    .joystick_0      ( joystick_USB_1 ),
+    .joystick_1      ( joystick_USB_2 ),
+    .joystick_2      ( joystick_USB_3 ),
+    .joystick_3      ( joystick_USB_4 ),
+    .ps2_kbd_clk_out ( ps2_kbd_clk    ),
+    .ps2_kbd_data_out( ps2_kbd_data   )
     //.ps2_key       ( ps2_key       )
 );
 
-
 jtframe_board #(
-    .THREE_BUTTONS         (THREE_BUTTONS         ),
+    .BUTTONS               ( BUTTONS              ),
     .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW),
     .COLORW                ( COLORW               ),
     .VIDEO_WIDTH           ( VIDEO_WIDTH          ),
@@ -196,8 +266,12 @@ jtframe_board #(
     .ps2_kbd_data   ( ps2_kbd_data    ),
     .board_joystick1( joystick1       ),
     .board_joystick2( joystick2       ),
+    .board_joystick3( joystick3       ),
+    .board_joystick4( joystick4       ),    
     .game_joystick1 ( game_joystick1  ),
     .game_joystick2 ( game_joystick2  ),
+    .game_joystick3 ( game_joystick3  ),
+    .game_joystick4 ( game_joystick4  ),
     .game_coin      ( game_coin       ),
     .game_start     ( game_start      ),
     .game_service   ( game_service    ),
@@ -258,6 +332,10 @@ jtframe_board #(
     .prog_mask      ( prog_mask       ),
     .prog_we        ( prog_we         ),
     .prog_rd        ( prog_rd         ),
+    // write back support
+    .sdram_wrmask   ( sdram_wrmask    ),
+    .sdram_rnw      ( sdram_rnw       ),
+    .data_write     ( data_write      ),
     // Base video
     .osd_rotate     ( rotate          ),
     .game_r         ( game_r          ),

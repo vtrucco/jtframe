@@ -98,13 +98,15 @@ module emu
     // 1 - D-/TX
     // 2..6 - USR2..USR6
     // Set USER_OUT to 1 to read from USER_IN.
+    output        USER_OSD,
+    output        USER_MODE,
     input   [6:0] USER_IN,
     output  [6:0] USER_OUT
     `ifdef SIMULATION
     ,output         sim_pxl_cen,
     output          sim_pxl_clk,
-    output          sim_vs,
-    output          sim_hs
+    output          sim_vb,
+    output          sim_hb
     `endif
 );
 
@@ -135,13 +137,25 @@ localparam CONF_STR = {
     `ifdef HAS_TESTMODE
     "O6,Test mode,OFF,ON;",
     `endif
+     "OUV,Serial SNAC DB15,Off,1 Player,2 Players;",    
     `ifdef JT12
     "O7,PSG,ON,OFF;",
     "O8,FM ,ON,OFF;",
     "OAB,FX volume, high, very high, very low, low;",
+    `else
+        `ifdef JTFRAME_ADPCM
+        "O7,ADPCM,ON,OFF;",
+        `endif
+        `ifdef JT51
+        "O8,FM ,ON,OFF;",
+        `endif
     `endif
     `SEPARATOR
+    `ifdef JTFRAME_MRA_DIP
+    "DIP;",
+    `else
     `CORE_OSD
+    `endif
     `SEPARATOR
     "R0,Reset;",
     `CORE_KEYMAP
@@ -157,7 +171,9 @@ assign VGA_F1=1'b0;
 wire   field;
 assign VGA_F1=field;
 `endif
-assign USER_OUT  = 7'd1;
+
+wire JOY_CLK, JOY_LOAD;
+wire JOY_DATA = USER_IN[5];
 
 ////////////////////   CLOCKS   ///////////////////
 
@@ -193,7 +209,8 @@ pll pll(
     .rst        ( pll_rst    ),
     .locked     ( pll_locked ),
     .outclk_0   ( clk_sys    ),
-    .outclk_1   ( SDRAM_CLK  )
+    .outclk_1   ( SDRAM_CLK  ),
+    .outclk_2   ( clk6       )
 );
 
 ///////////////////////////////////////////////////
@@ -201,25 +218,28 @@ pll pll(
 wire [31:0] status;
 wire [ 1:0] buttons;
 
-wire [7:0] dipsw_a, dipsw_b;
-wire [1:0] dip_fxlevel;
-wire       enable_fm, enable_psg;
-wire       dip_pause, dip_flip, dip_test;
+wire [ 7:0] dipsw_a, dipsw_b;
+wire [ 1:0] dip_fxlevel;
+wire        enable_fm, enable_psg;
+wire        dip_pause, dip_flip, dip_test;
+wire [31:0] dipsw;
 
-wire        ioctl_wr;
-wire [21:0] ioctl_addr;
+wire        ioctl_rom_wr;
+wire [22:0] ioctl_addr;
 wire [ 7:0] ioctl_data;
 
-wire [ 9:0] game_joy1, game_joy2;
-wire [ 1:0] game_coin, game_start;
+wire [ 9:0] game_joy1, game_joy2, game_joy3, game_joy4;
+wire [ 2:0] game_coin, game_start;
 wire [ 3:0] gfx_en;
 
 wire        downloading, game_rst, rst, rst_n, dwnld_busy;
 wire        rst_req   = RESET | status[0] | buttons[1];
 
-
 assign LED_DISK  = 2'b0;
 assign LED_POWER = 2'b0;
+
+assign USER_OUT  = |status[31:30] ? {5'b11111,JOY_CLK,JOY_LOAD} : '1;
+assign USER_MODE = |status[31:30];
 
 // SDRAM
 wire         loop_rst;
@@ -229,6 +249,16 @@ wire [21:0]  sdram_addr;
 wire         data_rdy;
 wire         sdram_ack;
 wire         refresh_en;
+
+wire [ 1:0]   sdram_wrmask;
+wire          sdram_rnw;
+wire [15:0]   data_write;
+
+`ifndef JTFRAME_WRITEBACK
+assign sdram_wrmask = 2'b11;
+assign sdram_rnw    = 1'b1;
+assign data_write   = 16'h00;
+`endif
 
 wire         prog_we, prog_rd;
 wire [21:0]  prog_addr;
@@ -250,14 +280,14 @@ assign AUDIO_S = 1'b1; // Assume signed by default
 assign AUDIO_S = `SIGNED_SND;
 `endif
 
-`ifndef THREE_BUTTONS
-`define THREE_BUTTONS 1'b1
+`ifndef BUTTONS
+`define BUTTONS 2
 `endif
 
 
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
-    .THREE_BUTTONS ( `THREE_BUTTONS ),
+    .BUTTONS       ( `BUTTONS       ),
     .COLORW        ( COLORW         )
     `ifdef VIDEO_WIDTH
     ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
@@ -300,7 +330,7 @@ u_frame(
     // ROM load
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_data     ( ioctl_data     ),
-    .ioctl_wr       ( ioctl_wr       ),
+    .ioctl_rom_wr   ( ioctl_rom_wr   ),
     .prog_addr      ( prog_addr      ),
     .prog_data      ( prog_data      ),
     .prog_mask      ( prog_mask      ),
@@ -316,6 +346,10 @@ u_frame(
     .data_read      ( data_read      ),
     .data_rdy       ( data_rdy       ),
     .refresh_en     ( refresh_en     ),
+    // write support
+    .sdram_wrmask   ( sdram_wrmask   ),
+    .sdram_rnw      ( sdram_rnw      ),
+    .data_write     ( data_write     ),
 //////////// board
     .rst            ( rst            ),
     .rst_n          ( rst_n          ), // unused
@@ -326,6 +360,8 @@ u_frame(
     // joystick
     .game_joystick1 ( game_joy1      ),
     .game_joystick2 ( game_joy2      ),
+    .game_joystick3 ( game_joy3      ),
+    .game_joystick4 ( game_joy4      ),
     .game_coin      ( game_coin      ),
     .game_start     ( game_start     ),
     .game_service   (                ), // unused
@@ -337,6 +373,7 @@ u_frame(
     .dip_pause      ( dip_pause      ),
     .dip_flip       ( dip_flip       ),
     .dip_fxlevel    ( dip_fxlevel    ),
+    .dipsw          ( dipsw          ),
     // screen
     .rotate         (                ),
     // HDMI
@@ -360,19 +397,23 @@ u_frame(
     .scan2x_clk     ( VGA_CLK        ),
     .scan2x_cen     ( VGA_CE         ),
     .scan2x_de      ( VGA_DE         ),
+     //DB15
+    .JOY_CLK        ( JOY_CLK        ),
+    .JOY_LOAD       ( JOY_LOAD       ),
+    .JOY_DATA       ( JOY_DATA       ),
+    .USER_OSD       ( USER_OSD       ), 
     // Debug
     .gfx_en         ( gfx_en         )
 );
 
 `ifdef SIMULATION
-assign sim_hs = hs;
-assign sim_vs = vs;
+assign sim_hb = ~LHBL_dly;
+assign sim_vb = ~LVBL_dly;
 assign sim_pxl_clk = clk_sys;
 assign sim_pxl_cen = pxl_cen;
 `endif
 
 ///////////////////////////////////////////////////////////////////
-
 
 `ifdef SIMULATION
 assign sim_pxl_clk = clk_sys;
@@ -383,6 +424,9 @@ assign sim_pxl_cen = pxl_cen;
 (
     .rst          ( game_rst         ),
     .clk          ( clk_sys          ),
+    `ifdef JTFRAME_CLK6
+    .clk6         ( clk6             ),
+    `endif
     .pxl2_cen     ( pxl2_cen         ),
     .pxl_cen      ( pxl_cen          ),
 
@@ -399,16 +443,20 @@ assign sim_pxl_cen = pxl_cen;
 
     .start_button ( game_start       ),
     .coin_input   ( game_coin        ),
-    .joystick1    ( game_joy1[6:0]   ),
-    .joystick2    ( game_joy2[6:0]   ),
+    .joystick1    ( game_joy1[7:0]   ),
+    .joystick2    ( game_joy2[7:0]   ),
+    `ifdef JTFRAME_4PLAYERS
+    .joystick3    ( game_joy3[7:0]   ),
+    .joystick4    ( game_joy4[7:0]   ),
+    `endif
 
     // Sound control
     .enable_fm    ( enable_fm        ),
     .enable_psg   ( enable_psg       ),
     // PROM programming
-    .ioctl_addr   ( ioctl_addr[21:0] ),
+    .ioctl_addr   ( ioctl_addr       ),
     .ioctl_data   ( ioctl_data       ),
-    .ioctl_wr     ( ioctl_wr         ),
+    .ioctl_wr     ( ioctl_rom_wr     ),
     .prog_addr    ( prog_addr        ),
     .prog_data    ( prog_data        ),
     .prog_mask    ( prog_mask        ),
@@ -424,13 +472,18 @@ assign sim_pxl_cen = pxl_cen;
     .sdram_ack    ( sdram_ack        ),
     .data_rdy     ( data_rdy         ),
     .refresh_en   ( refresh_en       ),
+    `ifdef JTFRAME_WRITEBACK
+    .sdram_wrmask ( sdram_wrmask     ),
+    .sdram_rnw    ( sdram_rnw        ),
+    .data_write   ( data_write       ),
+    `endif
 
     // DIP switches
     .status       ( status           ),
     .dip_pause    ( dip_pause        ),
     .dip_flip     ( dip_flip         ),
     .dip_test     ( dip_test         ),
-    .dip_fxlevel  ( dip_fxlevel      ),  
+    .dip_fxlevel  ( dip_fxlevel      ),
 
     `ifdef STEREO_GAME
     .snd_left     ( AUDIO_L          ),
