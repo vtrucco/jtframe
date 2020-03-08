@@ -209,7 +209,8 @@ pll pll(
     .rst        ( pll_rst    ),
     .locked     ( pll_locked ),
     .outclk_0   ( clk_sys    ),
-    .outclk_1   ( SDRAM_CLK  )
+    .outclk_1   ( SDRAM_CLK  ),
+    .outclk_2   ( clk6       )
 );
 
 ///////////////////////////////////////////////////
@@ -423,6 +424,9 @@ assign sim_pxl_cen = pxl_cen;
 (
     .rst          ( game_rst         ),
     .clk          ( clk_sys          ),
+    `ifdef JTFRAME_CLK6
+    .clk6         ( clk6             ),
+    `endif
     .pxl2_cen     ( pxl2_cen         ),
     .pxl_cen      ( pxl_cen          ),
 
