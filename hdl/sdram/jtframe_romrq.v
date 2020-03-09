@@ -21,7 +21,7 @@
 module jtframe_romrq #(parameter AW=18, DW=8 )(
     input               rst,
     input               clk,
-    input               cen,
+    input               clr, // clears the cache
     input [21:0]        offset,
     input [AW-1:0]      addr,
     input               addr_ok,    // signals that value in addr is valid
@@ -56,7 +56,7 @@ always @(*) begin
     endcase
     hit0 = addr_req === cached_addr0;
     hit1 = addr_req === cached_addr1;
-    req = init || ( !(hit0 || hit1) && addr_ok && !we);
+    req = (init||clr) || ( !(hit0 || hit1) && addr_ok && !we);
 end
 
 // reg [1:0] ok_sr;
@@ -66,6 +66,7 @@ always @(posedge clk, posedge rst)
         init      <= 1'b1;
         deleterus <= 1'b0;  // signals which cached data is to be overwritten next time
     end else begin
+        init    <= clr;
         data_ok <= !init && addr_ok && ( hit0 || hit1 || (din_ok&&we));
         if( we && din_ok ) begin
             if( init ) begin
@@ -83,7 +84,7 @@ always @(posedge clk, posedge rst)
                 end
                 deleterus <= ~deleterus;
             end
-            init        <= 1'b0;
+            init <= 1'b0;
         end
     end
 

@@ -92,6 +92,7 @@ module jtframe_sdram_mux #(parameter
     input  [9:0]        slot_cs,
     input  [9:0]        slot_wr,    
     output [9:0]        slot_ok,
+    input  [9:0]        slot_clr,
 
     // Slot 1 accepts 16-bit writes
     input  [1:0]        slot1_wrmask,
@@ -131,7 +132,7 @@ wire [21:0] slot0_addr_req,
 jtframe_sdram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.TYPE(SLOT0_TYPE)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[0]            ),
     .addr      ( slot0_addr             ),
     .addr_ok   ( slot_cs[0]             ),
     .offset    ( slot0_offset           ),
@@ -150,7 +151,7 @@ jtframe_sdram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.TYPE(SLOT0_TYPE)) u_slot0(
 jtframe_sdram_rq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.TYPE(SLOT1_TYPE)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[1]            ),
     .addr      ( slot1_addr             ),
     .addr_ok   ( slot_cs[1]             ),
     .offset    ( slot1_offset           ),
@@ -169,7 +170,7 @@ jtframe_sdram_rq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.TYPE(SLOT1_TYPE)) u_slot1(
 jtframe_sdram_rq #(.AW(SLOT2_AW),.DW(SLOT2_DW),.TYPE(SLOT2_TYPE)) u_slot2(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[2]            ),
     .addr      ( slot2_addr             ),
     .addr_ok   ( slot_cs[2]             ),
     .offset    ( slot2_offset           ),
@@ -188,7 +189,7 @@ jtframe_sdram_rq #(.AW(SLOT2_AW),.DW(SLOT2_DW),.TYPE(SLOT2_TYPE)) u_slot2(
 jtframe_sdram_rq #(.AW(SLOT3_AW),.DW(SLOT3_DW),.TYPE(SLOT3_TYPE)) u_slot3(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[3]            ),
     .addr      ( slot3_addr             ),
     .addr_ok   ( slot_cs[3]             ),
     .offset    ( slot3_offset           ),
@@ -207,7 +208,7 @@ jtframe_sdram_rq #(.AW(SLOT3_AW),.DW(SLOT3_DW),.TYPE(SLOT3_TYPE)) u_slot3(
 jtframe_sdram_rq #(.AW(SLOT4_AW),.DW(SLOT4_DW),.TYPE(SLOT4_TYPE)) u_slot4(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[4]            ),
     .addr      ( slot4_addr             ),
     .addr_ok   ( slot_cs[4]             ),
     .offset    ( slot4_offset           ),
@@ -226,7 +227,7 @@ jtframe_sdram_rq #(.AW(SLOT4_AW),.DW(SLOT4_DW),.TYPE(SLOT4_TYPE)) u_slot4(
 jtframe_sdram_rq #(.AW(SLOT5_AW),.DW(SLOT5_DW),.TYPE(SLOT5_TYPE)) u_slot5(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[5]            ),
     .addr      ( slot5_addr             ),
     .addr_ok   ( slot_cs[5]             ),
     .offset    ( slot5_offset           ),
@@ -245,7 +246,7 @@ jtframe_sdram_rq #(.AW(SLOT5_AW),.DW(SLOT5_DW),.TYPE(SLOT5_TYPE)) u_slot5(
 jtframe_sdram_rq #(.AW(SLOT6_AW),.DW(SLOT6_DW),.TYPE(SLOT6_TYPE)) u_slot6(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[6]            ),
     .addr      ( slot6_addr             ),
     .addr_ok   ( slot_cs[6]             ),
     .offset    ( slot6_offset           ),
@@ -264,7 +265,7 @@ jtframe_sdram_rq #(.AW(SLOT6_AW),.DW(SLOT6_DW),.TYPE(SLOT6_TYPE)) u_slot6(
 jtframe_sdram_rq #(.AW(SLOT7_AW),.DW(SLOT7_DW),.TYPE(SLOT7_TYPE)) u_slot7(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[7]            ),
     .addr      ( slot7_addr             ),
     .addr_ok   ( slot_cs[7]             ),
     .offset    ( slot7_offset           ),
@@ -283,7 +284,7 @@ jtframe_sdram_rq #(.AW(SLOT7_AW),.DW(SLOT7_DW),.TYPE(SLOT7_TYPE)) u_slot7(
 jtframe_sdram_rq #(.AW(SLOT8_AW),.DW(SLOT8_DW),.TYPE(SLOT8_TYPE)) u_slot8(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[8]            ),
     .addr      ( slot8_addr             ),
     .addr_ok   ( slot_cs[8]             ),
     .offset    ( slot8_offset           ),
@@ -302,7 +303,7 @@ jtframe_sdram_rq #(.AW(SLOT8_AW),.DW(SLOT8_DW),.TYPE(SLOT8_TYPE)) u_slot8(
 jtframe_sdram_rq #(.AW(SLOT9_AW),.DW(SLOT9_DW),.TYPE(SLOT9_TYPE)) u_slot9(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( slot_clr[9]            ),
     .addr      ( slot9_addr             ),
     .addr_ok   ( slot_cs[9]             ),
     .offset    ( slot9_offset           ),

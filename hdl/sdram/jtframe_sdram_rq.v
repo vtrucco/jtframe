@@ -26,7 +26,7 @@
 module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0)(
     input               rst,
     input               clk,
-    input               cen,
+    input               clr,
     input [AW-1:0]      addr,
     input [  21:0]      offset,     // It is not supposed to change during game play
     input               addr_ok,    // signals that value in addr is valid
@@ -54,7 +54,6 @@ if( TYPE==2 ) begin : rw_type
     jtframe_ram_rq #(.AW(AW), .DW(DW) ) u_rw(
         .rst        ( rst           ),
         .clk        ( clk           ),
-        .cen        ( cen           ),
         .addr       ( addr          ),
         .offset     ( offset        ),     // It is not supposed to change during game play
         .addr_ok    ( addr_ok       ),    // signals that value in addr is valid
@@ -81,7 +80,7 @@ if( TYPE==0) begin : ro_type
     jtframe_romrq #(.AW(AW),.DW(DW) )u_ro(
         .rst        ( rst       ),
         .clk        ( clk       ),
-        .cen        ( cen       ),
+        .clr        ( clr       ),
         .offset     ( offset    ),
         .addr       ( addr      ),
         .addr_ok    ( addr_ok   ),    // signals that value in addr is valid
