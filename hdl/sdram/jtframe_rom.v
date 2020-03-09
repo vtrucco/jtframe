@@ -139,7 +139,7 @@ wire [21:0] offset0 = SLOT0_OFFSET,
 jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset0                ),
     .addr      ( slot0_addr             ),
     .addr_ok   ( slot0_cs               ),
@@ -155,7 +155,7 @@ jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
 jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset1                ),
     .addr      ( slot1_addr             ),
     .addr_ok   ( slot1_cs               ),
@@ -171,7 +171,7 @@ jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
 jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW)) u_slot2(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset2                ),
     .addr      ( slot2_addr             ),
     .addr_ok   ( slot2_cs               ),
@@ -187,7 +187,7 @@ jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW)) u_slot2(
 jtframe_romrq #(.AW(SLOT3_AW),.DW(SLOT3_DW)) u_slot3(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset3                ),
     .addr      ( slot3_addr             ),
     .addr_ok   ( slot3_cs               ),
@@ -203,7 +203,7 @@ jtframe_romrq #(.AW(SLOT3_AW),.DW(SLOT3_DW)) u_slot3(
 jtframe_romrq #(.AW(SLOT4_AW),.DW(SLOT4_DW)) u_slot4(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset4                ),
     .addr      ( slot4_addr             ),
     .addr_ok   ( slot4_cs               ),
@@ -219,7 +219,7 @@ jtframe_romrq #(.AW(SLOT4_AW),.DW(SLOT4_DW)) u_slot4(
 jtframe_romrq #(.AW(SLOT5_AW),.DW(SLOT5_DW)) u_slot5(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset5                ),
     .addr      ( slot5_addr             ),
     .addr_ok   ( slot5_cs               ),
@@ -235,7 +235,7 @@ jtframe_romrq #(.AW(SLOT5_AW),.DW(SLOT5_DW)) u_slot5(
 jtframe_romrq #(.AW(SLOT6_AW),.DW(SLOT6_DW)) u_slot6(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset6                ),
     .addr      ( slot6_addr             ),
     .addr_ok   ( slot6_cs               ),
@@ -251,7 +251,7 @@ jtframe_romrq #(.AW(SLOT6_AW),.DW(SLOT6_DW)) u_slot6(
 jtframe_romrq #(.AW(SLOT7_AW),.DW(SLOT7_DW)) u_slot7(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset7                ),
     .addr      ( slot7_addr             ),
     .addr_ok   ( slot7_cs               ),
@@ -268,7 +268,7 @@ jtframe_romrq #(.AW(SLOT7_AW),.DW(SLOT7_DW)) u_slot7(
 jtframe_romrq #(.AW(SLOT8_AW),.DW(SLOT8_DW)) u_slot8(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .cen       ( 1'b1                   ),
+    .clr       ( 1'b0                   ),
     .offset    ( offset8                ),
     .addr      ( slot8_addr             ),
     .addr_ok   ( slot8_cs               ),

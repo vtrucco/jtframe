@@ -26,7 +26,6 @@
 module jtframe_ram_rq #(parameter AW=18, DW=8 )(
     input               rst,
     input               clk,
-    input               cen,
     input [AW-1:0]      addr,
     input [  21:0]      offset,     // It is not supposed to change during game play
     input               addr_ok,    // signals that value in addr is valid
