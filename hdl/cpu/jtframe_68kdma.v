@@ -19,9 +19,12 @@
 module jtframe_68kdma #(parameter BW=1)(
     input          clk,
     input          rst,
+    input          cen,
     output     reg cpu_BRn,
     output     reg cpu_BGACKn,
     input          cpu_BGn,
+    input          cpu_ASn,
+    input          cpu_DTACKn,
     input [BW-1:0] dev_br      // high to signal a bus request from a device
 );
 
@@ -29,20 +32,21 @@ always @(posedge clk, posedge rst)
     if( rst ) begin
         cpu_BRn    <= 1'b1;
         cpu_BGACKn <= 1'b1;
-    end else begin
+    end else if(cen) begin
         casez( {cpu_BGACKn, cpu_BGn} )
             2'b11: // waiting for bus request
                 if( |dev_br ) begin
                     cpu_BRn <= 1'b0;                    
                 end
             2'b10: begin // bus granted
-                cpu_BGACKn <= 1'b0;
-                cpu_BRn    <= 1'b1;
+                if( cpu_ASn /*&& cpu_DTACKn*/ ) cpu_BGACKn <= 1'b0;
             end
-            2'b0?: // bus held by the device
+            2'b0?: begin // bus held by the device
+                cpu_BRn  <= 1'b1;
                 if( !(|dev_br) ) begin
                     cpu_BGACKn <= 1'b1; // frees the bus
                 end
+            end
         endcase
     end
 
