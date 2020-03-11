@@ -44,7 +44,7 @@ module `MISTTOP(
     output          SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
    // SPI interface to arm io controller
-    inout           SPI_DO,
+    output          SPI_DO,
     input           SPI_DI,
     input           SPI_SCK,
     input           SPI_SS2,
