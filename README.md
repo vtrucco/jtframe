@@ -70,6 +70,15 @@ This module may result in timing errors in MiSTer because sometimes the compiler
 
 SDRAM is treated in top level modules as a read-only memory (except for the download process). If the game core needs to write to the SDRAM the **JTFRAME_WRITEBACK** macro must be defined.
 
+Fast load in MiST
+=================
+
+Starting from the Dec. 2020 firmware update, MiST can now delegate the ROM load to the FPGA. This makes the process 4x faster. This option is enabled by default. However, it can be a problem because the ROM transfer will be composed of full SD card sectors so there will be some garbage sent at the end of the ROM. If the core is not compatible with this and it relies on exact sizing of the ROM it needs to define the macro **JTFRAME_MIST_DIRECT** and set it to zero:
+
+```
+set_global_assignment -name VERILOG_MACRO "JTFRAME_MIST_DIRECT=0"
+```
+
 DIP switches in MRA files
 =========================
 
