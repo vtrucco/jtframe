@@ -57,11 +57,13 @@ int parse_line( int *buf, ifstream& fin ) {
     int f = line.find_first_not_of(" \t");
     if( line[f] == '#' ) return 0;
 
-    int id, x, y;
-    int n = sscanf( line.c_str(), "%d,%d,%d\n", &id, &x, &y );
-    if( n!=3 ) throw "ERROR: not enough arguments ";
+    int id, x, y, pal;
+    int n = sscanf( line.c_str(), "%d, %d, %d, %d\n", &id, &x, &y, &pal );
+    if( n!=4 ) throw "ERROR: not enough arguments ";
     buf[0] = id;
     buf[1] = x;
-    buf[2] = y;
+    buf[2] = --y; // deleted one so when writting LUT on a text editor
+        // the line numbers used in the msg file can be entered directly
+    buf[3] = pal;
     return 1;
 }

@@ -28,7 +28,7 @@ module jtframe_credits #(
     parameter [11:0] PAL2   = { 4'h3, 4'h3, 4'hf },  // Blue
     parameter [11:0] PAL3   = { 4'hf, 4'hf, 4'hf },  // White
     parameter        BLKPOL = 1'b1,
-    parameter        SPEED  = 3
+    parameter        SPEED  = 0 // 3
 ) (
     input               rst,
     input               clk,
@@ -147,7 +147,6 @@ wire [ 7:0] lut_data;
 
 reg  [12:0] obj_addr;
 wire [15:0] obj_data;
-reg  [ 7:0] obj_pxl_data;
 
 wire [ 7:0] pal_addr;
 wire [11:0] pal_data;
@@ -198,13 +197,9 @@ jtframe_ram #(.dw(12), .aw(4+4),.synfile("avatar_pal.hex")) u_pal(
     .q      ( pal_data  )
 );
 
-wire [VPOSW-1:0] vsub = vrender - { lut_data, 3'b0 };
-wire [3:0] obj_pal = 4'd0;
-
-function [3:0] get_pxl;
-    input [15:0] p;
-    get_pxl = { p[12],p[8],p[4], p[0] };
-endfunction
+wire [VPOSW-1:0] vsub = vdump1 - { lut_data, 3'b0 };
+reg  [3:0] obj_pal;
+reg  [3:0] x,y,z,w;
 
 reg [4:0] st;
 reg       first;
@@ -241,29 +236,46 @@ always @(posedge clk) begin
             4: begin
                 lut_addr <= lut_addr + 12'd1;
                 obj_y    <= lut_data;
-                obj_addr <= { obj_id[6:0], vrender[3:0], 2'b0 }; // 7+4+2 = 13
-                if( !({lut_data,3'b0} <= vrender && {lut_data,3'b0}+16  >= vrender) ) st <= 0;
+                obj_addr <= { obj_id[6:0], vsub[3:0], 2'b0 }; // 7+4+2 = 13
+                if( !({lut_data,3'b0} <= vdump1 && {lut_data,3'b0}+16  >= vdump1) ) st <= 0;
                 if( obj_id==8'hff ) begin // end of LUT
                     lut_addr <= 12'd0;
                     st <= 0;
                 end
             end
+            5: obj_pal <= lut_data;
             6: begin
-                buf_addr0    <= { obj_x-8'd1, 3'b111 };
-                obj_pxl_data <= obj_data;
+                buf_addr0     <= { obj_x-8'd1, 3'b111 };
+                {z,y,x,w}     <= obj_data;
+                obj_addr[1:0] <= 2'b01;
             end
-            7,8,9,10,    13,14,15,16,
-            19,20,21,22, 25,26,27,28: begin
+            7,8,9,10,    12,13,14,15,
+            17,18,19,20, 22,23,24,25: begin
                 buf_addr0    <= buf_addr0 + 1;
-                buf_din      <= { obj_pal, get_pxl( obj_pxl_data) };
+                // xywz
+                // wxyz
+                // zyxw
+                // zywx
+                // zwyx
+                // zwxy
+                buf_din      <= { obj_pal, z[3],y[3],x[3],w[3] };
                 buf_we0      <= 1'b1;
                 obj_x        <= obj_x + 1;
-                obj_pxl_data <= obj_pxl_data >> 1;
+                x            <= x << 1;
+                y            <= y << 1;
+                z            <= z << 1;
+                w            <= w << 1;
             end
-            11: obj_addr[1:0] <= 2'b01;
-            17: obj_addr[1:0] <= 2'b10;
-            23: obj_addr[1:0] <= 2'b11;
-            29: begin
+            11: begin
+                {z,y,x,w}     <= obj_data;
+                obj_addr[1:0] <= 2'b10;
+            end
+            16: begin
+                {z,y,x,w}     <= obj_data;
+                obj_addr[1:0] <= 2'b11;
+            end 
+            21: {z,y,x,w}     <= obj_data;
+            26: begin
                 buf_we0<= 1'b0;
                 st     <= 0;
             end
@@ -273,12 +285,14 @@ end
 
 reg rd=1'b0;
 reg [ 2:0] st2=3'd0;
+reg        obj_ok;
 
 always @(posedge clk ) begin
     st2 <= st2+1;
     case( st2 )
         3: begin
-            obj_pxl <= pal_addr == 8'hff ? ~12'd0 : pal_data;
+            obj_pxl <= pal_data;
+            obj_ok  <= pal_addr[3:0] != 4'hf; // visible pixel
             buf_we1 <= 1'b1;
         end
         4: begin
@@ -306,8 +320,6 @@ localparam G0 = COLW;
 localparam B1 = COLW-1;
 localparam B0 = 0;
 
-wire obj_visible = obj_pxl != ~12'd0;
-
 always @(posedge clk) if(pxl_cen) begin
     old1 <= rgb_in;
     old2 <= old1;
@@ -315,7 +327,7 @@ always @(posedge clk) if(pxl_cen) begin
     if( !enable )
         rgb_out <= old2;
     else begin
-        if( (!pxl[0] && !obj_visible) || !visible 
+        if( (!pxl[0] && !obj_ok) || !visible 
             /*|| (blanks[1:0]^{2{~BLKPOL[0]}}!=2'b00)*/ ) begin
             rgb_out            <= dim;
         end else begin
