@@ -37,14 +37,14 @@ always @(posedge clk) if(pxl_cen) begin
         end
     end
     if( hcnt == 32 )  hb=1'b0;
-    if( framecnt == 2 ) $finish;
+    if( framecnt == 8 ) $finish;
 end
 
 wire [11:0] game_rgb = { 12'habc };
 wire [ 3:0] red, green, blue;
 wire        pause = 1'b1;
 
-jtframe_credits uut(
+jtframe_credits #(.PAGES(3), .SPEED(2)) uut(
     .clk         ( clk              ),
     .rst         ( rst              ),
     .pxl_cen     ( pxl_cen          ),

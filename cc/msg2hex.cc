@@ -67,11 +67,11 @@ void parse_line( int *buf, ifstream& fin ) {
                 }
             }
             brk = false;
-            cout << pal << '\n';
+            // cout << pal << '\n';
             continue;
         }
         if( i=='\\' ) {
-            cout << "BRK";
+            // cout << "BRK";
             brk=true;
             continue;
         }

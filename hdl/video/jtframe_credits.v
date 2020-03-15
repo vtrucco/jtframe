@@ -21,13 +21,14 @@
 // 8x8 tiles
 
 module jtframe_credits #(
-    parameter        MSGW   = 10,
+    parameter        PAGES  = 1,
                      COLW   = 4,       // bits per pixel colour component
     parameter [11:0] PAL0   = { 4'hf, 4'h0, 4'h0 },  // Red
     parameter [11:0] PAL1   = { 4'h0, 4'hf, 4'h0 },  // Green
-    parameter [11:0] PAL2   = { 4'h0, 4'h0, 4'hf },  // Blue
+    parameter [11:0] PAL2   = { 4'h3, 4'h3, 4'hf },  // Blue
     parameter [11:0] PAL3   = { 4'hf, 4'hf, 4'hf },  // White
-    parameter        BLKPOL = 1'b1
+    parameter        BLKPOL = 1'b1,
+    parameter        SPEED  = 3
 ) (
     input               rst,
     input               clk,
@@ -45,13 +46,21 @@ module jtframe_credits #(
     output reg [COLW*3-1:0] rgb_out
 );
 
+localparam MSGW  = PAGES == 1 ? 10 : 
+                   (PAGES == 2 ? 11 :
+                   (PAGES > 2 && PAGES <=4 ? 12 :
+                   (PAGES > 5 && PAGES <=8 ? 13 : 14 ))); // Support for upto 16 pages
+localparam MAXVISIBLE = PAGES*32*8;
 localparam VPOSW = MSGW-2;
-reg [7:0] hpos;
-reg [VPOSW-1:0 ] vpos;
+
+reg  [7:0] hpos, vrender;
+reg  [VPOSW-1:0 ] vpos;
+wire [VPOSW-1:0 ] veff = vpos + vrender;
 (*keep*) wire [8:0]      scan_data;
 (*keep*) wire [7:0]      font_data;
 (*keep*) reg  [MSGW-1:0] scan_addr;
-(*keep*) wire [9:0]      font_addr = {scan_data[6:0], vpos[2:0] };
+(*keep*) wire [9:0]      font_addr = {scan_data[6:0], veff[2:0] };
+wire visible = veff < MAXVISIBLE;
 
 jtframe_ram #(.dw(9), .aw(MSGW),.synfile("msg.hex")) u_msg(
     .clk    ( clk       ),
@@ -81,25 +90,35 @@ localparam SCROLL_EN = MSGW > 10;
 (*keep*) wire vb = BLKPOL ? VB : ~VB;
 reg [7:0] pxl_data;
 
-reg last_hb;
+reg last_hb, last_vb;
+reg [3:0] scr_base;
 
 always @(posedge clk) begin
     if( rst ) begin
-        hpos <= 8'd0;
-        vpos <= {VPOSW{1'b0}};
+        hpos     <= 8'd0;
+        vpos     <= {VPOSW{1'b0}};
+        vrender  <= 8'd0;
+        scr_base <= 4'd0;
     end else if(pxl_cen) begin
         last_hb <= hb;
+        last_vb <= vb;
         if( hb && !last_hb ) begin
-            hpos <= 8'd0;
-            if ( vb && !SCROLL_EN )
-                vpos <= 0;
-            else
-                vpos <= vpos+1;
+            hpos    <= 8'd0;
+            vrender <= vrender + 8'd1;
         end else if( !hb && hpos!=8'hff ) begin
             hpos <= hpos + 8'd1;
         end
+        if ( vb ) begin
+            vrender  <= 0;
+            if( !last_vb && SCROLL_EN ) begin
+                if( scr_base == SPEED ) begin
+                    vpos <= vpos + 1;
+                    scr_base <= 4'd0;
+                end else scr_base <= scr_base + 4'd1;
+            end
+        end
         if( hpos[2:0]==3'd0 || hb || vb ) begin
-            scan_addr <= { vpos[VPOSW-1:3], hpos[7:3] };
+            scan_addr <= { veff[VPOSW-1:3], hpos[7:3] };
         end
         // Draw
         pxl <= { pal, pxl_data[7] };
@@ -114,6 +133,7 @@ end
 // Merge the new image with the old
 reg [COLW*3-1:0] old1, old2;
 reg [3:0]        blanks;
+wire [COLW*3-1:0] dim = { 1'b0, old2[R1:R0+1], 1'b0, old2[G1:G0+1], 1'b0, old2[B1:B0+1] };
 
 localparam R1 = COLW*3-1;
 localparam R0 = COLW*2;
@@ -129,8 +149,8 @@ always @(posedge clk) if(pxl_cen) begin
     if( !enable )
         rgb_out <= old2;
     else begin
-        if( !pxl[0] /*|| (blanks[1:0]^{2{~BLKPOL[0]}}!=2'b00)*/ ) begin
-            rgb_out            <= { 1'b0, old2[R1:R0+1], 1'b0, old2[G1:G0+1], 1'b0, old2[B1:B0+1] };
+        if( !pxl[0] || !visible /*|| (blanks[1:0]^{2{~BLKPOL[0]}}!=2'b00)*/ ) begin
+            rgb_out            <= dim;
         end else begin
             case( pxl[2:1] )
                 2'd0: rgb_out <= PAL0;
