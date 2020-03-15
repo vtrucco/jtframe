@@ -19,8 +19,12 @@ integer hcnt=0, vcnt=0, framecnt=0;
 reg hb=0,vb=0;
 wire hb_out, vb_out;
 
-always @(posedge clk)
-    pxl_cen <= ~pxl_cen;
+integer cen_cnt=0;
+
+always @(posedge clk) begin
+    cen_cnt <= cen_cnt==5 ? 0 : cen_cnt + 1;
+    pxl_cen <= cen_cnt==0;
+end
 
 always @(posedge clk) if(pxl_cen) begin
     hcnt <= hcnt==383 ? 0 : hcnt + 1;
@@ -37,12 +41,14 @@ always @(posedge clk) if(pxl_cen) begin
         end
     end
     if( hcnt == 32 )  hb=1'b0;
-    if( framecnt == 8 ) $finish;
+    if( framecnt == 3 ) $finish;
 end
 
 wire [11:0] game_rgb = { 12'habc };
 wire [ 3:0] red, green, blue;
 wire        pause = 1'b1;
+
+`define AVATARS
 
 jtframe_credits #(.PAGES(3), .SPEED(2)) uut(
     .clk         ( clk              ),

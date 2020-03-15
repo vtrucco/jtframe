@@ -113,6 +113,23 @@ M6801
 M6809
 I8051
 
+Credits Screen
+==============
+Credits can be displayed using the module *jtframe_credits*. This module needs the following files
+
+File           | Tool      | Function
+===============|===========|===========
+msg.hex        | msg2hex   | text shown
+avatar.hex     | avatar.py | avatar images. 4bpp indexed
+avatar_pal.hex | avatar.py | avatar paletters
+lut.hex        | lut2hex   | avatar tiles location in 8-pixel multiples
+
+avatar.py needs a .png image that complies with:
+
+1. x-y sizes are multiples of 8
+2. Maximum 16 colours in the image
+3. Alpha channel present in the PNG
+
 # JTCORE
 
 jtcore is the script used to compile the cores.
