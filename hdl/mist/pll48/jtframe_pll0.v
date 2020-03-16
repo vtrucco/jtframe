@@ -116,7 +116,7 @@ module jtframe_pll0 (
 		altpll_component.clk2_phase_shift = "10417",
 		altpll_component.clk3_divide_by = 9,
 		altpll_component.clk3_duty_cycle = 50,
-		altpll_component.clk3_multiply_by = 16,
+		altpll_component.clk3_multiply_by = 8,
 		altpll_component.clk3_phase_shift = "0",
 		altpll_component.clk4_divide_by = 9,
 		altpll_component.clk4_duty_cycle = 50,
@@ -205,7 +205,7 @@ endmodule
 // Retrieval info: PRIVATE: DUTY_CYCLE4 STRING "50.00000000"
 // Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "48.000000"
 // Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE2 STRING "48.000000"
-// Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE3 STRING "48.000000"
+// Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE3 STRING "24.000000"
 // Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE4 STRING "6.000000"
 // Retrieval info: PRIVATE: EXPLICIT_SWITCHOVER_COUNTER STRING "0"
 // Retrieval info: PRIVATE: EXT_FEEDBACK_RADIO STRING "0"
@@ -242,7 +242,7 @@ endmodule
 // Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
 // Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "48.00000000"
 // Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "48.00000000"
-// Retrieval info: PRIVATE: OUTPUT_FREQ3 STRING "48.00000000"
+// Retrieval info: PRIVATE: OUTPUT_FREQ3 STRING "24.00000000"
 // Retrieval info: PRIVATE: OUTPUT_FREQ4 STRING "6.00000000"
 // Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "1"
 // Retrieval info: PRIVATE: OUTPUT_FREQ_MODE2 STRING "1"
@@ -313,7 +313,7 @@ endmodule
 // Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "10417"
 // Retrieval info: CONSTANT: CLK3_DIVIDE_BY NUMERIC "9"
 // Retrieval info: CONSTANT: CLK3_DUTY_CYCLE NUMERIC "50"
-// Retrieval info: CONSTANT: CLK3_MULTIPLY_BY NUMERIC "16"
+// Retrieval info: CONSTANT: CLK3_MULTIPLY_BY NUMERIC "8"
 // Retrieval info: CONSTANT: CLK3_PHASE_SHIFT STRING "0"
 // Retrieval info: CONSTANT: CLK4_DIVIDE_BY NUMERIC "9"
 // Retrieval info: CONSTANT: CLK4_DUTY_CYCLE NUMERIC "50"
