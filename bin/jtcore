@@ -274,21 +274,34 @@ if [ $SKIP_COMPILE = FALSE ]; then
     mkdir -p $PRJPATH/mist
     mkdir -p $PRJPATH/mister
     # Update message file
-    if [ -d bin ]; then
+    if [ -e bin/jt${PRJ}_msg.py ]; then
         cd bin
         jt${PRJ}_msg.py || echo "WARNING: No message file"
-    else
-        mkdir bin
-    fi
-    # Update Avatars
-    if [ -e $PRJPATH/patrons/avatars ]; then
-        avatar.py $PRJ > /tmp/avatar_$PRJ.log || ( cat /tmp/avatar_$PRJ.log; exit 1 )
     fi
     cd $PRJPATH/$MIST || exit 1
     # if [ ! -e $PRJPATH/$MIST/rom_loadv.hex ]; then
     #     ln -s $JTROOT/modules/rom_loadv.hex
     # fi
     echo "Moved to folder " $(pwd)
+    ############################################3
+    # Credits via jtframe_credits:
+    if [[ -e $PRJPATH/patrons/msg && ! -e msg ]]; then
+        ln -sr $PRJPATH/patrons/msg
+    fi
+    if [ -e msg ]; then
+        $JTFRAME/bin/msg2hex msg
+    fi
+    # Update Avatars
+    if [ -e lut ]; then
+        $JTFRAME/bin/lut2hex lut
+        if [ -e $PRJPATH/patrons/avatars ]; then
+            avatar.py $PRJ > /tmp/avatar_$PRJ.log || ( cat /tmp/avatar_$PRJ.log; exit 1 )
+        fi
+    fi
+    if [ ! -e font0.hex ]; then
+        ln -s $JTFRAME/bin/font0.hex
+    fi
+    ############################################3
     # Recompile
     rm -rf db incremental_db output_files
     mkdir -p $JTROOT/log/$MIST

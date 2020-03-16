@@ -28,7 +28,7 @@ module jtframe_credits #(
     parameter [11:0] PAL2   = { 4'h3, 4'h3, 4'hf },  // Blue
     parameter [11:0] PAL3   = { 4'hf, 4'hf, 4'hf },  // White
     parameter        BLKPOL = 1'b1,
-    parameter        SPEED  = 0 // 3
+    parameter        SPEED  = 3
 ) (
     input               rst,
     input               clk,
@@ -237,7 +237,7 @@ always @(posedge clk) begin
                 lut_addr <= lut_addr + 12'd1;
                 obj_y    <= lut_data;
                 obj_addr <= { obj_id[6:0], vsub[3:0], 2'b0 }; // 7+4+2 = 13
-                if( !({lut_data,3'b0} <= vdump1 && {lut_data,3'b0}+16  >= vdump1) ) st <= 0;
+                if( !({lut_data,3'b0} <= vdump1 && {lut_data,3'b0}+16 > vdump1) ) st <= 0;
                 if( obj_id==8'hff ) begin // end of LUT
                     lut_addr <= 12'd0;
                     st <= 0;
@@ -304,6 +304,7 @@ end
 
 `else
 wire [11:0] obj_pxl = ~12'h0;
+wire        obj_ok  = 1'b0;
 `endif
 
 /////////////////////////////////////////////////////////////////////////////
