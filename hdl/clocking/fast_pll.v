@@ -5,6 +5,7 @@ module jtframe_pll0(
     output   reg c1,      // 12
     output   reg c2,      // 96
     output       c3,     // 96 (shifted by -2.5ns)
+    output   reg c4,     // 6
     output   locked
 );
 
@@ -26,6 +27,19 @@ initial begin
     c1 = 1'b0;
     forever c1 = #(base_clk/2.0) ~c1; 
 end
+
+integer cnt6;
+
+initial begin
+    cnt6=0;
+    c4=0;
+end
+
+always @(posedge c1) begin
+    cnt6 = cnt6==5 ? 0 : cnt6+1;
+    if( cnt6==5 ) c4 <= ~c4;
+end
+
 
 `ifdef SDRAM_DELAY
 real sdram_delay = `SDRAM_DELAY;

@@ -310,16 +310,16 @@ wire        obj_ok  = 1'b0;
 /////////////////////////////////////////////////////////////////////////////
 // Colour Mixer
 // Merge the new image with the old
-reg [COLW*3-1:0] old1, old2;
-reg [3:0]        blanks;
-wire [COLW*3-1:0] dim = { 1'b0, old2[R1:R0+1], 1'b0, old2[G1:G0+1], 1'b0, old2[B1:B0+1] };
-
 localparam R1 = COLW*3-1;
 localparam R0 = COLW*2;
 localparam G1 = COLW*2-1;
 localparam G0 = COLW;
 localparam B1 = COLW-1;
 localparam B0 = 0;
+
+reg [COLW*3-1:0] old1, old2;
+reg [3:0]        blanks;
+wire [COLW*3-1:0] dim = { 1'b0, old2[R1:R0+1], 1'b0, old2[G1:G0+1], 1'b0, old2[B1:B0+1] };
 
 always @(posedge clk) if(pxl_cen) begin
     old1 <= rgb_in;

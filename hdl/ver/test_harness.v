@@ -221,15 +221,20 @@ spitx #(.filename(GAME_ROMNAME), .TX_LEN(TX_LEN) )
 );
 
 data_io datain (
-    .sck        (SPI_SCK      ),
-    .ss         (SPI_SS2      ),
-    .sdi        (SPI_DI       ),
-    .downloading_sdram(downloading  ),
-    .index      (             ),
-    .clk_sdram  (SDRAM_CLK    ),
-    .ioctl_addr ( ioctl_addr  ),
-    .ioctl_data ( ioctl_data  ),
-    .ioctl_wr   ( ioctl_wr    )
+    .SPI_SCK        (SPI_SCK      ),
+    .SPI_SS2        (SPI_SS2      ),
+    .SPI_SS4        (1'b0         ),
+    .SPI_DI         (SPI_DI       ),
+    .SPI_DO         ( SPI_SS4     ),
+    .ioctl_download (downloading  ),
+    .ioctl_index    (             ),
+    .clk_sys        (SDRAM_CLK    ),
+    .ioctl_addr     ( ioctl_addr  ),
+    .ioctl_dout     ( ioctl_data  ),
+    .ioctl_wr       ( ioctl_wr    ),
+    // unused
+    .ioctl_fileext  (             ),
+    .ioctl_filesize (             )
 );
 // `else
 // assign downloading = 0;
