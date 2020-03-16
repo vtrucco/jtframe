@@ -2,9 +2,9 @@
 
 module jtframe_pll0(
     input    inclk0,
-    output   reg c1,      // 12
-    output   reg c2,      // 96
-    output       c3,     // 96 (shifted by -2.5ns)
+    output   reg c1,     // 48
+    output       c2,     // 48 (shifted by -2.5ns)
+    output   reg c3,     // 24
     output   reg c4,     // 6
     output   locked
 );
@@ -25,8 +25,11 @@ real base_clk = 20.833;
 
 initial begin
     c1 = 1'b0;
+    c3 = 1'b0;
     forever c1 = #(base_clk/2.0) ~c1; 
 end
+
+always @(posedge c1) c3 <= ~c3;
 
 integer cnt6;
 
