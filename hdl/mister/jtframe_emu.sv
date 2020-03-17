@@ -177,7 +177,7 @@ wire JOY_DATA = USER_IN[5];
 
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys;
+wire clk_sys, clk24, clk6;
 wire pxl2_cen, pxl_cen;
 wire pll_locked;
 reg  pll_rst = 1'b0;
@@ -210,7 +210,8 @@ pll pll(
     .locked     ( pll_locked ),
     .outclk_0   ( clk_sys    ),
     .outclk_1   ( SDRAM_CLK  ),
-    .outclk_2   ( clk6       )
+    .outclk_2   ( clk24      ),
+    .outclk_3   ( clk6       )
 );
 
 ///////////////////////////////////////////////////
@@ -424,6 +425,9 @@ assign sim_pxl_cen = pxl_cen;
 (
     .rst          ( game_rst         ),
     .clk          ( clk_sys          ),
+    `ifdef JTFRAME_CLK24
+    .clk24        ( clk24            ),
+    `endif
     `ifdef JTFRAME_CLK6
     .clk6         ( clk6             ),
     `endif
