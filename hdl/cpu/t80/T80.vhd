@@ -1242,8 +1242,7 @@ begin
 					if MCycle = "001" and TState = 2 and Wait_n = '1' then
 						M1_n <= '1';
 					end if;
-					if BusReq_s = '1' and BusAck = '1' then
-					else
+					if not ( BusReq_s = '1' and BusAck = '1' ) then
 						BusAck <= '0';
 						if TState = 2 and Wait_n = '0' then
 						elsif T_Res = '1' then
