@@ -137,11 +137,12 @@ module jtframe_mister #(parameter
     output   [3:0]    gfx_en
 );
 
+wire [15:0] joydb15_1,joydb15_2;
+
 assign LED  = downloading | dwnld_busy;
 assign USER_OSD = joydb15_1[10] & joydb15_1[6];
 
 // control
-reg [15:0] joydb15_1,joydb15_2;
 joy_db15 joy_db15
 (
   .clk       ( clk_sys   ), //48MHz

@@ -9,10 +9,11 @@ module hps_io #(parameter STRLEN=0, PS2DIV=2000, WIDE=0, VDNUM=1, PS2WE=0,
     // parameter STRLEN and the actual length of conf_str have to match
     input [(8*STRLEN)-1:0] conf_str,
 
+    output     [ 5:0] joy_raw,
     output     [15:0] joystick_0,
     output     [15:0] joystick_1,
-    // output     [15:0] joystick_2,
-    // output     [15:0] joystick_3,
+    output     [15:0] joystick_2,
+    output     [15:0] joystick_3,
     // output     [15:0] joystick_4,
     // output     [15:0] joystick_5,
     // output     [15:0] joystick_analog_0,
