@@ -1,4 +1,15 @@
 `timescale 1ns/10ps
+
+`ifndef SDRAM_SHIFT
+// 5ns works with both 32 and 128 MB modules
+// valid values
+// 0 260 520 729 1041 1250 1475 1736 1996 2256 2500 2734 2994 3255 3515 3750 3993 
+// 4253 4513 4774 5000 5208 5520 5729 5989 6250 6510 6770 6979 7291 7500 7725 7986 
+// 8246 8506 8750 8984 9244 9505 9765 10000 10243 10329
+`define SDRAM_SHIFT "5000 ps"
+`endif
+
+
 module  pll_0002(
 
 	// interface 'refclk'
@@ -32,7 +43,7 @@ module  pll_0002(
 		.phase_shift0("0 ps"),
 		.duty_cycle0(50),
 		.output_clock_frequency1("48.000000 MHz"),
-		.phase_shift1("0 ps"),
+		.phase_shift1(`SDRAM_SHIFT),
 		.duty_cycle1(50),
 		.output_clock_frequency2("24.000000 MHz"),
 		.phase_shift2("0 ps"),
