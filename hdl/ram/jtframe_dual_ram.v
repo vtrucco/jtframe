@@ -28,7 +28,10 @@
 
 `timescale 1ns/1ps
 
-module jtframe_dual_ram #(parameter dw=8, aw=10, simfile="", simhexfile="", synfile="",cen_rd=0)(
+module jtframe_dual_ram #(parameter dw=8, aw=10, 
+    simfile="", simhexfile="", synfile="", dumpfile="dump.hex",
+    cen_rd=0
+)(
     input   clk0,
     input   clk1,
     // Port 0
@@ -41,6 +44,9 @@ module jtframe_dual_ram #(parameter dw=8, aw=10, simfile="", simhexfile="", synf
     input   [aw-1:0] addr1,
     input   we1,
     output reg [dw-1:0] q1
+    `ifdef SIMULATION
+    ,input dump
+    `endif
 );
 
 (* ramstyle = "no_rw_check" *) reg [dw-1:0] mem[0:(2**aw)-1];
@@ -87,5 +93,19 @@ always @(posedge clk1) begin
     q1 <= mem[addr1];
     if(we1) mem[addr1] <= data1;
 end
+
+// Content dump for simulation debugging
+`ifdef SIMULATION
+integer fdump=0, dumpcnt;
+
+always @(posedge dump) begin
+    $display("INFO: contents dumped to %s", dumpfile );
+    if( fdump==0 )begin
+        fdump=$fopen(dumpfile,"w");
+    end
+    for( dumpcnt=0; dumpcnt<(2**aw)-1; dumpcnt=dumpcnt+1 )
+        $fdisplay(fdump,"%X", mem[dumpcnt]);
+end
+`endif
 
 endmodule
