@@ -103,7 +103,7 @@ always @(posedge dump) begin
     if( fdump==0 )begin
         fdump=$fopen(dumpfile,"w");
     end
-    for( dumpcnt=0; dumpcnt<(2**aw)-1; dumpcnt=dumpcnt+1 )
+    for( dumpcnt=0; dumpcnt<2**aw; dumpcnt=dumpcnt+1 )
         $fdisplay(fdump,"%X", mem[dumpcnt]);
 end
 `endif
