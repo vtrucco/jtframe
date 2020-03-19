@@ -119,7 +119,7 @@ wire [22:0]   ioctl_addr;
 wire [ 7:0]   ioctl_data;
 wire          ioctl_wr;
 
-wire [ 1:0]   sdram_wrmask;
+wire [ 1:0]   sdram_wrmask, sdram_bank;
 wire          sdram_rnw;
 wire [15:0]   data_write;
 
@@ -136,7 +136,7 @@ wire sdram_req;
 
 wire [21:0]   prog_addr;
 wire [ 7:0]   prog_data;
-wire [ 1:0]   prog_mask;
+wire [ 1:0]   prog_mask, prog_bank;
 wire          prog_we, prog_rd;
 
 `ifndef COLORW
@@ -268,6 +268,7 @@ u_frame(
     .prog_mask      ( prog_mask      ),
     .prog_we        ( prog_we        ),
     .prog_rd        ( prog_rd        ),
+    .prog_bank      ( prog_bank      ),
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),
     // ROM access from game
@@ -275,6 +276,7 @@ u_frame(
     .sdram_addr     ( sdram_addr     ),
     .sdram_req      ( sdram_req      ),
     .sdram_ack      ( sdram_ack      ),
+    .sdram_bank     ( sdram_bank     ),
     .data_read      ( data_read      ),
     .data_rdy       ( data_rdy       ),
     .refresh_en     ( refresh_en     ),
@@ -377,6 +379,10 @@ u_game(
     .prog_mask   ( prog_mask      ),
     .prog_we     ( prog_we        ),
     .prog_rd     ( prog_rd        ),
+    `ifdef JTFRAME_SDRAM_BANKS
+    .prog_bank   ( prog_bank      ),
+    .sdram_bank  ( sdram_bank     ),
+    `endif
     // ROM load
     .downloading ( downloading    ),
     .dwnld_busy  ( dwnld_busy     ),
@@ -411,6 +417,11 @@ u_game(
     // Debug
     .gfx_en      ( gfx_en         )
 );
+
+`ifndef JTFRAME_SDRAM_BANKS
+assign sdram_bank = 2'b0;
+assign prog_bank  = 2'b0;
+`endif
 
 `ifdef SIMULATION
 integer fsnd;

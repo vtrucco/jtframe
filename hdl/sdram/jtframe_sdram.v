@@ -27,6 +27,7 @@ module jtframe_sdram(
     input               read_req,    // read strobe
     output reg  [31:0]  data_read,
     input       [21:0]  sdram_addr,
+    input       [ 1:0]  sdram_bank,
     output reg          data_rdy,    // output data is valid
     output reg          sdram_ack,
     input               refresh_en,    // enable refresh to happen automatically
@@ -41,6 +42,7 @@ module jtframe_sdram(
     input       [21:0]  prog_addr,
     input       [ 7:0]  prog_data,
     input       [ 1:0]  prog_mask,
+    input       [ 1:0]  prog_bank,
     // SDRAM interface
     // SDRAM_A[12:11] and SDRAM_DQML/H are controlled in a way
     // that can be joined together thru an OR operation at a
@@ -54,7 +56,7 @@ module jtframe_sdram(
     output              SDRAM_nCAS,     // SDRAM Column Address Strobe
     output              SDRAM_nRAS,     // SDRAM Row Address Strobe
     output              SDRAM_nCS,      // SDRAM Chip Select
-    output      [ 1:0]  SDRAM_BA,       // SDRAM Bank Address
+    output reg  [ 1:0]  SDRAM_BA,       // SDRAM Bank Address
     output              SDRAM_CKE       // SDRAM Clock Enable
 );
 
@@ -74,7 +76,6 @@ localparam REPACK = 1;
 localparam REPACK = 0;
 `endif
 
-assign SDRAM_BA   = 2'b0;
 assign SDRAM_CKE  = 1'b1;
 
 reg [15:0] dq_ff;
@@ -168,6 +169,7 @@ always @(posedge clk)
         write_cycle <= 1'b0;
         read_cycle  <= 1'b0;
         hold_bus    <= 1'b1;
+        SDRAM_BA    <= 2'b0;
     end else if( initialize ) begin
         if( |wait_cnt ) begin
             wait_cnt <= wait_cnt-14'd1;
@@ -251,9 +253,10 @@ always @(posedge clk)
                 cnt_state  <= 2'd3; // give one NOP cycle after changing the mode
             end else begin
                 SDRAM_CMD <= CMD_NOP;
-                if( writeon || readprog ) begin
+                if( writeon || readprog ) begin // ROM downloading
                     SDRAM_CMD <= CMD_ACTIVATE;
                     { SDRAM_A, col_addr } <= prog_addr;
+                    SDRAM_BA      <= prog_bank;
                     refresh_cycle <= 1'b0;
                     write_cycle   <=  writeon;
                     read_cycle    <= ~writeon;
@@ -261,10 +264,11 @@ always @(posedge clk)
                     refresh_ok    <= 1'b0;
                     sdram_ack     <= 1'b1;
                 end
-                else if( (read_req || refresh_ok) ) begin
+                else if( (read_req || refresh_ok) ) begin // regular use
                     SDRAM_CMD <=
                         !read_req ? CMD_AUTOREFRESH : CMD_ACTIVATE;
                     { SDRAM_A, col_addr } <= sdram_addr;
+                    SDRAM_BA      <= sdram_bank;
                     refresh_cycle <= !read_req;
                     read_cycle    <= read_req && sdram_rnw;
                     sdram_ack     <= read_req;

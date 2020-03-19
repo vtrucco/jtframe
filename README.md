@@ -70,6 +70,13 @@ This module may result in timing errors in MiSTer because sometimes the compiler
 
 SDRAM is treated in top level modules as a read-only memory (except for the download process). If the game core needs to write to the SDRAM the **JTFRAME_WRITEBACK** macro must be defined.
 
+By default only the first bank of the SDRAM is used, allowing for 8MB of data organized in 4 M x 16bits. In order to enable access to the other three banks the macro **JTFRAME_SDRAM_BANKS** is used. Once this macro is defined the game module is expected to provide the following signals
+
+[1:0] prog_bank     bank used during SDRAM programming
+[1:0] sdram_bank    bank used during regular SDRAM use
+
+These signals should be used in combination with the rest of prog_ and sdram_ signals in order to control the SDRAM.
+
 Fast load in MiST
 =================
 

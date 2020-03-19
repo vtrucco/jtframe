@@ -251,7 +251,7 @@ wire         data_rdy;
 wire         sdram_ack;
 wire         refresh_en;
 
-wire [ 1:0]   sdram_wrmask;
+wire [ 1:0]   sdram_wrmask, sdram_bank;
 wire          sdram_rnw;
 wire [15:0]   data_write;
 
@@ -264,7 +264,7 @@ assign data_write   = 16'h00;
 wire         prog_we, prog_rd;
 wire [21:0]  prog_addr;
 wire [ 7:0]  prog_data;
-wire [ 1:0]  prog_mask;
+wire [ 1:0]  prog_mask, prog_bank;
 
 `ifndef COLORW
 `define COLORW 4
@@ -466,6 +466,10 @@ assign sim_pxl_cen = pxl_cen;
     .prog_mask    ( prog_mask        ),
     .prog_we      ( prog_we          ),
     .prog_rd      ( prog_rd          ),
+    `ifdef JTFRAME_SDRAM_BANKS
+    .prog_bank    ( prog_bank        ),
+    .sdram_bank   ( sdram_bank       ),
+    `endif
     // ROM load
     .downloading  ( downloading      ),
     .dwnld_busy   ( dwnld_busy       ),
@@ -503,6 +507,11 @@ assign sim_pxl_cen = pxl_cen;
 
 `ifndef STEREO_GAME
     assign AUDIO_R = AUDIO_L;
+`endif
+
+`ifndef JTFRAME_SDRAM_BANKS
+assign sdram_bank = 2'b0;
+assign prog_bank  = 2'b0;
 `endif
 
 `ifdef SIMULATION
