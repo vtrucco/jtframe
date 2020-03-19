@@ -97,6 +97,8 @@ module jtframe_sdram_mux #(parameter
     // Slot 1 accepts 16-bit writes
     input  [1:0]        slot1_wrmask,
 
+    output [9:0]        slot_active,   // currently active slot
+
     // SDRAM controller interface
     input               downloading,
     input               loop_rst,
@@ -117,6 +119,8 @@ wire [ 9:0] req, req_rnw;
 reg  [ 9:0] data_sel, slot_we;
 wire [ 9:0] active = ~data_sel & req;
 reg         wait_cycle;
+
+assign      slot_active = data_sel;
 
 wire [21:0] slot0_addr_req,
             slot1_addr_req,
