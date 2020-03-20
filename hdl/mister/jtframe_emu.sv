@@ -337,11 +337,13 @@ u_frame(
     .prog_mask      ( prog_mask      ),
     .prog_we        ( prog_we        ),
     .prog_rd        ( prog_rd        ),
+    .prog_bank      ( prog_bank      ),
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),
     // ROM access from game
     .loop_rst       ( loop_rst       ),
     .sdram_addr     ( sdram_addr     ),
+    .sdram_bank     ( sdram_bank     ),
     .sdram_req      ( sdram_req      ),
     .sdram_ack      ( sdram_ack      ),
     .data_read      ( data_read      ),

@@ -63,6 +63,7 @@ module jtframe_mister #(parameter
     input  [21:0]   prog_addr,
     input  [ 7:0]   prog_data,
     input  [ 1:0]   prog_mask,
+    input  [ 1:0]   prog_bank,
     input           prog_we,
     input           prog_rd,
     output          downloading,
@@ -77,6 +78,7 @@ module jtframe_mister #(parameter
     input           refresh_en,
     // Write back to SDRAM
     input  [ 1:0]   sdram_wrmask,
+    input  [ 1:0]   sdram_bank,
     input           sdram_rnw,
     input  [15:0]   data_write,
 //////////// board
@@ -323,6 +325,7 @@ jtframe_board #(
     // SDRAM controller
     .loop_rst       ( loop_rst        ),
     .sdram_addr     ( sdram_addr      ),
+    .sdram_bank     ( sdram_bank      ),
     .sdram_req      ( sdram_req       ),
     .sdram_ack      ( sdram_ack       ),
     .data_read      ( data_read       ),
@@ -331,6 +334,7 @@ jtframe_board #(
     .prog_addr      ( prog_addr       ),
     .prog_data      ( prog_data       ),
     .prog_mask      ( prog_mask       ),
+    .prog_bank      ( prog_bank       ),
     .prog_we        ( prog_we         ),
     .prog_rd        ( prog_rd         ),
     // write back support
