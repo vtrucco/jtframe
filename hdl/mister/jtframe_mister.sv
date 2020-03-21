@@ -57,7 +57,7 @@ module jtframe_mister #(parameter
     input           SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
     // ROM load
-    output [22:0]   ioctl_addr,
+    output [24:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
     output          ioctl_rom_wr,
     input  [21:0]   prog_addr,
@@ -161,7 +161,6 @@ wire [15:0]   joystick2 =  status[31]    ? {BUTTONS<6 ? joydb15_2[9] : 1'b0,joyd
 wire [15:0]   joystick3 =  status[31]    ? joystick_USB_1 : status[30] ? joystick_USB_2 : joystick_USB_3;
 wire [15:0]   joystick4 =  status[31]    ? joystick_USB_2 : status[30] ? joystick_USB_3 : joystick_USB_4;
 wire          ps2_kbd_clk, ps2_kbd_data;
-wire [2:0]    hpsio_nc; // top 3 bits of ioctl_addr are ignored
 wire          force_scan2x, direct_video;
 
 wire [7:0]    pre_scan2x_r;
@@ -214,7 +213,7 @@ assign dipsw        = {dsw[3],dsw[2],dsw[1],dsw[0]};
 assign ioctl_rom_wr = (ioctl_wr && ioctl_index==8'd0);
 
 always @(posedge clk_sys) begin
-    if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[21:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
+    if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[24:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
 end
 `endif
 

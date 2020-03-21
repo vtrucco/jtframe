@@ -226,7 +226,7 @@ wire        dip_pause, dip_flip, dip_test;
 wire [31:0] dipsw;
 
 wire        ioctl_rom_wr;
-wire [22:0] ioctl_addr;
+wire [24:0] ioctl_addr;
 wire [ 7:0] ioctl_data;
 
 wire [ 9:0] game_joy1, game_joy2, game_joy3, game_joy4;
