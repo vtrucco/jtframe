@@ -77,7 +77,7 @@ module jtframe_mist_base #(parameter
     output          snd_pwm_left,
     output          snd_pwm_right,
     // ROM load from SPI
-    output [22:0]   ioctl_addr,
+    output [24:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
     output          ioctl_wr,
     output          downloading

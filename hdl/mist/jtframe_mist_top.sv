@@ -115,7 +115,7 @@ wire [21:0]   sdram_addr;
 wire [31:0]   data_read;
 wire          loop_rst;
 wire          downloading, dwnld_busy;
-wire [22:0]   ioctl_addr;
+wire [24:0]   ioctl_addr;
 wire [ 7:0]   ioctl_data;
 wire          ioctl_wr;
 
