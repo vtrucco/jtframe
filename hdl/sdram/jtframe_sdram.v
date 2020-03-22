@@ -104,7 +104,7 @@ reg write_cycle, read_cycle, hold_bus;
 // improvement
 // For a 32MB memory of mine, the difference between holding the bus and not holding it
 // means adding at least 6ns of usable shift range: from 3ns to 10ns
-assign SDRAM_DQ = write_cycle ? dq_out : ( hold_bus ? 16'h0 : 16'hzzzz);
+assign SDRAM_DQ = write_cycle ? dq_out : 16'hzzzz; //( hold_bus ? 16'h0 : 16'hzzzz);
 
 reg [8:0] col_addr;
 
@@ -156,7 +156,7 @@ always @(posedge clk)
         SDRAM_DQML <= 1'b0;
         SDRAM_A    <= 13'd0;
         init_cmd   <= CMD_NOP;
-        wait_cnt   <= 14'd5000; // wait for 100us
+        wait_cnt   <= 14'd10_000; // wait for 100us
         initialize <= 1'b1;
         init_state <= 3'd0;
         // Main loop
@@ -220,7 +220,7 @@ always @(posedge clk)
         if( cnt_state!=3'd0 || refresh_ok ||
             (!downloading && read_req  ) || /* when not downloading */
             ( downloading && (writeon || readprog ) ) /* when downloading */) begin
-            if( cnt_state==3'd4 || (refresh_cycle&&cnt_state==3'd3) )
+            if( (cnt_state==3'd5 && !refresh_cycle) || cnt_state==3'd6 )
                 cnt_state <= 3'd0; // Autorefresh needs only 60ns
             else
                 cnt_state <= cnt_state + 3'd1;
@@ -286,7 +286,7 @@ always @(posedge clk)
                 end
             end
         end
-        3'd1: begin // set read/write
+        3'd2: begin // set read/write
             sdram_ack     <= 1'b0;
             SDRAM_A[12:9] <= 4'b0010; // auto precharge;
             SDRAM_A[ 8:0] <= col_addr;
@@ -297,11 +297,11 @@ always @(posedge clk)
                 refresh_cycle ? CMD_NOP : CMD_READ;
             dq_rdy      <= 1'b0;
         end
-        3'd2: begin
+        3'd3: begin
             SDRAM_CMD <= CMD_NOP;
             if( read_cycle ) hold_bus <= 1'b0;
         end
-        3'd3: begin
+        3'd4: begin
             SDRAM_CMD <= CMD_NOP;
             if( read_cycle) begin
                 dq_ff <= SDRAM_DQ;
@@ -312,7 +312,7 @@ always @(posedge clk)
                 write_cycle <= 1'b0;
             end
         end
-        3'd4: begin
+        3'd5: begin
             if( read_cycle) begin
                 dq_ff0   <= dq_ff;
                 dq_ff    <= SDRAM_DQ;

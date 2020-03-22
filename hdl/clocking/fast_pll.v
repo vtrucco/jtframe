@@ -1,5 +1,58 @@
 `timescale 1ns/1ps
 
+// 96 MHz PLL
+module jtframe_pll96(
+    input    inclk0,
+    output   reg c0,     // 48
+    output   reg c1,     // 96
+    output       c2,     // 96 (shifted by -2.5ns)
+    output   reg c3,     // 24
+    output   reg c4,     // 6
+    output   locked
+);
+
+assign locked = 1'b1;
+
+real base_clk = 10.417; //  96 MHz -> 10.417ns
+reg  c3n;
+
+initial begin
+    c0  = 1'b0;
+    c1  = 1'b0;
+    c3n = 1'b0;
+    forever c1 = #(base_clk/2.0) ~c1; 
+end
+
+always @(posedge c1) begin
+    { c3n, c0 } <= { c3n, c0 } + 2'd1; // 48 and 24
+    c3 <= c3n;
+end
+
+integer cnt6;
+
+initial begin
+    cnt6=0;
+    c4=0;
+end
+
+always @(posedge c0) begin
+    cnt6 = cnt6==5 ? 0 : cnt6+1;
+    if( cnt6==5 ) c4 <= ~c4;
+end
+
+
+`ifdef SDRAM_DELAY
+real sdram_delay = `SDRAM_DELAY;
+initial $display("INFO: SDRAM_CLK delay set to %f ns",sdram_delay);
+assign #sdram_delay c2 = c1;
+`else
+initial $display("INFO: SDRAM_CLK delay set to 1 ns");
+assign #1 c2 = c1;
+`endif
+
+endmodule // jtgng_pll0
+
+// 48 MHz PLL
 module jtframe_pll0(
     input    inclk0,
     output   reg c1,     // 48
