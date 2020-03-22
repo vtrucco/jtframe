@@ -202,11 +202,11 @@ always @(posedge clk)
                 3'd3: begin
                     init_cmd  <= CMD_PRECHARGE;
                     SDRAM_A[10]<= 1'b1; // all banks
-                    wait_cnt   <= 14'd2;
+                    wait_cnt   <= 14'd4;
                 end
                 3'd4: begin
                     initialize <= 1'b0;
-                    cnt_state  <=  'd0;
+                    cnt_state  <= 0;
                 end
                 default: begin
                     SDRAM_CMD  <= init_cmd;
@@ -220,9 +220,9 @@ always @(posedge clk)
         if( cnt_state!=3'd0 || refresh_ok ||
             (!downloading && read_req  ) || /* when not downloading */
             ( downloading && (writeon || readprog ) ) /* when downloading */) begin
-            if( (cnt_state==3'd5 && !refresh_cycle) || cnt_state==3'd6 )
-                cnt_state <= 3'd0; // Autorefresh needs only 60ns
-            else
+            //if( (cnt_state==3'd5 && !refresh_cycle) || cnt_state==3'd6 )
+            //    cnt_state <= 3'd0; // Autorefresh needs only 60ns
+            //else
                 cnt_state <= cnt_state + 3'd1;
         end
         case( cnt_state )
@@ -286,8 +286,12 @@ always @(posedge clk)
                 end
             end
         end
+        3'd1: begin
+            sdram_ack <= 1'b0;
+            SDRAM_CMD <= CMD_NOP;
+        end
         3'd2: begin // set read/write
-            sdram_ack     <= 1'b0;
+            // sdram_ack     <= 1'b0;
             SDRAM_A[12:9] <= 4'b0010; // auto precharge;
             SDRAM_A[ 8:0] <= col_addr;
             {SDRAM_DQMH, SDRAM_DQML } <= write_cycle ? 
@@ -308,7 +312,6 @@ always @(posedge clk)
             end
             if( write_cycle ) begin
                 dq_rdy      <= 1'b1;
-                cnt_state   <= 3'd0;
                 write_cycle <= 1'b0;
             end
         end
@@ -318,9 +321,12 @@ always @(posedge clk)
                 dq_ff    <= SDRAM_DQ;
                 dq_rdy   <= 1'b1;   // data_ready marks that new data is ready
                 hold_bus <= 1'b1;
+                cnt_state<= 3'd0;
             end
+            if( write_cycle ) cnt_state <= 3'd0;
             SDRAM_CMD <= CMD_NOP;
         end
+        3'd6: if( refresh_cycle ) cnt_state <= 3'd0;
         endcase
     end
 endmodule

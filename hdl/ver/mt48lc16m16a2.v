@@ -487,6 +487,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 // Precharge to Activate Bank 0
                 if ($time - RP_chk0 < tRP) begin
                     $display ("%m : at time %t ERROR: tRP violation during Activate bank 0", $time);
+                    #100 $finish;
                 end
 
                 // Record variables

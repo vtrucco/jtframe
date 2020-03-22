@@ -170,7 +170,7 @@ wire clk_vga_in, clk_vga, pll_locked;
 `ifdef JTFRAME_CLK96
 jtframe_pll96 u_pll_game (
     .inclk0 ( CLOCK_27[0] ),
-    .c0     ( clk_sys     ), // 48 MHz
+    .c0     ( clk48       ), // 48 MHz
     .c1     ( clk_rom     ), // 96 MHz
     .c2     ( SDRAM_CLK   ), // 96 MHz shifted
     .c3     ( clk24       ),
@@ -186,8 +186,8 @@ jtframe_pll0 u_pll_game (
     .c4     ( clk6        ),
     .locked ( pll_locked  )
 );
-assign clk_sys   = clk_rom;
 `endif
+assign clk_sys   = clk_rom;
 
 jtframe_pll1 u_pll_vga (
     .inclk0 ( clk_sys    ),
@@ -353,9 +353,7 @@ u_game(
     .rst         ( game_rst       ),
     .clk         ( clk_sys        ),
     `ifdef JTFRAME_CLK96
-    .clk96       ( clk_rom        ),
-    `else
-    .clk96       ( clk_rom        ),
+    .clk48       ( clk48          ),
     `endif
     `ifdef JTFRAME_CLK24
     .clk24       ( clk24          ),

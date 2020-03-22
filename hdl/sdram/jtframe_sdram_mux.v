@@ -333,11 +333,14 @@ if( loop_rst || downloading ) begin
     refresh_en <=  1'b1;
 end else begin
     {ready, ready_cnt}  <= {ready_cnt, 1'b1};
-    if( sdram_ack ) sdram_req <= 1'b0;
+    if( sdram_ack ) begin
+        sdram_req <= 1'b0;
+        wait_cycle <= 1'b0;
+    end
+        
     refresh_en <= 1'b0;
     // accept a new request
     slot_we <= data_sel;
-    wait_cycle <= 1'b0;
     if( data_sel==10'd0 || (data_rdy&&!wait_cycle) ) begin
         sdram_req <= |active;
         wait_cycle<= |active;
