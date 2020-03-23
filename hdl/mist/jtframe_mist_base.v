@@ -27,7 +27,6 @@ module jtframe_mist_base #(parameter
     input           rst,
     input           clk_sys,
     input           clk_rom,
-    input           clk_vga,
     input           SDRAM_CLK,      // SDRAM Clock
     output          osd_shown,
 
@@ -48,6 +47,7 @@ module jtframe_mist_base #(parameter
     input           scan2x_hs,
     input           scan2x_vs,
     output          scan2x_enb, // scan doubler enable bar = scan doubler disable.
+    input           scan2x_clk,
     // Final video: VGA+OSD or base+OSD depending on configuration
     output  [5:0]   VIDEO_R,
     output  [5:0]   VIDEO_G,
@@ -229,8 +229,8 @@ wire [5:0] game_g6 = extend_color( game_g );
 wire [5:0] game_b6 = extend_color( game_b );
 
 
-osd #(0,0,3'b110) osd (
-   .clk_sys    ( scan2x_enb ? clk_sys : clk_vga ),
+osd #(0,0,6'b01_11_01) osd (
+   .clk_sys    ( scan2x_enb ? clk_sys : scan2x_clk ),
 
    // spi for OSD
    .SPI_DI     ( SPI_DI       ),

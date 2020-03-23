@@ -134,7 +134,7 @@ wire          ps2_kbd_clk, ps2_kbd_data;
 wire          osd_shown;
 
 wire [7:0]    scan2x_r, scan2x_g, scan2x_b;
-wire          scan2x_hs, scan2x_vs;
+wire          scan2x_hs, scan2x_vs, scan2x_clk;
 wire          scan2x_enb;
 
 ///////////////// LED is on while
@@ -151,7 +151,6 @@ jtframe_mist_base #(
 ) u_base(
     .rst            ( rst           ),
     .clk_sys        ( clk_sys       ),
-    .clk_vga        ( clk_vga       ),
     .clk_rom        ( clk_rom       ),
     .SDRAM_CLK      ( SDRAM_CLK     ),
     .osd_shown      ( osd_shown     ),
@@ -172,6 +171,7 @@ jtframe_mist_base #(
     .scan2x_hs      ( scan2x_hs     ),
     .scan2x_vs      ( scan2x_vs     ),
     .scan2x_enb     ( scan2x_enb    ),
+    .scan2x_clk     ( scan2x_clk    ),
     // MiST VGA pins (includes OSD)
     .VIDEO_R        ( VGA_R         ),
     .VIDEO_G        ( VGA_G         ),
@@ -297,6 +297,7 @@ jtframe_board #(
     .scan2x_hs      ( scan2x_hs       ),
     .scan2x_vs      ( scan2x_vs       ),
     .scan2x_enb     ( scan2x_enb      ),
+    .scan2x_clk     ( scan2x_clk      ),
     // Debug
     .gfx_en         ( gfx_en          ),
     // Unused ports (MiSTer)
@@ -311,7 +312,6 @@ jtframe_board #(
     .hdmi_vs        (                 ),
     .hdmi_de        (                 ),
     .hdmi_sl        (                 ),
-    .scan2x_clk     (                 ),
     .scan2x_cen     (                 ),
     .scan2x_de      (                 )
 );
