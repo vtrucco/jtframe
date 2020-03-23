@@ -316,6 +316,7 @@ always @(posedge clk)
             end
         end
         3'd5: begin
+            dq_rdy<=1'b0; // in case previous state set it.
             if( read_cycle) begin
                 dq_ff0   <= dq_ff;
                 dq_ff    <= SDRAM_DQ;
