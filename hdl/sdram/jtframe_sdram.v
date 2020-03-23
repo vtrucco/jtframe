@@ -104,8 +104,11 @@ reg write_cycle, read_cycle, hold_bus;
 // improvement
 // For a 32MB memory of mine, the difference between holding the bus and not holding it
 // means adding at least 6ns of usable shift range: from 3ns to 10ns
-// assign SDRAM_DQ = write_cycle ? dq_out : ( hold_bus ? 16'h0 : 16'hzzzz);
+`ifndef SIMULATION
+assign SDRAM_DQ = write_cycle ? dq_out : ( hold_bus ? 16'h0 : 16'hzzzz);
+`else
 assign SDRAM_DQ = write_cycle ? dq_out : 16'hzzzz;
+`endif
 
 reg [8:0] col_addr;
 
