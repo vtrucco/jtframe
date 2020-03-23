@@ -104,7 +104,8 @@ reg write_cycle, read_cycle, hold_bus;
 // improvement
 // For a 32MB memory of mine, the difference between holding the bus and not holding it
 // means adding at least 6ns of usable shift range: from 3ns to 10ns
-assign SDRAM_DQ = write_cycle ? dq_out : ( hold_bus ? 16'h0 : 16'hzzzz);
+// assign SDRAM_DQ = write_cycle ? dq_out : ( hold_bus ? 16'h0 : 16'hzzzz);
+assign SDRAM_DQ = write_cycle ? dq_out : 16'hzzzz;
 
 reg [8:0] col_addr;
 
@@ -305,7 +306,7 @@ always @(posedge clk)
             SDRAM_CMD <= CMD_NOP;
             if( read_cycle ) hold_bus <= 1'b0;
         end
-        3'd4: begin
+        3'd5: begin
             SDRAM_CMD <= CMD_NOP;
             if( read_cycle) begin
                 dq_ff <= SDRAM_DQ;
@@ -315,7 +316,7 @@ always @(posedge clk)
                 write_cycle <= 1'b0;
             end
         end
-        3'd5: begin
+        3'd6: begin
             dq_rdy<=1'b0; // in case previous state set it.
             if( read_cycle) begin
                 dq_ff0   <= dq_ff;
@@ -326,8 +327,8 @@ always @(posedge clk)
             end
             if( write_cycle ) cnt_state <= 3'd0;
             SDRAM_CMD <= CMD_NOP;
+            if( refresh_cycle ) cnt_state <= 3'd0;
         end
-        3'd6: if( refresh_cycle ) cnt_state <= 3'd0;
         endcase
     end
 endmodule

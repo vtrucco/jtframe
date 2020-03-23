@@ -40,7 +40,7 @@ always @(posedge c0) begin
     if( cnt6==5 ) c4 <= ~c4;
 end
 
-
+/*
 `ifdef SDRAM_DELAY
 real sdram_delay = `SDRAM_DELAY;
 initial $display("INFO: SDRAM_CLK delay set to %f ns",sdram_delay);
@@ -49,6 +49,8 @@ assign #sdram_delay c2 = c1;
 initial $display("INFO: SDRAM_CLK delay set to 1 ns");
 assign #1 c2 = c1;
 `endif
+*/
+assign c2=c1;
 
 endmodule // jtgng_pll0
 
