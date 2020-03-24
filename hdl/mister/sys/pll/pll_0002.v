@@ -1,10 +1,19 @@
 `ifndef SDRAM_SHIFT
 // 5ns works with both 32 and 128 MB modules
-// valid values
+// valid values for 48 MHz
 // 0 260 520 729 1041 1250 1475 1736 1996 2256 2500 2734 2994 3255 3515 3750 3993 
 // 4253 4513 4774 5000 5208 5520 5729 5989 6250 6510 6770 6979 7291 7500 7725 7986 
 // 8246 8506 8750 8984 9244 9505 9765 10000 10243 10329
-`define SDRAM_SHIFT "5000 ps"
+
+// valid values for 96 MHz
+// 0 -520 -1041 -1475 -1996 -2517 -2994 -3515 -3993
+	`ifndef JTFRAME_CLK96
+		// 48 MHz clock
+		`define SDRAM_SHIFT "5000 ps"
+	`else
+		// 96 MHz clock
+		`define SDRAM_SHIFT "-1996 ps"
+	`endif
 `endif
 
 

@@ -1,9 +1,12 @@
 #!/bin/bash
 
-MIN=0
+MIN=-11000
 MAX=11000
 CORE=
 EXTRA=
+DRYRUN=
+
+SHIFTS="0 260 520 729 1041 1250 1475 1736 1996 2256 2500 2734 2994 3255 3515 3750 3993 4253 4513 4774 5000 5208 5520 5729 5989 6250 6510 6770 6979 7291 7500 7725 7986 8246 8506 8750 8984 9244 9505 9765 10000 10243 10329 10503 10763 11024 11284 11458 11770 11979 12239 12500"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -16,14 +19,24 @@ while [ $# -gt 0 ]; do
         -core)
             shift
             CORE=$1;;
+        -96)
+            echo "96MHz clock selected"
+            SHIFTS="0 -520 -1041 -1475 -1996 -2517 -2994 -3515 -3993"
+            ;;
+        -dryrun)
+            DRYRUN=echo;;
         -h|-help)
-            echo Usage: jtseed -core "<name>" "[-min value]" "-max [value]"
-            echo Valid delays:
+            echo Usage: jtseed -core "<name>" "[-min value]" "-max [value]" "[-96] [-dryrun] : [args for jtcore]"
+            echo -96    : enable 96MHz shift values
+            echo -dryrun: show commands without executing them
+            echo Valid delays for 48MHz:
             echo 0 260 520 729 1041 1250 1475 1736 1996 2256 2500 2734 2994 3255 3515 3750 3993 
             echo 4253 4513 4774 5000 5208 5520 5729 5989 6250 6510 6770 6979 7291 7500 7725 7986 
             echo 8246 8506 8750 8984 9244 9505 9765 10000 10243 10329
             echo 10503 10763 11024 11284 11458 11770 11979 12239 12500
-            exit 0
+            echo
+            echo Valid delays for 96MHz:
+            exit 0 -520 -1041 -1475 -1996 -2517 -2994 -3515 -3993
             ;;
         :)
             shift
@@ -48,13 +61,16 @@ if [ -d $JTROOT/cores/$CORE ];then
     CORE_DIR=$JTROOT/cores/$CORE
 fi
 
-for DELAY in 0 260 520 729 1041 1250 1475 1736 1996 2256 2500 2734 2994 3255 3515 3750 3993 4253 4513 4774 5000 5208 5520 5729 5989 6250 6510 6770 6979 7291 7500 7725 7986 8246 8506 8750 8984 9244 9505 9765 10000 10243 10329 10503 10763 11024 11284 11458 11770 11979 12239 12500;
+for DELAY in $SHIFTS;
 do
     if [[ $DELAY -lt $MIN || $DELAY -gt $MAX ]]; then
         continue
     fi
     echo Using ${DELAY}ps delay
-    jtcore ${CORE} -mr -d SDRAM_SHIFT=\\\"$DELAY\\\" $EXTRA
+    $DRYRUN jtcore ${CORE} -mr -d SDRAM_SHIFT=\\\"$DELAY\\\" $EXTRA
+    if [ -n "$DRYRUN" ]; then
+        continue
+    fi
     OUTPUT=$CORE_DIR/mister/output_files/jt${CORE}.rbf
     if [ -e  ]; then
         cp $OUTPUT jt${CORE}_${DELAY}ps.rbf
@@ -64,4 +80,4 @@ do
     fi
 done
 
-7za a jt${CORE}_shift.7z jt${CORE}*.log jt${CORE}*.rbf
+$DRYRUN 7za a jt${CORE}_shift.7z jt${CORE}*.log jt${CORE}*.rbf

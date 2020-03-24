@@ -1,5 +1,5 @@
 //============================================================================
-//  Arcade: CAPCOM pre-CPS hardware  by Jose Tejada Gomez. Twitter: @topapate
+//  JTFRAME by Jose Tejada Gomez. Twitter: @topapate
 //
 //  Port to MiSTer
 //  Thanks to Sorgelig for his continuous support
@@ -216,7 +216,7 @@ pll pll(
     .outclk_5   ( clk96sh    )
 );
 
-`ifdef JTFRAME_CLK96
+`ifndef JTFRAME_CLK96
 assign clk_sys   = clk48;
 assign SDRAM_CLK = clk48sh;
 `else
