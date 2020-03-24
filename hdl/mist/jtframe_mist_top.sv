@@ -100,6 +100,13 @@ localparam CONF_STR = {
     "O7,PSG,ON,OFF;",
     "O8,FM ,ON,OFF;",
     "OAB,FX volume, high, very high, very low, low;",
+    `else
+        `ifdef JTFRAME_ADPCM
+        "O7,ADPCM,ON,OFF;",
+        `endif
+        `ifdef JT51
+        "O8,FM ,ON,OFF;",
+        `endif
     `endif
     `SEPARATOR
     `CORE_OSD
