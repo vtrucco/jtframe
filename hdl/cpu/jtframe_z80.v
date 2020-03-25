@@ -129,12 +129,20 @@ module jtframe_z80_romwait (
 );
 
 wire wait_n;
+reg  rstsyncn=1'b0;
+
+assign cpu_cen = cen;
+
+always @(posedge clk) begin
+    if( !rst_n  ) rstsyncn <= 1'b0;
+    if( cpu_cen && rst_n ) rstsyncn <= 1'b1;
+end
 
 jtframe_rom_wait u_wait(
     .rst_n    ( rst_n     ),
     .clk      ( clk       ),
     .cen_in   ( cen       ),
-    .cen_out  ( cpu_cen   ),
+    .cen_out  (           ),
     .gate     ( wait_n    ),
       // manage access to ROM data from SDRAM
     .rom_cs   ( rom_cs    ),
