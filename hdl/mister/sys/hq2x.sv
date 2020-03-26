@@ -2,6 +2,7 @@
 //
 // Copyright (c) 2012-2013 Ludvig Strigeus
 // Copyright (c) 2017,2018 Sorgelig
+// Copyright (c) 2019      Jose Tejada
 //
 // This program is GPL Licensed. See COPYING for the full license.
 //
@@ -9,6 +10,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // altera message_off 10030
+
+// It is assumed that there is more than one clock cycle per pixel clock enable
+// ie ce_in cannot a permanent 1'b1
 
 module Hq2x #(parameter LENGTH, parameter HALF_DEPTH)
 (
@@ -54,7 +58,9 @@ initial begin
 	};
 end
 
-wire [5:0] hqrule = hqTable[nextpatt];
+reg [5:0] hqrule;
+
+always @(posedge clk) hqrule <= hqTable[nextpatt];
 
 reg [23:0] Prev0, Prev1, Prev2, Curr0, Curr1, Curr2, Next0, Next1, Next2;
 reg [23:0] A, B, D, F, G, H;
@@ -66,8 +72,8 @@ reg  prevbuf = 0;
 wire iobuf = !curbuf;
 
 wire diff0, diff1;
-DiffCheck diffcheck0(Curr1, (cyc == 0) ? Prev0 : (cyc == 1) ? Curr0 : (cyc == 2) ? Prev2 : Next1, diff0);
-DiffCheck diffcheck1(Curr1, (cyc == 0) ? Prev1 : (cyc == 1) ? Next0 : (cyc == 2) ? Curr2 : Next2, diff1);
+DiffCheck diffcheck0( clk, Curr1, (cyc == 0) ? Prev0 : (cyc == 1) ? Curr0 : (cyc == 2) ? Prev2 : Next1, diff0);
+DiffCheck diffcheck1( clk, Curr1, (cyc == 0) ? Prev1 : (cyc == 1) ? Next0 : (cyc == 2) ? Curr2 : Next2, diff1);
 
 wire [7:0] new_pattern = {diff1, diff0, pattern[7:2]};
 
@@ -268,11 +274,11 @@ endmodule
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-module DiffCheck
-(
+module DiffCheck (
+	input		 clk,
 	input [23:0] rgb1,
 	input [23:0] rgb2,
-	output       result
+	output reg   result
 );
 
 	wire [7:0] r = rgb1[7:1]   - rgb2[7:1];
@@ -291,7 +297,10 @@ module DiffCheck
 
 	// if v is inside (-24, 24)
 	wire v_inside = (v < 10'h18 || v >= 10'h3e8);
-	assign result = !(y_inside && u_inside && v_inside);
+
+	always @(posedge clk) begin
+		result <= !(y_inside && u_inside && v_inside);
+	end
 
 endmodule
 
@@ -325,7 +334,7 @@ module Blend
 	end
 
 	wire is_diff;
-	DiffCheck diff_checker(df_rule[1] ? b : h, df_rule[0] ? d : f, is_diff);
+	DiffCheck diff_checker( clk, df_rule[1] ? b : h, df_rule[0] ? d : f, is_diff);
 
 	reg [23:0] i10,i20,i30;
 	reg  [6:0] op0;
@@ -364,7 +373,15 @@ module Blend
 	end
 	endfunction
 
-	wire [35:0] res = {mul24x3(i1, op[6:4]), 1'b0} + mul24x3(i2, {op[3:2], !op[3:2]}) + mul24x3(i3, {op[1:0], !op[3:2]});
+	reg [35:0] res;
+	reg [34:0] res_a, res_b, res_c;
+
+	always @(posedge clk) begin
+		res_a <= mul24x3(i1, op[6:4]);
+		res_b <= mul24x3(i2, {op[3:2], !op[3:2]});
+		res_c <= mul24x3(i3, {op[1:0], !op[3:2]});
+		res <= {res_a, 1'b0} + res_b + res_c;
+	end
 
 	always @(posedge clk) if (clk_en) Result <= {res[35:28],res[23:16],res[11:4]};
 

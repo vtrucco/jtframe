@@ -100,16 +100,16 @@ end
 // horizontal counter
 reg  [9:0] h_cnt;
 reg  [9:0] hs_low, hs_high;
-wire       hs_pol = hs_high < hs_low;
-wire [9:0] dsp_width = hs_pol ? hs_low : hs_high;
+reg        hs_pol;
+reg  [9:0] dsp_width;
 
 // vertical counter
 reg  [9:0] v_cnt;
 reg  [9:0] vs_low, vs_high;
-wire       vs_pol = vs_high < vs_low;
-wire [9:0] dsp_height = vs_pol ? vs_low : vs_high;
+reg        vs_pol;
+reg  [9:0] dsp_height;
 
-wire doublescan = (dsp_height>350);
+reg        doublescan;
 
 reg ce_pix;
 always @(negedge clk_sys) begin
@@ -130,6 +130,14 @@ always @(negedge clk_sys) begin
 		pixcnt <= 0;
 		ce_pix <= 1;
 	end
+end
+
+always @(posedge clk_sys) begin
+	hs_pol     <= hs_high < hs_low;
+	dsp_width  <= hs_pol ? hs_low : hs_high;
+	vs_pol 	   <= vs_high < vs_low;
+	dsp_height <= vs_pol ? vs_low : vs_high;
+	doublescan <= dsp_height>350;
 end
 
 always @(posedge clk_sys) begin
@@ -225,9 +233,9 @@ always @(posedge clk_sys) begin
                               // no rotation:
                               back_byte[doublescan ? osd_vcnt[4:2] : osd_vcnt[3:1]];
     `endif
-    R_out <= !osd_de ? R_in : { {2{osd_pixel}}, {OSD_COLOR[5:4]&back_pixel}, R_in[5:4]};
-    G_out <= !osd_de ? G_in : { {2{osd_pixel}}, {OSD_COLOR[3:2]&back_pixel}, G_in[5:4]};
-    B_out <= !osd_de ? B_in : { {2{osd_pixel}}, {OSD_COLOR[1:0]&back_pixel}, B_in[5:4]};
+    R_out <= !osd_de ? R_in : { {2{osd_pixel}}, OSD_COLOR[5:4]&{2{back_pixel}}, R_in[5:4]};
+    G_out <= !osd_de ? G_in : { {2{osd_pixel}}, OSD_COLOR[3:2]&{2{back_pixel}}, G_in[5:4]};
+    B_out <= !osd_de ? B_in : { {2{osd_pixel}}, OSD_COLOR[1:0]&{2{back_pixel}}, B_in[5:4]};
     HSync_out <= HSync;
 	VSync_out <= VSync;
 end
