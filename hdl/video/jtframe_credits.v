@@ -27,8 +27,8 @@ module jtframe_credits #(
     parameter [11:0] PAL1   = { 4'h0, 4'hf, 4'h0 },  // Green
     parameter [11:0] PAL2   = { 4'h3, 4'h3, 4'hf },  // Blue
     parameter [11:0] PAL3   = { 4'hf, 4'hf, 4'hf },  // White
-    parameter        BLKPOL = 1'b1,
-    parameter        SPEED  = 3
+    parameter        BLKPOL = 1'b1, // Blanking polarity
+    parameter        SPEED  = 3     // scroll speed
 ) (
     input               rst,
     input               clk,
@@ -50,15 +50,15 @@ localparam MSGW  = PAGES == 1 ? 10 :
                    (PAGES == 2 ? 11 :
                    (PAGES > 2 && PAGES <=4 ? 12 :
                    (PAGES > 5 && PAGES <=8 ? 13 : 14 ))); // Support for upto 16 pages
-localparam MAXVISIBLE = PAGES*32*8;
+localparam [VPOSW-1:0] MAXVISIBLE = PAGES*32*8-1;
 localparam VPOSW = MSGW-2;
 
 reg  [7:0] hpos;
 reg  [VPOSW-1:0 ] vpos, vrender, vdump, vdump1;
-(*keep*) wire [8:0]      scan_data;
-(*keep*) wire [7:0]      font_data;
-(*keep*) reg  [MSGW-1:0] scan_addr;
-(*keep*) wire [9:0]      font_addr = {scan_data[6:0], vdump[2:0] };
+wire [8:0]        scan_data;
+wire [7:0]        font_data;
+reg  [MSGW-1:0]   scan_addr;
+wire [9:0]        font_addr = {scan_data[6:0], vdump[2:0] };
 wire visible = vrender < MAXVISIBLE;
 
 jtframe_ram #(.dw(9), .aw(MSGW),.synfile("msg.hex")) u_msg(
@@ -85,8 +85,8 @@ reg  [2:0]      pxl;
 localparam SCROLL_EN = MSGW > 10;
 
 // hb and vb are always active high
-(*keep*) wire hb = BLKPOL ? HB : ~HB;
-(*keep*) wire vb = BLKPOL ? VB : ~VB;
+wire hb = BLKPOL ? HB : ~HB;
+wire vb = BLKPOL ? VB : ~VB;
 reg [7:0] pxl_data;
 
 reg last_hb, last_vb;
@@ -114,7 +114,9 @@ always @(posedge clk) begin
         if ( vb ) begin
             vrender  <= 0;
             if( !last_vb && SCROLL_EN ) begin
-                if( scr_base == SPEED ) begin
+                // Scroll runs at max speed when the visible pages are over
+                // otherwise it runs at SPEED
+                if( scr_base == SPEED || vrender>MAXVISIBLE ) begin
                     vpos <= vpos + 1;
                     scr_base <= 4'd0;
                 end else scr_base <= scr_base + 4'd1;
@@ -321,6 +323,16 @@ reg [COLW*3-1:0] old1, old2;
 reg [3:0]        blanks;
 wire [COLW*3-1:0] dim = { 1'b0, old2[R1:R0+1], 1'b0, old2[G1:G0+1], 1'b0, old2[B1:B0+1] };
 
+function [COLW*3-1:0] extend;
+    input [11:0] rgb4;
+    extend = COLW==4 ? rgb4 :
+        { 
+            rgb4[11:8], rgb4[11:8],
+            rgb4[7:4],  rgb4[7:4],
+            rgb4[3:0],  rgb4[3:0]
+        };
+endfunction
+
 always @(posedge clk) if(pxl_cen) begin
     old1 <= rgb_in;
     old2 <= old1;
@@ -334,12 +346,12 @@ always @(posedge clk) if(pxl_cen) begin
         end else begin
             if( pxl[0] ) begin // CHAR
                 case( pxl[2:1] )
-                    2'd0: rgb_out <= PAL0;
-                    2'd1: rgb_out <= PAL1;
-                    2'd2: rgb_out <= PAL2;
-                    2'd3: rgb_out <= PAL3;
+                    2'd0: rgb_out <= extend(PAL0);
+                    2'd1: rgb_out <= extend(PAL1);
+                    2'd2: rgb_out <= extend(PAL2);
+                    2'd3: rgb_out <= extend(PAL3);
                 endcase
-            end else rgb_out <= obj_pxl; // OBJ
+            end else rgb_out <= extend(obj_pxl); // OBJ
         end
     end
 end

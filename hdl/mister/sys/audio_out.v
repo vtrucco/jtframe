@@ -39,9 +39,9 @@ always @(posedge clk) begin
 	reg [31:0] cnt;
 
 	mclk_ce <= 0;
-	cnt = cnt + real_ce;
+	cnt <= cnt + real_ce;
 	if(cnt >= CLK_RATE) begin
-		cnt = cnt - CLK_RATE;
+		cnt <= cnt - CLK_RATE;
 		mclk_ce <= 1;
 	end
 end
