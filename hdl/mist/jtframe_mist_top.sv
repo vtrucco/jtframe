@@ -90,7 +90,7 @@ localparam CONF_STR = {
         "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
     `else
         `ifdef JTGNG_VGA
-            "O9,Screen filter,ON,OFF;",
+            "O3,Screen filter,ON,OFF;",
         `endif
     `endif
     `ifdef HAS_TESTMODE

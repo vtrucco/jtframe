@@ -51,7 +51,7 @@ module jtframe_dip(
 // "O6,Test mode,OFF,ON;",
 // "O7,PSG,ON,OFF;",
 // "O8,FM ,ON,OFF;",
-// "O9,Screen filter,ON,OFF;",
+// "O3,Screen filter,ON,OFF;",
 // "OAB,FX volume, high, very high, very low, low;",
 // core-specific settings should start at letter G (i.e. 16)
 
@@ -79,7 +79,7 @@ assign scanlines   = status[5:3];
 always @(posedge clk) begin
     rotate      <= { dip_flip, tate && !rot_control };
     dip_fxlevel <= 2'b10 ^ status[11:10];
-    en_mixing   <= ~status[9];
+    en_mixing   <= ~status[3];
     enable_fm   <= ~status[8];
     enable_psg  <= ~status[7];
     // only for MiSTer

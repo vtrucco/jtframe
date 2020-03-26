@@ -130,7 +130,7 @@ localparam CONF_STR = {
     "OC,Flip screen,OFF,ON;",
     `endif
     `ifdef JTFRAME_VGA
-        "O9,Screen filter,ON,OFF;",
+        "O3,Screen filter,ON,OFF;",
     `else
         "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
     `endif
