@@ -159,7 +159,7 @@ localparam CONF_STR = {
     `SEPARATOR
     "R0,Reset;",
     `CORE_KEYMAP
-    "V,v",`BUILD_DATE," patreon.com/topapate;"
+    "V,v",`BUILD_DATE," jotego;"
 };
 `endif
 
