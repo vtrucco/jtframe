@@ -104,7 +104,11 @@ reg write_cycle, read_cycle, hold_bus;
 // improvement
 // For a 32MB memory of mine, the difference between holding the bus and not holding it
 // means adding at least 6ns of usable shift range: from 3ns to 10ns
-`ifndef SIMULATION
+`ifdef SIMULATION
+`define JTFRAME_NOHOLDBUS
+`endif
+
+`ifndef JTFRAME_NOHOLDBUS
 assign SDRAM_DQ = write_cycle ? dq_out : ( hold_bus ? 16'h0 : 16'hzzzz);
 `else
 assign SDRAM_DQ = write_cycle ? dq_out : 16'hzzzz;

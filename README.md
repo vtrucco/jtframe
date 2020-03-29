@@ -77,6 +77,8 @@ By default only the first bank of the SDRAM is used, allowing for 8MB of data or
 
 These signals should be used in combination with the rest of prog_ and sdram_ signals in order to control the SDRAM.
 
+The data bus is held down all the time and only released when the SDRAM is expected to use it. This behaviour can be reverted using **JTFRAME_NOHOLDBUS**. When this macro is defined, the bus will only be held while writting data and released the rest of the time. For 48MHz operation, holding the bus works better. For 96MHz it doesn't seem to matter.
+
 Fast load in MiST
 =================
 
