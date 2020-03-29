@@ -121,7 +121,7 @@ reg [3:0] SDRAM_CMD,
 assign {SDRAM_nCS, SDRAM_nRAS, SDRAM_nCAS, SDRAM_nWE } = SDRAM_CMD;
 
 reg [13:0] wait_cnt;
-reg [ 2:0] cnt_state;
+reg [ 7:0] cnt_state;
 reg [ 2:0] init_state;
 reg       initialize;
 
@@ -156,6 +156,15 @@ end
 reg refresh_cycle;
 reg [1:0] refresh_sr;
 
+`ifdef JTFRAME_CLK96
+// 96 MHz operation
+localparam [7:0] ST_ZERO = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h4, ST_THREE = 8'h8, ST_FIVE = 8'h20, ST_SIX = 8'h40;
+localparam [7:0] ST_NOP  = 8'b1111_1010;
+`else
+// 48 MHz operation
+localparam [7:0] ST_ZERO = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h4, ST_THREE = 8'h8, ST_FIVE = 8'h20, ST_SIX = 8'h40;
+`endif
+
 always @(posedge clk)
     if( rst ) begin
         // initialization of SDRAM
@@ -169,7 +178,7 @@ always @(posedge clk)
         init_state <= 3'd0;
         // Main loop
         burst_done <= 1'b0;
-        cnt_state  <= 2'd0; //Starts after the precharge
+        cnt_state  <= 8'd1; //Starts after the precharge
         dq_rdy     <= 1'b0;
         sdram_ack  <= 1'b0;
         refresh_sr <=  'd0;
@@ -214,7 +223,7 @@ always @(posedge clk)
                 end
                 3'd4: begin
                     initialize <= 1'b0;
-                    cnt_state  <= 0;
+                    cnt_state  <= 8'd1;
                 end
                 default: begin
                     SDRAM_CMD  <= init_cmd;
@@ -225,19 +234,15 @@ always @(posedge clk)
     end else begin 
     //////////////////////////////////////////////////////////////////////////////////
     // regular operation
-        if( cnt_state!=3'd0 || refresh_ok ||
+        if( !cnt_state[0] || refresh_ok ||
             (!downloading && read_req  ) || /* when not downloading */
             ( downloading && (writeon || readprog ) ) /* when downloading */) begin
-            //if( (cnt_state==3'd5 && !refresh_cycle) || cnt_state==3'd6 )
-            //    cnt_state <= 3'd0; // Autorefresh needs only 60ns
-            //else
-                cnt_state <= cnt_state + 3'd1;
+                cnt_state <= { cnt_state[6:0], cnt_state[7] };
         end
-        case( cnt_state )
-        default: begin // wait
+        if( (cnt_state & ST_NOP)!=8'b0 ) begin
             SDRAM_CMD <= CMD_NOP;
         end
-        3'd0: begin // activate or refresh
+        if( cnt_state == ST_ZERO ) begin // activate or refresh
             dq_out         <= downloading ? { prog_data, prog_data } : data_write;
             write_cycle    <= 1'b0;
             read_cycle     <= 1'b0;
@@ -258,7 +263,7 @@ always @(posedge clk)
                 // or 1 = 2 words, used for normal operation
                 SDRAM_A   <= {12'b00_1_00_010_0_00, burst_mode}; // CAS Latency = 2
                 burst_done <= 1'b1;
-                cnt_state  <= 2'd3; // give one NOP cycle after changing the mode
+                cnt_state  <= 8'b0000_1000; // give one NOP cycle after changing the mode
             end else begin
                 SDRAM_CMD <= CMD_NOP;
                 if( writeon || readprog ) begin // ROM downloading
@@ -294,11 +299,10 @@ always @(posedge clk)
                 end
             end
         end
-        3'd1: begin
+        if( cnt_state == ST_ONE ) begin
             sdram_ack <= 1'b0;
-            SDRAM_CMD <= CMD_NOP;
         end
-        3'd2: begin // set read/write
+        if ( cnt_state == ST_TWO ) begin // set read/write
             // sdram_ack     <= 1'b0;
             SDRAM_A[12:9] <= 4'b0010; // auto precharge;
             SDRAM_A[ 8:0] <= col_addr;
@@ -309,12 +313,10 @@ always @(posedge clk)
                 refresh_cycle ? CMD_NOP : CMD_READ;
             dq_rdy      <= 1'b0;
         end
-        3'd3: begin
-            SDRAM_CMD <= CMD_NOP;
+        if ( cnt_state == ST_THREE ) begin
             if( read_cycle ) hold_bus <= 1'b0;
         end
-        3'd5: begin
-            SDRAM_CMD <= CMD_NOP;
+        if ( cnt_state == ST_FIVE ) begin
             if( read_cycle) begin
                 dq_ff <= SDRAM_DQ;
             end
@@ -323,19 +325,17 @@ always @(posedge clk)
                 write_cycle <= 1'b0;
             end
         end
-        3'd6: begin
+        if( cnt_state == ST_SIX ) begin
             dq_rdy<=1'b0; // in case previous state set it.
             if( read_cycle) begin
                 dq_ff0   <= dq_ff;
                 dq_ff    <= SDRAM_DQ;
                 dq_rdy   <= 1'b1;   // data_ready marks that new data is ready
                 hold_bus <= 1'b1;
-                cnt_state<= 3'd0;
+                cnt_state<= 8'b1;
             end
-            if( write_cycle ) cnt_state <= 3'd0;
-            SDRAM_CMD <= CMD_NOP;
-            if( refresh_cycle ) cnt_state <= 3'd0;
+            if( write_cycle )   cnt_state <= ST_ZERO;
+            if( refresh_cycle ) cnt_state <= ST_ZERO;
         end
-        endcase
     end
 endmodule
