@@ -12,7 +12,7 @@
 		`define SDRAM_SHIFT "5000 ps"
 	`else
 		// 96 MHz clock
-		`define SDRAM_SHIFT "-1996 ps"
+		`define SDRAM_SHIFT "-3515 ps"
 	`endif
 `endif
 
