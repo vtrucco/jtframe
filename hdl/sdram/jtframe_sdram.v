@@ -162,7 +162,8 @@ localparam [7:0] ST_ZERO = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h4, ST_THREE = 8'h8, 
 localparam [7:0] ST_NOP  = 8'b1111_1010;
 `else
 // 48 MHz operation
-localparam [7:0] ST_ZERO = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h4, ST_THREE = 8'h8, ST_FIVE = 8'h20, ST_SIX = 8'h40;
+localparam [7:0] ST_ZERO = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h2, ST_THREE = 8'h4, ST_FIVE = 8'h8, ST_SIX = 8'h10;
+localparam [7:0] ST_NOP  = 8'b1111_1100;
 `endif
 
 always @(posedge clk)
