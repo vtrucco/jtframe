@@ -391,18 +391,17 @@ jtframe_sdram u_sdram(
 // For horizontal games, the scaler can be chosen with the SCAN2X_TYPE macro
 // and overridden with a parameter.
 
+// If the scan doubler type is not defined, takes 0 as the default
+// except if we are on MiSTer and the game is vertical
 `ifdef VERTICAL_SCREEN
-    `ifdef MISTER
-    localparam ROTATE_FX=1;
-    `else
-    localparam ROTATE_FX=0;
-    `endif
-`else
-localparam ROTATE_FX=0;
+`ifdef MISTER
+    `undef SCAN2X_TYPE
+    `define SCAN2X_TYPE 6
+`endif
 `endif
 
 `ifndef SCAN2X_TYPE
-`define SCAN2X_TYPE 0
+    `define SCAN2X_TYPE 0
 `endif
 
 localparam SCAN2X_TYPE=`SCAN2X_TYPE;
@@ -439,52 +438,7 @@ endfunction
 
 `ifndef NOVIDEO
 generate    
-    if( ROTATE_FX ) begin
-        wire hblank = ~LHBL;
-        wire vblank = ~LVBL;
-
-        arcade_rotate_fx #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(COLORW*3),.CCW(1)) 
-        u_rotate_fx(
-            .clk_video  ( clk_sys       ),
-            .ce_pix     ( pxl_cen       ),
-        
-            .RGB_in     ( game_rgb      ),
-            .HBlank     ( hblank        ),
-            .VBlank     ( vblank        ),
-            .HSync      ( hs            ),
-            .VSync      ( vs            ),
-        
-            .VGA_CLK    (  scan2x_clk   ),
-            .VGA_CE     (  scan2x_cen   ),
-            .VGA_R      (  scan2x_r     ),
-            .VGA_G      (  scan2x_g     ),
-            .VGA_B      (  scan2x_b     ),
-            .VGA_HS     (  scan2x_hs    ),
-            .VGA_VS     (  scan2x_vs    ),
-            .VGA_DE     (  scan2x_de    ),
-        
-            .HDMI_CLK   (  hdmi_clk     ),
-            .HDMI_CE    (  hdmi_cen     ),
-            .HDMI_R     (  hdmi_r       ),
-            .HDMI_G     (  hdmi_g       ),
-            .HDMI_B     (  hdmi_b       ),
-            .HDMI_HS    (  hdmi_hs      ),
-            .HDMI_VS    (  hdmi_vs      ),
-            .HDMI_DE    (  hdmi_de      ),
-            .HDMI_SL    (  hdmi_sl      ),
-            .gamma_bus  ( gamma_bus     ),
-
-        
-            .fx                ( scanlines   ),
-            .forced_scandoubler( ~scan2x_enb ),
-            .direct_video      ( direct_video),
-            .no_rotate         ( rotate[0]   ) // the no_rotate name
-                // is misleading. A low value in no_rotate will actually
-                // rotate the game video. If the game is vertical, a low value
-                // presents the game correctly on a horizontal screen
-        );
-    end
-    else case( SCAN2X_TYPE )
+    case( SCAN2X_TYPE )
         default: begin // JTFRAME easy going scaler
             wire [COLORW*3-1:0] rgbx2;
 
@@ -694,6 +648,51 @@ generate
             assign scan2x_clk  = clk_sys;
             assign scan2x_cen  = pxl_cen;
             assign scan2x_de   = LVBL && LHBL;
+        end
+        6: begin // vertical games
+            wire hblank = ~LHBL;
+            wire vblank = ~LVBL;
+
+            arcade_rotate_fx #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(COLORW*3),.CCW(1)) 
+            u_rotate_fx(
+                .clk_video  ( clk_sys       ),
+                .ce_pix     ( pxl_cen       ),
+            
+                .RGB_in     ( game_rgb      ),
+                .HBlank     ( hblank        ),
+                .VBlank     ( vblank        ),
+                .HSync      ( hs            ),
+                .VSync      ( vs            ),
+            
+                .VGA_CLK    (  scan2x_clk   ),
+                .VGA_CE     (  scan2x_cen   ),
+                .VGA_R      (  scan2x_r     ),
+                .VGA_G      (  scan2x_g     ),
+                .VGA_B      (  scan2x_b     ),
+                .VGA_HS     (  scan2x_hs    ),
+                .VGA_VS     (  scan2x_vs    ),
+                .VGA_DE     (  scan2x_de    ),
+            
+                .HDMI_CLK   (  hdmi_clk     ),
+                .HDMI_CE    (  hdmi_cen     ),
+                .HDMI_R     (  hdmi_r       ),
+                .HDMI_G     (  hdmi_g       ),
+                .HDMI_B     (  hdmi_b       ),
+                .HDMI_HS    (  hdmi_hs      ),
+                .HDMI_VS    (  hdmi_vs      ),
+                .HDMI_DE    (  hdmi_de      ),
+                .HDMI_SL    (  hdmi_sl      ),
+                .gamma_bus  ( gamma_bus     ),
+
+            
+                .fx                ( scanlines   ),
+                .forced_scandoubler( scandoubler ),
+                .direct_video      ( direct_video),
+                .no_rotate         ( rotate[0]   ) // the no_rotate name
+                    // is misleading. A low value in no_rotate will actually
+                    // rotate the game video. If the game is vertical, a low value
+                    // presents the game correctly on a horizontal screen
+            );
         end
     endcase
 endgenerate
