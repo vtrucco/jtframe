@@ -31,15 +31,15 @@ module arcade_rotate_fx #(parameter WIDTH=320, HEIGHT=240, DW=8, CCW=0, GAMMA=1)
 	output        VGA_VS,
 	output        VGA_DE,
 
-	output        HDMI_CLK,
-	output        HDMI_CE,
-	output  [7:0] HDMI_R,
-	output  [7:0] HDMI_G,
-	output  [7:0] HDMI_B,
-	output        HDMI_HS,
-	output        HDMI_VS,
-	output        HDMI_DE,
-	output  [1:0] HDMI_SL,
+	output           HDMI_CLK,
+	output           HDMI_CE,
+	output     [7:0] HDMI_R,
+	output     [7:0] HDMI_G,
+	output     [7:0] HDMI_B,
+	output           HDMI_HS,
+	output           HDMI_VS,
+	output           HDMI_DE,
+	output reg [1:0] HDMI_SL,
 	
 	input   [2:0] fx,
 	input         forced_scandoubler,
@@ -76,16 +76,27 @@ arcade_vga #(DW) vga
 	.VGA_VBL(VBL)
 );
 
-wire [DW-1:0] RGB_out;
+localparam RW = DW==24 ? 12 : DW;
+wire [RW-1:0] RGB_out;
+wire [RW-1:0] rotate_in;
 wire rhs,rvs,rhblank,rvblank;
-wire scandoubler;
+reg  scandoubler;
 
-screen_rotate #(WIDTH,HEIGHT,DW,4,CCW) rotator
+
+generate
+	if( DW == 24 ) begin
+		assign rotate_in = { RGB_fix[23:20], RGB_fix[15:12], RGB_fix[7:4] };
+	end else begin
+		assign rotate_in = RGB_fix;
+	end
+endgenerate
+
+screen_rotate #(WIDTH,HEIGHT,RW,4,CCW) rotator
 (
 	.clk(VGA_CLK),
 	.ce(CE),
 
-	.video_in(RGB_fix),
+	.video_in(rotate_in),
 	.hblank(HBL),
 	.vblank(VBL),
 
@@ -100,17 +111,17 @@ screen_rotate #(WIDTH,HEIGHT,DW,4,CCW) rotator
 wire [3:0] Rr,Gr,Br;
 
 generate
-	if(DW == 6) begin
+	if(RW == 6) begin
 		assign Rr = {RGB_out[5:4],RGB_out[5:4]};
 		assign Gr = {RGB_out[3:2],RGB_out[3:2]};
 		assign Br = {RGB_out[1:0],RGB_out[1:0]};
 	end
-	else if(DW == 8) begin
+	else if(RW == 8) begin
 		assign Rr = {RGB_out[7:5],RGB_out[7]};
 		assign Gr = {RGB_out[4:2],RGB_out[4]};
 		assign Br = {RGB_out[1:0],RGB_out[1:0]};
 	end
-	else if(DW == 9) begin
+	else if(RW == 9) begin
 		assign Rr = {RGB_out[8:6],RGB_out[8]};
 		assign Gr = {RGB_out[5:3],RGB_out[5]};
 		assign Br = {RGB_out[2:0],RGB_out[2]};
@@ -122,15 +133,39 @@ generate
 	end
 endgenerate
 
-reg norot;
-always @(posedge VGA_CLK) norot <= no_rotate | direct_video;
+reg       norot;
+reg [2:0] sl;
 
-wire [2:0] sl = fx ? fx - 1'd1 : 3'd0;
-assign scandoubler = fx || forced_scandoubler;
+always @(posedge VGA_CLK) begin
+	norot       <= no_rotate | direct_video;
+	sl          <= fx ? fx - 1'd1 : 3'd0;
+	scandoubler <= fx || forced_scandoubler;
+end
+
+always @(posedge HDMI_CLK) begin
+	HDMI_SL     <= (no_rotate & ~direct_video) ? 2'd0 : sl[1:0];
+end
+
 assign HDMI_CLK = VGA_CLK;
-assign HDMI_SL  = (no_rotate & ~direct_video) ? 2'd0 : sl[1:0];
 
-video_mixer #(WIDTH+4, 1, GAMMA) video_mixer
+localparam MIXW = DW==24 ? 8 : 4;
+localparam HALF_DEPTH = DW!=24;
+
+wire [MIXW-1:0] mixin_r, mixin_g, mixin_b;
+
+generate
+	if( MIXW==4 ) begin
+		assign {mixin_r, mixin_g, mixin_b} = norot ? {R[7:4],G[7:4],B[7:4]} : {Rr,Gr,Br};
+	end else begin
+		assign {mixin_r, mixin_g, mixin_b} = norot ? {R,G,B} : 
+			{ RGB_out[11:8], RGB_out[11:8], // Red
+			  RGB_out[ 7:4], RGB_out[ 7:4], // green
+			  RGB_out[ 3:0], RGB_out[ 3:0]  // blue
+			};
+	end
+endgenerate
+
+video_mixer #(WIDTH+4, HALF_DEPTH, GAMMA) video_mixer
 (
 	.clk_vid(HDMI_CLK),
 	.ce_pix(CE | (~scandoubler & ~gamma_bus[19] & ~norot)),
@@ -140,9 +175,9 @@ video_mixer #(WIDTH+4, 1, GAMMA) video_mixer
 	.hq2x(fx==1),
 	.gamma_bus(gamma_bus),
 
-	.R(norot ? R[7:4] : Rr),
-	.G(norot ? G[7:4] : Gr),
-	.B(norot ? B[7:4] : Br),
+	.R( mixin_r ),
+	.G( mixin_g ),
+	.B( mixin_b ),
 
 	.HSync (norot ? HS  : rhs),
 	.VSync (norot ? VS  : rvs),
