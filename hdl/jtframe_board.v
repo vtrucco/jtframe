@@ -34,6 +34,8 @@ module jtframe_board #(parameter
     input             clk_sys,
     input             clk_rom,
     input             clk_vga,
+
+    input  [ 6:0]     core_mod,
     // ROM access from game
     input             sdram_req,
     output            sdram_ack,
@@ -321,6 +323,7 @@ always @(posedge clk_sys)
 jtframe_dip u_dip(
     .clk        ( clk_sys       ),
     .status     ( status        ),
+    .core_mod   ( core_mod      ),
     .game_pause ( game_pause    ),
     .hdmi_arx   ( hdmi_arx      ),
     .hdmi_ary   ( hdmi_ary      ),

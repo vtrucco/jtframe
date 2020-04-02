@@ -136,6 +136,7 @@ wire          osd_shown;
 wire [7:0]    scan2x_r, scan2x_g, scan2x_b;
 wire          scan2x_hs, scan2x_vs, scan2x_clk;
 wire          scan2x_enb;
+wire [6:0]    core_mod;
 
 ///////////////// LED is on while
 // downloading, PLL lock lost, OSD is shown or in reset state
@@ -153,6 +154,7 @@ jtframe_mist_base #(
     .clk_sys        ( clk_sys       ),
     .clk_rom        ( clk_rom       ),
     .SDRAM_CLK      ( SDRAM_CLK     ),
+    .core_mod       ( core_mod      ),
     .osd_shown      ( osd_shown     ),
     // Base video
     .osd_rotate     ( rotate        ),
@@ -224,6 +226,8 @@ jtframe_board #(
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
     .clk_vga        ( clk_vga         ),
+
+    .core_mod       ( core_mod        ),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
     .ps2_kbd_data   ( ps2_kbd_data    ),

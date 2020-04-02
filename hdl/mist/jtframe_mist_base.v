@@ -29,7 +29,7 @@ module jtframe_mist_base #(parameter
     input           clk_rom,
     input           SDRAM_CLK,      // SDRAM Clock
     output          osd_shown,
-
+    output  [6:0]   core_mod,
     // Base video
     input   [1:0]   osd_rotate,
     input [COLORW-1:0] game_r,
@@ -130,6 +130,7 @@ assign snd_pwm_right = 1'b0;
 
 `ifndef SIMULATION
 user_io #(.STRLEN(CONF_STR_LEN), .ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_userio(
+    .rst            ( rst       ),
     .clk_sys        ( clk_sys   ),
     .conf_str       ( CONF_STR  ),
     .SPI_CLK        ( SPI_SCK   ),
@@ -146,6 +147,8 @@ user_io #(.STRLEN(CONF_STR_LEN), .ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_use
     // keyboard
     .ps2_kbd_clk    ( ps2_kbd_clk  ),
     .ps2_kbd_data   ( ps2_kbd_data ),
+    // Core variant
+    .core_mod       ( core_mod  ),
     // unused ports:
     .serial_strobe  ( 1'b0      ),
     .serial_data    ( 8'd0      ),

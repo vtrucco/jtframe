@@ -21,6 +21,7 @@
 module jtframe_dip(
     input              clk,
     input      [31:0]  status,
+    input      [ 6:0]  core_mod,
     input              game_pause,
 
     //Video aspect ratio for HDMI. Most retro systems have ratio 4:3.
@@ -61,11 +62,13 @@ wire   widescreen  = status[2];
 assign scanlines   = status[5:3];
 
 `ifdef VERTICAL_SCREEN
+    // core_mod[0] = 0 horizontal game
+    //             = 1 vertical game
     `ifdef MISTER
-    wire   tate   = status[13]; // 1 if screen is vertical (tate in Japanese)
+    wire   tate   = status[13] & core_mod[0]; // 1 if screen is vertical (tate in Japanese)
     assign rot_control = 1'b0;
     `else
-    wire   tate   = 1'b1;      // MiST is always vertical
+    wire   tate   = 1'b1 & core_mod[0];      // MiST is always vertical
     assign rot_control = status[13];
     `endif
     wire   swap_ar = tate;
