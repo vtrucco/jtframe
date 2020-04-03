@@ -64,14 +64,16 @@ assign scanlines   = status[5:3];
 `ifdef VERTICAL_SCREEN
     // core_mod[0] = 0 horizontal game
     //             = 1 vertical game
+    // status[13]  = 0 Rotate screen
+    //             = 1 no rotation  
     `ifdef MISTER
-    wire   tate   = status[13] & core_mod[0]; // 1 if screen is vertical (tate in Japanese)
+    wire   tate   = ~status[13] & core_mod[0]; // 1 if screen is vertical (tate in Japanese)
     assign rot_control = 1'b0;
     `else
     wire   tate   = 1'b1 & core_mod[0];      // MiST is always vertical
     assign rot_control = status[13];
     `endif
-    wire   swap_ar = tate;
+    wire   swap_ar = ~tate | ~core_mod[0];
 `else
     wire   tate   = 1'b0;
     assign rot_control = 1'b0;

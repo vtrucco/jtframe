@@ -123,7 +123,9 @@ localparam CONF_STR = {
     "O1,Credits,OFF,ON;",
     `SEPARATOR
     // Common MiSTer options
+    `ifndef JTFRAME_OSD_NOLOAD
     "F,rom;",
+    `endif
     "H0O2,Aspect Ratio,Original,Wide;",
     `ifdef VERTICAL_SCREEN
     "OD,Rotate screen,Yes,No;",

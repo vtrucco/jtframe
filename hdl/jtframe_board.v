@@ -691,7 +691,7 @@ generate
                 .fx                ( scanlines   ),
                 .forced_scandoubler( scandoubler ),
                 .direct_video      ( direct_video),
-                .no_rotate         ( rotate[0]   ) // the no_rotate name
+                .no_rotate         ( ~rotate[0]  ) // the no_rotate name
                     // is misleading. A low value in no_rotate will actually
                     // rotate the game video. If the game is vertical, a low value
                     // presents the game correctly on a horizontal screen

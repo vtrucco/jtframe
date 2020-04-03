@@ -172,6 +172,8 @@ wire          pre_scan2x_clk;
 wire          pre_scan2x_cen;
 wire          pre_scan2x_de;
 
+reg  [6:0]    core_mod;
+
 // This slows down synthesis on MiSTer a lot
 // if pre_scan signals come from a 25MHz clock domain
 always @(*) begin
@@ -216,6 +218,14 @@ always @(posedge clk_sys) begin
     if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[24:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
 end
 `endif
+
+always @(posedge clk_sys, posedge rst) begin
+    if( rst ) begin
+        core_mod <= ~7'd0;
+    end else begin
+        if (ioctl_wr && (ioctl_index==1)) core_mod <= ioctl_data[6:0];
+    end
+end
 
 hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
 (
@@ -263,6 +273,8 @@ jtframe_board #(
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
     .clk_vga        ( clk_vga         ),
+
+    .core_mod       ( core_mod        ),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
     .ps2_kbd_data   ( ps2_kbd_data    ),
