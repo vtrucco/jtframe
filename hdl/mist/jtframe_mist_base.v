@@ -68,6 +68,8 @@ module jtframe_mist_base #(parameter
     output [31:0]   joystick2,
     output [31:0]   joystick3,
     output [31:0]   joystick4,
+    output [15:0]   joystick_analog_0,
+    output [15:0]   joystick_analog_1,
     output          ps2_kbd_clk,
     output          ps2_kbd_data,
     // Sound
@@ -141,6 +143,10 @@ user_io #(.STRLEN(CONF_STR_LEN), .ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_use
     .joystick_1     ( joystick1 ),
     .joystick_3     ( joystick3 ),
     .joystick_4     ( joystick4 ),
+    // Analog joysticks
+    .joystick_analog_0  ( joystick_analog_0 ),
+    .joystick_analog_1  ( joystick_analog_1 ),
+    
     .status         ( status    ),
     .ypbpr          ( ypbpr     ),
     .scandoubler_disable ( scan2x_enb ),

@@ -93,6 +93,8 @@ module jtframe_mister #(parameter
     output  [ 9:0]  game_joystick2,
     output  [ 9:0]  game_joystick3,
     output  [ 9:0]  game_joystick4,
+    output  [15:0]  joystick_analog_0,
+    output  [15:0]  joystick_analog_1,
     output  [ 3:0]  game_coin,
     output  [ 3:0]  game_start,
     output          game_service,
@@ -251,6 +253,8 @@ hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
     .joystick_1      ( joystick_USB_2 ),
     .joystick_2      ( joystick_USB_3 ),
     .joystick_3      ( joystick_USB_4 ),
+    .joystick_analog_0( joystick_analog_0   ),
+    .joystick_analog_1( joystick_analog_1   ),
     .ps2_kbd_clk_out ( ps2_kbd_clk    ),
     .ps2_kbd_data_out( ps2_kbd_data   )
     //.ps2_key       ( ps2_key       )

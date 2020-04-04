@@ -114,6 +114,8 @@ module jtframe_mist #(parameter
     output   [3:0]  game_coin,
     output   [3:0]  game_start,
     output          game_service,
+    output  [15:0]  joystick_analog_0,
+    output  [15:0]  joystick_analog_1,
     // DIP and OSD settings
     output          enable_fm,
     output          enable_psg,
@@ -194,6 +196,10 @@ jtframe_mist_base #(
     .joystick2      ( joystick2     ),
     .joystick3      ( joystick3     ),
     .joystick4      ( joystick4     ),
+    // Analog joystick
+    .joystick_analog_0( joystick_analog_0   ),
+    .joystick_analog_1( joystick_analog_1   ),
+    // Keyobard
     .ps2_kbd_clk    ( ps2_kbd_clk   ),
     .ps2_kbd_data   ( ps2_kbd_data  ),
     // audio

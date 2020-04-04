@@ -248,6 +248,7 @@ wire [ 7:0] ioctl_data;
 wire [ 9:0] game_joy1, game_joy2, game_joy3, game_joy4;
 wire [ 2:0] game_coin, game_start;
 wire [ 3:0] gfx_en;
+wire [15:0] joystick_analog_0, joystick_analog_1;
 
 wire        downloading, game_rst, rst, rst_n, dwnld_busy;
 wire        rst_req   = RESET | status[0] | buttons[1];
@@ -384,6 +385,8 @@ u_frame(
     .game_coin      ( game_coin      ),
     .game_start     ( game_start     ),
     .game_service   (                ), // unused
+    .joystick_analog_0( joystick_analog_0 ),
+    .joystick_analog_1( joystick_analog_1 ),
     .LED            ( LED_USER       ),
     // DIP and OSD settings
     .enable_fm      ( enable_fm      ),
@@ -476,7 +479,10 @@ assign sim_pxl_cen = pxl_cen;
     .joystick3    ( game_joy3[7:0]   ),
     .joystick4    ( game_joy4[7:0]   ),
     `endif
-
+    `ifdef JTFRAME_ANALOG
+    .joystick_analog_0( joystick_analog_0   ),
+    .joystick_analog_1( joystick_analog_1   ),
+    `endif
     // Sound control
     .enable_fm    ( enable_fm        ),
     .enable_psg   ( enable_psg       ),

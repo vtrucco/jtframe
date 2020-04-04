@@ -76,7 +76,9 @@ localparam CONF_STR = {
     "O1,Credits,OFF,ON;",
     `SEPARATOR
     // Common MiSTer options
+    `ifndef JTFRAME_OSD_NOLOAD
     "F,rom;",
+    `endif
     //"O2,Aspect Ratio,Original,Wide;",
     `ifdef VERTICAL_SCREEN
     "OD,Rotate controls,No,Yes;",
@@ -129,6 +131,7 @@ wire          ioctl_wr;
 wire [ 1:0]   sdram_wrmask, sdram_bank;
 wire          sdram_rnw;
 wire [15:0]   data_write;
+wire [15:0]   joystick_analog_0, joystick_analog_1;
 
 `ifndef JTFRAME_WRITEBACK
 assign sdram_wrmask = 2'b11;
@@ -321,6 +324,8 @@ u_frame(
     .game_coin      ( game_coin      ),
     .game_start     ( game_start     ),
     .game_service   (                ), // unused
+    .joystick_analog_0( joystick_analog_0 ),
+    .joystick_analog_1( joystick_analog_1 ),
     .LED            ( LED            ),
     // DIP and OSD settings
     .enable_fm      ( enable_fm      ),
@@ -385,6 +390,10 @@ u_game(
     `ifdef JTFRAME_4PLAYERS
     .joystick3    ( game_joy3[7:0]   ),
     .joystick4    ( game_joy4[7:0]   ),
+    `endif
+    `ifdef JTFRAME_ANALOG
+    .joystick_analog_0( joystick_analog_0   ),
+    .joystick_analog_1( joystick_analog_1   ),
     `endif
 
     // Sound control
