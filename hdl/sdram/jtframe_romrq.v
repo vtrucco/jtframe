@@ -40,9 +40,8 @@ reg [AW-1:0] cached_addr0;
 reg [AW-1:0] cached_addr1;
 reg [31:0]   cached_data0;
 reg [31:0]   cached_data1;
-reg deleterus;
 reg [1:0]    subaddr;
-reg init;
+reg [1:0]    good;
 reg hit0, hit1;
 
 wire  [21:0] size_ext = { {22-AW{1'b0}}, addr_req };
@@ -54,43 +53,31 @@ always @(*) begin
         16: addr_req = {addr[AW-1:1],1'b0};
         32: addr_req = addr;
     endcase
-    hit0 = addr_req === cached_addr0;
-    hit1 = addr_req === cached_addr1;
-    req = (init||clr) || ( !(hit0 || hit1) && addr_ok && !we);
+    hit0 = addr_req === cached_addr0 && good[0];
+    hit1 = addr_req === cached_addr1 && good[1];
+    req = clr || ( !(hit0 || hit1) && addr_ok && !we);
 end
 
 // reg [1:0] ok_sr;
 
 always @(posedge clk, posedge rst)
     if( rst ) begin
-        init      <= 1'b1;
-        deleterus <= 1'b0;  // signals which cached data is to be overwritten next time
+        good      <= 2'b00;
     end else begin
-        init    <= clr;
-        data_ok <= !init && addr_ok && ( hit0 || hit1 || (din_ok&&we));
+        if( clr ) good <= 2'b00;
+        data_ok <= addr_ok && ( hit0 || hit1 || (din_ok&&we));
         if( we && din_ok ) begin
-            if( init ) begin
-                cached_data0 <= din;
-                cached_addr0 <= addr_req;
-                cached_data1 <= din;
-                cached_addr1 <= addr_req;
-            end else begin
-                if( deleterus ) begin
-                    cached_data1 <= din;
-                    cached_addr1 <= addr_req;
-                end else begin
-                    cached_data0 <= din;
-                    cached_addr0 <= addr_req;
-                end
-                deleterus <= ~deleterus;
-            end
-            init <= 1'b0;
+            cached_data1 <= cached_data0;
+            cached_addr1 <= cached_addr0;
+            cached_data0 <= din;
+            cached_addr0 <= addr_req;
+            good <= { good[0], 1'b1 };
         end
     end
 
 always @(*) begin
     subaddr[1] = addr[1];
-    subaddr[0] =  addr[0];
+    subaddr[0] = addr[0];
 end
 
 // data_mux selects one of two cache registers
