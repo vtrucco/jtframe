@@ -116,6 +116,15 @@ Game clocks
 ===========
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
 
+optional clock input | Macro Needed
+=====================|==============
+clk6                 | JTFRAME_CLK6
+clk24                | JTFRAME_CLK24
+clk48                | JTFRAME_CLK96
+
+Note that although clk6 and clk24 are obtained without affecting the main clock input, if **JTFRAME_CLK96** is defined, the main clock input moves up from 48MHz to 96MHz. The 48MHz clock can the be obtained from clk48.
+
+
 Modules with simulation files added automatically
 =================================================
 Define and export the following environgment variables to have these
