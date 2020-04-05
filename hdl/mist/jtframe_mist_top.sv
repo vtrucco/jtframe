@@ -225,10 +225,12 @@ assign sim_hb = ~LHBL_dly;
 `define BUTTONS 2
 `endif
 
+localparam BUTTONS=`BUTTONS;
+
 jtframe_mist #( 
     .CONF_STR     ( CONF_STR       ),
     .SIGNED_SND   ( `SIGNED_SND    ),
-    .BUTTONS      ( `BUTTONS       ),
+    .BUTTONS      ( BUTTONS        ),
     .COLORW       ( COLORW         )
     `ifdef VIDEO_WIDTH
     ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
@@ -385,11 +387,11 @@ u_game(
 
     .start_button( game_start     ),
     .coin_input  ( game_coin      ),
-    .joystick1   ( game_joy1[7:0] ),
-    .joystick2   ( game_joy2[7:0] ),
+    .joystick1   ( game_joy1[BUTTONS+3:0]      ),
+    .joystick2   ( game_joy2[BUTTONS+3:0]      ),
     `ifdef JTFRAME_4PLAYERS
-    .joystick3    ( game_joy3[7:0]   ),
-    .joystick4    ( game_joy4[7:0]   ),
+    .joystick3   ( game_joy3[BUTTONS+3:0]      ),
+    .joystick4   ( game_joy4[BUTTONS+3:0]      ),
     `endif
     `ifdef JTFRAME_ANALOG
     .joystick_analog_0( joystick_analog_0   ),

@@ -29,6 +29,7 @@ module jtframe_keyboard(
     // decodes keys
     output reg [9:0] key_joy1,
     output reg [9:0] key_joy2,
+    output reg [9:0] key_joy3,
     output reg [3:0] key_start,
     output reg [3:0] key_coin,
     output reg key_reset,
@@ -53,8 +54,9 @@ always @(posedge clk) begin
     if(rst) begin
       key_released <= 1'b0;
       key_extended <= 1'b0;
-      key_joy1     <=  'd0;
-      key_joy2     <=  'd0;
+      key_joy1     <= 10'd0;
+      key_joy2     <= 10'd0;
+      key_joy3     <= 10'd0;
       key_coin     <= 4'd0;
       key_start    <= 4'd0;
       key_reset    <= 1'b0;
@@ -90,6 +92,14 @@ always @(posedge clk) begin
                     9'h0_2b: key_joy2[2] <= !key_released;   // Down
                     9'h0_23: key_joy2[1] <= !key_released;   // Left
                     9'h0_34: key_joy2[0] <= !key_released;   // Right
+                    // third joystick
+                    9'h0_5a: key_joy3[6] <= !key_released;   // Button 3
+                    9'h0_59: key_joy3[5] <= !key_released;   // Button 2
+                    9'h0_14: key_joy3[4] <= !key_released;   // Button 1
+                    9'h0_43: key_joy3[3] <= !key_released;   // Up
+                    9'h0_42: key_joy3[2] <= !key_released;   // Down
+                    9'h0_3b: key_joy3[1] <= !key_released;   // Left
+                    9'h0_4b: key_joy3[0] <= !key_released;   // Right
                     // coins
                     9'h2e                : key_coin[0] <= !key_released;  // 1st coin
                     9'h36: key_coin[1] <= !key_released;  // 2nd coin

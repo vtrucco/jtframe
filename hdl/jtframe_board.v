@@ -195,7 +195,7 @@ always @(posedge clk_sys)
         game_rst_n <= pre_game_rst_n;
     end
 
-wire [9:0] key_joy1, key_joy2;
+wire [9:0] key_joy1, key_joy2, key_joy3;
 wire [3:0] key_start, key_coin;
 wire [3:0] key_gfx;
 wire       key_service;
@@ -210,6 +210,7 @@ jtframe_keyboard u_keyboard(
     // decoded keys
     .key_joy1    ( key_joy1      ),
     .key_joy2    ( key_joy2      ),
+    .key_joy3    ( key_joy3      ),
     .key_start   ( key_start     ),
     .key_coin    ( key_coin      ),
     .key_reset   ( key_reset     ),
@@ -218,8 +219,9 @@ jtframe_keyboard u_keyboard(
     .key_gfx     ( key_gfx       )
 );
 `else
-assign key_joy2    = 6'h0;
-assign key_joy1    = 6'h0;
+assign key_joy3    = 10'h0;
+assign key_joy2    = 10'h0;
+assign key_joy1    = 10'h0;
 assign key_start   = 2'd0;
 assign key_coin    = 2'd0;
 assign key_reset   = 1'b0;
@@ -302,9 +304,8 @@ always @(posedge clk_sys)
                 joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start);
         `endif
         game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, invert_inputs);
-        // rotation is only applied to the first two players
-        game_joystick3 <= {10{invert_inputs}} ^ board_joystick3[9:0];
-        game_joystick4 <= {10{invert_inputs}} ^ board_joystick4[9:0];
+        game_joystick3 <= apply_rotation(joy3_sync | key_joy3, rot_control, invert_inputs);
+        game_joystick4 <= apply_rotation(joy4_sync           , rot_control, invert_inputs);
         
         soft_rst <= key_reset && !last_reset;
 
