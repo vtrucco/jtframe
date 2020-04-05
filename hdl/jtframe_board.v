@@ -137,7 +137,8 @@ module jtframe_board #(parameter
 wire  [ 2:0]  scanlines;
 wire          en_mixing;
 wire          scandoubler = ~scan2x_enb;
-
+wire          hblank = ~LHBL;
+wire          vblank = ~LVBL;
 
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
 wire key_reset, key_pause, rot_control;
@@ -616,8 +617,8 @@ generate
                 .RGB_in         ( {game_r, game_g, game_b } ),
                 .HSync          ( hs            ),
                 .VSync          ( vs            ),
-                .HBlank         ( ~LHBL         ),
-                .VBlank         ( ~LVBL         ),
+                .HBlank         ( hblank        ),
+                .VBlank         ( vblank        ),
 
                 .VGA_CLK        ( scan2x_clk    ),
                 .VGA_CE         ( scan2x_cen    ),
@@ -654,9 +655,6 @@ generate
             assign scan2x_de   = LVBL && LHBL;
         end
         6: begin // vertical games
-            wire hblank = ~LHBL;
-            wire vblank = ~LVBL;
-
             arcade_rotate_fx #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(COLORW*3),.CCW(1)) 
             u_rotate_fx(
                 .clk_video  ( clk_sys       ),
