@@ -13,7 +13,8 @@ data_io.v
 ../mister/sys/video_mixer.sv
 ../mister/sys/video_cleaner.sv
 ../mister/sys/scandoubler.v
-../mister/hq2x_dummy.sv
+#../mister/hq2x_dummy.sv
+../mister/sys/hq2x.sv
 ../ram/jtframe_dual_clk_ram.v
 -sv rgb2ypbpr.sv
 osd.sv

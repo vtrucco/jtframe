@@ -189,7 +189,7 @@ end
 wire hde = scandoubler ? ~hb_sd : ~hb_g;
 wire vde = scandoubler ? ~vb_sd : ~vb_g;
 
-always @(posedge clk_vid) begin
+always @(posedge clk_vid) if(ce_pix_out) begin
 	reg old_hde;
 
 	case(scanlines & {scanline, scanline})

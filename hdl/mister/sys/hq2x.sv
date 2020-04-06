@@ -14,8 +14,11 @@
 // It is assumed that there is more than one clock cycle per pixel clock enable
 // ie ce_in cannot a permanent 1'b1
 
-module Hq2x #(parameter LENGTH, parameter HALF_DEPTH)
-(
+module Hq2x #(
+    parameter LENGTH=128, 
+    parameter HALF_DEPTH=0, 
+    parameter DWIDTH = HALF_DEPTH ? 11 : 23  // do not define DWIDTH
+) (
 	input             clk,
 
 	input             ce_in,
@@ -28,12 +31,11 @@ module Hq2x #(parameter LENGTH, parameter HALF_DEPTH)
 	input             ce_out,
 	input       [1:0] read_y,
 	input             hblank,
-	output [DWIDTH:0] outpixel
+	output reg [DWIDTH:0] outpixel
 );
 
 
 localparam AWIDTH = $clog2(LENGTH)-1;
-localparam DWIDTH = HALF_DEPTH ? 11 : 23;
 localparam DWIDTH1 = DWIDTH+1;
 
 (* romstyle = "MLAB" *) reg [5:0] hqTable[256];
@@ -60,7 +62,6 @@ end
 
 reg [5:0] hqrule;
 
-always @(posedge clk) hqrule <= hqTable[nextpatt];
 
 reg [23:0] Prev0, Prev1, Prev2, Curr0, Curr1, Curr2, Next0, Next1, Next2;
 reg [23:0] A, B, D, F, G, H;
@@ -79,6 +80,9 @@ wire [7:0] new_pattern = {diff1, diff0, pattern[7:2]};
 
 wire [23:0] X = (cyc == 0) ? A : (cyc == 1) ? Prev1 : (cyc == 2) ? Next1 : G;
 wire [23:0] blend_result_pre;
+
+always @(posedge clk) hqrule <= hqTable[nextpatt];
+
 Blend blender(clk, ce_in, disable_hq2x ? 6'd0 : hqrule, Curr0, X, B, D, F, H, blend_result_pre);
 
 wire [DWIDTH:0] Curr20tmp;
@@ -89,6 +93,7 @@ wire     [23:0] Curr21 = HALF_DEPTH ? h2rgb(Curr21tmp) : Curr21tmp;
 reg  [AWIDTH:0] wrin_addr2;
 reg  [DWIDTH:0] wrpix;
 reg             wrin_en;
+reg  [AWIDTH:0] offs;
 
 function [23:0] h2rgb;
 	input [11:0] v;
@@ -127,7 +132,7 @@ reg  [DWIDTH1*4-1:0] wrdata, wrdata_pre;
 wire [DWIDTH1*4-1:0] outpixel_x4;
 reg  [DWIDTH1*2-1:0] outpixel_x2;
 
-assign outpixel = read_x[0] ? outpixel_x2[DWIDTH1*2-1:DWIDTH1] : outpixel_x2[DWIDTH:0];
+//assign outpixel = read_x[0] ? outpixel_x2[DWIDTH1*2-1:DWIDTH1] : outpixel_x2[DWIDTH:0];
 
 hq2x_buf #(.NUMWORDS(LENGTH*2), .AWIDTH(AWIDTH+1), .DWIDTH(DWIDTH1*4-1)) hq2x_out
 (
@@ -144,6 +149,7 @@ hq2x_buf #(.NUMWORDS(LENGTH*2), .AWIDTH(AWIDTH+1), .DWIDTH(DWIDTH1*4-1)) hq2x_ou
 always @(posedge clk) begin
 	if(ce_out) begin
 		if(read_x[0]) outpixel_x2 <= read_y[0] ? outpixel_x4[DWIDTH1*4-1:DWIDTH1*2] : outpixel_x4[DWIDTH1*2-1:0];
+        outpixel <= read_x[0] ? outpixel_x2[DWIDTH1*2-1:DWIDTH1] : outpixel_x2[DWIDTH:0];
 		if(~hblank & ~&read_x) read_x <= read_x + 1'd1;
 		if(hblank) read_x <= 0;
 	end
@@ -151,7 +157,6 @@ end
 
 wire [DWIDTH:0] blend_result = HALF_DEPTH ? rgb2h(blend_result_pre) : blend_result_pre[DWIDTH:0];
 
-reg [AWIDTH:0] offs;
 always @(posedge clk) begin
 	reg old_reset_line;
 	reg old_reset_frame;
@@ -229,7 +234,7 @@ endmodule
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-module hq2x_in #(parameter LENGTH, parameter DWIDTH)
+module hq2x_in #(parameter LENGTH=128, parameter DWIDTH=12, parameter  AWIDTH = $clog2(LENGTH)-1)
 (
 	input            clk,
 
@@ -243,7 +248,6 @@ module hq2x_in #(parameter LENGTH, parameter DWIDTH)
 	input            wren
 );
 
-localparam AWIDTH = $clog2(LENGTH)-1;
 wire  [DWIDTH:0] out[2];
 assign q0 = out[rdbuf0];
 assign q1 = out[rdbuf1];
@@ -253,7 +257,7 @@ hq2x_buf #(.NUMWORDS(LENGTH), .AWIDTH(AWIDTH), .DWIDTH(DWIDTH)) buf1(clk,data,rd
 
 endmodule
 
-module hq2x_buf #(parameter NUMWORDS, parameter AWIDTH, parameter DWIDTH)
+module hq2x_buf #(parameter NUMWORDS=1, parameter AWIDTH=1, parameter DWIDTH=1)
 (
 	input                 clock,
 	input      [DWIDTH:0] data,
@@ -306,16 +310,16 @@ endmodule
 
 module Blend
 (
-	input         clk,
-	input         clk_en,
-	input   [5:0] rule,
-	input  [23:0] E,
-	input  [23:0] A,
-	input  [23:0] B,
-	input  [23:0] D,
-	input  [23:0] F,
-	input  [23:0] H,
-	output [23:0] Result
+	input             clk,
+	input             clk_en,
+	input       [5:0] rule,
+	input      [23:0] E,
+	input      [23:0] A,
+	input      [23:0] B,
+	input      [23:0] D,
+	input      [23:0] F,
+	input      [23:0] H,
+	output reg [23:0] Result
 );
 
 	localparam BLEND1 = 7'b110_10_00; // (A * 12 + B * 4        ) >> 4
