@@ -345,7 +345,7 @@ u_frame(
 `ifdef TESTINPUTS
     test_inputs u_test_inputs(
         .loop_rst       ( loop_rst       ),
-        .LVBL           ( LVBL           ),
+        .LVBL           ( LVBL_dly       ),
         .game_joystick1 ( game_joy1[6:0] ),
         .button_1p      ( game_start[0]  ),
         .coin_left      ( game_coin[0]   )

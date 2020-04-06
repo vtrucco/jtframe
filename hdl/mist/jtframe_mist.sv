@@ -311,7 +311,7 @@ jtframe_board #(
     // Debug
     .gfx_en         ( gfx_en          ),
     // Unused ports (MiSTer)
-    .gamma_bus      ( 22'd0           ),
+    .gamma_bus      (                 ),
     .direct_video   ( 1'b0            ),
     .hdmi_arx       (                 ),
     .hdmi_ary       (                 ),
