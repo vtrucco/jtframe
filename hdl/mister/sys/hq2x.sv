@@ -146,9 +146,10 @@ hq2x_buf #(.NUMWORDS(LENGTH*2), .AWIDTH(AWIDTH+1), .DWIDTH(DWIDTH1*4-1)) hq2x_ou
 	.wren     ( wrout_en                      )
 );
 
+
 always @(posedge clk) begin
 	if(ce_out) begin
-		/*if(read_x[0])*/ outpixel_x2 <= read_y[0] ? outpixel_x4[DWIDTH1*4-1:DWIDTH1*2] : outpixel_x4[DWIDTH1*2-1:0];
+		if(read_x[0]) outpixel_x2 <= read_y[0] ? outpixel_x4[DWIDTH1*4-1:DWIDTH1*2] : outpixel_x4[DWIDTH1*2-1:0];
 		if(~hblank & ~&read_x) read_x <= read_x + 1'd1;
 		if(hblank) begin
 			read_x <= 0;
