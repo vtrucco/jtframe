@@ -136,14 +136,14 @@ reg  [DWIDTH1*2-1:0] outpixel_x2;
 
 hq2x_buf #(.NUMWORDS(LENGTH*2), .AWIDTH(AWIDTH+1), .DWIDTH(DWIDTH1*4-1)) hq2x_out
 (
-	.clock(clk),
+	.clock    ( clk                           ),
 
-	.rdaddress({read_x[AWIDTH+1:1],read_y[1]}),
-	.q(outpixel_x4),
+	.rdaddress( {read_x[AWIDTH+1:1],read_y[1]}),
+	.q        ( outpixel_x4                   ),
 
-	.data(wrdata),
-	.wraddress(wrout_addr),
-	.wren(wrout_en)
+	.data     ( wrdata                        ),
+	.wraddress( wrout_addr                    ),
+	.wren     ( wrout_en                      )
 );
 
 always @(posedge clk) begin
