@@ -216,12 +216,12 @@ reg  [ 7:0] dsw[4];
 assign dipsw        = {dsw[3],dsw[2],dsw[1],dsw[0]};
 assign ioctl_rom_wr = (ioctl_wr && ioctl_index==8'd0);
 
-always @(posedge clk_sys) begin
+always @(posedge clk_rom) begin
     if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[24:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
 end
 `endif
 
-always @(posedge clk_sys, posedge rst) begin
+always @(posedge clk_rom, posedge rst) begin
     if( rst ) begin
         core_mod <= ~7'd0;
     end else begin
@@ -231,7 +231,7 @@ end
 
 hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
 (
-    .clk_sys         ( clk_sys        ),
+    .clk_sys         ( clk_rom        ),
     .HPS_BUS         ( HPS_BUS        ),
     .conf_str        ( CONF_STR       ),
 

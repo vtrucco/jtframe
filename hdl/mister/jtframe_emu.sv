@@ -183,7 +183,7 @@ wire JOY_DATA = USER_IN[5];
 
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys, clk96, clk96sh, clk48, clk48sh, clk24, clk6;
+wire clk_sys, clk_rom, clk96, clk96sh, clk48, clk48sh, clk24, clk6;
 wire pxl2_cen, pxl_cen;
 wire pll_locked;
 reg  pll_rst = 1'b0;
@@ -222,11 +222,13 @@ pll pll(
     .outclk_5   ( clk96sh    )
 );
 
-`ifndef JTFRAME_CLK96
 assign clk_sys   = clk48;
+
+`ifndef JTFRAME_CLK96
+assign clk_rom   = clk48;
 assign SDRAM_CLK = clk48sh;
 `else
-assign clk_sys   = clk96;
+assign clk_rom   = clk96;
 assign SDRAM_CLK = clk96sh;
 `endif
 
@@ -318,7 +320,7 @@ jtframe_mister #(
 )
 u_frame(
     .clk_sys        ( clk_sys        ),
-    .clk_rom        ( clk_sys        ),
+    .clk_rom        ( clk_rom        ),
     .clk_vga        ( clk_sys        ),
     .pll_locked     ( pll_locked     ),
     // interface with microcontroller
@@ -449,7 +451,7 @@ assign sim_pxl_cen = pxl_cen;
     .rst          ( game_rst         ),
     // clock inputs
     // By default clk is 48MHz, but JTFRAME_CLK96 overrides it to 96MHz
-    .clk          ( clk_sys          ),
+    .clk          ( clk_rom          ),
     `ifdef JTFRAME_CLK96
     .clk48        ( clk48            ),
     `endif
