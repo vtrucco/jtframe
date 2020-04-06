@@ -187,6 +187,7 @@ jtframe_pll96 u_pll_game (
     .c4     ( clk6        ),
     .locked ( pll_locked  )
 );
+assign clk_sys   = clk48;
 `else
 jtframe_pll0 u_pll_game (
     .inclk0 ( CLOCK_27[0] ),
@@ -196,8 +197,8 @@ jtframe_pll0 u_pll_game (
     .c4     ( clk6        ),
     .locked ( pll_locked  )
 );
-`endif
 assign clk_sys   = clk_rom;
+`endif
 
 jtframe_pll1 u_pll_vga (
     .inclk0 ( clk_sys    ),
@@ -365,7 +366,7 @@ wire sample;
 `GAMETOP
 u_game(
     .rst         ( game_rst       ),
-    .clk         ( clk_sys        ),
+    .clk         ( clk_rom        ),
     `ifdef JTFRAME_CLK96
     .clk48       ( clk48          ),
     `endif
