@@ -114,19 +114,19 @@ reg [8:0] hbo;
 
 Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 (
-	.clk(clk_vid),
+	.clk         ( clk_vid             ),
 
-	.ce_in(ce_x4i),
-	.inputpixel({b_d,g_d,r_d}),
-	.mono(mono),
-	.disable_hq2x(~hq2x),
-	.reset_frame(vb_in),
-	.reset_line(req_line_reset),
+	.ce_in       ( ce_x4i              ),
+	.inputpixel  ( {b_d,g_d,r_d}       ),
+	.mono        ( mono                ),
+    .disable_hq2x( ~hq2x               ),
+	.reset_frame ( vb_in               ),
+	.reset_line  ( req_line_reset      ),
 
-	.ce_out(ce_x4o),
-	.read_y(sd_line),
-	.hblank(hbo[0]&hbo[8]),
-	.outpixel({b_out,g_out,r_out})
+	.ce_out      ( ce_x4o              ),
+	.read_y      ( sd_line             ),
+	.hblank      ( hbo[0]&hbo[8]       ),
+	.outpixel    ( {b_out,g_out,r_out} )
 );
 
 reg  [7:0] pix_out_cnt = 0;
