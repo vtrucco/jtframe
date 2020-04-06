@@ -187,7 +187,8 @@ jtframe_pll96 u_pll_game (
     .c4     ( clk6        ),
     .locked ( pll_locked  )
 );
-assign clk_sys   = clk48;
+assign clk_sys   = clk_rom; // it is possible to use clk48 instead but
+    // video mixer doesn't work well in HQ mode
 `else
 jtframe_pll0 u_pll_game (
     .inclk0 ( CLOCK_27[0] ),

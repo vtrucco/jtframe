@@ -222,12 +222,13 @@ pll pll(
     .outclk_5   ( clk96sh    )
 );
 
-assign clk_sys   = clk48;
 
 `ifndef JTFRAME_CLK96
+assign clk_sys   = clk48;
 assign clk_rom   = clk48;
 assign SDRAM_CLK = clk48sh;
 `else
+assign clk_sys   = clk96; // clk48 can be used but video mixer may fail for some modes
 assign clk_rom   = clk96;
 assign SDRAM_CLK = clk96sh;
 `endif

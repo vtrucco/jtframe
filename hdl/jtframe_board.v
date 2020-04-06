@@ -173,7 +173,7 @@ reg soft_rst;
 reg last_dip_flip;
 reg [7:0] game_rst_cnt=8'd0;
 
-always @(negedge clk_sys) begin
+always @(negedge clk_rom) begin
     last_dip_flip <= dip_flip;
     if( downloading | rst | rst_req | (last_dip_flip!=dip_flip) | soft_rst ) begin
         game_rst_cnt <= 8'd0;
@@ -187,7 +187,7 @@ end
 
 // convert game_rst to game_rst_n
 reg pre_game_rst_n;
-always @(posedge clk_sys)
+always @(posedge clk_rom)
     if( game_rst ) begin
         pre_game_rst_n <= 1'b0;
         game_rst_n <= 1'b0;
