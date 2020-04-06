@@ -355,7 +355,6 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
                         NOMAIN macro
         SDRAM_DELAY=X   ns delay for SDRAM_CLK (cannot use with -slowpll)
         BASE_CLK=X      Base period for game clock (cannot use with -slowpll)
-        SIM_SCANDOUBLER Simulate scan doubler
         SIMULATE_OSD    Simulate OSD display
         SIMINFO         Show simulation options available thorugh define commands
         SCANDOUBLER_DISABLE=1   Disables the scan doubler module

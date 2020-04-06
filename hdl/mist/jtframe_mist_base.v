@@ -168,14 +168,16 @@ user_io #(.STRLEN(CONF_STR_LEN), .ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_use
 `else
 assign joystick1 = 32'd0;
 assign joystick2 = 32'd0;
+assign joystick3 = 32'd0;
+assign joystick4 = 32'd0;
 assign status    = 32'd0;
 assign ps2_kbd_data = 1'b0;
 assign ps2_kbd_clk  = 1'b0;
 `ifndef SCANDOUBLER_DISABLE
-assign scan2x_enb   = 1'b0;
-`define SCANDOUBLER_DISABLE 1'b0
-initial $display("INFO: Use -d SCANDOUBLER_DISABLE=1 if you want video output.");
+    `define SCANDOUBLER_DISABLE 1'b1
+    initial $display("INFO: Use -d SCANDOUBLER_DISABLE=0 if you want video output.");
 `endif
+initial $display("INFO:SCANDOUBLER_DISABLE=%d",`SCANDOUBLER_DISABLE);
 assign scan2x_enb = `SCANDOUBLER_DISABLE;
 assign ypbpr = 1'b0;
 `endif
