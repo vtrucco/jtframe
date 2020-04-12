@@ -9,13 +9,11 @@ You can show your appreciation through
     * Patreon: https://patreon.com/topapate
     * Paypal: https://paypal.me/topapate
 
-CPUs
-====
+#CPUs
 
 Some CPUs are included in JTFRAME. Some of them can be found in other repositories in Github but the versions in JTFRAME include clock enable inputs and other improvements.
 
-Simulation of 74-series based schematics
-========================================
+#Simulation of 74-series based schematics
 
 Many arcade games and 80's computers use 74-series devices to do discrete logic. There are some files in JTFRAME that help analyze these systems using the following flow:
 
@@ -29,8 +27,7 @@ There is a verilog library of 74-series gates in the hdl folder: hdl/jt74.v. The
 
 It makes sense to simulate delays in 74-series gates as this is important in some designs. Even if some cells do not include delays, later versions of jt74.v may include delays for all cells. It is not recommended to set up your simulations with Verilator because Verilator does not support delays and other modelling constructs. The jt74 library is not meant for synthesis, only simulation.
 
-Cabinet inputs during simulation
-================================
+#Cabinet inputs during simulation
 You can use a hex file with inputs for simulation. Enable this with the macro
 SIM_INPUTS. The file must be called sim_inputs.hex. Each line has a hexadecimal
 number with inputs coded. Active high only:
@@ -49,8 +46,7 @@ bit         meaning
 
 Each line will be applied on a new frame.
 
-OSD colours
-===========
+#OSD colours
 The macro JTFRAME_OSDCOLOR should be defined with a 6-bit value encoding an RGB tone. This is used for
 the OSD background. The meanins are:
 
@@ -61,9 +57,7 @@ Value | Meaning                 | Colour
 6'h3c | Playable with problems  | Yellow
 6'h35 | Very early core         | Red
 
-SDRAM Controller
-================
-
+#SDRAM Controller
 **jtframe_sdram** is a generic SDRAM controller that runs upto 48MHz because it is designed for CL=2. It mainly serves for reading ROMs from the SDRAM but it has some support for writting (apart from the initial ROM download process).
 
 This module may result in timing errors in MiSTer because sometimes the compiler does not assign the input flip flops from SDRAM_DQ at the pads. In order to avoid this, you can define the macro **JTFRAME_SDRAM_REPACK**. This will add one extra stage of data latching, which seems to allow the fitter to use the pad flip flops. This does delay data availability by one clock cycle. Some cores in MiSTer do synthesize with pad FF without the need of this option. Use it if you find setup timing violation about the SDRAM_DQ pins.
@@ -79,22 +73,23 @@ These signals should be used in combination with the rest of prog_ and sdram_ si
 
 The data bus is held down all the time and only released when the SDRAM is expected to use it. This behaviour can be reverted using **JTFRAME_NOHOLDBUS**. When this macro is defined, the bus will only be held while writting data and released the rest of the time. For 48MHz operation, holding the bus works better. For 96MHz it doesn't seem to matter.
 
-Fast load in MiST
-=================
+#Fast Load
 
+##MiST
 Starting from the Dec. 2020 firmware update, MiST can now delegate the ROM load to the FPGA. This makes the process 4x faster. This option is enabled by default. However, it can be a problem because the ROM transfer will be composed of full SD card sectors so there will be some garbage sent at the end of the ROM. If the core is not compatible with this and it relies on exact sizing of the ROM it needs to define the macro **JTFRAME_MIST_DIRECT** and set it to zero:
 
 ```
 set_global_assignment -name VERILOG_MACRO "JTFRAME_MIST_DIRECT=0"
 ```
 
-DIP switches in MRA files
-=========================
+##MiSTer
+In order to preserve the 8-bit ROM download interface with MiST, _jtframe_mister_ presents it too. However it can operate internally with 16-bit packets if the macro **JTFRAME_MR_FASTIO** is set to 1. This has only been tested with 96MHz clock. Indeed, if **JTFRAME_CLK96** is defined and **JTFRAME_MR_FASTIO** is not, then it will be defined to 1.
+
+#DIP switches in MRA files
 
 To enable support of DIP switches in MRA files define the macro **JTFRAME_MRA_DIP**. The maximum length of DIP switches is 32 bits.
 
-Joysticks
-=========
+#Joysticks
 By default the frame supports two joysticks only and will try to connect to game modules based on this assumption. For games that need four joysticks, define the macro **JTFRAME_4PLAYERS**.
 Note that the registers containing the coin and start button inputs are always passed as 4 bits, but the game can just ignore the 2 MSB if it only supports two players.
 
@@ -105,15 +100,13 @@ Analog controllers are not connected to the game module by default. In order to 
     input   [15:0]  joystick_analog_1,
 ```
 
-SDRAM Simulation
-================
+#SDRAM Simulation
 
 A model for SDRAM mt48lc16m16a2 is included in JTFRAME. The model will load the contents of the file **sdram.hex** if available at the beginning of simulation.
 
 The current contents of the SDRAM can be dumped at the beginning of each frame (falling edge of vertical blank) if **JTFRAME_SAVESDRAM** is defined. Because this is quite an overhead, it is possible to restrict it to dump only a certain **DUMP_START** frame count has been reached. All frames will be dumped after it. The macro **DUMP_START** is the same one used for setting the start of signal dump to the __VCD__ file.
 
-Game clocks
-===========
+#Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
 
 optional clock input | Macro Needed
@@ -124,9 +117,9 @@ clk48                | JTFRAME_CLK96
 
 Note that although clk6 and clk24 are obtained without affecting the main clock input, if **JTFRAME_CLK96** is defined, the main clock input moves up from 48MHz to 96MHz. The 48MHz clock can the be obtained from clk48.
 
+By default unless **JTFRAME_MR_FASTIO** is already defined, **JTFRAME_CLK96** will define it to 1. This enables fast ROM download in MiSTer using 16-bit mode in _hps_io_.
 
-Modules with simulation files added automatically
-=================================================
+#Modules with simulation files added automatically
 Define and export the following environgment variables to have these
 modules added to your simulation when using sim.sh
 
@@ -138,8 +131,7 @@ M6801
 M6809
 I8051
 
-Credits Screen
-==============
+#Credits Screen
 Credits can be displayed using the module *jtframe_credits*. This module needs the following files
 
 File           | Tool      | Function
@@ -155,7 +147,7 @@ avatar.py needs a .png image that complies with:
 2. Maximum 16 colours in the image
 3. Alpha channel present in the PNG
 
-# JTCORE
+#Compilation
 
 jtcore is the script used to compile the cores.
 

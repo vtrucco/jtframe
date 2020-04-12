@@ -229,7 +229,68 @@ always @(posedge clk_rom, posedge rst) begin
     end
 end
 
-hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
+`ifndef JTFRAME_MR_FASTIO
+    `ifdef JTFRAME_CLK96
+        `define JTFRAME_MR_FASTIO 1
+    `else 
+        `define JTFRAME_MR_FASTIO 0
+    `endif
+`endif
+
+localparam JTFRAME_MR_FASTIO=`JTFRAME_MR_FASTIO;
+
+wire                                dwnld_wr;
+wire [26:0]                         dwnld_addr;
+wire [(JTFRAME_MR_FASTIO?16:8)-1:0] dwnld_data;
+
+generate
+    if( JTFRAME_MR_FASTIO==0 ) begin
+        assign ioctl_wr   = dwnld_wr;
+        assign ioctl_addr = dwnld_addr[24:0];
+        assign ioctl_data = dwnld_data;
+    end else begin
+        // 16 to 8 bit conversion
+        // It transforms one 16-bit write request in two 8-bit requests
+        // Measured in MiSTer firmware of April 2020, there are ~100 96MHz clock
+        // cycles between two ioctl_wr requests (about 1us per data)
+        // During that time, two 8 bit writes must fit
+        // DWNLD_W marks the time it takes to process one 8-bit packet
+        // It has only been tested for 96MHz clock
+        localparam DWNLD_W=24;
+        reg [7:0]  dwnld_half;
+        reg        dwnld_addr0, half_wr;
+        reg [DWNLD_W-1:0] dwnld_st;
+        // reg       dwnld_wr_last;
+        assign ioctl_wr   = half_wr;
+        assign ioctl_addr = {dwnld_addr[24:1], dwnld_addr0};
+        assign ioctl_data = dwnld_half;
+
+        always @( posedge clk_rom, posedge rst ) begin
+            if( rst ) begin
+                dwnld_half  <= 8'd0;
+                dwnld_addr0 <= 1'b0;
+                half_wr     <= 1'b0;
+                dwnld_st    <= 0;
+            end else begin
+                dwnld_st <= dwnld_st<<1;
+                if( dwnld_wr ) begin
+                    dwnld_half <= dwnld_data[7:0];
+                    dwnld_addr0<= 1'b0;
+                    half_wr    <= 1'b1;
+                    dwnld_st[0]<= 1'b1;
+                end else if( dwnld_st[DWNLD_W-1] ) begin
+                    dwnld_half <= dwnld_data[15:8];
+                    dwnld_addr0<= 1'b1;
+                    half_wr    <= 1'b1;
+                end else begin
+                    half_wr <= 1'b0;
+                end
+            end
+        end
+    end
+endgenerate
+
+hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_hps_io
 (
     .clk_sys         ( clk_rom        ),
     .HPS_BUS         ( HPS_BUS        ),
@@ -243,9 +304,9 @@ hps_io #(.STRLEN($size(CONF_STR)/8),.PS2DIV(32)) u_hps_io
     .forced_scandoubler(force_scan2x  ),
 
     .ioctl_download  ( downloading    ),
-    .ioctl_wr        ( ioctl_wr       ),
-    .ioctl_addr      ( ioctl_addr     ),
-    .ioctl_dout      ( ioctl_data     ),
+    .ioctl_wr        ( dwnld_wr       ),
+    .ioctl_addr      ( dwnld_addr     ),
+    .ioctl_dout      ( dwnld_data     ),
     .ioctl_index     ( ioctl_index    ),
 
     .joy_raw         ( joydb15_1[5:0] ),   
