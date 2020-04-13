@@ -123,7 +123,7 @@ module jtframe_mist #(parameter
     output          dip_test,
     // non standard:
     output          dip_pause,
-    output          dip_flip,     // A change in dip_flip implies a reset
+    inout           dip_flip,     // A change in dip_flip implies a reset
     output  [ 1:0]  dip_fxlevel,
     // Debug
     output          LED,

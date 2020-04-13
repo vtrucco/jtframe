@@ -85,7 +85,11 @@ module jtframe_mist_base #(parameter
     output          downloading
 );
 
-wire ypbpr;
+wire        ypbpr;
+wire [7:0]  ioctl_index;
+wire        ioctl_download;
+
+assign downloading = ioctl_download && ioctl_index==8'd0;
 
 `ifndef SIMULATION
     `ifndef NOSOUND
@@ -183,18 +187,18 @@ assign ypbpr = 1'b0;
 `endif
 
 data_io #(.ROM_DIRECT_UPLOAD(1'b1)) u_datain (
-    .SPI_SCK            ( SPI_SCK      ),
-    .SPI_SS2            ( SPI_SS2      ),
-    .SPI_SS4            ( SPI_SS4      ),
-    .SPI_DI             ( SPI_DI       ),
-    .SPI_DO             ( SPI_DO       ),
+    .SPI_SCK            ( SPI_SCK           ),
+    .SPI_SS2            ( SPI_SS2           ),
+    .SPI_SS4            ( SPI_SS4           ),
+    .SPI_DI             ( SPI_DI            ),
+    .SPI_DO             ( SPI_DO            ),
     
-    .clk_sys            ( clk_rom      ),
-    .ioctl_download     ( downloading  ),
-    .ioctl_addr         ( ioctl_addr   ),
-    .ioctl_dout         ( ioctl_data   ),
-    .ioctl_wr           ( ioctl_wr     ),
-    .ioctl_index        ( /* unused*/  )
+    .clk_sys            ( clk_rom           ),
+    .ioctl_download     ( ioctl_download    ),
+    .ioctl_addr         ( ioctl_addr        ),
+    .ioctl_dout         ( ioctl_data        ),
+    .ioctl_wr           ( ioctl_wr          ),
+    .ioctl_index        ( ioctl_index       )
 );
 
 // OSD will only get simulated if SIMULATE_OSD is defined

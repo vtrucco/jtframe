@@ -85,9 +85,30 @@ set_global_assignment -name VERILOG_MACRO "JTFRAME_MIST_DIRECT=0"
 ##MiSTer
 In order to preserve the 8-bit ROM download interface with MiST, _jtframe_mister_ presents it too. However it can operate internally with 16-bit packets if the macro **JTFRAME_MR_FASTIO** is set to 1. This has only been tested with 96MHz clock. Indeed, if **JTFRAME_CLK96** is defined and **JTFRAME_MR_FASTIO** is not, then it will be defined to 1.
 
-#DIP switches in MRA files
+#DIP switches and OSD
 
 To enable support of DIP switches in MRA files define the macro **JTFRAME_MRA_DIP**. The maximum length of DIP switches is 32 bits.
+
+## Values used in the status word by JTFRAME
+
+Values above 8 are not available in MiST if **JTFRAME_MRA_DIP** is defined.
+
+bit     |  meaning                | Enabled with macro
+========|=========================|====================
+0       | Reset in MiST           |
+1       | Flip screen             | VERTICAL_SCREEN && !JTFRAME_OSD_FLIP
+2       | Rotate controls         | VERTICAL_SCREEN (MiST)
+2       | Rotate screen           | VERTICAL_SCREEN (MiSTer)
+3-5     | Scandoubler Fx          | MISTER_VIDEO_MIXER
+6-7     | FX Volume               | JT12
+8       | ADPCM                   | JTFRAME_ADPCM && !JT12 && !NOSOUND
+8       | PSG                     | JT12 && !NOSOUND
+9       | FM                      | (JT51 || JT12) && !NOSOUND
+10      | Test mode               | JTFRAME_OSD_TEST
+11      | Aspect Ratio            | MiSTer only
+15      | Credits/Pause           |
+
+If **JTFRAME_FLIP_RESET** is defined a change in dip_flip will reset the game.
 
 ##DIP switch information extraction from MAME
 

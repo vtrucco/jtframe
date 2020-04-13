@@ -73,21 +73,20 @@ localparam CONF_STR="JTGNG;;";
 
 localparam CONF_STR = {
     `CORENAME,";;",
-    "O1,Credits,OFF,ON;",
-    `SEPARATOR
     // Common MiSTer options
     `ifndef JTFRAME_OSD_NOLOAD
     "F,rom;",
     `endif
-    //"O2,Aspect Ratio,Original,Wide;",
     `ifdef VERTICAL_SCREEN
-    "OD,Rotate controls,No,Yes;",
-    "OC,Flip screen,OFF,ON;",
+    `ifdef JTFRAME_OSD_FLIP
+    "O1,Flip screen,OFF,ON;",
     `endif
-    `ifdef JOIN_JOYSTICKS
-    "OE,Separate Joysticks,Yes,No;",    // If no, then player 2 joystick
-        // is assimilated to player 1 joystick
+    "O2,Rotate controls,No,Yes;",
     `endif
+    // `ifdef JOIN_JOYSTICKS
+    // "OE,Separate Joysticks,Yes,No;",    // If no, then player 2 joystick
+    //     // is assimilated to player 1 joystick
+    // `endif
     `ifdef MISTER_VIDEO_MIXER
         "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
     `else
@@ -95,24 +94,34 @@ localparam CONF_STR = {
             "O3,Screen filter,ON,OFF;",
         `endif
     `endif
-    `ifdef HAS_TESTMODE
-    "O6,Test mode,OFF,ON;",
+    `ifndef NOSOUND    
+        `ifdef JT12
+        "O8,PSG,ON,OFF;",
+        "O9,FM ,ON,OFF;",
+        "O67,FX volume, high, very high, very low, low;",
+        `else
+            `ifdef JTFRAME_ADPCM
+            "O8,ADPCM,ON,OFF;",
+            `endif
+            `ifdef JT51
+            "O9,FM ,ON,OFF;",
+            `endif
+        `endif
     `endif
-    `ifdef JT12
-    "O7,PSG,ON,OFF;",
-    "O8,FM ,ON,OFF;",
-    "OAB,FX volume, high, very high, very low, low;",
-    `else
-        `ifdef JTFRAME_ADPCM
-        "O7,ADPCM,ON,OFF;",
-        `endif
-        `ifdef JT51
-        "O8,FM ,ON,OFF;",
-        `endif
+    `ifdef JTFRAME_OSD_TEST
+    "OA,Test mode,OFF,ON;",
     `endif
     `SEPARATOR
+    `ifdef JTFRAME_MRA_DIP
+    "DIP;",
+    `else
+    `CORE_OSD
+    `endif
     `CORE_OSD
     "T0,RST;",
+    `ifndef JTFRAME_OSD_NOCREDITS
+    "OF,Credits,OFF,ON;",
+    `endif
     "V,patreon.com/topapate;"
 };
 
@@ -140,7 +149,6 @@ assign data_write   = 16'h00;
 `endif
 
 wire rst_req   = status[0];
-wire join_joys = status[32'he];
 
 wire sdram_req;
 
@@ -438,6 +446,9 @@ u_game(
     .dip_flip    ( dip_flip       ),
     .dip_test    ( dip_test       ),
     .dip_fxlevel ( dip_fxlevel    ),  
+    `ifdef JTFRAME_MRA_DIP
+    .dipsw       ({status[31:8], 8'hff } ),
+    `endif
 
     // sound
     `ifndef STEREO_GAME

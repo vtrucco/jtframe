@@ -95,7 +95,7 @@ module jtframe_board #(parameter
     output            dip_test,
     // non standard:
     output            dip_pause,
-    output            dip_flip,     // A change in dip_flip implies a reset
+    inout             dip_flip,     // A change in dip_flip implies a reset if JTFRAME_FLIP_RESET is defined
     output    [ 1:0]  dip_fxlevel,
     // Base video
     input     [ 1:0]  osd_rotate,
@@ -175,7 +175,11 @@ reg [7:0] game_rst_cnt=8'd0;
 
 always @(negedge clk_rom) begin
     last_dip_flip <= dip_flip;
-    if( downloading | rst | rst_req | (last_dip_flip!=dip_flip) | soft_rst ) begin
+    if( downloading | rst | rst_req 
+        `ifdef JTFRAME_FLIP_RESET
+        | (last_dip_flip!=dip_flip) 
+        `endif
+        | soft_rst ) begin
         game_rst_cnt <= 8'd0;
         game_rst     <= 1'b1;
     end

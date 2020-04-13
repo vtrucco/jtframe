@@ -375,6 +375,10 @@ if [ $ZIP = TRUE ]; then
         cp $RELEASE.rbf $BINFOLDER/releases
         OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
         if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
+        # If there is a mounted SD card with the right name, copy the file to it too
+        if [ -d /media/$USER/${MIST^^} ]; then
+            cp $RELEASE.rbf /media/$USER/${MIST^^}
+        fi
     fi
     rm $RELEASE.rbf
 fi

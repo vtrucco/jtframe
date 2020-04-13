@@ -128,7 +128,7 @@ module jtframe_mister #(parameter
     output    [ 1:0]  hdmi_sl,   // scanlines fx   
     // non standard:
     output            dip_pause,
-    output            dip_flip,     // A change in dip_flip implies a reset
+    inout             dip_flip,
     output    [ 1:0]  dip_fxlevel,
     output    [31:0]  dipsw,
     //DB15 
@@ -142,7 +142,13 @@ module jtframe_mister #(parameter
 );
 
 wire [15:0] joydb15_1,joydb15_2;
+wire [21:0] gamma_bus;
 
+wire [ 7:0] ioctl_index;
+wire        ioctl_wr;
+wire        ioctl_download;
+
+assign downloading = ioctl_download &&ioctl_index==8'd0;
 assign LED  = downloading | dwnld_busy;
 assign USER_OSD = joydb15_1[10] & joydb15_1[6];
 
@@ -200,10 +206,6 @@ always @(*) begin
     end
 end
 
-wire [21:0] gamma_bus;
-
-wire [ 7:0] ioctl_index;
-wire        ioctl_wr;
 
 `ifndef JTFRAME_MRA_DIP
 // DIP switches through regular OSD options
@@ -225,7 +227,9 @@ always @(posedge clk_rom, posedge rst) begin
     if( rst ) begin
         core_mod <= ~7'd0;
     end else begin
-        if (ioctl_wr && (ioctl_index==1)) core_mod <= ioctl_data[6:0];
+        // The ioctl_addr[0]==1'b0 condition is needed in case JTFRAME_MR_FASTIO is enabled
+        // as it always creates two write events and the second would delete the data of the first
+        if (ioctl_wr && (ioctl_index==1) && ioctl_addr[0]==1'b0) core_mod <= ioctl_data[6:0];
     end
 end
 
@@ -303,7 +307,7 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .direct_video    ( direct_video   ),
     .forced_scandoubler(force_scan2x  ),
 
-    .ioctl_download  ( downloading    ),
+    .ioctl_download  ( ioctl_download ),
     .ioctl_wr        ( dwnld_wr       ),
     .ioctl_addr      ( dwnld_addr     ),
     .ioctl_dout      ( dwnld_data     ),
