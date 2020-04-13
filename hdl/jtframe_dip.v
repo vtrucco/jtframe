@@ -114,7 +114,7 @@ always @(posedge clk) begin
     `else
         dip_pause <= 
             `ifndef JTFRAME_OSD_NOCREDITS
-            ~status[15] | // Control pause via OSD too
+            (~status[15]) | // Control pause via OSD too
             `endif
             game_pause; // all dips are active low
     `endif
