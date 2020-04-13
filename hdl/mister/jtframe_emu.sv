@@ -120,8 +120,6 @@ localparam CONF_STR="JTGNG;;";
 `else
 localparam CONF_STR = {
     `CORENAME,";;",
-    "O1,Credits,OFF,ON;",
-    `SEPARATOR
     // Common MiSTer options
     `ifndef JTFRAME_OSD_NOLOAD
     "F,rom;",
@@ -164,6 +162,7 @@ localparam CONF_STR = {
     `endif
     `SEPARATOR
     "R0,Reset;",
+    "O1,Credits,OFF,ON;",
     `CORE_KEYMAP
     "V,v",`BUILD_DATE," jotego;"
 };
@@ -238,7 +237,6 @@ assign SDRAM_CLK = clk96sh;
 wire [31:0] status;
 wire [ 1:0] buttons;
 
-wire [ 7:0] dipsw_a, dipsw_b;
 wire [ 1:0] dip_fxlevel;
 wire        enable_fm, enable_psg;
 wire        dip_pause, dip_flip, dip_test;
@@ -526,6 +524,9 @@ assign sim_pxl_cen = pxl_cen;
     .dip_flip     ( dip_flip         ),
     .dip_test     ( dip_test         ),
     .dip_fxlevel  ( dip_fxlevel      ),
+    `ifdef JTFRAME_MRA_DIP
+    .dipsw        ( dipsw            ),
+    `endif
 
     `ifdef STEREO_GAME
     .snd_left     ( AUDIO_L          ),

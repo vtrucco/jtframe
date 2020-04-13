@@ -89,6 +89,18 @@ In order to preserve the 8-bit ROM download interface with MiST, _jtframe_mister
 
 To enable support of DIP switches in MRA files define the macro **JTFRAME_MRA_DIP**. The maximum length of DIP switches is 32 bits.
 
+##DIP switch information extraction from MAME
+
+First you need to get the xml with all the information:
+
+```
+mame -listxml > mame.xml
+```
+
+The file *mamefilter.cc* is an example of how to extract a subset of machine definitions from the file.
+
+The files *mamegame.hpp* and *mamegame.cc* contain some classes and a function to process the MAME XML into easy-to-use C++ objects. An example of this in use can be seen in JTCPS1 core.
+
 #Joysticks
 By default the frame supports two joysticks only and will try to connect to game modules based on this assumption. For games that need four joysticks, define the macro **JTFRAME_4PLAYERS**.
 Note that the registers containing the coin and start button inputs are always passed as 4 bits, but the game can just ignore the 2 MSB if it only supports two players.
