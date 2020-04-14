@@ -377,7 +377,10 @@ if [ $ZIP = TRUE ]; then
         if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
         # If there is a mounted SD card with the right name, copy the file to it too
         if [ -d /media/$USER/${MIST^^} ]; then
-            cp $RELEASE.rbf /media/$USER/${MIST^^}
+            cp -v $RELEASE.rbf /media/$USER/${MIST^^}
+            if [ -d /media/$USER/${MIST^^}/JT${PRJ^^} ]; then
+                cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}/JT${PRJ^^}.rbf
+            fi
         fi
     fi
     rm $RELEASE.rbf
