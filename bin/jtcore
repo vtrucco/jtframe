@@ -43,6 +43,8 @@ cd $JTROOT
 MODULES=$JTROOT/modules
 JTFRAME=$MODULES/jtframe
 SIDI=0
+# This is the FTP host to which files will be copied
+HOST=mr
 
 if [ ! -e "$JTFRAME" ]; then
     echo "ERROR: cannot locate jtframe folder."
@@ -380,6 +382,17 @@ if [ $ZIP = TRUE ]; then
             cp -v $RELEASE.rbf /media/$USER/${MIST^^}
             if [ -d /media/$USER/${MIST^^}/JT${PRJ^^} ]; then
                 cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}/JT${PRJ^^}.rbf
+            fi
+        fi
+        if [ $MIST = mister ]; then
+            # If Mr is online, copy the file to the _Arcade folder
+            if ping $HOST -w 1 -c 1 > /dev/null; then
+                ftp -inv $HOST <<EOF
+user root 1
+cd /media/fat/_CPS
+mput $RELEASE.rbf
+bye
+EOF
             fi
         fi
     fi
