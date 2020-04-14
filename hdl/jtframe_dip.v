@@ -56,6 +56,18 @@ module jtframe_dip(
 // "OAB,FX volume, high, very high, very low, low;",
 // core-specific settings should start at letter G (i.e. 16)
 
+`ifdef JTFRAME_ARX
+localparam [7:0] ARX = `JTFRAME_ARX;
+`else
+localparam [7:0] ARX = 8'd4;
+`endif
+
+`ifdef JTFRAME_ARY
+localparam [7:0] ARY = `JTFRAME_ARY;
+`else
+localparam [7:0] ARY = 8'd3;
+`endif
+
 `ifdef JTFRAME_OSD_FLIP
 assign dip_flip    = status[1];
 `endif
@@ -102,8 +114,8 @@ always @(posedge clk) begin
     enable_fm   <= ~status[9];
     enable_psg  <= ~status[8];
     // only for MiSTer
-    hdmi_arx    <= widescreen ? 8'd16 : swap_ar ? 8'd4 : 8'd3;
-    hdmi_ary    <= widescreen ? 8'd9  : swap_ar ? 8'd3 : 8'd4;
+    hdmi_arx    <= widescreen ? 8'd16 : swap_ar ? ARX : ARY;
+    hdmi_ary    <= widescreen ? 8'd9  : swap_ar ? ARY : ARX;
 
     `ifdef SIMULATION
         `ifdef DIP_PAUSE
@@ -112,11 +124,11 @@ always @(posedge clk) begin
             dip_pause <= 1'b1; // avoid having the main CPU halted in simulation
         `endif
     `else
-        dip_pause <= 
+        dip_pause <= ~(
             `ifndef JTFRAME_OSD_NOCREDITS
-            (~status[15]) | // Control pause via OSD too
+            status[15] | // Control pause via OSD too
             `endif
-            game_pause; // all dips are active low
+            game_pause); // all dips are active low
     `endif
 end
 
