@@ -89,7 +89,7 @@ wire        ypbpr;
 wire [7:0]  ioctl_index;
 wire        ioctl_download;
 
-assign downloading = ioctl_download && ioctl_index==8'd0;
+assign downloading = ioctl_download;
 
 `ifndef SIMULATION
     `ifndef NOSOUND
