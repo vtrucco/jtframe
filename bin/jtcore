@@ -389,7 +389,7 @@ if [ $ZIP = TRUE ]; then
             if ping $HOST -w 1 -c 1 > /dev/null; then
                 ftp -inv $HOST <<EOF
 user root 1
-cd /media/fat/_CPS
+cd /media/fat/_Arcade
 mput $RELEASE.rbf
 bye
 EOF
