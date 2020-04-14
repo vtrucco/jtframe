@@ -96,7 +96,7 @@ Values above 8 are not available in MiST if **JTFRAME_MRA_DIP** is defined.
 bit     |  meaning                | Enabled with macro
 ========|=========================|====================
 0       | Reset in MiST           |
-1       | Flip screen             | VERTICAL_SCREEN && !JTFRAME_OSD_FLIP
+1       | Flip screen             | VERTICAL_SCREEN && JTFRAME_OSD_FLIP
 2       | Rotate controls         | VERTICAL_SCREEN (MiST)
 2       | Rotate screen           | VERTICAL_SCREEN (MiSTer)
 3-5     | Scandoubler Fx          | MISTER_VIDEO_MIXER
