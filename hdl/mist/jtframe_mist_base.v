@@ -194,6 +194,7 @@ data_io #(.ROM_DIRECT_UPLOAD(1'b1)) u_datain (
     .SPI_DO             ( SPI_DO            ),
     
     .clk_sys            ( clk_rom           ),
+    .clkref_n           ( 1'b0              ), // this is not a clock.
     .ioctl_download     ( ioctl_download    ),
     .ioctl_addr         ( ioctl_addr        ),
     .ioctl_dout         ( ioctl_data        ),

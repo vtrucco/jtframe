@@ -372,6 +372,12 @@ u_frame(
 
 wire sample;
 
+`ifdef JTFRAME_4PLAYERS
+localparam STARTW=4;
+`else 
+localparam STARTW=2;
+`endif
+
 `GAMETOP
 u_game(
     .rst         ( game_rst       ),
@@ -395,8 +401,8 @@ u_game(
     .HS          ( hs             ),
     .VS          ( vs             ),
 
-    .start_button( game_start     ),
-    .coin_input  ( game_coin      ),
+    .start_button( game_start[STARTW-1:0]      ),
+    .coin_input  ( game_coin[STARTW-1:0]       ),
     .joystick1   ( game_joy1[BUTTONS+3:0]      ),
     .joystick2   ( game_joy2[BUTTONS+3:0]      ),
     `ifdef JTFRAME_4PLAYERS

@@ -221,11 +221,12 @@ spitx #(.filename(GAME_ROMNAME), .TX_LEN(TX_LEN) )
 );
 
 data_io datain (
+    .clkref_n       ( 1'b0        ),
     .SPI_SCK        (SPI_SCK      ),
     .SPI_SS2        (SPI_SS2      ),
     .SPI_SS4        (1'b1         ),
     .SPI_DI         (SPI_DI       ),
-    .SPI_DO         ( SPI_SS4     ),
+    .SPI_DO         (/* SPI_SS4 */),
     .ioctl_download (downloading  ),
     .ioctl_index    (             ),
     .clk_sys        (SDRAM_CLK    ),

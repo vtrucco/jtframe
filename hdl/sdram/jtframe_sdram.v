@@ -158,12 +158,14 @@ reg [1:0] refresh_sr;
 
 `ifdef JTFRAME_CLK96
 // 96 MHz operation
-localparam [7:0] ST_ZERO = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h4, ST_THREE = 8'h8, ST_FIVE = 8'h20, ST_SIX = 8'h40;
-localparam [7:0] ST_NOP  = 8'b1111_1010;
+localparam [ 7:0] ST_ZERO   = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h4, ST_THREE = 8'h8, ST_FIVE = 8'h20, ST_SIX = 8'h40;
+localparam [ 7:0] ST_NOP    = 8'b1111_1010;
+localparam [13:0] INIT_WAIT = 14'd10_000;
 `else
 // 48 MHz operation
-localparam [7:0] ST_ZERO = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h2, ST_THREE = 8'h4, ST_FIVE = 8'h8, ST_SIX = 8'h10;
-localparam [7:0] ST_NOP  = 8'b1111_1100;
+localparam [ 7:0] ST_ZERO   = 8'h1, ST_ONE = 8'h2, ST_TWO = 8'h2, ST_THREE = 8'h4, ST_FIVE = 8'h8, ST_SIX = 8'h10;
+localparam [ 7:0] ST_NOP    = 8'b1111_1100;
+localparam [13:0] INIT_WAIT = 14'd5_000;
 `endif
 
 always @(posedge clk)
@@ -174,7 +176,7 @@ always @(posedge clk)
         SDRAM_DQML <= 1'b0;
         SDRAM_A    <= 13'd0;
         init_cmd   <= CMD_NOP;
-        wait_cnt   <= 14'd10_000; // wait for 100us
+        wait_cnt   <= INIT_WAIT; // wait for 100us
         initialize <= 1'b1;
         init_state <= 3'd0;
         // Main loop
