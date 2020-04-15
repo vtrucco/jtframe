@@ -385,11 +385,11 @@ if [ $ZIP = TRUE ]; then
             fi
         fi
         if [ $MIST = mister ]; then
-            # If Mr is online, copy the file to the _Arcade folder
+            # If Mr is online, copy the file to the _Arcade/cores folder
             if ping $HOST -w 1 -c 1 > /dev/null; then
                 ftp -inv $HOST <<EOF
 user root 1
-cd /media/fat/_Arcade
+cd /media/fat/_Arcade/cores
 mput $RELEASE.rbf
 bye
 EOF
