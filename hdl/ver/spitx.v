@@ -186,7 +186,10 @@ else begin
             tx_cnt <= tx_cnt + 1;
         end
         9: if( data_sent ) begin
-            if( tx_cnt==file_len ) state <= 10;
+            if( tx_cnt==file_len ) begin
+                state <= 10;
+                hold  <= 1'b0;
+            end
             else begin
                 if( WAIT ) begin
                     slow <= WAIT;
