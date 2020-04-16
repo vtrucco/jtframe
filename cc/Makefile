@@ -1,5 +1,5 @@
-all: pcb2ver bin2m bin2raw drop1 raw2wav cen_gen bin2hex byte2hex msg2hex lut2hex
-	cp pcb2ver bin2m bin2raw drop1 raw2wav cen_gen bin2hex msg2hex lut2hex ../bin
+all: pcb2ver bin2m bin2raw drop1 raw2wav cen_gen bin2hex byte2hex msg2hex lut2hex hex2bin
+	cp pcb2ver bin2m bin2raw drop1 raw2wav cen_gen bin2hex msg2hex lut2hex hex2bin ../bin
 
 pcb2ver:
 
@@ -22,3 +22,5 @@ byte2hex:
 msg2hex:
 
 lut2hex:
+
+hex2bin:
