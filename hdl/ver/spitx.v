@@ -105,7 +105,7 @@ spitx_sub u_sub(
     .spi_ser   ( SPI_DI       )
 );
 
-integer state, next;
+integer state, next, slow;
 reg hold;
 
 localparam clkspeed=8; // MiST is probably 28MHz or clkspeed=17.857
@@ -118,6 +118,12 @@ end
 // Define LOAD_RANDOM_DLY to delay the start of the load process
 `ifndef LOAD_RANDOM_DLY
 `define LOAD_RANDOM_DLY 0
+`endif
+
+`ifndef JTFRAME_SIM_LOAD_EXTRA
+localparam WAIT=0;
+`else
+localparam WAIT=`JTFRAME_SIM_LOAD_EXTRA;
 `endif
 
 always @(posedge clk or posedge rst)
@@ -133,6 +139,7 @@ if( rst ) begin
     spi_done <= 1'b0;
     send     <= 1'b0;
     hold     <= 1'b1;
+    slow     <= 0;
 end
 else begin
     if( !hold ) begin
@@ -180,7 +187,20 @@ else begin
         end
         9: if( data_sent ) begin
             if( tx_cnt!=file_len ) state <= 8;
-            hold <= 1'b0;
+            if( WAIT ) begin
+                slow <= WAIT;
+                state <= 100;
+            end else begin
+                hold <= 1'b0;
+                state <= 8;
+            end
+        end
+        100: begin
+            slow <= slow-1;
+            if( !slow ) begin
+                hold <= 1'b0;
+                state <= 8;
+            end
         end
         // finish DOWNLOAD signal
         10: SPI_SS2 <= 1'b1;

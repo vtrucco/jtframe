@@ -139,6 +139,8 @@ A model for SDRAM mt48lc16m16a2 is included in JTFRAME. The model will load the 
 
 The current contents of the SDRAM can be dumped at the beginning of each frame (falling edge of vertical blank) if **JTFRAME_SAVESDRAM** is defined. Because this is quite an overhead, it is possible to restrict it to dump only a certain **DUMP_START** frame count has been reached. All frames will be dumped after it. The macro **DUMP_START** is the same one used for setting the start of signal dump to the __VCD__ file.
 
+To simulate the SDRAM load operation use **-load** on sim.sh. The normal download speed 1/270ns=3.7MHz. This is faster than the real systems but speeds up simulation. It is possible to slow it down by adding dead clock cycles to each transfer. The macro **JTFRAME_SIM_LOAD_EXTRA** can be defined with the required number of extra cycles. 
+
 #Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
 
