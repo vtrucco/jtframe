@@ -258,6 +258,9 @@ function sidi_pins {
 }
 
 echo ==============================================
+if [ $SIDI = 1 ]; then
+    echo "** SIDI **"
+fi
 echo jt$PRJ $MIST compilation starts at $(date +%T) with seed $SEED
 if [ "$MACROS" != "" ]; then
     echo INFO: Macros used: $MACROS
@@ -353,6 +356,9 @@ if [ $ZIP = TRUE ]; then
     cd $JTROOT
     mkdir -p releases
     RELEASE=jt${PRJ}_$(date +"%Y%m%d")
+    if [ $SEED != 1 ]; then
+        RELEASE=${RELEASE}_$SEED
+    fi
     if [ $MIST = mister ]; then
         RBF=$PRJPATH/${MIST}/output_files/jt$PRJ.rbf
     else
