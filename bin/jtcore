@@ -90,6 +90,7 @@ SKIP_COMPILE=FALSE
 # Verilog macros
 MACROS=
 SEED=1
+OUTPUTDIR=output_files
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -138,6 +139,8 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+OUTPUTDIR=output_${SEED}
+
 # Check Quartus path
 case $MIST in
     mister)
@@ -168,7 +171,9 @@ function escape_bars {
 function copy_templates {
     datestr=$(date "+%H:%M:%S %B %e, %Y")
     # Replace core name and path to modules
-    sedstr='s/${CORENAME}/'${PRJ}'/g;s/${DATE}/'${datestr}'/g;s/${MODULES}/'$(escape_bars ${MODULES})'/g;s/${PRJPATH}/'$(escape_bars ${PRJPATH})'/g'
+    # do not leave a space in the line below sedstr!
+    sedstr='s/${CORENAME}/'${PRJ}'/g;s/${DATE}/'${datestr}'/g;s/${MODULES}/'$(escape_bars ${MODULES})'/g;s/${PRJPATH}/'$(escape_bars ${PRJPATH})'/g;'\
+'s/${OUTPUTDIR}/'${OUTPUTDIR}'/g'
     sed "$sedstr" $JTFRAME/hdl/$MIST/$MIST.qpf > $PRJPATH/$MIST/jt${PRJ}.qpf
     sed "$sedstr" $JTFRAME/hdl/$MIST/$MIST.qsf > $PRJPATH/$MIST/jt${PRJ}.qsf
     # TCL in HDL folder is always appended
@@ -367,7 +372,7 @@ if [ $ZIP = TRUE ]; then
         RELEASE=${RELEASE}
     fi
     if [ $MIST = mister ]; then
-        RBF=$PRJPATH/${MIST}/output_files/jt$PRJ.rbf
+        RBF=$PRJPATH/${MIST}/$OUTPUTDIR/jt$PRJ.rbf
     else
         RBF=$PRJPATH/${MIST}/jt$PRJ.rbf
     fi
