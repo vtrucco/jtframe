@@ -16,6 +16,9 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
                     MISTER_NOHDMI       skips MiSTer HDMI related logic. Speeds up compilation.
     -qq         very quick compilation. Defines NOSUND and MISTER_NOHDMI. Does not alter compilation target.
     -q | -quick quick compilation. Defines NOSUND.
+    -ftp-folder Destination folder in MiSTer FTP to which final RBF will be copied
+                The full name is made by preceding this by a _
+                and adding /cores after it.
     -git        adds the release file to git
     -mister     compiles MiSTer version. Default is MiST.
     -seed       sets random seed for compilation
@@ -45,6 +48,7 @@ JTFRAME=$MODULES/jtframe
 SIDI=0
 # This is the FTP host to which files will be copied
 HOST=mr
+FTP_FOLDER=Arcade
 
 if [ ! -e "$JTFRAME" ]; then
     echo "ERROR: cannot locate jtframe folder."
@@ -108,6 +112,9 @@ while [ $# -gt 0 ]; do
             break;;
         -sim)
             SIM=TRUE;;
+        -ftp-folder)
+            shift
+            FTP_FOLDER=$1;;
         -seed | -s)
             shift
             SEED=$1;;
@@ -357,7 +364,7 @@ if [ $ZIP = TRUE ]; then
     mkdir -p releases
     RELEASE=jt${PRJ}_$(date +"%Y%m%d")
     if [ $SEED != 1 ]; then
-        RELEASE=${RELEASE}_$SEED
+        RELEASE=${RELEASE}
     fi
     if [ $MIST = mister ]; then
         RBF=$PRJPATH/${MIST}/output_files/jt$PRJ.rbf
@@ -380,12 +387,13 @@ if [ $ZIP = TRUE ]; then
         BINFOLDER=$JTROOT/../jtbin/$ZIPFOLDER/$PRJ
         mkdir -p $BINFOLDER
         mkdir -p $BINFOLDER/releases
-        cp $RELEASE.rbf $BINFOLDER/releases
+        cp $RELEASE.rbf $BINFOLDER/releases/${RELEASE}_$SEED.rbf
         OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
         if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
         # If there is a mounted SD card with the right name, copy the file to it too
         if [ -d /media/$USER/${MIST^^} ]; then
             cp -v $RELEASE.rbf /media/$USER/${MIST^^}
+            # Copy the file to the core folder so it can be used by ARC files
             if [ -d /media/$USER/${MIST^^}/JT${PRJ^^} ]; then
                 cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}/JT${PRJ^^}.rbf
             fi
@@ -395,7 +403,7 @@ if [ $ZIP = TRUE ]; then
             if ping $HOST -w 1 -c 1 > /dev/null; then
                 ftp -inv $HOST <<EOF
 user root 1
-cd /media/fat/_Arcade/cores
+cd /media/fat/_${FTP_FOLDER}/cores
 mput $RELEASE.rbf
 bye
 EOF

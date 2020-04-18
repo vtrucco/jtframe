@@ -54,7 +54,7 @@ wire       CE,HS,VS,HBL,VBL;
 wire [DW-1:0] RGB_fix;
 wire VGA_HBL, VGA_VBL;
 
-arcade_vga #(DW) vga (
+arcade_vga #(.DW(DW)) vga (
     .clk_video  ( clk_video ),
     .ce_pix     ( ce_pix    ),
 
@@ -188,14 +188,17 @@ video_mixer #(WIDTH+4, HALF_DEPTH, GAMMA) video_mixer
     .VGA_HS     ( HDMI_HS       ),
     .VGA_DE     ( HDMI_DE       )
 );
+
 always @(posedge VGA_CLK) begin
     VGA_CE <= direct_video ? HDMI_CE : CE;
-    VGA_R  <= direct_video ? HDMI_R  : R;
-    VGA_G  <= direct_video ? HDMI_G  : G;
-    VGA_B  <= direct_video ? HDMI_B  : B;
-    VGA_HS <= direct_video ? HDMI_HS : HS;
-    VGA_VS <= direct_video ? HDMI_VS : VS;
-    VGA_DE <= direct_video ? HDMI_DE : ~(HBL | VBL);
+    if( direct_video ? HDMI_CE : CE ) begin
+        VGA_R  <= direct_video ? HDMI_R  : R;
+        VGA_G  <= direct_video ? HDMI_G  : G;
+        VGA_B  <= direct_video ? HDMI_B  : B;
+        VGA_HS <= direct_video ? HDMI_HS : HS;
+        VGA_VS <= direct_video ? HDMI_VS : VS;
+        VGA_DE <= direct_video ? HDMI_DE : ~(HBL | VBL);
+    end
 end
 
 endmodule
@@ -316,7 +319,7 @@ endmodule
 
 //////////////////////////////////////////////////////////
 
-module arcade_vga #(parameter DW=12)
+module arcade_vga #(parameter DW=12, SYNC_FIX=1)
 (
     input          clk_video,
     input          ce_pix,
@@ -342,8 +345,15 @@ module arcade_vga #(parameter DW=12)
 assign VGA_CLK = clk_video;
 
 wire hs_fix,vs_fix;
-sync_fix sync_v(VGA_CLK, HSync, hs_fix);
-sync_fix sync_h(VGA_CLK, VSync, vs_fix);
+generate
+    if( SYNC_FIX ) begin
+        sync_fix sync_v(VGA_CLK, HSync, hs_fix);
+        sync_fix sync_h(VGA_CLK, VSync, vs_fix);
+    end else begin
+        assign hs_fix = HSync;
+        assign vs_fix = VSync;
+    end
+endgenerate
 
 reg [DW-1:0] RGB_fix;
 

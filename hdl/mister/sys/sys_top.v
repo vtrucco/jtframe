@@ -1249,6 +1249,7 @@ emu emu
 endmodule
 
 /////////////////////////////////////////////////////////////////////
+// Makes sync pulses to always have the same polarity
 
 module sync_fix
 (
