@@ -25,9 +25,6 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
     -sidi       compiles SIDI version. This uses MiST's folders and settings but different pinout
     -prog       programs the FPGA
     -prog-only  skips compilations and directly programs the FPGA
-    -zip | -z   Create zip file
-    -add        all arguments from that point on will be used as inputs to the
-                zip file. All files must be referred to $JTROOT path
     -sim        prepare quartus simulation
     -help       displays this message
 EOF
@@ -80,7 +77,6 @@ else
 fi
 shift
 
-ZIP=FALSE
 SIM=FALSE
 GIT=FALSE
 PROG=FALSE
@@ -92,52 +88,51 @@ MACROS=
 SEED=1
 OUTPUTDIR=output_files
 
-while [ $# -gt 0 ]; do
-    case "$1" in
-        -skip | -s) SKIP_COMPILE=TRUE;;
-        -git | -g) GIT=TRUE;;
-        -prog | -p) PROG=TRUE;;
-        -prog-only | -w)
-            PROG=TRUE
-            SKIP_COMPILE=TRUE;;
-        -mister | -mr)
-            MIST=mister;;
-        -mist)
-            MIST=mist;;
-        -sidi)
-            MIST=mist
-            SIDI=1;;            
-        -add)
-            ZIP=TRUE
-            shift
-            break;;
-        -sim)
-            SIM=TRUE;;
-        -ftp-folder)
-            shift
-            FTP_FOLDER=$1;;
-        -seed | -s)
-            shift
-            SEED=$1;;
-        -gngvga)
-            MACROS="JTFRAME_VGA SCAN2X_TYPE=1 $MACROS";;
-        -d)
-            shift
-            MACROS="$1 $MACROS"
-            ;;
-        -q|-quick)
-            MACROS="$MACROS NOSOUND";;
-        -qq|-veryquick)
-            MACROS="$MACROS NOSOUND MISTER_NOHDMI";;
-        -zip | -z)
-            ZIP=TRUE;;
-        -help | -h)
-            show_usage;;
-        *)  echo "ERROR: Unknown option $1";
-            exit 1;;
-    esac
-    shift
-done
+function parse_args {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -skip | -s) SKIP_COMPILE=TRUE;;
+            -git | -g) GIT=TRUE;;
+            -prog | -p) PROG=TRUE;;
+            -prog-only | -w)
+                PROG=TRUE
+                SKIP_COMPILE=TRUE;;
+            -mister | -mr)
+                MIST=mister;;
+            -mist)
+                MIST=mist;;
+            -sidi)
+                MIST=mist
+                SIDI=1;;            
+            -sim)
+                SIM=TRUE;;
+            -ftp-folder)
+                shift
+                FTP_FOLDER=$1;;
+            -seed | -s)
+                shift
+                SEED=$1;;
+            -gngvga)
+                MACROS="JTFRAME_VGA SCAN2X_TYPE=1 $MACROS";;
+            -d)
+                shift
+                MACROS="$1 $MACROS"
+                ;;
+            -q|-quick)
+                MACROS="$MACROS NOSOUND";;
+            -qq|-veryquick)
+                MACROS="$MACROS NOSOUND MISTER_NOHDMI";;
+            -help | -h)
+                show_usage;;
+            *)  echo "ERROR: Unknown option $1";
+                exit 1;;
+        esac
+        shift
+    done
+}
+
+parse_args $JTCORE_DEFAULT
+parse_args $*
 
 OUTPUTDIR=output_${SEED}
 
@@ -362,61 +357,59 @@ function append_if_exists {
     echo $val
 }
 
-################# Create zip file
-if [ $ZIP = TRUE ]; then
-    # Rename output file
-    cd $JTROOT
-    mkdir -p releases
-    RELEASE=jt${PRJ}_$(date +"%Y%m%d")
-    if [ $SEED != 1 ]; then
-        RELEASE=${RELEASE}
+################# Store output file
+# Rename output file
+cd $JTROOT
+mkdir -p releases
+RELEASE=jt${PRJ}_$(date +"%Y%m%d")
+if [ $SEED != 1 ]; then
+    RELEASE=${RELEASE}
+fi
+if [ $MIST = mister ]; then
+    RBF=$PRJPATH/${MIST}/$OUTPUTDIR/jt$PRJ.rbf
+else
+    RBF=$PRJPATH/${MIST}/jt$PRJ.rbf
+fi
+if [ ! -e $RBF ]; then
+    echo "ERROR: file $RBF does not exist. You need to recompile."
+    exit 1
+fi
+cp $RBF $RELEASE.rbf
+ZIPFOLDER=$MIST
+if [ "$SIDI" = 1 ]; then
+    ZIPFOLDER=sidi
+fi
+mkdir -p releases/$ZIPFOLDER
+# zip --update --junk-paths releases/$ZIPFOLDER/${RELEASE}.zip ${RELEASE}.rbf README.txt $* \
+#     $(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
+if [ -e $JTROOT/../jtbin ]; then
+    BINFOLDER=$JTROOT/../jtbin/$ZIPFOLDER/$PRJ
+    mkdir -p $BINFOLDER
+    mkdir -p $BINFOLDER/releases
+    cp $RELEASE.rbf $BINFOLDER/releases/${RELEASE}_$SEED.rbf
+    OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
+    if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
+    # If there is a mounted SD card with the right name, copy the file to it too
+    if [ -d /media/$USER/${MIST^^} ]; then
+        cp -v $RELEASE.rbf /media/$USER/${MIST^^}
+        # Copy the file to the core folder so it can be used by ARC files
+        if [ -d /media/$USER/${MIST^^}/JT${PRJ^^} ]; then
+            cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}/JT${PRJ^^}.rbf
+        fi
     fi
     if [ $MIST = mister ]; then
-        RBF=$PRJPATH/${MIST}/$OUTPUTDIR/jt$PRJ.rbf
-    else
-        RBF=$PRJPATH/${MIST}/jt$PRJ.rbf
-    fi
-    if [ ! -e $RBF ]; then
-        echo "ERROR: file $RBF does not exist. You need to recompile."
-        exit 1
-    fi
-    cp $RBF $RELEASE.rbf
-    ZIPFOLDER=$MIST
-    if [ "$SIDI" = 1 ]; then
-        ZIPFOLDER=sidi
-    fi
-    mkdir -p releases/$ZIPFOLDER
-    # zip --update --junk-paths releases/$ZIPFOLDER/${RELEASE}.zip ${RELEASE}.rbf README.txt $* \
-    #     $(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
-    if [ -e $JTROOT/../jtbin ]; then
-        BINFOLDER=$JTROOT/../jtbin/$ZIPFOLDER/$PRJ
-        mkdir -p $BINFOLDER
-        mkdir -p $BINFOLDER/releases
-        cp $RELEASE.rbf $BINFOLDER/releases/${RELEASE}_$SEED.rbf
-        OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
-        if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
-        # If there is a mounted SD card with the right name, copy the file to it too
-        if [ -d /media/$USER/${MIST^^} ]; then
-            cp -v $RELEASE.rbf /media/$USER/${MIST^^}
-            # Copy the file to the core folder so it can be used by ARC files
-            if [ -d /media/$USER/${MIST^^}/JT${PRJ^^} ]; then
-                cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}/JT${PRJ^^}.rbf
-            fi
-        fi
-        if [ $MIST = mister ]; then
-            # If Mr is online, copy the file to the _Arcade/cores folder
-            if ping $HOST -w 1 -c 1 > /dev/null; then
-                ftp -inv $HOST <<EOF
+        # If Mr is online, copy the file to the _Arcade/cores folder
+        if ping $HOST -w 1 -c 1 > /dev/null; then
+            ftp -inv $HOST <<EOF
 user root 1
 cd /media/fat/_${FTP_FOLDER}/cores
 mput $RELEASE.rbf
 bye
 EOF
-            fi
         fi
     fi
-    rm $RELEASE.rbf
 fi
+rm $RELEASE.rbf
 
 # Add to git
 if [ $GIT = TRUE ]; then
