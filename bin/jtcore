@@ -280,7 +280,7 @@ cd $JTROOT
 mkdir -p releases
 RELEASE=jt${PRJ}_$(date +"%Y%m%d")
 if [ $SEED != 1 ]; then
-    RELEASE=${RELEASE}
+    SEED_SUFFIX=_$SEED
 fi
 if [ $MIST = mister ]; then
     RBF=$PRJPATH/${MIST}/$OUTPUTDIR/jt$PRJ.rbf
@@ -293,9 +293,6 @@ if [ ! -e $RBF ]; then
 fi
 cp $RBF $RELEASE.rbf
 ZIPFOLDER=$MIST
-if [ "$SIDI" = 1 ]; then
-    ZIPFOLDER=sidi
-fi
 mkdir -p releases/$ZIPFOLDER
 # zip --update --junk-paths releases/$ZIPFOLDER/${RELEASE}.zip ${RELEASE}.rbf README.txt $* \
 #     $(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
@@ -303,7 +300,7 @@ if [ -e $JTROOT/../jtbin ]; then
     BINFOLDER=$JTROOT/../jtbin/$ZIPFOLDER/$PRJ
     mkdir -p $BINFOLDER
     mkdir -p $BINFOLDER/releases
-    cp $RELEASE.rbf $BINFOLDER/releases/${RELEASE}_$SEED.rbf
+    cp $RELEASE.rbf $BINFOLDER/releases/${RELEASE}${SEED_SUFFIX}.rbf -v
     OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
     if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
     # If there is a mounted SD card with the right name, copy the file to it too
