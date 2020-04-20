@@ -73,8 +73,8 @@ void makeMRA( Game* g ) {
         for( DIPsw* dip : dips ) {
             if( dip->tag != last_tag ) {
                 n.comment( dip->tag );
+                if( last_tag.size() ) base+=8;
                 last_tag = dip->tag;
-                base+=8;
             }
             Node &dipnode = n.add("dip");
             dipnode.add_attr("name",dip->name);
