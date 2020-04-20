@@ -22,6 +22,7 @@ public:
 };
 
 typedef std::list<DIPvalue> ListDIPValues;
+typedef std::list<class DIPsw*>   ListDIPs;
 
 class DIPsw {
 public:
@@ -41,7 +42,7 @@ public:
 
     void addDIP( DIPsw* d );
     void dump();
-    std::list<DIPsw*> getDIPs() { return dips; }
+    ListDIPs& getDIPs() { return dips; }
 };
 
 class GameMap : public std::map<std::string,Game*> {

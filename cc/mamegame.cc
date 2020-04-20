@@ -98,14 +98,14 @@ int parse_MAME_xml( GameMap& games, const char *xmlFile ) {
     }
     catch (const XMLException& toCatch) {
         char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "Exception message is: \n"
+        cout << "ERROR (XML): \n"
              << message << "\n";
         XMLString::release(&message);
         return -1;
     }
     catch (const SAXParseException& toCatch) {
         char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "Exception message is: \n"
+        cout << "ERROR (XML): \n"
              << message << "\n";
         XMLString::release(&message);
         return -1;
