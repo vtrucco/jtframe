@@ -94,11 +94,11 @@ localparam CONF_STR = {
             "O3,Screen filter,ON,OFF;",
         `endif
     `endif
-    `ifndef NOSOUND    
+    `ifndef JTFRAME_OSD_NOSND    
         `ifdef JT12
+        "O67,FX volume, high, very high, very low, low;",
         "O8,PSG,ON,OFF;",
         "O9,FM ,ON,OFF;",
-        "O67,FX volume, high, very high, very low, low;",
         `else
             `ifdef JTFRAME_ADPCM
             "O8,ADPCM,ON,OFF;",
@@ -111,6 +111,9 @@ localparam CONF_STR = {
     `ifdef JTFRAME_OSD_TEST
     "OA,Test mode,OFF,ON;",
     `endif
+    `ifndef JTFRAME_OSD_NOCREDITS
+    "OB,Credits,OFF,ON;",
+    `endif
     `SEPARATOR
     `ifdef JTFRAME_MRA_DIP
     "DIP;",
@@ -119,9 +122,6 @@ localparam CONF_STR = {
     `endif
     `CORE_OSD
     "T0,RST;",
-    `ifndef JTFRAME_OSD_NOCREDITS
-    "OF,Credits,OFF,ON;",
-    `endif
     "V,patreon.com/topapate;"
 };
 
@@ -378,6 +378,14 @@ localparam STARTW=4;
 localparam STARTW=2;
 `endif
 
+`ifdef JTFRAME_MIST_DIPBASE
+localparam DIPBASE=`JTFRAME_MIST_DIPBASE;
+`else
+localparam DIPBASE=16;
+`endif
+
+wire [31:0] dipsw = { {32-DIPBASE{1'b1}}, status[31:DIPBASE]  };
+
 `GAMETOP
 u_game(
     .rst         ( game_rst       ),
@@ -453,7 +461,7 @@ u_game(
     .dip_test    ( dip_test       ),
     .dip_fxlevel ( dip_fxlevel    ),  
     `ifdef JTFRAME_MRA_DIP
-    .dipsw       ({status[31:8], 8'hff } ),
+    .dipsw       ( dipsw          ),
     `endif
 
     // sound

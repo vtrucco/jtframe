@@ -101,12 +101,12 @@ bit     |  meaning                | Enabled with macro
 2       | Rotate screen           | VERTICAL_SCREEN (MiSTer)
 3-5     | Scandoubler Fx          | MISTER_VIDEO_MIXER
 6-7     | FX Volume               | JT12
-8       | ADPCM                   | JTFRAME_ADPCM && !JT12 && !NOSOUND
-8       | PSG                     | JT12 && !NOSOUND
-9       | FM                      | (JT51 || JT12) && !NOSOUND
+8       | ADPCM                   | JTFRAME_ADPCM && !JT12 && !JTFRAME_OSD_NOSND
+8       | PSG                     | JT12 && !JTFRAME_OSD_NOSND
+9       | FM                      | (JT51 || JT12) && !JTFRAME_OSD_NOSND
 10      | Test mode               | JTFRAME_OSD_TEST
 11      | Aspect Ratio            | MiSTer only
-15      | Credits/Pause           |
+12      | Credits/Pause           |
 
 If **JTFRAME_FLIP_RESET** is defined a change in dip_flip will reset the game.
 

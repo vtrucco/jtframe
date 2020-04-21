@@ -65,7 +65,7 @@ void makeMRA( Game* g ) {
     root.add("name",g->name); // should be full_name. Not implemented yet
     root.add("setname",g->name);
     ListDIPs& dips=g->getDIPs();
-    int base=0;
+    int base=-8;
     bool ommit_parenthesis=true;
     string last_tag;
     if( dips.size() ) {
@@ -73,7 +73,8 @@ void makeMRA( Game* g ) {
         for( DIPsw* dip : dips ) {
             if( dip->tag != last_tag ) {
                 n.comment( dip->tag );
-                if( last_tag.size() ) base+=8;
+                //if( last_tag.size() ) 
+                base+=8;
                 last_tag = dip->tag;
             }
             Node &dipnode = n.add("dip");

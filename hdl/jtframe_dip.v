@@ -106,13 +106,19 @@ assign scanlines   = status[5:3];
     wire   swap_ar = 1'b1;
 `endif
 
+`ifndef JTFRAME_OSD_NOSND
+localparam CHANNEL_CTRL=1;
+`else
+localparam CHANNEL_CTRL=0;  // channel control not available when MRA DIP is enabled in MiST
+`endif
+
 // all signals that are not direct re-wirings are latched
 always @(posedge clk) begin
     rotate      <= { dip_flip, tate && !rot_control };
     dip_fxlevel <= 2'b10 ^ status[7:6];
     en_mixing   <= ~status[3];
-    enable_fm   <= ~status[9];
-    enable_psg  <= ~status[8];
+    enable_fm   <= ~status[9] | ~CHANNEL_CTRL;
+    enable_psg  <= ~status[8] | ~CHANNEL_CTRL;
     // only for MiSTer
     hdmi_arx    <= widescreen ? 8'd16 : swap_ar ? ARX : ARY;
     hdmi_ary    <= widescreen ? 8'd9  : swap_ar ? ARY : ARX;
@@ -126,7 +132,7 @@ always @(posedge clk) begin
     `else
         dip_pause <= ~(
             `ifndef JTFRAME_OSD_NOCREDITS
-            status[15] | // Control pause via OSD too
+            status[12] | // Control pause via OSD too
             `endif
             game_pause); // all dips are active low
     `endif

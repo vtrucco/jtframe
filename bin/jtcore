@@ -26,6 +26,7 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
     -prog       programs the FPGA
     -prog-only  skips compilations and directly programs the FPGA
     -sim        prepare quartus simulation
+    -rename     name used for copying the RBF file into the SD card
     -help       displays this message
 EOF
    exit 0
@@ -81,6 +82,7 @@ GIT=FALSE
 PROG=FALSE
 MIST=mist
 SKIP_COMPILE=FALSE
+RENAME=
 
 # Verilog macros
 MACROS=
@@ -104,6 +106,9 @@ function parse_args {
                 MIST=sidi;;
             -sim)
                 SIM=TRUE;;
+            -rename)
+                shift
+                RENAME=$1;;
             -ftp-folder)
                 shift
                 FTP_FOLDER=$1;;
@@ -305,10 +310,15 @@ if [ -e $JTROOT/../jtbin ]; then
     if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
     # If there is a mounted SD card with the right name, copy the file to it too
     if [ -d /media/$USER/${MIST^^} ]; then
+        if [ -z $RENAME ]; then
+            RENAME=JT${PRJ^^}.rbf
+        else
+            RENAME=$RENAME.rbf
+        fi
         cp -v $RELEASE.rbf /media/$USER/${MIST^^}
         # Copy the file to the core folder so it can be used by ARC files
         if [ -d /media/$USER/${MIST^^}/JT${PRJ^^} ]; then
-            cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}/JT${PRJ^^}.rbf
+            cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}/$RENAME
         fi
     fi
     if [ $MIST = mister ]; then
