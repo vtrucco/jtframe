@@ -79,7 +79,7 @@ localparam CONF_STR = {
     `endif
     `ifdef VERTICAL_SCREEN
     `ifdef JTFRAME_OSD_FLIP
-    "O1,Flip screen,OFF,ON;",
+    "O1,Flip screen,Off,On;",
     `endif
     "O2,Rotate controls,No,Yes;",
     `endif
@@ -91,28 +91,28 @@ localparam CONF_STR = {
         "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
     `else
         `ifdef JTGNG_VGA
-            "O3,Screen filter,ON,OFF;",
+            "O3,Screen filter,On,Off;",
         `endif
     `endif
     `ifndef JTFRAME_OSD_NOSND    
         `ifdef JT12
         "O67,FX volume, high, very high, very low, low;",
-        "O8,PSG,ON,OFF;",
-        "O9,FM ,ON,OFF;",
+        "O8,PSG,On,Off;",
+        "O9,FM ,On,Off;",
         `else
             `ifdef JTFRAME_ADPCM
-            "O8,ADPCM,ON,OFF;",
+            "O8,ADPCM,On,Off;",
             `endif
             `ifdef JT51
-            "O9,FM ,ON,OFF;",
+            "O9,FM ,On,Off;",
             `endif
         `endif
     `endif
     `ifdef JTFRAME_OSD_TEST
-    "OA,Test mode,OFF,ON;",
+    "OA,Test mode,Off,On;",
     `endif
     `ifndef JTFRAME_OSD_NOCREDITS
-    "OB,Credits,OFF,ON;",
+    "OB,Credits,Off,On;",
     `endif
     `SEPARATOR
     `ifdef JTFRAME_MRA_DIP

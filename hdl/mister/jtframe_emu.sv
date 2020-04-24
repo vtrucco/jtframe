@@ -127,12 +127,12 @@ localparam CONF_STR = {
     "H0OB,Aspect Ratio,Original,Wide;",
     `ifdef VERTICAL_SCREEN
         `ifdef JTFRAME_OSD_FLIP
-        "O1,Flip screen,OFF,ON;",
+        "O1,Flip screen,Off,On;",
         `endif
     "O2,Rotate screen,Yes,No;",
     `endif
     `ifdef JTFRAME_VGA
-        "O3,Screen filter,ON,OFF;",
+        "O3,Screen filter,On,Off;",
     `else
         "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
     `endif
@@ -140,31 +140,30 @@ localparam CONF_STR = {
     `ifndef NOSOUND
         // sound OSD options are ommitted for compilations without sound
         `ifdef JT12
-        "O8,PSG,ON,OFF;",
-        "O9,FM ,ON,OFF;",
+        "O8,PSG,On,Off;",
+        "O9,FM ,On,Off;",
         "O67,FX volume, high, very high, very low, low;",
         `else
             `ifdef JTFRAME_ADPCM
-            "O8,ADPCM,ON,OFF;",
+            "O8,ADPCM,On,Off;",
             `endif
             `ifdef JT51
-            "O9,FM ,ON,OFF;",
+            "O9,FM ,On,Off;",
             `endif
         `endif
     `endif
     `ifdef JTFRAME_OSD_TEST
-    "OA,Test mode,OFF,ON;",
+    "OA,Test mode,Off,On;",
     `endif
     `SEPARATOR    
     `ifdef JTFRAME_MRA_DIP
     "DIP;",
-    `else
-    `CORE_OSD
     `endif
+    `CORE_OSD
     `SEPARATOR
     "OUV,Serial SNAC DB15,Off,1 Player,2 Players;",
     "R0,Reset;",
-    "OF,Credits,OFF,ON;",
+    "OF,Credits,Off,On;",
     `CORE_KEYMAP
     "V,v",`BUILD_DATE," jotego;"
 };
