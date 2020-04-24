@@ -53,28 +53,32 @@ module jtframe_dual_ram #(parameter dw=8, aw=10,
 
 `ifdef SIMULATION
 integer f, readcnt;
-initial
-if( simfile != "" ) begin
-    f=$fopen(simfile,"rb");
-    if( f != 0 ) begin
-        readcnt=$fread( mem, f );
-        $display("INFO: Read %s (%d byes) for %m",simfile, readcnt);
-        $fclose(f);
-    end else begin
-        $display("WARNING: %m cannot open file: %s", simfile);
+initial begin
+    for( readcnt=0; readcnt<(2**aw); readcnt=readcnt+1 ) begin
+        mem[readcnt] <= {aw{1'b0}};
     end
-    end
-else begin
-    if( simhexfile != "" ) begin
-        $readmemh(simhexfile,mem);
-        $display("INFO: Read %s for %m", simhexfile);
-    end else begin
-        if( synfile!= "" ) begin
-            $readmemh(synfile,mem);
-            $display("INFO: Read %s for %m", synfile);
-        end else
-            for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
-                mem[readcnt] = {dw{1'b0}};
+    if( simfile != "" ) begin
+        f=$fopen(simfile,"rb");
+        if( f != 0 ) begin
+            readcnt=$fread( mem, f );
+            $display("INFO: Read %s (%d byes) for %m",simfile, readcnt);
+            $fclose(f);
+        end else begin
+            $display("WARNING: %m cannot open file: %s", simfile);
+        end
+        end
+    else begin
+        if( simhexfile != "" ) begin
+            $readmemh(simhexfile,mem);
+            $display("INFO: Read %s for %m", simhexfile);
+        end else begin
+            if( synfile!= "" ) begin
+                $readmemh(synfile,mem);
+                $display("INFO: Read %s for %m", synfile);
+            end else
+                for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
+                    mem[readcnt] = {dw{1'b0}};
+        end
     end
 end
 `else
