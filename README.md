@@ -154,7 +154,7 @@ Note that although clk6 and clk24 are obtained without affecting the main clock 
 
 By default unless **JTFRAME_MR_FASTIO** is already defined, **JTFRAME_CLK96** will define it to 1. This enables fast ROM download in MiSTer using 16-bit mode in _hps_io_.
 
-#Aspect Ration
+#Aspect Ratio
 In MiSTer the aspect ratio through the scaler can be controlled via the core. By default it is possible to switch between 16:9 and 4:3. However, if the game AR is different, the following macros can be used to redefine it:
 
 Macro       |  Default    |   Meaning        
@@ -163,6 +163,14 @@ JTFRAME_ARX |     4       | horizontal magnitude
 JTFRAME_ARY |     3       | vertical   magnitude
 
 Internally each value is converted to an eight bit signal.
+
+#Debug Features
+
+If JTFRAME_RELEASE is not defined, some extra features within JTFRAME will operate.
+
+##GFX Enable Signals
+
+In debug mode keys F7-F10 will switch the *gfx_en[3:0]* signal. This can be used internally by the core for debugging. The original intent was to get each bit enable/disable a given GFX layer, hence the name.
 
 #Modules with simulation files added automatically
 Define and export the following environgment variables to have these

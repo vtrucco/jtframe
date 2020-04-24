@@ -314,8 +314,10 @@ always @(posedge clk_sys)
         
         soft_rst <= key_reset && !last_reset;
 
+        `ifndef JTFRAME_RELEASE
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
+        `endif
         // state variables:
         `ifndef DIP_PAUSE
         if( (key_pause && !last_pause) || (joy_pause && !last_joypause) )
