@@ -161,7 +161,9 @@ localparam CONF_STR = {
     `endif
     `CORE_OSD
     `SEPARATOR
-    "OUV,Serial SNAC DB15,Off,1 Player,2 Players;",
+    "OMN,Serial SNAC DB15,Off,1 Player,2 Players;",    
+    "OOR,H adjust,0,+1,+2,+3,+4,+5,+6,+7,-8,-7,-6,-5,-4,-3,-2,-1;",
+    "OSV,V adjust,0,+1,+2,+3,+4,+5,+6,+7,-8,-7,-6,-5,-4,-3,-2,-1;",
     "R0,Reset;",
     "OF,Credits,Off,On;",
     `CORE_KEYMAP
@@ -180,6 +182,8 @@ assign VGA_F1=field;
 
 wire JOY_CLK, JOY_LOAD;
 wire JOY_DATA = USER_IN[5];
+
+wire [3:0] hoffset, voffset;
 
 ////////////////////   CLOCKS   ///////////////////
 
@@ -258,8 +262,11 @@ wire        rst_req   = RESET | status[0] | buttons[1];
 assign LED_DISK  = 2'b0;
 assign LED_POWER = 2'b0;
 
-assign USER_OUT  = |status[31:30] ? {5'b11111,JOY_CLK,JOY_LOAD} : '1;
-assign USER_MODE = |status[31:30];
+parameter SNAC_B1 = 22;
+parameter SNAC_B0 = 21;
+
+assign USER_OUT  = |status[SNAC_B1:SNAC_B0] ? {5'b11111,JOY_CLK,JOY_LOAD} : '1;
+assign USER_MODE = |status[SNAC_B1:SNAC_B0];
 
 // SDRAM
 wire         loop_rst;
@@ -310,7 +317,9 @@ localparam BUTTONS=`BUTTONS;
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
     .BUTTONS       ( BUTTONS        ),
-    .COLORW        ( COLORW         )
+    .COLORW        ( COLORW         ),
+    .SNAC_B1       ( SNAC_B1        ),
+    .SNAC_B0       ( SNAC_B0        )
     `ifdef VIDEO_WIDTH
     ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
     `endif

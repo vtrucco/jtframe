@@ -24,7 +24,9 @@ module jtframe_mister #(parameter
     CONF_STR                = "",
     COLORW                  = 4,
     VIDEO_WIDTH             = 384,
-    VIDEO_HEIGHT            = 224
+    VIDEO_HEIGHT            = 224,
+    SNAC_B1                 = 22,   // position of SNAC cfg bits in status word
+    SNAC_B0                 = 21
 )(
     input           clk_sys,
     input           clk_rom,
@@ -148,6 +150,10 @@ wire [ 7:0] ioctl_index;
 wire        ioctl_wr;
 wire        ioctl_download;
 
+wire [ 3:0] hoffset, voffset;
+
+assign { voffset, hoffset } = status[31:24];
+
 assign downloading = ioctl_download &&ioctl_index==8'd0;
 assign LED  = downloading | dwnld_busy;
 assign USER_OSD = joydb15_1[10] & joydb15_1[6];
@@ -163,11 +169,13 @@ joy_db15 joy_db15
   .joystick2 ( joydb15_2 )    
 );
 
+wire [1:0]    snac = status[SNAC_B1:SNAC_B0]; // Options MN
+
 wire [15:0]   joystick_USB_1, joystick_USB_2, joystick_USB_3, joystick_USB_4;
-wire [15:0]   joystick1 = |status[31:30] ? {BUTTONS<6 ? joydb15_1[9] : 1'b0,joydb15_1[11],joydb15_1[10],joydb15_1[3+BUTTONS:0]} : joystick_USB_1;
-wire [15:0]   joystick2 =  status[31]    ? {BUTTONS<6 ? joydb15_2[9] : 1'b0,joydb15_2[11],joydb15_2[10],joydb15_2[3+BUTTONS:0]} : status[30] ? joystick_USB_1 : joystick_USB_2;
-wire [15:0]   joystick3 =  status[31]    ? joystick_USB_1 : status[30] ? joystick_USB_2 : joystick_USB_3;
-wire [15:0]   joystick4 =  status[31]    ? joystick_USB_2 : status[30] ? joystick_USB_3 : joystick_USB_4;
+wire [15:0]   joystick1 = |snac ? {BUTTONS<6 ? joydb15_1[9] : 1'b0,joydb15_1[11],joydb15_1[10],joydb15_1[3+BUTTONS:0]} : joystick_USB_1;
+wire [15:0]   joystick2 =  snac[1]   ? {BUTTONS<6 ? joydb15_2[9] : 1'b0,joydb15_2[11],joydb15_2[10],joydb15_2[3+BUTTONS:0]} : snac[0] ? joystick_USB_1 : joystick_USB_2;
+wire [15:0]   joystick3 =  snac[1]   ? joystick_USB_1 : (snac[0] ? joystick_USB_2 : joystick_USB_3);
+wire [15:0]   joystick4 =  snac[1]   ? joystick_USB_2 : (snac[0] ? joystick_USB_3 : joystick_USB_4);
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire          force_scan2x, direct_video;
 
@@ -181,6 +189,8 @@ wire          pre_scan2x_cen;
 wire          pre_scan2x_de;
 
 reg  [6:0]    core_mod;
+
+wire          hs_resync, vs_resync;
 
 // This slows down synthesis on MiSTer a lot
 // if pre_scan signals come from a 25MHz clock domain
@@ -198,13 +208,27 @@ always @(*) begin
         scan2x_r    = {2{game_r}}>>(COLORW*2-8);
         scan2x_g    = {2{game_g}}>>(COLORW*2-8);
         scan2x_b    = {2{game_b}}>>(COLORW*2-8);
-        scan2x_hs   = hs;
-        scan2x_vs   = vs;
+        scan2x_hs   = hs_resync;
+        scan2x_vs   = vs_resync;
         scan2x_clk  = clk_sys;
         scan2x_cen  = pxl_cen;
         scan2x_de   = LVBL & LHBL; 
     end
 end
+
+jtframe_resync u_resync(
+    .clk        ( clk_sys       ),
+    .pxl_cen    ( pxl_cen       ),
+    .hs_in      ( hs            ),
+    .vs_in      ( vs            ),
+    .LVBL       ( LVBL          ),
+    .LHBL       ( LHBL          ),
+    .hoffset    ( hoffset       ),
+    .voffset    ( voffset       ),
+    .hs_out     ( hs_resync     ),
+    .vs_out     ( vs_resync     )
+);
+
 
 
 `ifndef JTFRAME_MRA_DIP
