@@ -411,6 +411,15 @@ jtframe_sdram u_sdram(
 `endif
 `endif
 
+// By-pass
+`ifdef MiSTer
+`ifdef MISTER_NOHDMI
+    `undef SCAN2X_TYPE
+    `define SCAN2X_TYPE 5
+`endif
+`endif
+
+
 `ifndef SCAN2X_TYPE
     `define SCAN2X_TYPE 0
 `endif

@@ -136,6 +136,12 @@ wire [21:0] osd_h_hdr = (info || rot) ? osd_h : (osd_h + OSD_HDR);
 
 reg [10:0] back_buffer_addr;
 
+`ifdef MISTER_NOHDMI
+`ifndef OSD_NOBCK
+    `define OSD_NOBCK
+`endif
+`endif
+
 `ifndef OSD_NOBCK
 reg  [7:0] back_buffer[8*256];
 wire [7:0] back_byte = back_buffer[ back_buffer_addr ];
@@ -299,6 +305,7 @@ always @(posedge clk_video) begin
     vs_out  <= vs3;
 end
 
+`ifndef OSD_NOBCK
 initial begin
 `ifdef SIMULATION
 $readmemh("back_buffer.hex",back_buffer);
@@ -434,6 +441,6 @@ back_buffer = '{ 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00,
 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00 };
 `endif
 end
-
+`endif
 
 endmodule
