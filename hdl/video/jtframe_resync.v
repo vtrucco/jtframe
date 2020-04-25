@@ -26,31 +26,38 @@ module jtframe_resync(
 (*keep*)    input  [3:0]  hoffset,
 (*keep*)    input  [3:0]  voffset,
     output reg    hs_out,
-    output        vs_out
+    output reg    vs_out
 );
 
-parameter HCNT = 10; // max 1024 pixels
+parameter CNTW = 10; // max 1024 pixels/lines
 parameter HLEN = 8; // length in pixels of the H pulse
 
-reg [HCNT-1:0]   hs_pos, vs_pos,   // relative positions of the original sync pulses
+reg [CNTW-1:0]   hs_pos, vs_pos,   // relative positions of the original sync pulses
                  hs_cnt, vs_cnt;   // count the position of the original sync pulses
 reg              last_LHBL, last_LVBL, last_hsin, last_vsin;
 reg [HLEN-1:0]   hs_hold;
-wire             hb_edge, hs_edge;
+wire             hb_edge, hs_edge, vb_edge, vs_edge;
 reg [5:0]        hs_rst;
 
-(*keep*) wire [HCNT-1:0]  htrip = hs_pos + { {HCNT-4{hoffset[3]}}, hoffset[3:0]  };
-(*keep*) wire [HCNT-1:0]  vtrip = vs_pos + { {HCNT-4{voffset[3]}}, voffset[3:0]  };
+(*keep*) wire [CNTW-1:0]  htrip = hs_pos + { {CNTW-4{hoffset[3]}}, hoffset[3:0]  };
+(*keep*) wire [CNTW-1:0]  vtrip = vs_pos + { {CNTW-4{voffset[3]}}, voffset[3:0]  };
 
-assign vs_out  = vs_in;
 assign hb_edge = LHBL && !last_LHBL;
 assign hs_edge = hs_in && !last_hsin;
+assign vb_edge = LVBL && !last_LVBL;
+assign vs_edge = vs_in && !last_vsin;
 
 always @(posedge clk) if(pxl_cen) begin
     last_LHBL <= LHBL;
     last_hsin <= hs_in;
-    if( hs_edge ) hs_pos   <= hs_cnt;        
-    hs_cnt <= hb_edge ? {HCNT{1'b0}} : hs_cnt+1;
+    hs_cnt <= hb_edge ? {CNTW{1'b0}} : hs_cnt+1;
+    if( vb_edge )
+        vs_cnt <= {CNTW{1'b0}};
+    else if(hb_edge) 
+        vs_cnt <= vs_cnt+1;
+
+    // Horizontal
+    if( hs_edge ) hs_pos   <= hs_cnt;
     if( hs_cnt == htrip ) begin
         hs_out <= 1;
         hs_hold <= {HLEN{1'b1}};
@@ -58,12 +65,16 @@ always @(posedge clk) if(pxl_cen) begin
         hs_hold <= hs_hold>>1;
         if( !hs_hold[0] ) hs_out <= 0;
     end
+
+    // Vertical
+    if( vs_edge ) vs_pos <= vs_cnt;
+    vs_out = vs_cnt == vtrip;
 end
 
 `ifdef SIMULATION
 initial begin
-    hs_cnt = {HCNT{1'b0}};
-    vs_cnt = {HCNT{1'b0}};
+    hs_cnt = {CNTW{1'b0}};
+    vs_cnt = {CNTW{1'b0}};
     hs_out = 0;
     vs_out = 0;
 end
