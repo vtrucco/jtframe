@@ -81,12 +81,13 @@ void makeMRA( Game* g ) {
         n.add_attr("default","FF,FF");
         n.add_attr("base","16");
         for( DIPsw* dip : dips ) {
-            if( dip->tag != last_tag || dip->location != last_location ) {
+            if( dip->tag != last_tag /*|| dip->location != last_location*/ ) {
                 n.comment( dip->tag );
                 //if( last_tag.size() ) 
                 base+=8;
                 last_tag = dip->tag;
                 last_location = dip->location;
+                cout << "base = " << base << "\ntag " << dip->tag << "\nlocation " << dip->location << '\n';
             }
             Node &dipnode = n.add("dip");
             dipnode.add_attr("name",dip->name);
@@ -112,6 +113,8 @@ void makeMRA( Game* g ) {
                     break;
             }
             --bit1;
+            //if( bit0 > base ) bit0-=base;
+            //if( bit1 > base ) bit1-=base;
             stringstream bits;
             if( bit1==bit0 )
                 bits << dec << bit0;
