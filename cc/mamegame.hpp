@@ -27,7 +27,7 @@ typedef std::list<class DIPsw*>   ListDIPs;
 class DIPsw {
 public:
     ListDIPValues values;
-    std::string name, tag;
+    std::string name, tag, location;
     int mask;
     DIPsw( std::string n, std::string t, int m ) :
         name(n), tag(t), mask(m) { }

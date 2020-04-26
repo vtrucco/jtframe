@@ -41,6 +41,14 @@ int main(int argc, char * argv[] ) {
     return 0;
 }
 
+void replace( string&aux, const char *find_text, const char* new_text ) {
+    int pos;
+    int n = strlen(find_text);
+    while( (pos=aux.find(find_text))!=string::npos ) {
+        aux.replace(pos,n,new_text);
+    }
+}
+
 struct Attr {
     string name, value;
 };
@@ -67,15 +75,18 @@ void makeMRA( Game* g ) {
     ListDIPs& dips=g->getDIPs();
     int base=-8;
     bool ommit_parenthesis=true;
-    string last_tag;
+    string last_tag, last_location;
     if( dips.size() ) {
         Node& n = root.add("switches");
+        n.add_attr("default","FF,FF");
+        n.add_attr("base","16");
         for( DIPsw* dip : dips ) {
-            if( dip->tag != last_tag ) {
+            if( dip->tag != last_tag || dip->location != last_location ) {
                 n.comment( dip->tag );
                 //if( last_tag.size() ) 
                 base+=8;
                 last_tag = dip->tag;
+                last_location = dip->location;
             }
             Node &dipnode = n.add("dip");
             dipnode.add_attr("name",dip->name);
@@ -84,7 +95,7 @@ void makeMRA( Game* g ) {
             int bit1 = base;
             int m    = dip->mask;
             int k;
-            for( k=0; k<8; k++ ) {
+            for( k=0; k<32; k++ ) {
                 if( (m&1) == 0 ) {
                     m>>=1;
                     bit0++;
@@ -92,7 +103,7 @@ void makeMRA( Game* g ) {
                 else
                     break;
             }
-            for( bit1=bit0; k<8;k++ ) {
+            for( bit1=bit0; k<32;k++ ) {
                 if( (m&1) == 1 ) {
                     m>>=1;
                     bit1++;
@@ -122,6 +133,11 @@ void makeMRA( Game* g ) {
                         } else break;
                     }
                 }
+                replace( aux, "0000", "0k");
+                replace( aux, " Coins", "");
+                replace( aux, " Coin", "");
+                replace( aux, " Credits", "");
+                replace( aux, " Credit", "");
                 if( aux[aux.length()-1]==' ' ) {
                     aux.erase( aux.end()-1 );
                 }

@@ -35,6 +35,10 @@ void MameParser::startElement( const XMLCh *const uri,
         GET_STR_ATTR( value );
         current_dip->values.push_back( { name, toint(value)} );
     }
+    if( _localname == "diplocation" ) {
+        GET_STR_ATTR( name );
+        current_dip->location=name;
+    }
 }
 
 void MameParser::endElement( const XMLCh *const uri,
