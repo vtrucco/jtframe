@@ -304,9 +304,13 @@ mkdir -p releases/$ZIPFOLDER
 #     $(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
 if [ -e $JTROOT/../jtbin ]; then
     BINFOLDER=$JTROOT/../jtbin/$ZIPFOLDER/$PRJ
+    BINRBF=$BINFOLDER/releases/${RELEASE}
     mkdir -p $BINFOLDER
-    mkdir -p $BINFOLDER/releases
-    cp $RELEASE.rbf $BINFOLDER/releases/${RELEASE}${SEED_SUFFIX}.rbf -v
+    mkdir -p $BINFOLDER/releases    
+    cp $RELEASE.rbf ${BINRBF}.rbf -v
+    if [ -n "$SEED_SUFFIX" ]; then
+        cp $RELEASE.rbf ${BINRBF}${SEED_SUFFIX}.rbf -v
+    fi
     OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
     if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
     # If there is a mounted SD card with the right name, copy the file to it too
@@ -332,14 +336,14 @@ if [ -e $JTROOT/../jtbin ]; then
             sshpass -p 1 scp $RELEASE.rbf root@mr:/media/fat/_${FTP_FOLDER}/cores
         fi
     fi
+    # Add to git but don't commit
+    if [ $GIT = TRUE ]; then
+        cd $JTROOT/../jtbin
+        git add -f ${BINRBF}.rbf
+    fi
 fi
 rm $RELEASE.rbf
 
-# Add to git
-if [ $GIT = TRUE ]; then
-    git add -f $PRJ/${MIST}/msg.hex
-    git add -f releases/$MIST/$RELEASE.zip
-fi
 
 if [ $PROG = TRUE ]; then
     if [ $MIST = mister ]; then
