@@ -30,12 +30,14 @@ module jtframe_resync(
 );
 
 parameter CNTW = 10; // max 1024 pixels/lines
-parameter HLEN = 8; // length in pixels of the H pulse
+parameter HLEN = 24; // length in pixels of the H pulse
+parameter VLEN = 2;
 
 reg [CNTW-1:0]   hs_pos, vs_pos,   // relative positions of the original sync pulses
                  hs_cnt, vs_cnt;   // count the position of the original sync pulses
 reg              last_LHBL, last_LVBL, last_hsin, last_vsin;
 reg [HLEN-1:0]   hs_hold;
+reg [VLEN-1:0]   vs_hold;
 wire             hb_edge, hs_edge, vb_edge, vs_edge;
 reg [5:0]        hs_rst;
 
@@ -49,7 +51,10 @@ assign vs_edge = vs_in && !last_vsin;
 
 always @(posedge clk) if(pxl_cen) begin
     last_LHBL <= LHBL;
+    last_LVBL <= LVBL;
     last_hsin <= hs_in;
+    last_vsin <= vs_in;
+
     hs_cnt <= hb_edge ? {CNTW{1'b0}} : hs_cnt+1;
     if( vb_edge )
         vs_cnt <= {CNTW{1'b0}};
@@ -57,18 +62,23 @@ always @(posedge clk) if(pxl_cen) begin
         vs_cnt <= vs_cnt+1;
 
     // Horizontal
-    if( hs_edge ) hs_pos   <= hs_cnt;
+    if( hs_edge ) hs_pos <= hs_cnt;
     if( hs_cnt == htrip ) begin
         hs_out <= 1;
         hs_hold <= {HLEN{1'b1}};
+        if( vs_cnt == vtrip ) begin
+            vs_hold <= {VLEN{1'b1}};
+            vs_out <= 1;
+        end else begin
+            vs_hold <= vs_hold>>1;
+            if( !vs_hold[0] ) vs_out <= 0;
+        end
     end else begin
         hs_hold <= hs_hold>>1;
         if( !hs_hold[0] ) hs_out <= 0;
     end
 
-    // Vertical
     if( vs_edge ) vs_pos <= vs_cnt;
-    vs_out = vs_cnt == vtrip;
 end
 
 `ifdef SIMULATION
