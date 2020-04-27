@@ -71,9 +71,9 @@ public:
 void makeROM( Node& root, Game* g ) {
     Node& n = root.add("rom");
     n.add_attr("index","0");
-    string zips = g->name;
+    string zips = g->name+".zip";
     if( g->cloneof.size() ) {
-        zips = zips + "|" + g->cloneof;
+        zips = zips + "|" + g->cloneof+".zip";
     }
     n.add_attr("zip",zips);
     n.add_attr("type","merged");
