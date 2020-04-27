@@ -36,6 +36,7 @@ int main(int argc, char * argv[] ) {
     GameMap games;
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
+        cout << g.second->name << '\n';
         makeMRA(g.second);
     }
     return 0;
@@ -67,11 +68,26 @@ public:
     virtual ~Node();
 };
 
-void makeMRA( Game* g ) {
-    string indent;
-    Node root("misterromdescription");
-    root.add("name",g->name); // should be full_name. Not implemented yet
-    root.add("setname",g->name);
+void makeROM( Node& root, Game* g ) {
+    Node& n = root.add("rom");
+    n.add_attr("index","0");
+    string zips = g->name;
+    if( g->cloneof.size() ) {
+        zips = zips + "|" + g->cloneof;
+    }
+    n.add_attr("zip",zips);
+    n.add_attr("type","merged");
+    for( ROMRegion* region : g->getRegionList() ) {
+        n.comment( region->name );
+        for( ROM* r : region->roms ) {
+            Node& part = n.add("part");
+            part.add_attr("name",r->name);
+            part.add_attr("crc",r->crc);
+        }
+    }
+}
+
+void makeDIP( Node& root, Game* g ) {
     ListDIPs& dips=g->getDIPs();
     int base=-8;
     bool ommit_parenthesis=true;
@@ -87,7 +103,7 @@ void makeMRA( Game* g ) {
                 base+=8;
                 last_tag = dip->tag;
                 last_location = dip->location;
-                cout << "base = " << base << "\ntag " << dip->tag << "\nlocation " << dip->location << '\n';
+                // cout << "base = " << base << "\ntag " << dip->tag << "\nlocation " << dip->location << '\n';
             }
             Node &dipnode = n.add("dip");
             dipnode.add_attr("name",dip->name);
@@ -151,6 +167,17 @@ void makeMRA( Game* g ) {
             dipnode.add_attr("ids",ids_str);
         }
     }
+}
+
+void makeMRA( Game* g ) {
+    string indent;
+    Node root("misterromdescription");
+    root.add("name",g->name); // should be full_name. Not implemented yet
+    root.add("setname",g->name);
+
+    makeROM( root, g );
+    makeDIP( root, g );
+
     string fout_name = g->name+".mra";
     ofstream fout(fout_name);
     if( !fout.good() ) {
@@ -188,19 +215,23 @@ void Node::dump(ostream& os, string indent ) {
                 os << " " << a->name << "=\"" << a->value << '\"';
             }
         }
-        os << ">";
-        if( !nodes.size()) {
-            string aux = value.size()>80 ? "\n" : "";
-            os << aux;
-            os << value << aux;
-        } else {
-            os << '\n';
-            for( Node* n : nodes ) {
-                n->dump(os, indent+"    ");
+        if( nodes.size() || value.size() ) {
+            os << ">";
+            if( !nodes.size()) {
+                string aux = value.size()>80 ? "\n" : "";
+                os << aux;
+                os << value << aux;
+            } else {
+                os << '\n';
+                for( Node* n : nodes ) {
+                    n->dump(os, indent+"    ");
+                }
+                os << indent;
             }
-            os << indent;
+            os << "</" << name << ">\n";
+        } else {
+            os << "/>\n";
         }
-        os << "</" << name << ">\n";
     }
 }
 
