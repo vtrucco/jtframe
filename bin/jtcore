@@ -293,7 +293,13 @@ function append_if_exists {
 # Rename output file
 cd $JTROOT
 mkdir -p releases
-RELEASE=jt${PRJ}_$(date +"%Y%m%d")
+if [ -z $RENAME ]; then
+    SHORT=jt${PRJ}
+else
+    SHORT=jt$RENAME
+fi
+RELEASE=${SHORT}_$(date +"%Y%m%d")
+
 if [ $SEED != 1 ]; then
     SEED_SUFFIX=_$SEED
 fi
@@ -333,10 +339,10 @@ if [ -e $JTROOT/../jtbin ]; then
         # with full date for reference, as core.rbf to start up with it
         # and inside its own folder for use with ARC files
         #cp -v $RELEASE.rbf /media/$USER/${MIST^^}
-        cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}.rbf
+        cp -v $RELEASE.rbf /media/$USER/${MIST^^}/${SHORT^^}.rbf
         # Copy the file to the core folder so it can be used by ARC files
         if [ -d /media/$USER/${MIST^^}/JT${PRJ^^} ]; then
-            cp -v $RELEASE.rbf /media/$USER/${MIST^^}/JT${PRJ^^}/$RENAME
+            cp -v $RELEASE.rbf /media/$USER/${MIST^^}/${SHORT^^}/$RENAME
         fi
     fi
     if [ $MIST = mister ]; then
