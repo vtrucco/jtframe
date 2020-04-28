@@ -31,7 +31,7 @@ module jtframe_resync(
 
 parameter CNTW = 10; // max 1024 pixels/lines
 parameter HLEN = 24; // length in pixels of the H pulse
-parameter VLEN = 2;
+parameter VLEN = 3;  // video standard
 
 reg [CNTW-1:0]   hs_pos, vs_pos,   // relative positions of the original sync pulses
                  hs_cnt, vs_cnt;   // count the position of the original sync pulses
