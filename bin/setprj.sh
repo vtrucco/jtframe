@@ -43,5 +43,7 @@ function swcore {
     pwd
 }
 
-echo "Use swcore <corename> to switch to a different core once you are"
-echo "inside the cores folder"
+if [ $1 != "--quiet" ]; then
+    echo "Use swcore <corename> to switch to a different core once you are"
+    echo "inside the cores folder"
+fi

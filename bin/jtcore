@@ -37,7 +37,7 @@ EOF
 if [ "$JTROOT" = "" ]; then
     cd ${0%%modules/jtframe/bin/jtcore}
     if [ -e setprj.sh ]; then
-        source setprj.sh
+        source setprj.sh --quiet
     else
         echo "WARNING: cannot find setprj.sh in " $(pwd)
     fi
@@ -205,9 +205,7 @@ function link_if_missing {
 echo ==============================================
 echo jt$PRJ $MIST compilation starts at $(date +%T) with seed $SEED on $(hostname)
 if [ "$MACROS" != "" ]; then
-    echo INFO: Macros used: $MACROS
-else
-    echo INFO: No macros.
+    echo Macros used: $MACROS
 fi
 
 ################ compilation
@@ -225,7 +223,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
         jt${PRJ}_msg.py || echo "WARNING: No message file"
     fi
     cd $PRJPATH/$MIST || exit 1
-    echo "Moved to folder " $(pwd)
+    # echo "Moved to folder " $(pwd)
     # Link files from MiST folder if missing
     for i in msg.hex conf_str.v msg_av.hex jt${PRJ}.tcl; do
         link_if_missing $i
@@ -268,7 +266,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
             echo "ERROR while compiling the project. Aborting"
             exit 1
         fi
-        grep Worst-case "$LOG"
+        grep "Worst-case.*-[0-9.]*" "$LOG"
     else
         # Simulation
         echo Preparing simulation netlist. Logfile:
@@ -355,7 +353,7 @@ if [ -e $JTROOT/../jtbin ]; then
     if [ $GIT = TRUE ]; then
         cd $JTROOT/../jtbin
         git add -f ${BINRBF}.rbf
-        cd -
+        cd - > /dev/null
     fi
 fi
 rm $RELEASE.rbf
