@@ -12,7 +12,25 @@
 using namespace xercesc;
 
 
-int toint(std::string s);
+int toint(std::string s, int base=10);
+
+typedef std::list<class ROM*> ListROMs;
+typedef std::list<class ROMRegion*> ListRegions;
+
+class ROM {
+public: // keep the variable order:
+    std::string name, crc;
+    int size, offset;
+};
+
+
+class ROMRegion {
+public:
+    std::string name;
+    ListROMs roms;
+    ~ROMRegion();
+};
+
 
 class DIPvalue{
 public:
@@ -27,7 +45,7 @@ typedef std::list<class DIPsw*>   ListDIPs;
 class DIPsw {
 public:
     ListDIPValues values;
-    std::string name, tag;
+    std::string name, tag, location;
     int mask;
     DIPsw( std::string n, std::string t, int m ) :
         name(n), tag(t), mask(m) { }
@@ -35,14 +53,17 @@ public:
 
 class Game {
     std::list<DIPsw*> dips;
+    ListRegions regions;
 public:
-    std::string name, full_name;
+    std::string name, full_name, cloneof;
     Game( std::string _name ) : name(_name) {}
     ~Game();
 
     void addDIP( DIPsw* d );
     void dump();
     ListDIPs& getDIPs() { return dips; }
+    ROMRegion* getRegion( std::string _name );
+    ListRegions& getRegionList() { return regions; }
 };
 
 class GameMap : public std::map<std::string,Game*> {
@@ -57,6 +78,7 @@ class MameParser : public DefaultHandler {
     Game *current;
     DIPsw* current_dip;
     GameMap& games;
+    void parse_rom( const Attributes & attrs );
 public:
     MameParser(GameMap& _games) : games(_games) {
         current = nullptr;
@@ -77,7 +99,7 @@ class XMLStr {
     XMLCh* v;
 public:
     XMLStr( const char *s ) {
-        v = XMLString::transcode(s);
+        v = XMLString::transcode( s );
     }
     ~XMLStr() { XMLString::release(&v); }
     operator const XMLCh*() const{ return v; }
@@ -93,6 +115,6 @@ public:
     operator const char*() const{ return v; }
 };
 
-
+std::string get_str_attr( const XMLCh* name );
 
 #endif

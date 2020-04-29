@@ -11,8 +11,19 @@
 using namespace xercesc;
 using namespace std;
 
+string get_str_attr( const Attributes & attrs, const char* name ) {
+    const char *blank="";
+    const XMLCh* v = attrs.getValue( (const XMLCh*)XMLStr(name) );
+    if( v != NULL ) {
+        string aux( (const char*)StdStr(v) );
+        return aux;
+    }
+    else return blank;
+}
+
 #define TOSTR(a,b) string a( (const char*)StdStr(b) )
-#define GET_STR_ATTR( a ) string a( (const char*)StdStr( attrs.getValue(XMLStr(#a)) ) );
+//#define GET_STR_ATTR( a ) string a( (const char*)StdStr( attrs.getValue(XMLStr(#a)) ) );
+#define GET_STR_ATTR( a ) string a( get_str_attr(attrs, #a) );
 
 void MameParser::startElement( const XMLCh *const uri,
         const XMLCh *const localname, const XMLCh *const qname, const Attributes & attrs ) 
@@ -20,7 +31,11 @@ void MameParser::startElement( const XMLCh *const uri,
     TOSTR( _localname, localname );
     if( _localname == "machine" ) {
         GET_STR_ATTR( name );
+        string cloneof;
+        const XMLCh* aux = attrs.getValue( XMLStr("cloneof"));
+        if( aux ) cloneof = (const char*)StdStr(aux);
         current = new Game(name);
+        current->cloneof = cloneof;
         games[name] = current;
     }
     if( _localname == "dipswitch" ) {
@@ -35,6 +50,13 @@ void MameParser::startElement( const XMLCh *const uri,
         GET_STR_ATTR( value );
         current_dip->values.push_back( { name, toint(value)} );
     }
+    if( _localname == "diplocation" ) {
+        GET_STR_ATTR( name );
+        current_dip->location=name;
+    }
+    if( _localname == "rom" ) {
+        parse_rom( attrs );
+    }
 }
 
 void MameParser::endElement( const XMLCh *const uri,
@@ -44,6 +66,34 @@ void MameParser::endElement( const XMLCh *const uri,
         current_dip->values.sort();
         current_dip = nullptr;
     }
+}
+
+void MameParser::parse_rom( const Attributes & attrs ) {
+    GET_STR_ATTR( name   );
+    GET_STR_ATTR( crc    );
+    GET_STR_ATTR( region );
+    GET_STR_ATTR( size   );
+    GET_STR_ATTR( offset );
+    ROMRegion* r = current->getRegion( region );
+    r->roms.push_back(
+        new ROM( {name, crc, toint(size,16), toint(offset,16)} )
+    );
+}
+
+ROMRegion* Game::getRegion( std::string _name ) {
+    static ROMRegion *last = nullptr;
+    if( last != nullptr ) {
+        if( last->name == _name ) return last;
+    }
+    for( ROMRegion *r : regions ) {
+        if( r->name == _name ) {
+            last = r;
+            return last;
+        }
+    }
+    last = new ROMRegion( {_name} );
+    regions.push_back(last);
+    return last;
 }
 
 void Game::addDIP( DIPsw* d ) {
@@ -63,11 +113,8 @@ Game::~Game() {
     }
 }
 
-int toint(string s) {
-    stringstream ss(s);
-    int x;
-    ss >> x;
-    return x;
+int toint(string s, int base) {    
+    return strtol( s.c_str(), NULL, base);
 }
 
 GameMap::~GameMap() {
@@ -76,6 +123,13 @@ GameMap::~GameMap() {
         g.second=nullptr;
     }
     clear();
+}
+
+ROMRegion::~ROMRegion() {
+    for( ROM* r : roms ) {
+        delete r;
+    }
+    roms.clear();
 }
 
 int parse_MAME_xml( GameMap& games, const char *xmlFile ) {

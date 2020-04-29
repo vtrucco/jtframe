@@ -51,7 +51,7 @@ The macro JTFRAME_OSDCOLOR should be defined with a 6-bit value encoding an RGB 
 the OSD background. The meanins are:
 
 Value | Meaning                 | Colour
-======|=========================|========
+------|-------------------------|---------
 6'h3f | Mature core             | Gray
 6'h1e | Almost done             | Green
 6'h3c | Playable with problems  | Yellow
@@ -91,12 +91,19 @@ To enable support of DIP switches in MRA files define the macro **JTFRAME_MRA_DI
 
 In MiST, DIP switches are incorporated into the status word. As some bits in the status word are used for other OSD settings, DIP switches are by default located in range 31:16. This is set by the macro **JTFRAME_MIST_DIPBASE**, whose **default value is 16**. Note that the MRA should match this, the **base** attribute can be used in the MRA dip definition to shift the switch bits up.
 
+Macro                | Effect
+---------------------|----------------------------
+JTFRAME_OSD_NOLOAD   | Do not display _load file_ 
+JTFRAME_OSD_NOCREDITS| Do not display _Credits_ 
+JTFRAME_OSD_FLIP     | Display flip option (only for vertical games)
+JTFRAME_OSD_NOSND    | Do not display sound options
+
 ## Values used in the status word by JTFRAME
 
 Values above 8 are not available in MiST if **JTFRAME_MRA_DIP** is defined.
 
 bit     |  meaning                | Enabled with macro
-========|=========================|====================
+--------|-------------------------|-------------------------------------
 0       | Reset in MiST           |
 1       | Flip screen             | VERTICAL_SCREEN && JTFRAME_OSD_FLIP
 2       | Rotate controls         | VERTICAL_SCREEN (MiST)
@@ -147,7 +154,7 @@ To simulate the SDRAM load operation use **-load** on sim.sh. The normal downloa
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
 
 optional clock input | Macro Needed
-=====================|==============
+---------------------|--------------
 clk6                 | JTFRAME_CLK6
 clk24                | JTFRAME_CLK24
 clk48                | JTFRAME_CLK96
@@ -160,7 +167,7 @@ By default unless **JTFRAME_MR_FASTIO** is already defined, **JTFRAME_CLK96** wi
 In MiSTer the aspect ratio through the scaler can be controlled via the core. By default it is possible to switch between 16:9 and 4:3. However, if the game AR is different, the following macros can be used to redefine it:
 
 Macro       |  Default    |   Meaning        
-============|=============|=====================
+------------|-------------|----------------------
 JTFRAME_ARX |     4       | horizontal magnitude
 JTFRAME_ARY |     3       | vertical   magnitude
 
@@ -190,7 +197,7 @@ I8051
 Credits can be displayed using the module *jtframe_credits*. This module needs the following files
 
 File           | Tool      | Function
-===============|===========|===========
+---------------|-----------|--------------
 msg.hex        | msg2hex   | text shown
 avatar.hex     | avatar.py | avatar images. 4bpp indexed
 avatar_pal.hex | avatar.py | avatar paletters

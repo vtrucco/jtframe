@@ -36,9 +36,18 @@ int main(int argc, char * argv[] ) {
     GameMap games;
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
+        cout << g.second->name << '\n';
         makeMRA(g.second);
     }
     return 0;
+}
+
+void replace( string&aux, const char *find_text, const char* new_text ) {
+    int pos;
+    int n = strlen(find_text);
+    while( (pos=aux.find(find_text))!=string::npos ) {
+        aux.replace(pos,n,new_text);
+    }
 }
 
 struct Attr {
@@ -59,23 +68,42 @@ public:
     virtual ~Node();
 };
 
-void makeMRA( Game* g ) {
-    string indent;
-    Node root("misterromdescription");
-    root.add("name",g->name); // should be full_name. Not implemented yet
-    root.add("setname",g->name);
+void makeROM( Node& root, Game* g ) {
+    Node& n = root.add("rom");
+    n.add_attr("index","0");
+    string zips = g->name+".zip";
+    if( g->cloneof.size() ) {
+        zips = zips + "|" + g->cloneof+".zip";
+    }
+    n.add_attr("zip",zips);
+    n.add_attr("type","merged");
+    for( ROMRegion* region : g->getRegionList() ) {
+        n.comment( region->name );
+        for( ROM* r : region->roms ) {
+            Node& part = n.add("part");
+            part.add_attr("name",r->name);
+            part.add_attr("crc",r->crc);
+        }
+    }
+}
+
+void makeDIP( Node& root, Game* g ) {
     ListDIPs& dips=g->getDIPs();
     int base=-8;
     bool ommit_parenthesis=true;
-    string last_tag;
+    string last_tag, last_location;
     if( dips.size() ) {
         Node& n = root.add("switches");
+        n.add_attr("default","FF,FF");
+        n.add_attr("base","16");
         for( DIPsw* dip : dips ) {
-            if( dip->tag != last_tag ) {
+            if( dip->tag != last_tag /*|| dip->location != last_location*/ ) {
                 n.comment( dip->tag );
                 //if( last_tag.size() ) 
                 base+=8;
                 last_tag = dip->tag;
+                last_location = dip->location;
+                // cout << "base = " << base << "\ntag " << dip->tag << "\nlocation " << dip->location << '\n';
             }
             Node &dipnode = n.add("dip");
             dipnode.add_attr("name",dip->name);
@@ -84,7 +112,7 @@ void makeMRA( Game* g ) {
             int bit1 = base;
             int m    = dip->mask;
             int k;
-            for( k=0; k<8; k++ ) {
+            for( k=0; k<32; k++ ) {
                 if( (m&1) == 0 ) {
                     m>>=1;
                     bit0++;
@@ -92,7 +120,7 @@ void makeMRA( Game* g ) {
                 else
                     break;
             }
-            for( bit1=bit0; k<8;k++ ) {
+            for( bit1=bit0; k<32;k++ ) {
                 if( (m&1) == 1 ) {
                     m>>=1;
                     bit1++;
@@ -101,6 +129,8 @@ void makeMRA( Game* g ) {
                     break;
             }
             --bit1;
+            //if( bit0 > base ) bit0-=base;
+            //if( bit1 > base ) bit1-=base;
             stringstream bits;
             if( bit1==bit0 )
                 bits << dec << bit0;
@@ -122,6 +152,11 @@ void makeMRA( Game* g ) {
                         } else break;
                     }
                 }
+                replace( aux, "0000", "0k");
+                replace( aux, " Coins", "");
+                replace( aux, " Coin", "");
+                replace( aux, " Credits", "");
+                replace( aux, " Credit", "");
                 if( aux[aux.length()-1]==' ' ) {
                     aux.erase( aux.end()-1 );
                 }
@@ -132,6 +167,17 @@ void makeMRA( Game* g ) {
             dipnode.add_attr("ids",ids_str);
         }
     }
+}
+
+void makeMRA( Game* g ) {
+    string indent;
+    Node root("misterromdescription");
+    root.add("name",g->name); // should be full_name. Not implemented yet
+    root.add("setname",g->name);
+
+    makeROM( root, g );
+    makeDIP( root, g );
+
     string fout_name = g->name+".mra";
     ofstream fout(fout_name);
     if( !fout.good() ) {
@@ -169,19 +215,23 @@ void Node::dump(ostream& os, string indent ) {
                 os << " " << a->name << "=\"" << a->value << '\"';
             }
         }
-        os << ">";
-        if( !nodes.size()) {
-            string aux = value.size()>80 ? "\n" : "";
-            os << aux;
-            os << value << aux;
-        } else {
-            os << '\n';
-            for( Node* n : nodes ) {
-                n->dump(os, indent+"    ");
+        if( nodes.size() || value.size() ) {
+            os << ">";
+            if( !nodes.size()) {
+                string aux = value.size()>80 ? "\n" : "";
+                os << aux;
+                os << value << aux;
+            } else {
+                os << '\n';
+                for( Node* n : nodes ) {
+                    n->dump(os, indent+"    ");
+                }
+                os << indent;
             }
-            os << indent;
+            os << "</" << name << ">\n";
+        } else {
+            os << "/>\n";
         }
-        os << "</" << name << ">\n";
     }
 }
 
