@@ -1,5 +1,7 @@
 #!/bin/bash
+# Define JTROOT before sourcing this file
 
+export JTFRAME=$JTROOT/modules/jtframe
 PATH=$PATH:$JTFRAME/bin:.
 #unalias jtcore
 alias jtcore="$JTFRAME/bin/jtcore"
@@ -43,7 +45,7 @@ function swcore {
     pwd
 }
 
-if [ $1 != "--quiet" ]; then
+if [ "$1" != "--quiet" ]; then
     echo "Use swcore <corename> to switch to a different core once you are"
     echo "inside the cores folder"
 fi
