@@ -139,6 +139,8 @@ wire          en_mixing;
 wire          scandoubler = ~scan2x_enb;
 wire          hblank = ~LHBL;
 wire          vblank = ~LVBL;
+wire          osd_pause;
+reg           last_osdpause;
 
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
 wire key_reset, key_pause, rot_control;
@@ -286,6 +288,7 @@ always @(posedge clk_sys)
         soft_rst     <= 1'b0;
         gfx_en       <= 4'hf;
     end else begin
+        last_osdpause<= osd_pause;
         last_pause   <= key_pause;
         last_reset   <= key_reset;
         last_joypause <= joy_pause; // joy is active low!
@@ -320,8 +323,11 @@ always @(posedge clk_sys)
         `endif
         // state variables:
         `ifndef DIP_PAUSE
-        if( (key_pause && !last_pause) || (joy_pause && !last_joypause) )
-            game_pause   <= ~game_pause;
+        if( downloading )
+            game_pause<=0;
+        else // toggle
+            if( (key_pause && !last_pause) || (joy_pause && !last_joypause) || (osd_pause&&!last_osdpause))
+                game_pause   <= ~game_pause;
         `else 
         game_pause <= 1'b1;
         `endif
@@ -341,6 +347,7 @@ jtframe_dip u_dip(
     .scanlines  ( scanlines     ),
     .enable_fm  ( enable_fm     ),
     .enable_psg ( enable_psg    ),
+    .osd_pause  ( osd_pause     ),
     .dip_test   ( dip_test      ),
     .dip_pause  ( dip_pause     ),
     .dip_flip   ( dip_flip      ),

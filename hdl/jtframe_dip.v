@@ -34,6 +34,7 @@ module jtframe_dip(
 
     output reg         enable_fm,
     output reg         enable_psg,
+    output             osd_pause,
 
     inout              dip_test,
     // non standard:
@@ -86,6 +87,11 @@ assign dip_flip    = status[1];
 
 wire   widescreen  = status[11];    // only MiSTer
 assign scanlines   = status[5:3];
+`ifndef JTFRAME_OSD_NOCREDITS
+assign osd_pause   = status[12];
+`else
+assign osd_pause   = 1'b0;
+`endif
 
 `ifdef VERTICAL_SCREEN
     // core_mod[0] = 0 horizontal game
