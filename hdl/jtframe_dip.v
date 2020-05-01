@@ -136,11 +136,7 @@ always @(posedge clk) begin
             dip_pause <= 1'b1; // avoid having the main CPU halted in simulation
         `endif
     `else
-        dip_pause <= ~(
-            `ifndef JTFRAME_OSD_NOCREDITS
-            status[12] | // Control pause via OSD too
-            `endif
-            game_pause); // all dips are active low
+        dip_pause <= ~game_pause; // all dips are active low
     `endif
 end
 
