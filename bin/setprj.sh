@@ -1,5 +1,7 @@
 #!/bin/bash
+# Define JTROOT before sourcing this file
 
+export JTFRAME=$JTROOT/modules/jtframe
 PATH=$PATH:$JTFRAME/bin:.
 #unalias jtcore
 alias jtcore="$JTFRAME/bin/jtcore"

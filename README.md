@@ -89,6 +89,8 @@ In order to preserve the 8-bit ROM download interface with MiST, _jtframe_mister
 
 To enable support of DIP switches in MRA files define the macro **JTFRAME_MRA_DIP**. The maximum length of DIP switches is 32 bits.
 
+In MiST, DIP switches are incorporated into the status word. As some bits in the status word are used for other OSD settings, DIP switches are by default located in range 31:16. This is set by the macro **JTFRAME_MIST_DIPBASE**, whose **default value is 16**. Note that the MRA should match this, the **base** attribute can be used in the MRA dip definition to shift the switch bits up.
+
 Macro                | Effect
 ---------------------|----------------------------
 JTFRAME_OSD_NOLOAD   | Do not display _load file_ 

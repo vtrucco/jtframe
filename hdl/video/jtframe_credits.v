@@ -51,8 +51,8 @@ localparam MSGW  = PAGES == 1 ? 10 :
                    (PAGES == 2 ? 11 :
                    (PAGES > 2 && PAGES <=4 ? 12 :
                    (PAGES > 5 && PAGES <=8 ? 13 : 14 ))); // Support for upto 16 pages
-localparam [VPOSW-1:0] MAXVISIBLE = PAGES*32*8-1;
 localparam VPOSW = MSGW-2;
+localparam [VPOSW-1:0] MAXVISIBLE = PAGES*32*8-1;
 
 reg  [7:0] hn  ;
 reg  [VPOSW-1:0 ] vpos, vrender, vdump, vdump1;
