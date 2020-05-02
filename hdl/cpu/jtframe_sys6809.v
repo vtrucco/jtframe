@@ -28,6 +28,7 @@ module jtframe_sys6809(
     input           nIRQ,
     input           nFIRQ,
     input           nNMI,
+    output          irq_ack,
     // Bus sharing
     input           bus_busy,
     output          waitn,
@@ -48,6 +49,8 @@ wire E, Q;
 reg  cen_E, cen_Q;
 assign cpu_cen = Q;
 
+wire   BA, BS;
+assign irq_ack = {BA,BS}==2'b01;
 
 reg [1:0] cencnt=2'd0;
 
@@ -96,8 +99,8 @@ mc6809i u_cpu(
     .clk     ( clk     ),
     .cen_E   ( E       ),
     .cen_Q   ( Q       ),
-    .BS      (         ),
-    .BA      (         ),
+    .BS      ( BS      ),
+    .BA      ( BA      ),
     .nIRQ    ( nIRQ    ),
     .nFIRQ   ( nFIRQ   ),
     .nNMI    ( nNMI    ),

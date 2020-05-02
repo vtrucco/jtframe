@@ -24,6 +24,10 @@
 // It will get the config string for the microcontroller
 // from the include file conf_str.v
 
+`ifndef MISTTOP
+    `define MISTTOP top
+`endif
+
 module `MISTTOP(
     input   [1:0]   CLOCK_27,
     output  [5:0]   VGA_R,
