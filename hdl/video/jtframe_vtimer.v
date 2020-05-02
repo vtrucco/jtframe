@@ -31,6 +31,8 @@ module jtframe_vtimer(
     output  reg         VS
 );
 
+reg LVBL2, LVBL1;
+
 `ifdef SIMULATION
 initial begin
     Hinit = 0;
@@ -47,8 +49,6 @@ initial begin
     vdump    = 0;
 end
 `endif
-
-reg LVBL2, LVBL1;
 
 parameter [8:0] V_START  = 9'd0,
                 VB_START = 9'd239,
@@ -95,7 +95,7 @@ always @(posedge clk) if(pxl_cen) begin
     if (H==HS_END) HS <= 0;
 end
 
-`ifdef SIMULATION
+`ifdef SIMULATION_VTIMER
 reg LVBL_Last, LHBL_last, VS_last, HS_last;
 
 wire new_line  = LHBL_last && !LHBL;

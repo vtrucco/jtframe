@@ -440,7 +440,7 @@ iverilog)
     || exit 1
     $SHOWCMD sim -lxt;;
 ncverilog)
-    $SHOWCMD ncverilog +access+r +nc64bit +define+NCVERILOG \
+    $SHOWCMD ncverilog +access+r +nc64bit +define+NCVERILOG +nctimescale+1ns/1ps\
         -f game.f $PERCORE \
         -F $JTFRAME/hdl/ver/$SIMFILE -disable_sem2009 $MIST \
         +define+SIM_MS=$SIM_MS +define+SIMULATION \
