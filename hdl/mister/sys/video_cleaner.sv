@@ -79,9 +79,9 @@ module s_fix
 
 reg pol;
 assign sync_out = sync_in ^ pol;
+integer pos = 0, neg = 0, cnt = 0;
 
 always @(posedge clk) begin
-	integer pos = 0, neg = 0, cnt = 0;
 	reg s1,s2;
 
 	s1 <= sync_in;

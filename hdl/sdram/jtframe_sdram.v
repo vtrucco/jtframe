@@ -186,6 +186,7 @@ always @(posedge clk)
         sdram_ack  <= 1'b0;
         refresh_sr <=  'd0;
         refresh_ok <= 1'b0;
+        refresh_cycle <= 0;
         write_cycle <= 1'b0;
         read_cycle  <= 1'b0;
         hold_bus    <= 1'b1;

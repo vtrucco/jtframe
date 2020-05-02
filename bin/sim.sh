@@ -102,7 +102,7 @@ fi
 
 if [ "$M6809" = 1 ]; then
     echo "INFO: M6809 support added."
-    PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/mc6809i.v"
+    PERCORE="$PERCORE $MODULES/jtframe/hdl/cpu/mc6809i.v $MODULES/jtframe/hdl/cpu/jtframe_sys6809.v"
 fi
 
 if [ "$M6801" = 1 ]; then
