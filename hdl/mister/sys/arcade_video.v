@@ -190,8 +190,8 @@ video_mixer #(WIDTH+4, HALF_DEPTH, GAMMA) video_mixer
 );
 
 always @(posedge VGA_CLK) begin
-    VGA_CE <= direct_video ? HDMI_CE : CE;
-    if( direct_video ? HDMI_CE : CE ) begin
+    VGA_CE <= norot ? HDMI_CE : CE;
+    if( norot ? HDMI_CE : CE ) begin
         VGA_R  <= direct_video ? HDMI_R  : R;
         VGA_G  <= direct_video ? HDMI_G  : G;
         VGA_B  <= direct_video ? HDMI_B  : B;
