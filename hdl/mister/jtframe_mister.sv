@@ -239,7 +239,17 @@ assign dipsw        = status;
 // Dip switches through MRA file
 // Support for 32 bits only for now.
 reg  [ 7:0] dsw[4];
-assign dipsw        = {dsw[3],dsw[2],dsw[1],dsw[0]};
+
+`ifndef SIMULATION
+    assign dipsw = {dsw[3],dsw[2],dsw[1],dsw[0]};
+`else // SIMULATION:
+    `ifndef JTFRAME_SIM_DIPS
+        assign dipsw = ~32'd0;
+    `else
+        assign dipsw = `JTFRAME_SIM_DIPS;
+    `endif
+`endif
+
 assign ioctl_rom_wr = (ioctl_wr && ioctl_index==8'd0);
 
 always @(posedge clk_rom) begin

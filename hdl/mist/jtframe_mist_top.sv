@@ -388,7 +388,15 @@ localparam DIPBASE=`JTFRAME_MIST_DIPBASE;
 localparam DIPBASE=16;
 `endif
 
-wire [31:0] dipsw = { {32-DIPBASE{1'b1}}, status[31:DIPBASE]  };
+`ifndef SIMULATION
+    wire [31:0] dipsw = { {32-DIPBASE{1'b1}}, status[31:DIPBASE]  };
+`else
+    `ifndef JTFRAME_SIM_DIPS
+        wire [31:0] dipsw = ~32'd0;
+    `else
+        wire [31:0] dipsw = `JTFRAME_SIM_DIPS;
+    `endif
+`endif
 
 `GAMETOP
 u_game(
