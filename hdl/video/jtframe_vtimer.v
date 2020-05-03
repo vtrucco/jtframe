@@ -58,7 +58,7 @@ parameter [8:0] V_START  = 9'd0,
                 V_END    = 9'd255,
                 H_END    = 9'd395,
                 HB_START = 9'd0,
-                HB_END   = H_END-9'd280,
+                HB_END   = H_END-9'd279,
                 HS_START = 9'd30,
                 HS_END   = HS_START+9'd10;
 
