@@ -192,12 +192,12 @@ video_mixer #(WIDTH+4, HALF_DEPTH, GAMMA) video_mixer
 always @(posedge VGA_CLK) begin
     VGA_CE <= norot ? HDMI_CE : CE;
     if( norot ? HDMI_CE : CE ) begin
-        VGA_R  <= direct_video ? HDMI_R  : R;
-        VGA_G  <= direct_video ? HDMI_G  : G;
-        VGA_B  <= direct_video ? HDMI_B  : B;
-        VGA_HS <= direct_video ? HDMI_HS : HS;
-        VGA_VS <= direct_video ? HDMI_VS : VS;
-        VGA_DE <= direct_video ? HDMI_DE : ~(HBL | VBL);
+        VGA_R  <= norot ? HDMI_R  : R;
+        VGA_G  <= norot ? HDMI_G  : G;
+        VGA_B  <= norot ? HDMI_B  : B;
+        VGA_HS <= norot ? HDMI_HS : HS;
+        VGA_VS <= norot ? HDMI_VS : VS;
+        VGA_DE <= norot ? HDMI_DE : ~(HBL | VBL);
     end
 end
 
