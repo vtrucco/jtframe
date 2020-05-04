@@ -74,6 +74,11 @@ case "$PRJ" in
         show_usage;;
 esac
 
+if [ ${PRJ:0:1} = - ]; then
+    echo "ERROR: Missing project name."
+    exit 1
+fi    
+
 if [ -e $JTROOT/cores/$PRJ ]; then
     PRJPATH=$JTROOT/cores/$PRJ
 elif [ -e $JTROOT/$PRJ ]; then
