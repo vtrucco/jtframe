@@ -49,3 +49,19 @@ if [ "$1" != "--quiet" ]; then
     echo "Use swcore <corename> to switch to a different core once you are"
     echo "inside the cores folder"
 fi
+
+# Git prompt
+source $JTFRAME/bin/git-prompt.sh
+export GIT_PS1_SHOWUPSTREAM=
+export GIT_PS1_SHOWDIRTYSTATE=
+export GIT_PS1_SHOWCOLORHINTS=
+function __git_subdir {
+    PWD=$(pwd)
+    echo ${PWD##${JTROOT}/}
+}
+PS1='[$(__git_subdir)$(__git_ps1 " (%s)")]\$ '
+
+# check that git hooks are present
+# Only the pre-commit is added automatically, the post-commit must
+# be copied manually as it implies automatic pushing to the server
+cp --no-clobber $JTFRAME/bin/pre-commit $JTROOT/.git/hooks/pre-commit
