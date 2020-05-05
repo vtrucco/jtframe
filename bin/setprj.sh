@@ -61,6 +61,12 @@ function __git_subdir {
 }
 PS1='[$(__git_subdir)$(__git_ps1 " (%s)")]\$ '
 
+function pull_jtframe {
+    cd $JTFRAME
+    git pull
+    cd -
+}
+
 # check that git hooks are present
 # Only the pre-commit is added automatically, the post-commit must
 # be copied manually as it implies automatic pushing to the server
