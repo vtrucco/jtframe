@@ -1,4 +1,4 @@
-#!/bin/sample
+#!/bin/bash
 
 if ( git status -b -s -u no | grep behind > /dev/null ); then
 	echo "Your work tree is behind the remote branch"

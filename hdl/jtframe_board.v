@@ -322,7 +322,7 @@ always @(posedge clk_sys)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
         `endif
         // state variables:
-        `ifndef DIP_PAUSE
+        `ifndef DIP_PAUSE // Forces pause during simulation
         if( downloading )
             game_pause<=0;
         else // toggle
