@@ -76,7 +76,7 @@ void MameParser::parse_rom( const Attributes & attrs ) {
     GET_STR_ATTR( offset );
     ROMRegion* r = current->getRegion( region );
     r->roms.push_back(
-        new ROM( {name, crc, toint(size,16), toint(offset,16)} )
+        new ROM( {name, crc, toint(size,10), toint(offset,16)} )
     );
 }
 
