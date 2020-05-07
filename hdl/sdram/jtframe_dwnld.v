@@ -16,6 +16,16 @@
     Version: 1.0
     Date: 02-5-2020 */
 
+// Produces the right signals for jtframe_sdram to get the ROM data
+// A prom_we signal is used for the second half of the ROM byte stream
+// For system simulation, it is useful sometimes to be able to load the
+// PROM data quickly at the beginning of the simulation. If the PROM
+// modules are isolated, this can be done manually typing the path to
+// each rom file in the jtframe_prom instantiation. However, sometimes
+// the hierarchy will not allow it or the code may get messy.
+// jtframe_dwnld can load PROMs only during simulation when the
+// macro JTFRAME_DWNLD_PROM_ONLY is defined.
+
 module jtframe_dwnld(
     input                clk,
     input                downloading,
@@ -26,19 +36,66 @@ module jtframe_dwnld(
     output reg [ 7:0]    prog_data,
     output reg [ 1:0]    prog_mask, // active low
     output reg           prog_we,
+    output reg           prom_we,
     input                sdram_ack
 );
 
+parameter        SIMFILE   = "rom.bin";
+parameter [24:0] PROM_START= ~25'd0;
+localparam       PROM_EN   = PROM_START!=~25'd0;
+
+`ifndef JTFRAME_DWNLD_PROM_ONLY
+/////////////////////////////////////////////////
+// Normal operation
+
 always @(posedge clk) begin
     if ( ioctl_wr && downloading ) begin
-        prog_we   <= 1'b1;
+        prog_we   <= !PROM_EN || ioctl_addr<PROM_START;
+        prom_we   <=  PROM_EN && ioctl_addr>=PROM_START;
         prog_data <= ioctl_data;
         prog_addr <= ioctl_addr[22:1];
         prog_mask <= ioctl_addr[0] ? 2'b10 : 2'b01;            
     end
     else begin
-        if(!downloading || sdram_ack) prog_we  <= 1'b0;
+        if(!downloading || sdram_ack) prog_we  <= 0;
+        if(!downloading) prom_we <= 0;
     end
 end
+
+`else
+////////////////////////////////////////////////////////
+// Load only PROMs directly from file in simulation
+
+integer f, readcnt, dumpcnt;
+reg [7:0] mem[0:`GAME_ROM_LEN];
+
+initial begin
+    dumpcnt = PROM_START;
+    if( SIMFILE != "" && PROM_EN ) begin
+        f=$fopen(SIMFILE,"rb");
+        if( f != 0 ) begin
+            readcnt=$fread( mem, f );
+            $display("INFO: %m file %s loaded",SIMFILE);
+            $fclose(f);
+        end else begin
+            $display("WARNING: %m cannot open %s", SIMFILE);
+        end
+    end
+end
+
+always @(posedge clk) begin
+    if( dumpcnt < `GAME_ROM_LEN ) begin
+        prom_we   <= 1;
+        prog_we   <= 0;
+        prog_mask <= 2'b11;
+        prog_data <= mem[dumpcnt];
+        prog_addr <= dumpcnt[21:0];
+        dumpcnt   <= dumpcnt+1;
+    end else begin
+        prom_we <= 0;
+    end
+end
+
+`endif
 
 endmodule
