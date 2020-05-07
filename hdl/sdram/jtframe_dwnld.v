@@ -44,16 +44,24 @@ parameter        SIMFILE   = "rom.bin";
 parameter [24:0] PROM_START= ~25'd0;
 localparam       PROM_EN   = PROM_START!=~25'd0;
 
+wire             is_prom   = PROM_EN && ioctl_addr>=PROM_START;
+
 `ifndef JTFRAME_DWNLD_PROM_ONLY
 /////////////////////////////////////////////////
 // Normal operation
 
 always @(posedge clk) begin
     if ( ioctl_wr && downloading ) begin
-        prog_we   <= !PROM_EN || ioctl_addr<PROM_START;
-        prom_we   <=  PROM_EN && ioctl_addr>=PROM_START;
+        if( is_prom ) begin
+            prog_addr <= ioctl_addr[21:0];
+            prom_we   <= 1;
+            prog_we   <= 0;
+        end else begin
+            prog_addr <= ioctl_addr[22:1];
+            prom_we   <= 0;
+            prog_we   <= 1;
+        end
         prog_data <= ioctl_data;
-        prog_addr <= ioctl_addr[22:1];
         prog_mask <= ioctl_addr[0] ? 2'b10 : 2'b01;            
     end
     else begin

@@ -120,11 +120,10 @@ localparam CONF_STR = {
     `endif
     `SEPARATOR
     `ifdef JTFRAME_MRA_DIP
-    "DIP;",
+        "DIP;",
     `else
-    `CORE_OSD
+        `CORE_OSD
     `endif
-    `CORE_OSD
     "T0,RST;",
     "V,patreon.com/topapate;"
 };
@@ -388,14 +387,17 @@ localparam DIPBASE=`JTFRAME_MIST_DIPBASE;
 localparam DIPBASE=16;
 `endif
 
-`ifndef SIMULATION
-    wire [31:0] dipsw = { {32-DIPBASE{1'b1}}, status[31:DIPBASE]  };
+// For simulation, either ~32'd0 or `JTFRAME_SIM_DIPS will be used for DIPs
+`ifdef SIMULATION
+`ifndef JTFRAME_SIM_DIPS
+    `define JTFRAME_SIM_DIPS ~32'd0
+`endif
+`endif
+
+`ifdef JTFRAME_SIM_DIPS
+    wire [31:0] dipsw = `JTFRAME_SIM_DIPS;
 `else
-    `ifndef JTFRAME_SIM_DIPS
-        wire [31:0] dipsw = ~32'd0;
-    `else
-        wire [31:0] dipsw = `JTFRAME_SIM_DIPS;
-    `endif
+    wire [31:0] dipsw = { {DIPBASE{1'b1}}, status[31:DIPBASE]  };
 `endif
 
 `GAMETOP
