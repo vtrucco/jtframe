@@ -55,23 +55,21 @@ parameter [8:0] V_START  = 9'd0,
                 VB_END   = 9'd255,
                 VS_START = 9'd244,
                 VS_END   = (VS_START+9'd3),
-                V_END    = 9'd255,
-                H_END    = 9'd395,
-                HB_START = 9'd0,
-                HB_END   = H_END-9'd279,
-                HS_START = 9'd30,
-                HS_END   = HS_START+9'd10;
+                HB_END   = 9'd395,
+                HB_START = HB_END-9'd116,
+                HS_START = 9'h130,
+                HS_END   = HS_START+9'h10;
 
 // H counter
 always @(posedge clk) if(pxl_cen) begin
-    Hinit <= H == H_END;
-    H     <= H == H_END ? 9'd0 : (H+9'd1);
+    Hinit <= H == HB_END;
+    H     <= H == HB_END ? 9'd0 : (H+9'd1);
 end
 
 always @(posedge clk) if(pxl_cen) begin
-    if( H == H_END ) begin
-        Vinit    <= vdump==V_END;
-        vrender1 <= vrender1==V_END ? V_START : vrender1 + 9'd1;
+    if( H == HB_END ) begin
+        Vinit    <= vdump==VB_END;
+        vrender1 <= vrender1==VB_END ? V_START : vrender1 + 9'd1;
         vrender  <= vrender1;
         vdump    <= vrender;
     end
