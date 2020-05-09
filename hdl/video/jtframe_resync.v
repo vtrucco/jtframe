@@ -23,27 +23,27 @@ module jtframe_resync(
     input         vs_in,
     input         LVBL,
     input         LHBL,
-(*keep*)    input  [3:0]  hoffset,
-(*keep*)    input  [3:0]  voffset,
+    input  [3:0]  hoffset,
+    input  [3:0]  voffset,
     output reg    hs_out,
     output reg    vs_out
 );
 
 parameter CNTW = 10; // max 1024 pixels/lines
 
-reg [CNTW-1:0]   hs_pos[2], vs_hpos[2], vs_vpos[2], // relative positions of the original sync pulses
-                 hs_len[2], vs_len[2],              // count the length of the original sync pulses
-                 hs_cnt, vs_cnt,                    // count the position of the original sync pulses
-                 hs_hold, vs_hold;
+reg [CNTW-1:0]   hs_pos[0:1], vs_hpos[0:1], vs_vpos[0:1],// relative positions of the original sync pulses
+                 hs_len[0:1], vs_len[0:1],               // count the length of the original sync pulses
+                 hs_cnt,      vs_cnt,                    // count the position of the original sync pulses
+                 hs_hold,     vs_hold;
 reg              last_LHBL, last_LVBL, last_hsin, last_vsin;
 
 wire             hb_edge, hs_edge, hs_n_edge, vb_edge, vs_edge, vs_n_edge;
 reg              field;
 
-(*keep*) wire [CNTW-1:0]  hpos_off = { {CNTW-4{hoffset[3]}}, hoffset[3:0]  };
-(*keep*) wire [CNTW-1:0]  htrip = hs_pos[field] + hpos_off;
-(*keep*) wire [CNTW-1:0]  vs_htrip = vs_hpos[field] + hpos_off;
-(*keep*) wire [CNTW-1:0]  vs_vtrip = vs_vpos[field] + { {CNTW-4{voffset[3]}}, voffset[3:0]  };
+wire [CNTW-1:0]  hpos_off = { {CNTW-4{hoffset[3]}}, hoffset[3:0]  };
+wire [CNTW-1:0]  htrip = hs_pos[field] + hpos_off;
+wire [CNTW-1:0]  vs_htrip = vs_hpos[field] + hpos_off;
+wire [CNTW-1:0]  vs_vtrip = vs_vpos[field] + { {CNTW-4{voffset[3]}}, voffset[3:0]  };
 
 assign hb_edge = LHBL && !last_LHBL;
 assign hs_edge = hs_in && !last_hsin;
