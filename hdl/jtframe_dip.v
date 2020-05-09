@@ -70,7 +70,7 @@ localparam [7:0] ARY = 8'd3;
 `endif
 
 `ifdef JTFRAME_OSD_FLIP
-assign dip_flip    = status[1];
+assign dip_flip    = ~status[1];
 `endif
 
 `ifdef JTFRAME_OSD_TEST
@@ -120,7 +120,7 @@ localparam CHANNEL_CTRL=0;  // channel control not available when MRA DIP is ena
 
 // all signals that are not direct re-wirings are latched
 always @(posedge clk) begin
-    rotate      <= { dip_flip, tate && !rot_control };
+    rotate      <= { ~dip_flip, tate && !rot_control };
     dip_fxlevel <= 2'b10 ^ status[7:6];
     en_mixing   <= ~status[3];
     enable_fm   <= ~status[9] | ~CHANNEL_CTRL;
