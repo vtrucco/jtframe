@@ -131,6 +131,29 @@ The file *mamefilter.cc* is an example of how to extract a subset of machine def
 
 The files *mamegame.hpp* and *mamegame.cc* contain some classes and a function to process the MAME XML into easy-to-use C++ objects. An example of this in use can be seen in JTCPS1 core.
 
+## MOD BYTE
+
+Some JTFRAME features are configured via an ARC or MRA file. This is used to share a common RBF file among several games. The mod byte is introduced in the MRA file using this syntax:
+
+```
+    <rom index="1"><part> 01 </part></rom>
+```
+
+And in the ARC file with
+
+```
+MOD=1
+```
+
+This is the meaning for each bit. Note that core mod is only 7 bits in MiST.
+
+Bit  |    Meaning            | Default value
+-----|-----------------------|--------------
+ 0   |  1 = vertical screen  |     1
+ 1   |  1 = 4 way joystick   |     0
+
+ The vertical screen bit is only read if JTFRAME was compiled with the **VERTICAL_SCREEN** macro. This macro enables support for vertical games in the RBF. Then the same RBF can switch between horizontal and vertical games by using the MOD byte.
+
 #Joysticks
 By default the frame supports two joysticks only and will try to connect to game modules based on this assumption. For games that need four joysticks, define the macro **JTFRAME_4PLAYERS**.
 Note that the registers containing the coin and start button inputs are always passed as 4 bits, but the game can just ignore the 2 MSB if it only supports two players.
@@ -141,6 +164,8 @@ Analog controllers are not connected to the game module by default. In order to 
     input   [15:0]  joystick_analog_0,
     input   [15:0]  joystick_analog_1,
 ```
+
+Support for 4-way joysticks (instead of 8-way joysticks) is enabled by setting high bit 1 of core_mod. See MOD BYTE.
 
 #SDRAM Simulation
 

@@ -236,14 +236,48 @@ assign key_pause   = 1'b0;
 assign key_service = 1'b0;
 `endif
 
-reg [15:0] joy1_sync, joy2_sync, joy3_sync, joy4_sync;
+reg  [15:0] joy1_sync, joy2_sync, joy3_sync, joy4_sync;
+wire [ 3:0] joy4way1p, joy4way2p, joy4way3p, joy4way4p;
+wire        en4way = core_mod[1];
 
 always @(posedge clk_sys) begin
-    joy1_sync <= board_joystick1;
-    joy2_sync <= board_joystick2;
-    joy3_sync <= board_joystick3;
-    joy4_sync <= board_joystick4;
+    joy1_sync <= { board_joystick1[15:4], joy4way1p[3:0] };
+    joy2_sync <= { board_joystick2[15:4], joy4way2p[3:0] };
+    joy3_sync <= { board_joystick3[15:4], joy4way3p[3:0] };
+    joy4_sync <= { board_joystick4[15:4], joy4way4p[3:0] };
 end
+
+jtframe_4wayjoy u_4way_1p(
+    .clk        ( clk                    ),
+    .rst        ( rst                    ),
+    .enable     ( en4way                 ),
+    .joy8way    ( board_joystick1[3:0]   ),
+    .joy4way    ( joy4way1p              )
+);
+
+jtframe_4wayjoy u_4way_2p(
+    .clk        ( clk                    ),
+    .rst        ( rst                    ),
+    .enable     ( en4way                 ),
+    .joy8way    ( board_joystick2[3:0]   ),
+    .joy4way    ( joy4way2p              )
+);
+
+jtframe_4wayjoy u_4way_3p(
+    .clk        ( clk                    ),
+    .rst        ( rst                    ),
+    .enable     ( en4way                 ),
+    .joy8way    ( board_joystick3[3:0]   ),
+    .joy4way    ( joy4way3p              )
+);
+
+jtframe_4wayjoy u_4way_4p(
+    .clk        ( clk                    ),
+    .rst        ( rst                    ),
+    .enable     ( en4way                 ),
+    .joy8way    ( board_joystick4[3:0]   ),
+    .joy4way    ( joy4way4p              )
+);
 
 localparam START_BIT  = 6+(BUTTONS-2);
 localparam COIN_BIT   = 7+(BUTTONS-2);

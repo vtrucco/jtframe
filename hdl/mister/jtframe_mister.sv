@@ -259,7 +259,7 @@ end
 
 always @(posedge clk_rom, posedge rst) begin
     if( rst ) begin
-        core_mod <= ~7'd0;
+        core_mod <= 7'b01; // see readme file for documentation on each bit
     end else begin
         // The ioctl_addr[0]==1'b0 condition is needed in case JTFRAME_MR_FASTIO is enabled
         // as it always creates two write events and the second would delete the data of the first
