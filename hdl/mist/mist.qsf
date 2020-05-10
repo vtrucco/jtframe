@@ -194,5 +194,4 @@ set_global_assignment -name QIP_FILE ${PRJPATH}/hdl/jt${CORENAME}.qip
 
 set_global_assignment -name VERILOG_MACRO "MIST=<None>"
 set_global_assignment -name VERILOG_MACRO "SCAN2X_TYPE=1"
-# set_global_assignment -name VERILOG_MACRO "JTGNG_VGA=1"
 

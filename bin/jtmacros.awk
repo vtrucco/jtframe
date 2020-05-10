@@ -22,7 +22,8 @@ BEGIN {
 # Convert only lines that start with a letter
 /^[a-zA-Z]/{
     if(dump) {
-        printf "set_global_assignment -name VERILOG_MACRO \"%s\"\n",$0
+        fixed=gensub(/\"/, "\\\\\"", "g" )
+        printf "set_global_assignment -name VERILOG_MACRO \"%s\"\n",fixed
     }
     next
 }
@@ -32,5 +33,5 @@ BEGIN {
 }
 END {
     # Adds a blanks line
-    print 
+    printf "\n"
 }
