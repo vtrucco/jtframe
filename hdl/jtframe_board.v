@@ -248,32 +248,32 @@ always @(posedge clk_sys) begin
 end
 
 jtframe_4wayjoy u_4way_1p(
-    .clk        ( clk                    ),
     .rst        ( rst                    ),
+    .clk        ( clk_sys                ),
     .enable     ( en4way                 ),
     .joy8way    ( board_joystick1[3:0]   ),
     .joy4way    ( joy4way1p              )
 );
 
 jtframe_4wayjoy u_4way_2p(
-    .clk        ( clk                    ),
     .rst        ( rst                    ),
+    .clk        ( clk_sys                ),
     .enable     ( en4way                 ),
     .joy8way    ( board_joystick2[3:0]   ),
     .joy4way    ( joy4way2p              )
 );
 
 jtframe_4wayjoy u_4way_3p(
-    .clk        ( clk                    ),
     .rst        ( rst                    ),
+    .clk        ( clk_sys                ),
     .enable     ( en4way                 ),
     .joy8way    ( board_joystick3[3:0]   ),
     .joy4way    ( joy4way3p              )
 );
 
 jtframe_4wayjoy u_4way_4p(
-    .clk        ( clk                    ),
     .rst        ( rst                    ),
+    .clk        ( clk_sys                ),
     .enable     ( en4way                 ),
     .joy8way    ( board_joystick4[3:0]   ),
     .joy4way    ( joy4way4p              )
