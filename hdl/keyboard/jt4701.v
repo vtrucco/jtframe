@@ -34,70 +34,91 @@ module jt4701(
     output reg [7:0]    dout
 );
 
-reg  [11:0] cntx, cnty;
-reg  [ 1:0] last_x, last_y;
-
-reg  [ 1:0] xphase, yphase;
-wire [ 1:0] xedge, yedge;
-reg  [ 1:0] last_xedge, last_yedge;
+wire [11:0] cntx, cnty;
+wire        xflagn, yflagn;
 
 wire [ 7:0] upper, lower;
-
-assign      xedge = x_in ^ last_x;
-assign      yedge = y_in ^ last_y;
 
 assign      upper = { sfn, leftn, rightn, middlen, xn_y ? cnty[11:8] : cntx[11:8] };
 assign      lower = xn_y ? cnty[7:0] : cntx[7:0];
 
+jt4701_axis u_axisx(
+    .clk        ( clk       ),
+    .rstn       ( x_rstn    ),
+    .sigin      ( x_in      ),
+    .flag_clrn  ( csn       ),
+    .flagn      ( xflagn    ),
+    .axis       ( cntx      )
+);
+
+jt4701_axis u_axisy(
+    .clk        ( clk       ),
+    .rstn       ( y_rstn    ),
+    .sigin      ( y_in      ),
+    .flag_clrn  ( csn       ),
+    .flagn      ( yflagn    ),
+    .axis       ( cnty      )
+);
+
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        cntx   <= 12'd0;
-        cnty   <= 12'd0;
-        last_x <= 2'b0;
-        last_y <= 2'b0;
-        cfn    <= 1;
-        sfn    <= 1;
+        cfn  <= 1;
+        sfn  <= 1;
+        dout <= 8'd0;
     end else begin
-        sfn        <= leftn && middlen && rightn;
-        cfn        <= !csn || !(last_xedge || last_yedge);
-
-        last_x     <= x_in;
-        last_y     <= y_in;
-        last_xedge <= xedge;
-        last_yedge <= yedge;
-
-        if( xedge[0] ) xphase[0] <= x_in[0] & ~last_x[0];
-        if( xedge[1] ) xphase[1] <= x_in[1] & ~last_x[1];
-        if( yedge[0] ) yphase[0] <= y_in[0] & ~last_y[0];
-        if( yedge[1] ) yphase[1] <= y_in[1] & ~last_y[1];
-
-        if( !x_rstn )
-            cntx <= 12'd0;
-        else begin
-            if( (last_xedge[0] && (xphase[0]!=xphase[1])) ||
-                (last_xedge[1] && (xphase[0]==xphase[1])) )
-                cntx <= cntx+12'd1;
-            else begin
-                if( (last_xedge[0] && (xphase[0]==xphase[1])) ||
-                    (last_xedge[1] && (xphase[0]!=xphase[1])) )
-                    cntx <= cntx-12'd1;
-            end
-        end
-
-        if( !y_rstn )
-            cnty <= 12'd0;
-        else begin
-            if( (last_yedge[0] && (yphase[0]!=yphase[1])) ||
-                (last_yedge[1] && (yphase[0]==yphase[1])) )
-                cnty <= cnty+12'd1;
-            else begin
-                if( (last_yedge[0] && (yphase[0]==yphase[1])) ||
-                    (last_yedge[1] && (yphase[0]!=yphase[1])) )
-                    cnty <= cnty-12'd1;
-            end
-        end
-
+        sfn  <= leftn && middlen && rightn;
+        cfn  <= xflagn && yflagn;
         dout <= uln ? upper : lower;
+    end
+end
+
+endmodule
+
+module jt4701_axis(
+    input               clk,
+    input               rstn,   // synchronous
+    input      [1:0]    sigin,
+    input               flag_clrn,
+    output reg          flagn,
+    output reg [11:0]   axis
+);
+
+wire [1:0] xedge;
+reg  [1:0] last_in, locked, last_xedge;
+reg        dir;
+
+assign     xedge = sigin ^ last_in;
+
+`ifdef SIMULATION
+initial begin
+    axis    = 12'd0;
+    last_in = 2'b0;
+    flagn   = 1;
+    locked  = 2'b00;
+    dir     = 0;
+end
+`endif
+
+always @(posedge clk) begin
+    if( !rstn ) begin
+        axis   <= 12'd0;
+        last_in<= 2'b0;
+        flagn  <= 1;
+        locked <= 2'b00;
+        dir    <= 0;
+    end else begin
+        flagn      <= !flag_clrn || !(xedge!=2'b00 && locked[0]!=locked[1]);
+        last_in    <= sigin;
+
+        if( locked[0]==locked[1] ) begin
+            dir <= (sigin[0] & ~last_in[0] & sigin[1]) | (~sigin[0] & last_in[0] & ~sigin[1]);
+        end
+
+        if( xedge != 2'b00 ) begin
+            if( locked[0] != locked[1] )
+                axis   <=  dir ? axis-12'd1 : axis+12'd1;
+            locked <= { locked, xedge[0] };
+        end 
     end
 end
 
