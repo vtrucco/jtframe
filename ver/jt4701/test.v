@@ -5,7 +5,7 @@ module test;
 reg           clk;
 reg           rst;
 reg  [1:0]    x_in;
-reg  [1:0]    y_in;
+wire [1:0]    y_in;
 reg           rightn;
 reg           leftn;
 reg           middlen;
@@ -30,7 +30,6 @@ initial begin
     uln    = 1;
     xn_y   = 1;
     phases = 2'b0;
-    y_in   = 2'b0;
     slowcnt= 0;
     rst    = 0;
     #5;
@@ -100,6 +99,44 @@ jt4701 UUT(
     .sfn        ( sfn        ),
     .dout       ( dout       )
 );
+
+reg do_inc, do_dec;
+
+initial begin
+    do_inc = 1;
+    do_dec = 0;
+end
+
+always @( posedge clk ) begin
+    case( slowcnt[7:0] )
+        0: begin
+            do_inc=1;
+            do_dec=0;
+        end
+        63: begin
+            do_inc=0;
+            do_dec=0;
+        end
+        127: begin
+            do_inc=0;
+            do_dec=1;
+        end
+        197: begin
+            do_inc=0;
+            do_dec=0;
+        end
+    endcase
+end
+
+jt4701_dialemu u_dialemu(
+    .clk        ( clk        ),
+    .rst        ( rst        ),
+    .pulse      ( slowcnt[0] ),
+    .inc        ( do_inc     ),
+    .dec        ( do_dec     ),
+    .dial       ( y_in       )
+);
+
 
 initial begin
     $dumpfile("test.lxt");  

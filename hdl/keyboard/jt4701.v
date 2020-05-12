@@ -16,11 +16,13 @@
     Version: 1.0
     Date: 12-5-2020 */
 
+// Equivalent to NEC uPD4701A
+// if A comes first, it increases the count
 module jt4701(
     input               clk,
     input               rst,
-    input      [1:0]    x_in,
-    input      [1:0]    y_in,
+    input      [1:0]    x_in, // MSB=A, LSB=B
+    input      [1:0]    y_in, // MSB=A, LSB=B
     input               rightn,
     input               leftn,
     input               middlen,
@@ -85,9 +87,15 @@ module jt4701_axis(
 
 wire [1:0] xedge;
 reg  [1:0] last_in, locked, last_xedge;
-reg        dir;
+reg        dir;     // if dir==1 the count increases
+wire       posedge_a, posedge_b, negedge_a, negedge_b;
+reg        ping, pong;
 
 assign     xedge = sigin ^ last_in;
+assign     posedge_a = ~last_in[1] &  sigin[1];
+assign     posedge_b = ~last_in[0] &  sigin[0];
+assign     negedge_a =  last_in[1] & ~sigin[1];
+assign     negedge_b =  last_in[0] & ~sigin[0];
 
 `ifdef SIMULATION
 initial begin
@@ -106,19 +114,65 @@ always @(posedge clk) begin
         flagn  <= 1;
         locked <= 2'b00;
         dir    <= 0;
+        ping   <= 0;
+        pong   <= 0;
     end else begin
         flagn      <= !flag_clrn || !(xedge!=2'b00 && locked[0]!=locked[1]);
         last_in    <= sigin;
 
-        if( locked[0]==locked[1] ) begin
-            dir <= (sigin[0] & ~last_in[0] & sigin[1]) | (~sigin[0] & last_in[0] & ~sigin[1]);
+        if( posedge_b ) begin
+            ping <= 0;
+            pong <= 1;
         end
 
-        if( xedge != 2'b00 ) begin
-            if( locked[0] != locked[1] )
-                axis   <=  dir ? axis-12'd1 : axis+12'd1;
-            locked <= { locked, xedge[0] };
-        end 
+        if( posedge_a ) begin
+            ping <= 1;
+            pong <= 0;
+        end
+
+        if( (posedge_a && !sigin[0]) || (negedge_a && sigin[0]) ) begin
+            if( pong ) axis <= axis + 12'd1;
+        end else begin
+            if( (posedge_b && !sigin[1]) || (negedge_b && sigin[1]) ) begin
+                if(ping) axis <= axis - 12'd1;
+            end
+        end
+
+    end
+end
+
+endmodule
+
+module jt4701_dialemu(
+    input            clk,
+    input            rst,
+    input            pulse,
+    input            inc,
+    input            dec,
+    output reg [1:0] dial
+);
+
+reg s;
+reg last_pulse;
+
+always @(posedge clk) last_pulse <= pulse;
+
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        dial <= 2'b0;
+        s    <= 0;
+    end else if( pulse && !last_pulse ) begin
+        s <= ~s;
+        if( inc ) begin
+            if( !s ) dial[0] <= ~dial[0];
+            if(  s ) dial[1] <= dial[0];
+        end else if( dec ) begin
+            if( !s ) dial[1] <= ~dial[1];
+            if(  s ) dial[0] <= dial[1];
+        end else begin
+            dial[0] <= 0;
+            dial[1] <= 0;
+        end
     end
 end
 
