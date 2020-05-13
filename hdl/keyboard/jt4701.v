@@ -26,8 +26,8 @@ module jt4701(
     input               rightn,
     input               leftn,
     input               middlen,
-    input               x_rstn,
-    input               y_rstn,
+    input               x_rst,
+    input               y_rst,
     input               csn,        // chip select
     input               uln,        // byte selection
     input               xn_y,       // select x or y for reading
@@ -46,7 +46,7 @@ assign      lower = xn_y ? cnty[7:0] : cntx[7:0];
 
 jt4701_axis u_axisx(
     .clk        ( clk       ),
-    .rstn       ( x_rstn    ),
+    .rst        ( x_rst     ),
     .sigin      ( x_in      ),
     .flag_clrn  ( csn       ),
     .flagn      ( xflagn    ),
@@ -55,7 +55,7 @@ jt4701_axis u_axisx(
 
 jt4701_axis u_axisy(
     .clk        ( clk       ),
-    .rstn       ( y_rstn    ),
+    .rst        ( y_rst     ),
     .sigin      ( y_in      ),
     .flag_clrn  ( csn       ),
     .flagn      ( yflagn    ),
@@ -78,7 +78,7 @@ endmodule
 
 module jt4701_axis(
     input               clk,
-    input               rstn,   // synchronous
+    input               rst,   // synchronous
     input      [1:0]    sigin,
     input               flag_clrn,
     output reg          flagn,
@@ -108,7 +108,7 @@ end
 `endif
 
 always @(posedge clk) begin
-    if( !rstn ) begin
+    if( rst ) begin
         axis   <= 12'd0;
         last_in<= 2'b0;
         flagn  <= 1;

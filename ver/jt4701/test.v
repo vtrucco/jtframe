@@ -9,8 +9,8 @@ wire [1:0]    y_in;
 reg           rightn;
 reg           leftn;
 reg           middlen;
-reg           x_rstn;
-reg           y_rstn;
+reg           x_rst;
+reg           y_rst;
 reg           csn;        // chip select
 reg           uln;        // byte selection
 reg           xn_y;       // select x or y for reading
@@ -24,8 +24,8 @@ initial begin
     rightn = 1;
     leftn  = 1;
     middlen= 1;
-    x_rstn = 1;
-    y_rstn = 1;
+    x_rst  = 0;
+    y_rst  = 0;
     csn    = 1;
     uln    = 1;
     xn_y   = 1;
@@ -90,8 +90,8 @@ jt4701 UUT(
     .rightn     ( rightn     ),
     .leftn      ( leftn      ),
     .middlen    ( middlen    ),
-    .x_rstn     ( x_rstn     ),
-    .y_rstn     ( y_rstn     ),
+    .x_rst      ( x_rst      ),
+    .y_rst      ( y_rst      ),
     .csn        ( csn        ),
     .uln        ( uln        ),
     .xn_y       ( xn_y       ),
