@@ -239,15 +239,16 @@ if [ $SKIP_COMPILE = FALSE ]; then
     done
     ############################################3
     # Credits via jtframe_credits:
-    if [[ -e $PRJPATH/patrons/msg && ! -e msg ]]; then
-        ln -sr $PRJPATH/patrons/msg
+    MSGFILE=msg
+    if [[ -e $PRJPATH/patrons/msg && ! -e $MSGFILE ]]; then
+        MSGFILE=$PRJPATH/patrons/msg
     fi
-    if [ -e msg ]; then
-        $JTFRAME/bin/msg2hex msg
+    if [ -e $MSGFILE ]; then
+        $JTFRAME/bin/msg2hex $MSGFILE
     fi
     # Update Avatars
-    if [ -e lut ]; then
-        $JTFRAME/bin/lut2hex lut
+    if [ -e $PRJPATH/patrons/lut ]; then
+        $JTFRAME/bin/lut2hex $PRJPATH/patrons/lut
         if [ -e $PRJPATH/patrons/avatars ]; then
             avatar.py $PRJ > /tmp/avatar_$PRJ.log || ( cat /tmp/avatar_$PRJ.log; exit 1 )
         fi

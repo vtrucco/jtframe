@@ -29,7 +29,7 @@ int main( int argc, char *argv[] ) {
 
     try {
         while( !fin.eof() ) {
-            if( parse_line( pline, fin ) ) pline+=4;
+            pline += parse_line( pline, fin );
             if( pline-buf >= max_mem-4 ) {
                 throw "ERROR: file is too long for 4kB ";
             }
@@ -56,14 +56,35 @@ int parse_line( int *buf, ifstream& fin ) {
     if( line.length()==0 ) return 0;
     int f = line.find_first_not_of(" \t");
     if( line[f] == '#' ) return 0;
-
-    int id, x, y, pal;
-    int n = sscanf( line.c_str(), "%d, %d, %d, %d\n", &id, &x, &y, &pal );
-    if( n!=4 ) throw "ERROR: not enough arguments ";
-    buf[0] = id;
-    buf[1] = x;
-    buf[2] = --y; // deleted one so when writting LUT on a text editor
-        // the line numbers used in the msg file can be entered directly
-    buf[3] = pal;
-    return 1;
+    if( line[f] == '\\') {
+        if( line[f+1]=='9') { // parse 9x9 object
+            line=line.substr(3);
+            int id, x, y, pal;
+            int n = sscanf( line.c_str(), "%d, %d, %d, %d\n", &id, &x, &y, &pal );
+            if( n!=4 ) throw "ERROR: not enough arguments ";
+            for( int row=0; row<3; row++ )
+                for( int col=0; col<3; col++ )
+                {
+                    buf[0] = id++;
+                    buf[1] = x + col*2;
+                    buf[2] = y + row*2;
+                    buf[3] = pal;
+                    buf+=4;
+                }
+            return 4*9;
+        } else {
+            throw "ERROR: cannot parse line "+line;
+        }
+    }
+    else { // single object
+        int id, x, y, pal;
+        int n = sscanf( line.c_str(), "%d, %d, %d, %d\n", &id, &x, &y, &pal );
+        if( n!=4 ) throw "ERROR: not enough arguments ";
+        buf[0] = id;
+        buf[1] = x;
+        buf[2] = --y; // deleted one so when writting LUT on a text editor
+            // the line numbers used in the msg file can be entered directly
+        buf[3] = pal;
+        return 4;        
+    }
 }

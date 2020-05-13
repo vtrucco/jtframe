@@ -4,7 +4,7 @@ import sys
 import os
 pr=sys.stdout.write
 
-jtgng_path=os.environ['JTROOT']+"/"
+jtroot_path=os.environ['JTROOT']+"/"
 
 # for row in bmp:
 #     for col in row:
@@ -39,22 +39,6 @@ def read_bmp(filename):
     l=avatar.read()
     bmp=list(l[2])  # rows and columns
     return bmp
-
-# 1943 colour palettes
-def show_palettes():
-    muxsel=bytearray( file(jtgng_path+"/rom/1943/bm4.12c","rb").read(32)     )
-    rpal  =bytearray( file(jtgng_path+"/rom/1943/bm1.12a","rb").read(256)    )
-    gpal  =bytearray( file(jtgng_path+"/rom/1943/bm2.13a","rb").read(256)    )
-    bpal  =bytearray( file(jtgng_path+"/rom/1943/bm3.14a","rb").read(256)    )
-
-    # Dump all object palettes
-    for palmsb in range(4):
-        msb=muxsel[ 0x19 | (palmsb<<1) ]
-        for pallsb in range(4):
-            for col in range(16):
-                idx = msb<<6 | (pallsb<<4) | col
-                idx &= 0xff
-                print("%d,%d -> %d, %d, %d" %(palmsb, pallsb, rpal[idx], gpal[idx], bpal[idx]) )
 
 def break_4pixels( bit, pixel ):
     zy = ( (pixel&8)<<1 ) | ((pixel&4)>>2)
@@ -161,7 +145,7 @@ def get_pal(bmp):
 pal_list=list()
 
 def convert_file(filename):
-    p=jtgng_path+"cores/"+filename.strip("\n")
+    p=jtroot_path+filename.strip("\n")
     print p
     bmp=read_bmp( p )
     pal=get_pal(bmp)
@@ -172,7 +156,12 @@ def convert_file(filename):
 
 # Try opening the file with the list of PNG images
 corename=sys.argv[1]
-corepath=jtgng_path+"cores/"+corename
+
+if os.path.exists(jtroot_path+"cores/"):
+    corepath=jtroot_path+"cores/"+corename
+else:
+    corepath=jtroot_path
+
 avatar_filename = corepath+"/patrons/avatars"
 file = open( avatar_filename )
 line = file.readline()
@@ -185,7 +174,7 @@ file.close()
 # dump the new ROM files
 
 # Graphics
-f0=open(corepath+"/mister/avatar.hex","w")
+f0=open(corepath+"/patrons/avatar.hex","w")
 for k in range(len(bufzy)):
     x = bufzy[k]<<8
     x |= bufxw[k]
@@ -193,7 +182,7 @@ for k in range(len(bufzy)):
     f0.write("%4X\n" % x )
 
 # Palette
-f0=open(corepath+"/mister/avatar_pal.hex","w")
+f0=open(corepath+"/patrons/avatar_pal.hex","w")
 for pal in pal_list:
     palbuf=[]
     for k in range(16):
@@ -212,6 +201,5 @@ while k<16:
     for j in range(16):
         f0.write("0\n")
     k=k+1
-
 
 print("Only %d 16-bit words actually used" % bufpos )
