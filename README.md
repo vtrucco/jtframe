@@ -187,7 +187,17 @@ Note that although clk6 and clk24 are obtained without affecting the main clock 
 
 By default unless **JTFRAME_MR_FASTIO** is already defined, **JTFRAME_CLK96** will define it to 1. This enables fast ROM download in MiSTer using 16-bit mode in _hps_io_.
 
-# Aspect Ratio
+# Scan Doublers
+
+Although original JTFRAME supported a variety of scan doublers, the support has been simplified down to the following:
+
+SCAN2X_TYPE   |   MODULE          | Description
+--------------|-------------------|------------------------------------
+    5         | None              | by pass values without scan doubler
+    6         | jtframe_tateyoko  | provides a rotated and non rotated output
+ default      | jtframe_scan2x    | simple and fast scan doubler
+
+## Aspect Ratio
 In MiSTer the aspect ratio through the scaler can be controlled via the core. By default it is possible to switch between 16:9 and 4:3. However, if the game AR is different, the following macros can be used to redefine it:
 
 Macro       |  Default    |   Meaning        

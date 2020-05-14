@@ -60,6 +60,7 @@ set_global_assignment -name QIP_FILE ${PRJPATH}/hdl/jt${CORENAME}.qip
 
 set_global_assignment -name VERILOG_MACRO "MISTER=<None>"
 set_global_assignment -name VERILOG_MACRO "SCAN2X_TYPE=2"
+set_global_assignment -name VERILOG_MACRO "ARCADE_SYS=1"
 
 set_instance_assignment -name FAST_INPUT_REGISTER ON -to emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_sdram:u_sdram|dq_ff -entity sys_top
 #set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to *
