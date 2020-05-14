@@ -169,7 +169,7 @@ wire [COLORW-1:0] red;
 wire [COLORW-1:0] green;
 wire [COLORW-1:0] blue;
 
-wire LHBL_dly, LVBL_dly, hs, vs;
+wire LHBL, LVBL, hs, vs;
 wire [15:0] snd_left, snd_right;
 
 `ifndef STEREO_GAME
@@ -226,8 +226,8 @@ wire       pxl_cen, pxl2_cen;
 `ifdef SIMULATION
 assign sim_pxl_clk = clk_sys;
 assign sim_pxl_cen = pxl_cen;
-assign sim_vb = ~LVBL_dly;
-assign sim_hb = ~LHBL_dly;
+assign sim_vb = ~LVBL;
+assign sim_hb = ~LHBL;
 `endif
 
 `ifndef SIGNED_SND
@@ -262,8 +262,8 @@ u_frame(
     .game_r         ( red            ),
     .game_g         ( green          ),
     .game_b         ( blue           ),
-    .LHBL           ( LHBL_dly       ),
-    .LVBL           ( LVBL_dly       ),
+    .LHBL           ( LHBL           ),
+    .LVBL           ( LVBL           ),
     .hs             ( hs             ),
     .vs             ( vs             ),
     .pxl_cen        ( pxl_cen        ),
@@ -357,7 +357,7 @@ u_frame(
 `ifdef TESTINPUTS
     test_inputs u_test_inputs(
         .loop_rst       ( loop_rst       ),
-        .LVBL           ( LVBL_dly       ),
+        .LVBL           ( LVBL           ),
         .game_joystick1 ( game_joy1[6:0] ),
         .button_1p      ( game_start[0]  ),
         .coin_left      ( game_coin[0]   )
@@ -418,8 +418,8 @@ u_game(
     .red         ( red            ),
     .green       ( green          ),
     .blue        ( blue           ),
-    .LHBL_dly    ( LHBL_dly       ),
-    .LVBL_dly    ( LVBL_dly       ),
+    .LHBL_dly    ( LHBL           ),
+    .LVBL_dly    ( LVBL           ),
     .HS          ( hs             ),
     .VS          ( vs             ),
 

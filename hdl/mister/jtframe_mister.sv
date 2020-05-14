@@ -328,6 +328,11 @@ generate
     end
 endgenerate
 
+wire [15:0] status_menumask;
+
+assign status_menumask[15:1] = 15'd0;
+assign status_menumask[0]    = direct_video;
+
 hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_hps_io
 (
     .clk_sys         ( clk_rom        ),
@@ -336,7 +341,7 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
 
     .buttons         ( buttons        ),
     .status          ( status         ),
-    .status_menumask ( direct_video   ),
+    .status_menumask ( status_menumask),
     .gamma_bus       ( gamma_bus      ),
     .direct_video    ( direct_video   ),
     .forced_scandoubler(force_scan2x  ),
@@ -355,8 +360,14 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .joystick_analog_0( joystick_analog_0   ),
     .joystick_analog_1( joystick_analog_1   ),
     .ps2_kbd_clk_out ( ps2_kbd_clk    ),
-    .ps2_kbd_data_out( ps2_kbd_data   )
-    //.ps2_key       ( ps2_key       )
+    .ps2_kbd_data_out( ps2_kbd_data   ),
+    // Unused:
+    .ps2_key         (                ),
+    .RTC             (                ),
+    .TIMESTAMP       (                ),
+    .ps2_mouse       (                ),
+    .ps2_mouse_ext   (                ),
+    .ioctl_file_ext  (                )
 );
 
 jtframe_board #(

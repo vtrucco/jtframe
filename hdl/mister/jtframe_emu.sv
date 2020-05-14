@@ -258,7 +258,7 @@ wire [24:0] ioctl_addr;
 wire [ 7:0] ioctl_data;
 
 wire [ 9:0] game_joy1, game_joy2, game_joy3, game_joy4;
-wire [ 2:0] game_coin, game_start;
+wire [ 3:0] game_coin, game_start;
 wire [ 3:0] gfx_en;
 wire [15:0] joystick_analog_0, joystick_analog_1;
 
@@ -304,7 +304,7 @@ wire [ 1:0]  prog_mask, prog_bank;
 localparam COLORW=`COLORW;
 
 wire [COLORW-1:0] game_r, game_g, game_b;
-wire              LHBL_dly, LVBL_dly;
+wire              LHBL, LVBL;
 wire              hs, vs, sample;
 
 `ifndef SIGNED_SND
@@ -346,8 +346,8 @@ u_frame(
     .game_r         ( game_r         ),
     .game_g         ( game_g         ),
     .game_b         ( game_b         ),
-    .LHBL           ( LHBL_dly       ),
-    .LVBL           ( LVBL_dly       ),
+    .LHBL           ( LHBL           ),
+    .LVBL           ( LVBL           ),
     .hs             ( hs             ),
     .vs             ( vs             ),
     .pxl_cen        ( pxl_cen        ),
@@ -448,8 +448,8 @@ u_frame(
 );
 
 `ifdef SIMULATION
-assign sim_hb = ~LHBL_dly;
-assign sim_vb = ~LVBL_dly;
+assign sim_hb = ~LHBL;
+assign sim_vb = ~LVBL;
 assign sim_pxl_clk = clk_sys;
 assign sim_pxl_cen = pxl_cen;
 `endif
@@ -482,8 +482,8 @@ assign sim_pxl_cen = pxl_cen;
     .red          ( game_r           ),
     .green        ( game_g           ),
     .blue         ( game_b           ),
-    .LHBL_dly     ( LHBL_dly         ),
-    .LVBL_dly     ( LVBL_dly         ),
+    .LHBL_dly     ( LHBL             ), // Final timing
+    .LVBL_dly     ( LVBL             ),
     .HS           ( hs               ),
     .VS           ( vs               ),
 `ifdef JTFRAME_INTERLACED
