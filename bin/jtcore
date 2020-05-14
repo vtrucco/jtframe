@@ -15,6 +15,7 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
                     JTFRAME_SCAN2X      uses simple scan doubler from JTFRAME
                     DEBUG_NOHDMI        skips MiSTer HDMI related logic. Speeds up compilation.
     -qq         very quick compilation. Defines NOSUND and DEBUG_NOHDMI. Sets MiSTer as target.
+    -credits    Defines NOSOUND, DEBUG_NOHDMI and NOMAIN. Sets MiSTer as target.
     -q | -quick quick compilation. Defines NOSUND.
     -ftp-folder Destination folder in MiSTer FTP to which final RBF will be copied
                 The full name is made by preceding this by a _
@@ -139,6 +140,9 @@ function parse_args {
                 MACROS="$MACROS NOSOUND";;
             -qq|-veryquick)
                 MACROS="$MACROS NOSOUND DEBUG_NOHDMI"
+                MIST=mister;;
+            -credits)
+                MACROS="$MACROS NOSOUND DEBUG_NOHDMI NOMAIN"
                 MIST=mister;;
             -help | -h)
                 show_usage;;
