@@ -113,7 +113,7 @@ reg        doublescan;
 
 reg ce_pix;
 always @(negedge clk_sys) begin
-	static integer cnt = 0;
+	integer cnt;
 	integer pixsz, pixcnt;
 	reg hs;
 

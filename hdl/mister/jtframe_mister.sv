@@ -352,7 +352,7 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .ioctl_dout      ( dwnld_data     ),
     .ioctl_index     ( ioctl_index    ),
 
-    //.joy_raw         ( joydb15_1[5:0] ),   
+    .joy_raw         ( joydb15_1[5:0] ),   
     .joystick_0      ( joystick_USB_1 ),
     .joystick_1      ( joystick_USB_2 ),
     .joystick_2      ( joystick_USB_3 ),
