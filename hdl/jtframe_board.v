@@ -136,9 +136,6 @@ module jtframe_board #(parameter
 
 wire  [ 2:0]  scanlines;
 wire          en_mixing;
-wire          scandoubler = ~scan2x_enb;
-wire          hblank = ~LHBL;
-wire          vblank = ~LVBL;
 wire          osd_pause;
 reg           last_osdpause;
 
@@ -146,6 +143,7 @@ wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
 wire key_reset, key_pause, rot_control;
 reg [7:0] rst_cnt=8'd0;
 reg       game_pause;
+wire      scandoubler = ~scan2x_enb;
 
 `ifdef JTFRAME_MISTER_VIDEO_DW
 localparam arcade_fx_dw = `JTFRAME_MISTER_VIDEO_DW;
@@ -172,16 +170,21 @@ always @(posedge clk_sys)
     end
 
 reg soft_rst;
-reg last_dip_flip;
 reg [7:0] game_rst_cnt=8'd0;
 
+`ifdef JTFRAME_FLIP_RESET
+reg last_dip_flip, rst_flip;
 always @(negedge clk_rom) begin
     last_dip_flip <= dip_flip;
+    rst_flip      <= last_dip_flip!=dip_flip;
+end
+`else
+wire rst_flip = 0;
+`endif
+
+always @(negedge clk_rom) begin
     if( downloading | rst | rst_req 
-        `ifdef JTFRAME_FLIP_RESET
-        | (last_dip_flip!=dip_flip) 
-        `endif
-        | soft_rst ) begin
+        | rst_flip | soft_rst ) begin
         game_rst_cnt <= 8'd0;
         game_rst     <= 1'b1;
     end
@@ -326,7 +329,6 @@ always @(posedge clk_sys)
         last_pause   <= key_pause;
         last_reset   <= key_reset;
         last_joypause <= joy_pause; // joy is active low!
-        last_gfx     <= key_gfx;
 
         // joystick, coin, start and service inputs are inverted
         // as indicated in the instance parameter
@@ -352,6 +354,7 @@ always @(posedge clk_sys)
         soft_rst <= key_reset && !last_reset;
 
         `ifndef JTFRAME_RELEASE
+        last_gfx <= key_gfx;
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
         `endif
@@ -462,7 +465,11 @@ jtframe_sdram u_sdram(
 
 
 `ifndef SCAN2X_TYPE
-    `define SCAN2X_TYPE 0
+    `ifdef MISTER
+        `define SCAN2X_TYPE 6
+    `else // MiST
+        `define SCAN2X_TYPE 2
+    `endif
 `endif
 
 localparam SCAN2X_TYPE=`SCAN2X_TYPE;
@@ -500,7 +507,7 @@ endfunction
 `ifndef NOVIDEO
 generate    
     case( SCAN2X_TYPE )
-        default: begin // JTFRAME easy going scaler
+        0: begin // JTFRAME easy going scaler
             wire [COLORW*3-1:0] rgbx2;
 
             jtframe_scan2x #(.DW(COLORW*3), .HLEN(VIDEO_WIDTH)) u_scan2x(
@@ -530,6 +537,59 @@ generate
             assign hdmi_vs      = ~scan2x_vs;
             assign hdmi_sl      = 2'b0;
         end
+        2: begin // MiSTer mixer
+            wire hq2x_en = scanlines==3'd1;
+            reg [1:0] sl;
+            always @(posedge clk_sys)
+                case( scanlines )
+                    default: sl <= 2'd0;
+                    3'd2:    sl <= 2'd1;
+                    3'd3:    sl <= 2'd2;
+                    3'd4:    sl <= 2'd3;
+                endcase // scanlines
+            wire [1:0] nc_r, nc_g, nc_b;
+            localparam HALF_DEPTH = COLORW==4;
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
+            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
+            wire mixer_ce = pxl_cen | (~scandoubler & ~gamma_bus[19] & ~direct_video);
+            video_mixer #(
+                .LINE_LENGTH(VIDEO_WIDTH+4),
+                .HALF_DEPTH(HALF_DEPTH)) 
+            u_video_mixer (
+                .clk_vid        ( clk_sys       ),
+                .ce_pix         ( pxl_cen       ),
+                .ce_pix_out     ( scan2x_cen    ),
+                .scandoubler    ( scandoubler   ),        
+                .scanlines      ( sl            ),
+                .hq2x           ( hq2x_en       ),
+                .R              ( mr_mixer_r    ),
+                .G              ( mr_mixer_g    ),
+                .B              ( mr_mixer_b    ),
+                .mono           ( 1'b0          ),
+                .gamma_bus      ( gamma_bus     ),
+                .HSync          ( hs            ),
+                .VSync          ( vs            ),
+                .HBlank         ( ~LHBL         ),
+                .VBlank         ( ~LVBL         ),
+                .VGA_R          ( scan2x_r      ),
+                .VGA_G          ( scan2x_g      ),
+                .VGA_B          ( scan2x_b      ),
+                .VGA_HS         ( scan2x_hs     ),
+                .VGA_VS         ( scan2x_vs     ),
+                .VGA_DE         ( scan2x_de     )
+            );
+            assign scan2x_clk = clk_sys;
+            assign hdmi_clk   = scan2x_clk;
+            assign hdmi_cen   = scan2x_cen;
+            assign hdmi_r     = scan2x_r;
+            assign hdmi_g     = scan2x_g;
+            assign hdmi_b     = scan2x_b;
+            assign hdmi_de    = scan2x_de;
+            assign hdmi_hs    = scan2x_hs;
+            assign hdmi_vs    = scan2x_vs;
+            assign hdmi_sl    = sl[1:0];
+        end
         5: begin // by pass
             assign scan2x_r    = game_r;
             assign scan2x_g    = game_g;
@@ -547,8 +607,8 @@ generate
                 .ce_pix     ( pxl_cen       ),
             
                 .RGB_in     ( game_rgb      ),
-                .HBlank     ( hblank        ),
-                .VBlank     ( vblank        ),
+                .HBlank     ( ~LHBL         ),
+                .VBlank     ( ~LVBL         ),
                 .HSync      ( hs            ),
                 .VSync      ( vs            ),
             

@@ -238,7 +238,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
     cd $PRJPATH/$TARGET || exit 1
     # echo "Moved to folder " $(pwd)
     # Link files from MiST folder if missing
-    for i in msg.hex conf_str.v msg_av.hex jt${PRJ}.tcl; do
+    for i in conf_str.v jt${PRJ}.tcl; do
         link_if_missing $i
     done
     ############################################3
@@ -249,6 +249,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
     fi
     if [ -e $MSGFILE ]; then
         $JTFRAME/bin/msg2hex $MSGFILE
+        # cp ${MSGFILE}.bin $PRJPATH/$TARGET
     fi
     # Update Avatars
     if [ -e $PRJPATH/patrons/lut ]; then

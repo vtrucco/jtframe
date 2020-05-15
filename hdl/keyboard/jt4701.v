@@ -87,7 +87,6 @@ module jt4701_axis(
 
 wire [1:0] xedge;
 reg  [1:0] last_in, locked, last_xedge;
-reg        dir;     // if dir==1 the count increases
 wire       posedge_a, posedge_b, negedge_a, negedge_b;
 reg        ping, pong;
 
@@ -103,7 +102,6 @@ initial begin
     last_in = 2'b0;
     flagn   = 1;
     locked  = 2'b00;
-    dir     = 0;
 end
 `endif
 
@@ -113,7 +111,6 @@ always @(posedge clk) begin
         last_in<= 2'b0;
         flagn  <= 1;
         locked <= 2'b00;
-        dir    <= 0;
         ping   <= 0;
         pong   <= 0;
     end else begin

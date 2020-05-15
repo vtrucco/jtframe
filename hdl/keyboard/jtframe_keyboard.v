@@ -93,9 +93,8 @@ always @(posedge clk) begin
                     9'h0_23: key_joy2[1] <= !key_released;   // Left
                     9'h0_34: key_joy2[0] <= !key_released;   // Right
                     // third joystick
-                    9'h0_5a: key_joy3[6] <= !key_released;   // Button 3
+                    9'h0_5a: key_joy3[4] <= !key_released;   // Button 1
                     9'h0_59: key_joy3[5] <= !key_released;   // Button 2
-                    9'h0_14: key_joy3[4] <= !key_released;   // Button 1
                     9'h0_43: key_joy3[3] <= !key_released;   // Up
                     9'h0_42: key_joy3[2] <= !key_released;   // Down
                     9'h0_3b: key_joy3[1] <= !key_released;   // Left

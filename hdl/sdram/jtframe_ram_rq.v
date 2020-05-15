@@ -65,7 +65,7 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
                 req     <= 1'b0;
                 req_rnw <= 1'b1;
                 data_ok <= 1'b1;
-                dout    <= din;
+                dout    <= din[DW-1:0];
             end
         end
     end

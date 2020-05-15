@@ -189,6 +189,8 @@ wire refresh_en;
 wire clk_vga_in, clk_vga, pll_locked;
 
 `ifdef JTFRAME_CLK96
+wire clk48;
+
 jtframe_pll96 u_pll_game (
     .inclk0 ( CLOCK_27[0] ),
     .c0     ( clk48       ), // 48 MHz

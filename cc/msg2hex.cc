@@ -39,6 +39,16 @@ int main( int argc, char *argv[] ) {
         for( int k=0; k<16*1024; k++ ) {
             fout << hex << buf[k] << '\n';
         }
+        fout.close();
+        fout.open( "msg.bin" );
+        for( int k=0; k<16*1024; k++ ) {
+            int v = buf[k];
+            for( int bit=0; bit<9; bit++ ) {
+                if( v&0x100 ) fout << '1'; else fout << '0';
+                v<<=1;
+            }
+            fout << '\n';
+        }
     } catch( const char* error ) {
         cout << "ERROR: " << error << "at line " << dec << (line+1) << '\n';
         delete []buf;
