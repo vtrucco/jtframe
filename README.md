@@ -98,6 +98,15 @@ JTFRAME_OSD_NOCREDITS| Do not display _Credits_
 JTFRAME_OSD_FLIP     | Display flip option (only for vertical games)
 JTFRAME_OSD_NOSND    | Do not display sound options
 
+Status bits in the configuration string are indicated with characters. This is the reference of the position for each character:
+
+```
+bit          00000000001111111112222222222233
+  number   : 01234567890123456789012345678901
+status char: 0123456789abcdefghijklmnopqrstuv
+```
+
+
 ## Values used in the status word by JTFRAME
 
 Values above 8 are not available in MiST if **JTFRAME_MRA_DIP** is defined.

@@ -236,11 +236,6 @@ if [ $SKIP_COMPILE = FALSE ]; then
         jt${PRJ}_msg.py || echo "WARNING: No message file"
     fi
     cd $PRJPATH/$TARGET || exit 1
-    # echo "Moved to folder " $(pwd)
-    # Link files from MiST folder if missing
-    for i in conf_str.v jt${PRJ}.tcl; do
-        link_if_missing $i
-    done
     ############################################3
     # Credits via jtframe_credits:
     MSGFILE=msg

@@ -73,7 +73,6 @@ localparam CONF_STR="JTGNG;;";
 `else
 // Config string
 `define SEPARATOR "",
-`include "conf_str.v"
 
 localparam CONF_STR = {
     `CORENAME,";;",
@@ -122,7 +121,9 @@ localparam CONF_STR = {
     `ifdef JTFRAME_MRA_DIP
         "DIP;",
     `else
-        `CORE_OSD
+        `ifdef CORE_OSD
+            `CORE_OSD
+        `endif
     `endif
     "T0,RST;",
     "V,patreon.com/topapate;"

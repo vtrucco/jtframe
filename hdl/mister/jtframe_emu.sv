@@ -113,7 +113,6 @@ module emu
 // Config string
 `include "build_id.v"
 `define SEPARATOR "-;",
-`include "conf_str.v"
 
 `ifdef SIMULATION
 localparam CONF_STR="JTGNG;;";

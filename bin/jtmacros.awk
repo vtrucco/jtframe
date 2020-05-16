@@ -1,7 +1,7 @@
 #!/usr/bin/awk -f
 # invocation example
 # target must come before the name of the file
-# gawk -f jtmacro.sh  target=mister macros
+# gawk -f jtmacro.awk  target=mister macros
 BEGIN { 
     FS="|" 
     dump=0
@@ -23,6 +23,8 @@ BEGIN {
 /^[a-zA-Z]/{
     if(dump) {
         fixed=gensub(/\"/, "\\\\\"", "g" )
+        if( match(fixed,"=")==0 )
+            fixed=fixed "=<None>"
         printf "set_global_assignment -name VERILOG_MACRO \"%s\"\n",fixed
     }
     next
