@@ -25,3 +25,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) .
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/template/sys/video_cleaner.sv ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/template/sys/hq2x.sv          ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/sync_fix.sv                   ]
+
+# JTFRAME scan doubler for memory constrained systems
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtframe_scan2x.v  ]

@@ -80,7 +80,9 @@ localparam CONF_STR = {
     // "OE,Separate Joysticks,Yes,No;",    // If no, then player 2 joystick
     //     // is assimilated to player 1 joystick
     // `endif
+    `ifndef JTFRAME_SCAN2X
     "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+    `endif
     `ifndef JTFRAME_OSD_NOSND    
         `ifdef JT12
         "O67,FX volume, high, very high, very low, low;",

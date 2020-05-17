@@ -437,24 +437,6 @@ jtframe_sdram u_sdram(
     .SDRAM_CKE      ( SDRAM_CKE     )
 );
 
-localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
-
-wire [VIDEO_DW-1:0] game_rgb;
-
-// arcade video does not support 15bpp colour, so for that
-// case we need to convert it to 24bpp
-generate
-    if( COLORW!=5 ) begin
-        assign game_rgb = {game_r, game_g, game_b };
-    end else begin
-        assign game_rgb = {
-            game_r, game_r[4:2],
-            game_g, game_g[4:2],
-            game_b, game_b[4:2]
-        };
-    end
-endgenerate
-
 `ifdef NOVIDEO
 assign scan2x_r    = game_r;
 assign scan2x_g    = game_g;
@@ -475,57 +457,123 @@ assign scan2x_clk  = clk_sys;
 assign scan2x_cen  = pxl_cen;
 assign scan2x_de   = LVBL && LHBL;
 `else
-arcade_video #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(VIDEO_DW)
-    // Disable Gamma correction for MiST/SiDi
-    `ifndef MISTER
-    ,.GAMMA(0)
-    `endif
-    ) 
-u_arcade_video(
-    .clk_video  ( clk_sys       ),
-    .ce_pix     ( pxl_cen       ),
+`ifdef JTFRAME_SCAN2X
+    // This scan doubler takes very little memory. Some games in MiST
+    // can only use this
+    wire [COLORW*3-1:0] rgbx2;
+    wire [COLORW*3-1:0] game_rgb = {game_r, game_g, game_b };
 
-    .RGB_in     ( game_rgb      ),
-    .HBlank     ( ~LHBL         ),
-    .VBlank     ( ~LVBL         ),
-    .HSync      ( hs            ),
-    .VSync      ( vs            ),
+    function [7:0] extend8;
+        input [COLORW-1:0] a;
+        case( COLORW )
+            3: extend8 = { a, a, a[2:1] };
+            4: extend8 = { a, a         };
+            5: extend8 = { a, a[4:2]    };
+            6: extend8 = { a, a[5:4]    };
+            7: extend8 = { a, a[6]      };
+            8: extend8 = a;
+        endcase
+    endfunction
+    // Note that VIDEO_WIDTH must include blanking for JTFRAME_SCAN2X
+    jtframe_scan2x #(.DW(COLORW*3), .HLEN(VIDEO_WIDTH)) u_scan2x(
+        .rst_n      ( rst_n        ),
+        .clk        ( clk_sys      ),
+        .base_cen   ( pxl_cen      ),
+        .basex2_cen ( pxl2_cen     ),
+        .base_pxl   ( game_rgb     ),
+        .x2_pxl     ( rgbx2        ),
+        .HS         ( hs           ),
+        .x2_HS      ( scan2x_hs    )
+    );
+    assign scan2x_vs    = vs;
+    assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );
+    assign scan2x_g     = extend8( rgbx2[COLORW*2-1:COLORW] );
+    assign scan2x_b     = extend8( rgbx2[COLORW-1:0] );
+    assign scan2x_de    = ~(scan2x_vs | scan2x_hs);
+    assign scan2x_cen   = pxl2_cen;
+    assign scan2x_clk   = clk_sys;
+    assign hdmi_clk     = 0;
+    assign hdmi_cen     = 0;
+    assign hdmi_r       = 8'd0;
+    assign hdmi_g       = 8'd0;
+    assign hdmi_b       = 8'd0;
+    assign hdmi_de      = 0;
+    assign hdmi_hs      = 0;
+    assign hdmi_vs      = 0;
+    assign hdmi_sl      = 2'b0;
 
-    .VGA_CLK    (  scan2x_clk   ),
-    .VGA_CE     (  scan2x_cen   ),
-    .VGA_R      (  scan2x_r     ),
-    .VGA_G      (  scan2x_g     ),
-    .VGA_B      (  scan2x_b     ),
-    .VGA_HS     (  scan2x_hs    ),
-    .VGA_VS     (  scan2x_vs    ),
-    .VGA_DE     (  scan2x_de    ),
+`else
+    localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
 
-    .HDMI_CLK   (  hdmi_clk     ),
-    .HDMI_CE    (  hdmi_cen     ),
-    .HDMI_R     (  hdmi_r       ),
-    .HDMI_G     (  hdmi_g       ),
-    .HDMI_B     (  hdmi_b       ),
-    .HDMI_HS    (  hdmi_hs      ),
-    .HDMI_VS    (  hdmi_vs      ),
-    .HDMI_DE    (  hdmi_de      ),
-    .HDMI_SL    (  hdmi_sl      ),
-    .gamma_bus  ( gamma_bus     ),
+    wire [VIDEO_DW-1:0] game_rgb;
+
+    // arcade video does not support 15bpp colour, so for that
+    // case we need to convert it to 24bpp
+    generate
+        if( COLORW!=5 ) begin
+            assign game_rgb = {game_r, game_g, game_b };
+        end else begin
+            assign game_rgb = {
+                game_r, game_r[4:2],
+                game_g, game_g[4:2],
+                game_b, game_b[4:2]
+            };
+        end
+    endgenerate
+    
+    // VIDEO_WIDTH does not include blanking:
+    arcade_video #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(VIDEO_DW)
+        // Disable Gamma correction for MiST/SiDi
+        `ifndef MISTER
+        ,.GAMMA(0)
+        `endif
+        ) 
+    u_arcade_video(
+        .clk_video  ( clk_sys       ),
+        .ce_pix     ( pxl_cen       ),
+
+        .RGB_in     ( game_rgb      ),
+        .HBlank     ( ~LHBL         ),
+        .VBlank     ( ~LVBL         ),
+        .HSync      ( hs            ),
+        .VSync      ( vs            ),
+
+        .VGA_CLK    (  scan2x_clk   ),
+        .VGA_CE     (  scan2x_cen   ),
+        .VGA_R      (  scan2x_r     ),
+        .VGA_G      (  scan2x_g     ),
+        .VGA_B      (  scan2x_b     ),
+        .VGA_HS     (  scan2x_hs    ),
+        .VGA_VS     (  scan2x_vs    ),
+        .VGA_DE     (  scan2x_de    ),
+
+        .HDMI_CLK   (  hdmi_clk     ),
+        .HDMI_CE    (  hdmi_cen     ),
+        .HDMI_R     (  hdmi_r       ),
+        .HDMI_G     (  hdmi_g       ),
+        .HDMI_B     (  hdmi_b       ),
+        .HDMI_HS    (  hdmi_hs      ),
+        .HDMI_VS    (  hdmi_vs      ),
+        .HDMI_DE    (  hdmi_de      ),
+        .HDMI_SL    (  hdmi_sl      ),
+        .gamma_bus  ( gamma_bus     ),
 
 
-    .fx                ( scanlines   ),
-    .forced_scandoubler( scandoubler ),
-    .rotate_ccw        ( 1'b0        ),
-    `ifdef MISTER
-    .no_rotate         ( ~rotate[0]  ) // the no_rotate name
-        // is misleading. A low value in no_rotate will actually
-        // rotate the game video. If the game is vertical, a low value
-        // presents the game correctly on a horizontal screen
-    `else
-    // MiST / SiDi don't have enough BRAM to rotate the video
-    // nor do they have HDMI pins
-    .no_rotate         ( 1'b1        )
-    `endif
-);
+        .fx                ( scanlines   ),
+        .forced_scandoubler( scandoubler ),
+        .rotate_ccw        ( 1'b0        ),
+        `ifdef MISTER
+        .no_rotate         ( ~rotate[0]  ) // the no_rotate name
+            // is misleading. A low value in no_rotate will actually
+            // rotate the game video. If the game is vertical, a low value
+            // presents the game correctly on a horizontal screen
+        `else
+        // MiST / SiDi don't have enough BRAM to rotate the video
+        // nor do they have HDMI pins
+        .no_rotate         ( 1'b1        )
+        `endif
+    );
+`endif
 `endif
 `endif
 
