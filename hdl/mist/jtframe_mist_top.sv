@@ -16,19 +16,9 @@
     Version: 1.0
     Date: 22-2-2019 */
 
-`timescale 1ns/1ps
-
 // This is the MiST top level
-// It will instantiate the appropriate game core according
-// to the macro GAMETOP
-// It will get the config string for the microcontroller
-// from the include file conf_str.v
 
-`ifndef MISTTOP
-    `define MISTTOP top
-`endif
-
-module `MISTTOP(
+module mist_top(
     input   [1:0]   CLOCK_27,
     output  [5:0]   VGA_R,
     output  [5:0]   VGA_G,
@@ -90,13 +80,7 @@ localparam CONF_STR = {
     // "OE,Separate Joysticks,Yes,No;",    // If no, then player 2 joystick
     //     // is assimilated to player 1 joystick
     // `endif
-    `ifdef MISTER_VIDEO_MIXER
-        "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
-    `else
-        `ifdef JTGNG_VGA
-            "O3,Screen filter,On,Off;",
-        `endif
-    `endif
+    // "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
     `ifndef JTFRAME_OSD_NOSND    
         `ifdef JT12
         "O67,FX volume, high, very high, very low, low;",

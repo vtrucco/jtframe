@@ -130,6 +130,8 @@ function parse_args {
             -seed | -s)
                 shift
                 SEED=$1;;
+            -showmacros)
+                SHOWMACROS=1;;
             -gngvga)
                 MACROS="JTFRAME_VGA SCAN2X_TYPE=1 $MACROS";;
             -d)
@@ -190,7 +192,7 @@ function copy_templates {
     sed "$sedstr" $JTFRAME/hdl/$TARGET/$TARGET.qsf > $PRJPATH/$TARGET/jt${PRJ}.qsf
     # TCL in HDL folder is always appended
     TCL=$PRJPATH/hdl/jt${PRJ}.tcl
-    MACROS_FILE=$PRJPATH/hdl/macros
+    MACROS_FILE=$PRJPATH/hdl/jt${PRJ}.def
     QSF=$PRJPATH/$TARGET/jt${PRJ}.qsf
     if [ -e $TCL ]; then
         cat $TCL >> $QSF
@@ -202,6 +204,10 @@ function copy_templates {
     # Add definitions in "macros" files
     if [ -e $MACROS_FILE ]; then
         gawk -f $JTFRAME/bin/jtmacros.awk target=$TARGET $MACROS_FILE >> $QSF
+        if [ -n "$SHOWMACROS" ]; then
+            gawk -f $JTFRAME/bin/jtmacros.awk target=$TARGET $MACROS_FILE
+            exit 0
+        fi
     fi
 }
 
@@ -281,7 +287,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
             echo "ERROR while compiling the project. Aborting"
             exit 1
         fi
-        grep "Worst-case.*-[0-9.]*" "$LOG"
+        grep "Worst-case.*-[0-9.]*" "$LOG" || figlet PASS
     else
         # Simulation
         echo Preparing simulation netlist. Logfile:

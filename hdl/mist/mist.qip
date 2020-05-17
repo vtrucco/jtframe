@@ -14,14 +14,14 @@ set_global_assignment -name VHDL_FILE          [file join $::quartus(qip_path) .
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../jtframe_board.v             ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../jtframe_dip.v               ]
 
-# Scan doubler from MiSTer
-set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/sys/video_mixer.sv ]
-set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/sys/video_cleaner.sv ]
-set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/sys/hq2x.sv        ]
-set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../mister/sys/scandoubler.v  ]
+# Constraints
+set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) mist_io.sdc                    ]
 
-# set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtgng_vga.v         ]
-# set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtgng_vgapxl.v      ]
-set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtframe_scan2x.v    ]
-set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../ram/jtframe_dual_clk_ram.v  ]
-set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) mist_io.sdc                  ]
+# Scan doubler from MiSTer
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../mister/template/sys/scandoubler.v    ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../mister/template/sys/arcade_video.v   ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/template/sys/video_mixer.sv   ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/template/sys/gamma_corr.sv    ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/template/sys/video_cleaner.sv ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/template/sys/hq2x.sv          ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) ../mister/sync_fix.sv                   ]

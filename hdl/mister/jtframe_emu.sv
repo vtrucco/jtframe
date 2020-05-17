@@ -132,11 +132,7 @@ localparam CONF_STR = {
         `endif
     "O2,Rotate screen,Yes,No;",
     `endif
-    `ifdef JTFRAME_VGA
-        "O3,Screen filter,On,Off;",
-    `else
-        "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
-    `endif
+    "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 
     `ifndef NOSOUND
         // sound OSD options are ommitted for compilations without sound

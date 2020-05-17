@@ -437,219 +437,93 @@ jtframe_sdram u_sdram(
     .SDRAM_CKE      ( SDRAM_CKE     )
 );
 
-
-/////////// Scan doubler
-// There are several scan doublers available
-// the best quality one for CAPCOM CPS0 games is jtgng_vga
-// the best one for vertical games on MiSTer is arcade_rotate_fx, which
-// is selected automatically in that case
-// For horizontal games, the scaler can be chosen with the SCAN2X_TYPE macro
-// and overridden with a parameter.
-
-// If the scan doubler type is not defined, takes 0 as the default
-// except if we are on MiSTer and the game is vertical
-`ifdef VERTICAL_SCREEN
-`ifdef MISTER
-    `undef SCAN2X_TYPE
-    `define SCAN2X_TYPE 6
-`endif
-`endif
-
-// By-pass
-`ifdef MiSTer
-`ifdef MISTER_NOHDMI
-    `undef SCAN2X_TYPE
-    `define SCAN2X_TYPE 5
-`endif
-`endif
-
-
-`ifndef SCAN2X_TYPE
-    `ifdef MISTER
-        `define SCAN2X_TYPE 6
-    `else // MiST
-        `define SCAN2X_TYPE 2
-    `endif
-`endif
-
-localparam SCAN2X_TYPE=`SCAN2X_TYPE;
-
 `ifdef SIMULATION
 initial $display("INFO: Scan 2x type =%d", SCAN2X_TYPE);
 `endif
 
-wire [COLORW*3-1:0] game_rgb = {game_r, game_g, game_b };
+localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
 
-function [7:0] extend8;
-    input [COLORW-1:0] a;
-    case( COLORW )
-        3: extend8 = { a, a, a[2:1] };
-        4: extend8 = { a, a         };
-        5: extend8 = { a, a[4:2]    };
-        6: extend8 = { a, a[5:4]    };
-        7: extend8 = { a, a[6]      };
-        8: extend8 = a;
-    endcase
-endfunction
+wire [VIDEO_DW-1:0] game_rgb;
 
-function [7:0] extend8b;    // the input width is COLORW+1
-    input [COLORW:0] a;
-    case( COLORW )
-        3: extend8b = { a, a         };
-        4: extend8b = { a, a[4:2]    };
-        5: extend8b = { a, a[5:4]    };
-        6: extend8b = { a, a[6]      };
-        7: extend8b = a;
-        8: extend8b = a[8:1];
-    endcase
-endfunction
-
-`ifndef NOVIDEO
-generate    
-    case( SCAN2X_TYPE )
-        0: begin // JTFRAME easy going scaler
-            wire [COLORW*3-1:0] rgbx2;
-
-            jtframe_scan2x #(.DW(COLORW*3), .HLEN(VIDEO_WIDTH)) u_scan2x(
-                .rst_n      ( rst_n        ),
-                .clk        ( clk_sys      ),
-                .base_cen   ( pxl_cen      ),
-                .basex2_cen ( pxl2_cen     ),
-                .base_pxl   ( game_rgb     ),
-                .x2_pxl     ( rgbx2        ),
-                .HS         ( hs           ),
-                .x2_HS      ( scan2x_hs    )
-            );
-            assign scan2x_vs = vs;
-            assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );
-            assign scan2x_g     = extend8( rgbx2[COLORW*2-1:COLORW] );
-            assign scan2x_b     = extend8( rgbx2[COLORW-1:0] );
-            assign scan2x_de    = ~(scan2x_vs | scan2x_hs);
-            assign scan2x_cen   = pxl2_cen;
-            assign scan2x_clk   = clk_sys;
-            assign hdmi_clk     = scan2x_clk;
-            assign hdmi_cen     = scan2x_cen;
-            assign hdmi_r       = scan2x_r;
-            assign hdmi_g       = scan2x_g;
-            assign hdmi_b       = scan2x_b;
-            assign hdmi_de      = scan2x_de;
-            assign hdmi_hs      = ~scan2x_hs;
-            assign hdmi_vs      = ~scan2x_vs;
-            assign hdmi_sl      = 2'b0;
-        end
-        2: begin // MiSTer mixer
-            wire hq2x_en = scanlines==3'd1;
-            reg [1:0] sl;
-            always @(posedge clk_sys)
-                case( scanlines )
-                    default: sl <= 2'd0;
-                    3'd2:    sl <= 2'd1;
-                    3'd3:    sl <= 2'd2;
-                    3'd4:    sl <= 2'd3;
-                endcase // scanlines
-            wire [1:0] nc_r, nc_g, nc_b;
-            localparam HALF_DEPTH = COLORW==4;
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
-            wire mixer_ce = pxl_cen | (~scandoubler & ~gamma_bus[19] & ~direct_video);
-            video_mixer #(
-                .LINE_LENGTH(VIDEO_WIDTH+4),
-                .HALF_DEPTH(HALF_DEPTH)) 
-            u_video_mixer (
-                .clk_vid        ( clk_sys       ),
-                .ce_pix         ( pxl_cen       ),
-                .ce_pix_out     ( scan2x_cen    ),
-                .scandoubler    ( scandoubler   ),        
-                .scanlines      ( sl            ),
-                .hq2x           ( hq2x_en       ),
-                .R              ( mr_mixer_r    ),
-                .G              ( mr_mixer_g    ),
-                .B              ( mr_mixer_b    ),
-                .mono           ( 1'b0          ),
-                .gamma_bus      ( gamma_bus     ),
-                .HSync          ( hs            ),
-                .VSync          ( vs            ),
-                .HBlank         ( ~LHBL         ),
-                .VBlank         ( ~LVBL         ),
-                .VGA_R          ( scan2x_r      ),
-                .VGA_G          ( scan2x_g      ),
-                .VGA_B          ( scan2x_b      ),
-                .VGA_HS         ( scan2x_hs     ),
-                .VGA_VS         ( scan2x_vs     ),
-                .VGA_DE         ( scan2x_de     )
-            );
-            assign scan2x_clk = clk_sys;
-            assign hdmi_clk   = scan2x_clk;
-            assign hdmi_cen   = scan2x_cen;
-            assign hdmi_r     = scan2x_r;
-            assign hdmi_g     = scan2x_g;
-            assign hdmi_b     = scan2x_b;
-            assign hdmi_de    = scan2x_de;
-            assign hdmi_hs    = scan2x_hs;
-            assign hdmi_vs    = scan2x_vs;
-            assign hdmi_sl    = sl[1:0];
-        end
-        5: begin // by pass
-            assign scan2x_r    = game_r;
-            assign scan2x_g    = game_g;
-            assign scan2x_b    = game_b;
-            assign scan2x_hs   = hs;
-            assign scan2x_vs   = vs;
-            assign scan2x_clk  = clk_sys;
-            assign scan2x_cen  = pxl_cen;
-            assign scan2x_de   = LVBL && LHBL;
-        end
-        6: begin // vertical games
-            arcade_video #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(3*COLORW)) 
-            u_arcade_video(
-                .clk_video  ( clk_sys       ),
-                .ce_pix     ( pxl_cen       ),
-            
-                .RGB_in     ( game_rgb      ),
-                .HBlank     ( ~LHBL         ),
-                .VBlank     ( ~LVBL         ),
-                .HSync      ( hs            ),
-                .VSync      ( vs            ),
-            
-                .VGA_CLK    (  scan2x_clk   ),
-                .VGA_CE     (  scan2x_cen   ),
-                .VGA_R      (  scan2x_r     ),
-                .VGA_G      (  scan2x_g     ),
-                .VGA_B      (  scan2x_b     ),
-                .VGA_HS     (  scan2x_hs    ),
-                .VGA_VS     (  scan2x_vs    ),
-                .VGA_DE     (  scan2x_de    ),
-            
-                .HDMI_CLK   (  hdmi_clk     ),
-                .HDMI_CE    (  hdmi_cen     ),
-                .HDMI_R     (  hdmi_r       ),
-                .HDMI_G     (  hdmi_g       ),
-                .HDMI_B     (  hdmi_b       ),
-                .HDMI_HS    (  hdmi_hs      ),
-                .HDMI_VS    (  hdmi_vs      ),
-                .HDMI_DE    (  hdmi_de      ),
-                .HDMI_SL    (  hdmi_sl      ),
-                .gamma_bus  ( gamma_bus     ),
-
-            
-                .fx                ( scanlines   ),
-                .forced_scandoubler( scandoubler ),
-                .rotate_ccw        ( 1'b0        ),
-                `ifdef MISTER
-                .no_rotate         ( ~rotate[0]  ) // the no_rotate name
-                    // is misleading. A low value in no_rotate will actually
-                    // rotate the game video. If the game is vertical, a low value
-                    // presents the game correctly on a horizontal screen
-                `else
-                // MiST / SiDi don't have enough BRAM to rotate the video
-                // nor do they have HDMI pins
-                .no_rotate         ( 1'b1        )
-                `endif
-            );
-        end
-    endcase
+// arcade video does not support 15bpp colour, so for that
+// case we need to convert it to 24bpp
+generate
+    if( COLORW!=5 ) begin
+        assign game_rgb = {game_r, game_g, game_b };
+    end else begin
+        assign game_rgb = {
+            game_r, game_r[4:2],
+            game_g, game_g[4:2],
+            game_b, game_b[4:2]
+        };
+    end
 endgenerate
+
+`ifdef NOVIDEO
+assign scan2x_r    = game_r;
+assign scan2x_g    = game_g;
+assign scan2x_b    = game_b;
+assign scan2x_hs   = hs;
+assign scan2x_vs   = vs;
+assign scan2x_clk  = clk_sys;
+assign scan2x_cen  = pxl_cen;
+assign scan2x_de   = LVBL && LHBL;
+`else
+arcade_video #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(VIDEO_DW)
+    // Disable Gamma correction for MiST/SiDi
+    `ifndef MISTER
+    ,.GAMMA(0)
+    `endif
+    ) 
+u_arcade_video(
+    .clk_video  ( clk_sys       ),
+    .ce_pix     ( pxl_cen       ),
+
+    .RGB_in     ( game_rgb      ),
+    .HBlank     ( ~LHBL         ),
+    .VBlank     ( ~LVBL         ),
+    .HSync      ( hs            ),
+    .VSync      ( vs            ),
+
+    .VGA_CLK    (  scan2x_clk   ),
+    .VGA_CE     (  scan2x_cen   ),
+    .VGA_R      (  scan2x_r     ),
+    .VGA_G      (  scan2x_g     ),
+    .VGA_B      (  scan2x_b     ),
+    .VGA_HS     (  scan2x_hs    ),
+    .VGA_VS     (  scan2x_vs    ),
+    .VGA_DE     (  scan2x_de    ),
+
+    .HDMI_CLK   (  hdmi_clk     ),
+    .HDMI_CE    (  hdmi_cen     ),
+    .HDMI_R     (  hdmi_r       ),
+    .HDMI_G     (  hdmi_g       ),
+    .HDMI_B     (  hdmi_b       ),
+    .HDMI_HS    (  hdmi_hs      ),
+    .HDMI_VS    (  hdmi_vs      ),
+    .HDMI_DE    (  hdmi_de      ),
+    .HDMI_SL    (  hdmi_sl      ),
+    .gamma_bus  ( gamma_bus     ),
+
+
+    `ifdef MISTER
+    .fx                ( scanlines   ),
+    `else
+    .fx                ( 3'b00       ),
+    `endif
+    .forced_scandoubler( scandoubler ),
+    .rotate_ccw        ( 1'b0        ),
+    `ifdef MISTER
+    .no_rotate         ( ~rotate[0]  ) // the no_rotate name
+        // is misleading. A low value in no_rotate will actually
+        // rotate the game video. If the game is vertical, a low value
+        // presents the game correctly on a horizontal screen
+    `else
+    // MiST / SiDi don't have enough BRAM to rotate the video
+    // nor do they have HDMI pins
+    .no_rotate         ( 1'b1        )
+    `endif
+);
 `endif
 
 endmodule // jtgng_board
