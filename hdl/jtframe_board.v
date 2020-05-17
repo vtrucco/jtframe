@@ -512,11 +512,7 @@ u_arcade_video(
     .gamma_bus  ( gamma_bus     ),
 
 
-    `ifdef MISTER
     .fx                ( scanlines   ),
-    `else
-    .fx                ( 3'b00       ),
-    `endif
     .forced_scandoubler( scandoubler ),
     .rotate_ccw        ( 1'b0        ),
     `ifdef MISTER
