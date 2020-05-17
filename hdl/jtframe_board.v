@@ -437,10 +437,6 @@ jtframe_sdram u_sdram(
     .SDRAM_CKE      ( SDRAM_CKE     )
 );
 
-`ifdef SIMULATION
-initial $display("INFO: Scan 2x type =%d", SCAN2X_TYPE);
-`endif
-
 localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
 
 wire [VIDEO_DW-1:0] game_rgb;
@@ -460,6 +456,16 @@ generate
 endgenerate
 
 `ifdef NOVIDEO
+assign scan2x_r    = game_r;
+assign scan2x_g    = game_g;
+assign scan2x_b    = game_b;
+assign scan2x_hs   = hs;
+assign scan2x_vs   = vs;
+assign scan2x_clk  = clk_sys;
+assign scan2x_cen  = pxl_cen;
+assign scan2x_de   = LVBL && LHBL;
+`else
+`ifdef SIMULATION
 assign scan2x_r    = game_r;
 assign scan2x_g    = game_g;
 assign scan2x_b    = game_b;
@@ -524,6 +530,7 @@ u_arcade_video(
     .no_rotate         ( 1'b1        )
     `endif
 );
+`endif
 `endif
 
 endmodule // jtgng_board
