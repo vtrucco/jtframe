@@ -9,11 +9,11 @@ You can show your appreciation through
     * Patreon: https://patreon.com/topapate
     * Paypal: https://paypal.me/topapate
 
-#CPUs
+# CPUs
 
 Some CPUs are included in JTFRAME. Some of them can be found in other repositories in Github but the versions in JTFRAME include clock enable inputs and other improvements.
 
-#Simulation of 74-series based schematics
+# Simulation of 74-series based schematics
 
 Many arcade games and 80's computers use 74-series devices to do discrete logic. There are some files in JTFRAME that help analyze these systems using the following flow:
 
@@ -27,7 +27,7 @@ There is a verilog library of 74-series gates in the hdl folder: hdl/jt74.v. The
 
 It makes sense to simulate delays in 74-series gates as this is important in some designs. Even if some cells do not include delays, later versions of jt74.v may include delays for all cells. It is not recommended to set up your simulations with Verilator because Verilator does not support delays and other modelling constructs. The jt74 library is not meant for synthesis, only simulation.
 
-#Cabinet inputs during simulation
+# Cabinet inputs during simulation
 You can use a hex file with inputs for simulation. Enable this with the macro
 SIM_INPUTS. The file must be called sim_inputs.hex. Each line has a hexadecimal
 number with inputs coded. Active high only:
@@ -46,7 +46,7 @@ bit         meaning
 
 Each line will be applied on a new frame.
 
-#OSD colours
+# OSD colours
 The macro JTFRAME_OSDCOLOR should be defined with a 6-bit value encoding an RGB tone. This is used for
 the OSD background. The meanins are:
 
@@ -57,7 +57,7 @@ Value | Meaning                 | Colour
 6'h3c | Playable with problems  | Yellow
 6'h35 | Very early core         | Red
 
-#SDRAM Controller
+# SDRAM Controller
 **jtframe_sdram** is a generic SDRAM controller that runs upto 48MHz because it is designed for CL=2. It mainly serves for reading ROMs from the SDRAM but it has some support for writting (apart from the initial ROM download process).
 
 This module may result in timing errors in MiSTer because sometimes the compiler does not assign the input flip flops from SDRAM_DQ at the pads. In order to avoid this, you can define the macro **JTFRAME_SDRAM_REPACK**. This will add one extra stage of data latching, which seems to allow the fitter to use the pad flip flops. This does delay data availability by one clock cycle. Some cores in MiSTer do synthesize with pad FF without the need of this option. Use it if you find setup timing violation about the SDRAM_DQ pins.
@@ -73,19 +73,19 @@ These signals should be used in combination with the rest of prog_ and sdram_ si
 
 The data bus is held down all the time and only released when the SDRAM is expected to use it. This behaviour can be reverted using **JTFRAME_NOHOLDBUS**. When this macro is defined, the bus will only be held while writting data and released the rest of the time. For 48MHz operation, holding the bus works better. For 96MHz it doesn't seem to matter.
 
-#Fast Load
+# Fast Load
 
-##MiST
+## MiST
 Starting from the Dec. 2020 firmware update, MiST can now delegate the ROM load to the FPGA. This makes the process 4x faster. This option is enabled by default. However, it can be a problem because the ROM transfer will be composed of full SD card sectors so there will be some garbage sent at the end of the ROM. If the core is not compatible with this and it relies on exact sizing of the ROM it needs to define the macro **JTFRAME_MIST_DIRECT** and set it to zero:
 
 ```
 set_global_assignment -name VERILOG_MACRO "JTFRAME_MIST_DIRECT=0"
 ```
 
-##MiSTer
+## MiSTer
 In order to preserve the 8-bit ROM download interface with MiST, _jtframe_mister_ presents it too. However it can operate internally with 16-bit packets if the macro **JTFRAME_MR_FASTIO** is set to 1. This has only been tested with 96MHz clock. Indeed, if **JTFRAME_CLK96** is defined and **JTFRAME_MR_FASTIO** is not, then it will be defined to 1.
 
-#DIP switches and OSD
+# DIP switches and OSD
 
 To enable support of DIP switches in MRA files define the macro **JTFRAME_MRA_DIP**. The maximum length of DIP switches is 32 bits.
 
@@ -97,6 +97,15 @@ JTFRAME_OSD_NOLOAD   | Do not display _load file_
 JTFRAME_OSD_NOCREDITS| Do not display _Credits_ 
 JTFRAME_OSD_FLIP     | Display flip option (only for vertical games)
 JTFRAME_OSD_NOSND    | Do not display sound options
+
+Status bits in the configuration string are indicated with characters. This is the reference of the position for each character:
+
+```
+bit          00000000001111111112222222222233
+  number   : 01234567890123456789012345678901
+status char: 0123456789abcdefghijklmnopqrstuv
+```
+
 
 ## Values used in the status word by JTFRAME
 
@@ -119,7 +128,7 @@ bit     |  meaning                | Enabled with macro
 
 If **JTFRAME_FLIP_RESET** is defined a change in dip_flip will reset the game.
 
-##DIP switch information extraction from MAME
+## DIP switch information extraction from MAME
 
 First you need to get the xml with all the information:
 
@@ -131,7 +140,30 @@ The file *mamefilter.cc* is an example of how to extract a subset of machine def
 
 The files *mamegame.hpp* and *mamegame.cc* contain some classes and a function to process the MAME XML into easy-to-use C++ objects. An example of this in use can be seen in JTCPS1 core.
 
-#Joysticks
+## MOD BYTE
+
+Some JTFRAME features are configured via an ARC or MRA file. This is used to share a common RBF file among several games. The mod byte is introduced in the MRA file using this syntax:
+
+```
+    <rom index="1"><part> 01 </part></rom>
+```
+
+And in the ARC file with
+
+```
+MOD=1
+```
+
+This is the meaning for each bit. Note that core mod is only 7 bits in MiST.
+
+Bit  |    Meaning            | Default value
+-----|-----------------------|--------------
+ 0   |  1 = vertical screen  |     1
+ 1   |  1 = 4 way joystick   |     0
+
+ The vertical screen bit is only read if JTFRAME was compiled with the **VERTICAL_SCREEN** macro. This macro enables support for vertical games in the RBF. Then the same RBF can switch between horizontal and vertical games by using the MOD byte.
+
+# Joysticks
 By default the frame supports two joysticks only and will try to connect to game modules based on this assumption. For games that need four joysticks, define the macro **JTFRAME_4PLAYERS**.
 Note that the registers containing the coin and start button inputs are always passed as 4 bits, but the game can just ignore the 2 MSB if it only supports two players.
 
@@ -142,15 +174,16 @@ Analog controllers are not connected to the game module by default. In order to 
     input   [15:0]  joystick_analog_1,
 ```
 
-#SDRAM Simulation
+Support for 4-way joysticks (instead of 8-way joysticks) is enabled by setting high bit 1 of core_mod. See MOD BYTE.
 
+# SDRAM Simulation
 A model for SDRAM mt48lc16m16a2 is included in JTFRAME. The model will load the contents of the file **sdram.hex** if available at the beginning of simulation.
 
 The current contents of the SDRAM can be dumped at the beginning of each frame (falling edge of vertical blank) if **JTFRAME_SAVESDRAM** is defined. Because this is quite an overhead, it is possible to restrict it to dump only a certain **DUMP_START** frame count has been reached. All frames will be dumped after it. The macro **DUMP_START** is the same one used for setting the start of signal dump to the __VCD__ file.
 
 To simulate the SDRAM load operation use **-load** on sim.sh. The normal download speed 1/270ns=3.7MHz. This is faster than the real systems but speeds up simulation. It is possible to slow it down by adding dead clock cycles to each transfer. The macro **JTFRAME_SIM_LOAD_EXTRA** can be defined with the required number of extra cycles. 
 
-#Game clocks
+# Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
 
 optional clock input | Macro Needed
@@ -163,7 +196,17 @@ Note that although clk6 and clk24 are obtained without affecting the main clock 
 
 By default unless **JTFRAME_MR_FASTIO** is already defined, **JTFRAME_CLK96** will define it to 1. This enables fast ROM download in MiSTer using 16-bit mode in _hps_io_.
 
-#Aspect Ratio
+# Scan Doublers
+
+Although original JTFRAME supported a variety of scan doublers, the support has been simplified down to the following:
+
+SCAN2X_TYPE   |   MODULE          | Description
+--------------|-------------------|------------------------------------
+    5         | None              | by pass values without scan doubler
+    6         | jtframe_tateyoko  | provides a rotated and non rotated output
+ default      | jtframe_scan2x    | simple and fast scan doubler
+
+## Aspect Ratio
 In MiSTer the aspect ratio through the scaler can be controlled via the core. By default it is possible to switch between 16:9 and 4:3. However, if the game AR is different, the following macros can be used to redefine it:
 
 Macro       |  Default    |   Meaning        
@@ -173,15 +216,13 @@ JTFRAME_ARY |     3       | vertical   magnitude
 
 Internally each value is converted to an eight bit signal.
 
-#Debug Features
-
+# Debug Features
 If JTFRAME_RELEASE is not defined, some extra features within JTFRAME will operate.
 
-##GFX Enable Signals
-
+## GFX Enable Signals
 In debug mode keys F7-F10 will switch the *gfx_en[3:0]* signal. This can be used internally by the core for debugging. The original intent was to get each bit enable/disable a given GFX layer, hence the name.
 
-#Modules with simulation files added automatically
+# Modules with simulation files added automatically
 Define and export the following environgment variables to have these
 modules added to your simulation when using sim.sh
 
@@ -193,15 +234,31 @@ M6801
 M6809
 I8051
 
-#Credits Screen
-Credits can be displayed using the module *jtframe_credits*. This module needs the following files
+# Credits Screen
+Credits can be displayed using the module *jtframe_credits*. This module needs the following files inside the patrons folder:
 
-File           | Tool      | Function
----------------|-----------|--------------
-msg.hex        | msg2hex   | text shown
-avatar.hex     | avatar.py | avatar images. 4bpp indexed
-avatar_pal.hex | avatar.py | avatar paletters
-lut.hex        | lut2hex   | avatar tiles location in 8-pixel multiples
+Input File | Output File    | Tool      | Function
+-----------|----------------|-----------|--------------------------------------------
+ msg       | msg.hex        | msg2hex   | text shown
+ avatars   | avatar.hex     | avatar.py | avatar images. 4bpp indexed
+ avatars   | avatar_pal.hex | avatar.py | avatar paletters
+ lut       | lut.hex        | lut2hex   | avatar tiles location in 8-pixel multiples
+
+**avatars** contains a line with the path from $JTROOT or $JTROOT/cores (if cores exists) to the PNG image.
+There should be one line per image.
+
+**lut** contains the object look-up table. Each line has four fields:
+
+1. Tile code
+2. x position
+3. y position
+4. Palette
+
+* Line starting with # character are treated as comments
+* A line can start with the scape code **\9,** which means that the following
+  four fields should be expanded to a full 3x3 sprite, adjusting tile code
+  and positions accordingly
+* The table end is marked by an object with ID 255
 
 avatar.py needs a .png image that complies with:
 
@@ -209,8 +266,24 @@ avatar.py needs a .png image that complies with:
 2. Maximum 16 colours in the image
 3. Alpha channel present in the PNG
 
-#Compilation
+Once the three files msg, avatars and lut are available, jtcore will process them as part of the compilation.
 
+## jtframe_credits
+
+Features 1-bpp text font and 4-bpp objects.
+
+## msg2hex
+Converts from a text file (patrons/msg) to a hex file usable by *jtframe_credits*.
+Type text for ASCII conversion. Escape characters can be introduced by \ with the following meaning:
+
+Escape              |  Meaning
+--------------------|------------------------------
+R                   | RED   palette (index 0)
+G                   | GREEN palette (index 1)
+B                   | BLUE  palette (index 2)
+W                   | WHITE palette (index 3)
+
+# Compilation
 jtcore is the script used to compile the cores.
 
 ## JTAG Programming

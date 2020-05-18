@@ -9,15 +9,15 @@ module hps_io #(parameter STRLEN=0, PS2DIV=2000, WIDE=0, VDNUM=1, PS2WE=0,
     // parameter STRLEN and the actual length of conf_str have to match
     input [(8*STRLEN)-1:0] conf_str,
 
-    output     [ 5:0] joy_raw,
+    input      [ 5:0] joy_raw,
     output     [15:0] joystick_0,
     output     [15:0] joystick_1,
     output     [15:0] joystick_2,
     output     [15:0] joystick_3,
     // output     [15:0] joystick_4,
     // output     [15:0] joystick_5,
-    // output     [15:0] joystick_analog_0,
-    // output     [15:0] joystick_analog_1,
+    output     [15:0] joystick_analog_0,
+    output     [15:0] joystick_analog_1,
     // output     [15:0] joystick_analog_2,
     // output     [15:0] joystick_analog_3,
     // output     [15:0] joystick_analog_4,
@@ -62,7 +62,7 @@ module hps_io #(parameter STRLEN=0, PS2DIV=2000, WIDE=0, VDNUM=1, PS2WE=0,
     output            ioctl_download, // signal indicating an active download
     output      [7:0] ioctl_index,        // menu index used to upload the file
     (*keep*) output            ioctl_wr,
-    (*keep*) output     [24:0] ioctl_addr,         // in WIDE mode address will be incremented by 2
+    (*keep*) output     [26:0] ioctl_addr,         // in WIDE mode address will be incremented by 2
     (*keep*) output     [DW:0] ioctl_dout,
     output     [31:0] ioctl_file_ext,
     // input             ioctl_wait,
@@ -123,5 +123,8 @@ assign forced_scandoubler = 1'b0;
 assign buttons = 2'b0;
 
 assign direct_video = 1'b0;
+
+assign joystick_analog_0 = 16'd0;
+assign joystick_analog_1 = 16'd0;
 
 endmodule // hps_io

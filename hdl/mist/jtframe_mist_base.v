@@ -199,7 +199,10 @@ data_io #(.ROM_DIRECT_UPLOAD(1'b1)) u_datain (
     .ioctl_addr         ( ioctl_addr        ),
     .ioctl_dout         ( ioctl_data        ),
     .ioctl_wr           ( ioctl_wr          ),
-    .ioctl_index        ( ioctl_index       )
+    .ioctl_index        ( ioctl_index       ),
+    // Unused:
+    .ioctl_fileext      (                   ),
+    .ioctl_filesize     (                   )
 );
 
 // OSD will only get simulated if SIMULATE_OSD is defined

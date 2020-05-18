@@ -129,7 +129,7 @@ wire rom_cs_posedge = !last_rom_cs && rom_cs;
 
 reg       locked;
 wire rom_bad;
-wire bus_ok = (rom_ok||!rom_cs) && !dev_busy;
+// wire bus_ok = (rom_ok||!rom_cs) && !dev_busy;
 
 assign gate    = !(rom_bad || dev_busy || locked );
 assign rom_bad = (rom_cs && !rom_ok) || rom_cs_posedge;

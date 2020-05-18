@@ -113,7 +113,9 @@ mt48lc16m16a2 #(.filename(GAME_ROMNAME)) mister_sdram (
     .Cas_n      ( SDRAM_nCAS    ),
     .We_n       ( SDRAM_nWE     ),
     .Dqm        ( {SDRAM_DQMH,SDRAM_DQML}   ),
-    .downloading( dwnld_busy    )
+    .downloading( dwnld_busy    ),
+    .VS         ( VS            ),
+    .frame_cnt  ( frame_cnt     )
 );
 
 endmodule // jt_1942_a_test

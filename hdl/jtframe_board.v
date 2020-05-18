@@ -136,9 +136,6 @@ module jtframe_board #(parameter
 
 wire  [ 2:0]  scanlines;
 wire          en_mixing;
-wire          scandoubler = ~scan2x_enb;
-wire          hblank = ~LHBL;
-wire          vblank = ~LVBL;
 wire          osd_pause;
 reg           last_osdpause;
 
@@ -146,6 +143,7 @@ wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
 wire key_reset, key_pause, rot_control;
 reg [7:0] rst_cnt=8'd0;
 reg       game_pause;
+wire      scandoubler = ~scan2x_enb;
 
 `ifdef JTFRAME_MISTER_VIDEO_DW
 localparam arcade_fx_dw = `JTFRAME_MISTER_VIDEO_DW;
@@ -172,16 +170,21 @@ always @(posedge clk_sys)
     end
 
 reg soft_rst;
-reg last_dip_flip;
 reg [7:0] game_rst_cnt=8'd0;
 
+`ifdef JTFRAME_FLIP_RESET
+reg last_dip_flip, rst_flip;
 always @(negedge clk_rom) begin
     last_dip_flip <= dip_flip;
+    rst_flip      <= last_dip_flip!=dip_flip;
+end
+`else
+wire rst_flip = 0;
+`endif
+
+always @(negedge clk_rom) begin
     if( downloading | rst | rst_req 
-        `ifdef JTFRAME_FLIP_RESET
-        | (last_dip_flip!=dip_flip) 
-        `endif
-        | soft_rst ) begin
+        | rst_flip | soft_rst ) begin
         game_rst_cnt <= 8'd0;
         game_rst     <= 1'b1;
     end
@@ -236,14 +239,48 @@ assign key_pause   = 1'b0;
 assign key_service = 1'b0;
 `endif
 
-reg [15:0] joy1_sync, joy2_sync, joy3_sync, joy4_sync;
+reg  [15:0] joy1_sync, joy2_sync, joy3_sync, joy4_sync;
+wire [ 3:0] joy4way1p, joy4way2p, joy4way3p, joy4way4p;
+wire        en4way = core_mod[1];
 
 always @(posedge clk_sys) begin
-    joy1_sync <= board_joystick1;
-    joy2_sync <= board_joystick2;
-    joy3_sync <= board_joystick3;
-    joy4_sync <= board_joystick4;
+    joy1_sync <= { board_joystick1[15:4], joy4way1p[3:0] };
+    joy2_sync <= { board_joystick2[15:4], joy4way2p[3:0] };
+    joy3_sync <= { board_joystick3[15:4], joy4way3p[3:0] };
+    joy4_sync <= { board_joystick4[15:4], joy4way4p[3:0] };
 end
+
+jtframe_4wayjoy u_4way_1p(
+    .rst        ( rst                    ),
+    .clk        ( clk_sys                ),
+    .enable     ( en4way                 ),
+    .joy8way    ( board_joystick1[3:0]   ),
+    .joy4way    ( joy4way1p              )
+);
+
+jtframe_4wayjoy u_4way_2p(
+    .rst        ( rst                    ),
+    .clk        ( clk_sys                ),
+    .enable     ( en4way                 ),
+    .joy8way    ( board_joystick2[3:0]   ),
+    .joy4way    ( joy4way2p              )
+);
+
+jtframe_4wayjoy u_4way_3p(
+    .rst        ( rst                    ),
+    .clk        ( clk_sys                ),
+    .enable     ( en4way                 ),
+    .joy8way    ( board_joystick3[3:0]   ),
+    .joy4way    ( joy4way3p              )
+);
+
+jtframe_4wayjoy u_4way_4p(
+    .rst        ( rst                    ),
+    .clk        ( clk_sys                ),
+    .enable     ( en4way                 ),
+    .joy8way    ( board_joystick4[3:0]   ),
+    .joy4way    ( joy4way4p              )
+);
 
 localparam START_BIT  = 6+(BUTTONS-2);
 localparam COIN_BIT   = 7+(BUTTONS-2);
@@ -292,7 +329,6 @@ always @(posedge clk_sys)
         last_pause   <= key_pause;
         last_reset   <= key_reset;
         last_joypause <= joy_pause; // joy is active low!
-        last_gfx     <= key_gfx;
 
         // joystick, coin, start and service inputs are inverted
         // as indicated in the instance parameter
@@ -318,6 +354,7 @@ always @(posedge clk_sys)
         soft_rst <= key_reset && !last_reset;
 
         `ifndef JTFRAME_RELEASE
+        last_gfx <= key_gfx;
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
         `endif
@@ -400,326 +437,144 @@ jtframe_sdram u_sdram(
     .SDRAM_CKE      ( SDRAM_CKE     )
 );
 
-
-/////////// Scan doubler
-// There are several scan doublers available
-// the best quality one for CAPCOM CPS0 games is jtgng_vga
-// the best one for vertical games on MiSTer is arcade_rotate_fx, which
-// is selected automatically in that case
-// For horizontal games, the scaler can be chosen with the SCAN2X_TYPE macro
-// and overridden with a parameter.
-
-// If the scan doubler type is not defined, takes 0 as the default
-// except if we are on MiSTer and the game is vertical
-`ifdef VERTICAL_SCREEN
-`ifdef MISTER
-    `undef SCAN2X_TYPE
-    `define SCAN2X_TYPE 6
-`endif
-`endif
-
-// By-pass
-`ifdef MiSTer
-`ifdef MISTER_NOHDMI
-    `undef SCAN2X_TYPE
-    `define SCAN2X_TYPE 5
-`endif
-`endif
-
-
-`ifndef SCAN2X_TYPE
-    `define SCAN2X_TYPE 0
-`endif
-
-localparam SCAN2X_TYPE=`SCAN2X_TYPE;
-
+`ifdef NOVIDEO
+assign scan2x_r    = game_r;
+assign scan2x_g    = game_g;
+assign scan2x_b    = game_b;
+assign scan2x_hs   = hs;
+assign scan2x_vs   = vs;
+assign scan2x_clk  = clk_sys;
+assign scan2x_cen  = pxl_cen;
+assign scan2x_de   = LVBL && LHBL;
+`else
 `ifdef SIMULATION
-initial $display("INFO: Scan 2x type =%d", SCAN2X_TYPE);
+assign scan2x_r    = game_r;
+assign scan2x_g    = game_g;
+assign scan2x_b    = game_b;
+assign scan2x_hs   = hs;
+assign scan2x_vs   = vs;
+assign scan2x_clk  = clk_sys;
+assign scan2x_cen  = pxl_cen;
+assign scan2x_de   = LVBL && LHBL;
+`else
+`ifdef JTFRAME_SCAN2X
+    // This scan doubler takes very little memory. Some games in MiST
+    // can only use this
+    wire [COLORW*3-1:0] rgbx2;
+    wire [COLORW*3-1:0] game_rgb = {game_r, game_g, game_b };
+
+    function [7:0] extend8;
+        input [COLORW-1:0] a;
+        case( COLORW )
+            3: extend8 = { a, a, a[2:1] };
+            4: extend8 = { a, a         };
+            5: extend8 = { a, a[4:2]    };
+            6: extend8 = { a, a[5:4]    };
+            7: extend8 = { a, a[6]      };
+            8: extend8 = a;
+        endcase
+    endfunction
+    // Note that VIDEO_WIDTH must include blanking for JTFRAME_SCAN2X
+    jtframe_scan2x #(.DW(COLORW*3), .HLEN(VIDEO_WIDTH)) u_scan2x(
+        .rst_n      ( rst_n        ),
+        .clk        ( clk_sys      ),
+        .base_cen   ( pxl_cen      ),
+        .basex2_cen ( pxl2_cen     ),
+        .base_pxl   ( game_rgb     ),
+        .x2_pxl     ( rgbx2        ),
+        .HS         ( hs           ),
+        .x2_HS      ( scan2x_hs    )
+    );
+    assign scan2x_vs    = vs;
+    assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );
+    assign scan2x_g     = extend8( rgbx2[COLORW*2-1:COLORW] );
+    assign scan2x_b     = extend8( rgbx2[COLORW-1:0] );
+    assign scan2x_de    = ~(scan2x_vs | scan2x_hs);
+    assign scan2x_cen   = pxl2_cen;
+    assign scan2x_clk   = clk_sys;
+    assign hdmi_clk     = 0;
+    assign hdmi_cen     = 0;
+    assign hdmi_r       = 8'd0;
+    assign hdmi_g       = 8'd0;
+    assign hdmi_b       = 8'd0;
+    assign hdmi_de      = 0;
+    assign hdmi_hs      = 0;
+    assign hdmi_vs      = 0;
+    assign hdmi_sl      = 2'b0;
+
+`else
+    localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
+
+    wire [VIDEO_DW-1:0] game_rgb;
+
+    // arcade video does not support 15bpp colour, so for that
+    // case we need to convert it to 24bpp
+    generate
+        if( COLORW!=5 ) begin
+            assign game_rgb = {game_r, game_g, game_b };
+        end else begin
+            assign game_rgb = {
+                game_r, game_r[4:2],
+                game_g, game_g[4:2],
+                game_b, game_b[4:2]
+            };
+        end
+    endgenerate
+    
+    // VIDEO_WIDTH does not include blanking:
+    arcade_video #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(VIDEO_DW)
+        // Disable Gamma correction for MiST/SiDi
+        `ifndef MISTER
+        ,.GAMMA(0)
+        `endif
+        ) 
+    u_arcade_video(
+        .clk_video  ( clk_sys       ),
+        .ce_pix     ( pxl_cen       ),
+
+        .RGB_in     ( game_rgb      ),
+        .HBlank     ( ~LHBL         ),
+        .VBlank     ( ~LVBL         ),
+        .HSync      ( hs            ),
+        .VSync      ( vs            ),
+
+        .VGA_CLK    (  scan2x_clk   ),
+        .VGA_CE     (  scan2x_cen   ),
+        .VGA_R      (  scan2x_r     ),
+        .VGA_G      (  scan2x_g     ),
+        .VGA_B      (  scan2x_b     ),
+        .VGA_HS     (  scan2x_hs    ),
+        .VGA_VS     (  scan2x_vs    ),
+        .VGA_DE     (  scan2x_de    ),
+
+        .HDMI_CLK   (  hdmi_clk     ),
+        .HDMI_CE    (  hdmi_cen     ),
+        .HDMI_R     (  hdmi_r       ),
+        .HDMI_G     (  hdmi_g       ),
+        .HDMI_B     (  hdmi_b       ),
+        .HDMI_HS    (  hdmi_hs      ),
+        .HDMI_VS    (  hdmi_vs      ),
+        .HDMI_DE    (  hdmi_de      ),
+        .HDMI_SL    (  hdmi_sl      ),
+        .gamma_bus  ( gamma_bus     ),
+
+
+        .fx                ( scanlines   ),
+        .forced_scandoubler( scandoubler ),
+        .rotate_ccw        ( 1'b0        ),
+        `ifdef MISTER
+        .no_rotate         ( ~rotate[0]  ) // the no_rotate name
+            // is misleading. A low value in no_rotate will actually
+            // rotate the game video. If the game is vertical, a low value
+            // presents the game correctly on a horizontal screen
+        `else
+        // MiST / SiDi don't have enough BRAM to rotate the video
+        // nor do they have HDMI pins
+        .no_rotate         ( 1'b1        )
+        `endif
+    );
 `endif
-
-wire [COLORW*3-1:0] game_rgb = {game_r, game_g, game_b };
-
-function [7:0] extend8;
-    input [COLORW-1:0] a;
-    case( COLORW )
-        3: extend8 = { a, a, a[2:1] };
-        4: extend8 = { a, a         };
-        5: extend8 = { a, a[4:2]    };
-        6: extend8 = { a, a[5:4]    };
-        7: extend8 = { a, a[6]      };
-        8: extend8 = a;
-    endcase
-endfunction
-
-function [7:0] extend8b;    // the input width is COLORW+1
-    input [COLORW:0] a;
-    case( COLORW )
-        3: extend8b = { a, a         };
-        4: extend8b = { a, a[4:2]    };
-        5: extend8b = { a, a[5:4]    };
-        6: extend8b = { a, a[6]      };
-        7: extend8b = a;
-        8: extend8b = a[8:1];
-    endcase
-endfunction
-
-`ifndef NOVIDEO
-generate    
-    case( SCAN2X_TYPE )
-        default: begin // JTFRAME easy going scaler
-            wire [COLORW*3-1:0] rgbx2;
-
-            jtframe_scan2x #(.DW(COLORW*3), .HLEN(VIDEO_WIDTH)) u_scan2x(
-                .rst_n      ( rst_n        ),
-                .clk        ( clk_sys      ),
-                .base_cen   ( pxl_cen      ),
-                .basex2_cen ( pxl2_cen     ),
-                .base_pxl   ( game_rgb     ),
-                .x2_pxl     ( rgbx2        ),
-                .HS         ( hs           ),
-                .x2_HS      ( scan2x_hs    )
-            );
-            assign scan2x_vs = vs;
-            assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );
-            assign scan2x_g     = extend8( rgbx2[COLORW*2-1:COLORW] );
-            assign scan2x_b     = extend8( rgbx2[COLORW-1:0] );
-            assign scan2x_de    = ~(scan2x_vs | scan2x_hs);
-            assign scan2x_cen   = pxl2_cen;
-            assign scan2x_clk   = clk_sys;
-            assign hdmi_clk     = scan2x_clk;
-            assign hdmi_cen     = scan2x_cen;
-            assign hdmi_r       = scan2x_r;
-            assign hdmi_g       = scan2x_g;
-            assign hdmi_b       = scan2x_b;
-            assign hdmi_de      = scan2x_de;
-            assign hdmi_hs      = ~scan2x_hs;
-            assign hdmi_vs      = ~scan2x_vs;
-            assign hdmi_sl      = 2'b0;
-        end
-        1: begin // JTGNG_VGA, nicely scales up to 640x480
-            // Do not use this scaler with MiSTer
-            wire [COLORW:0] pre_r, pre_g, pre_b;
-            wire pre_hb, pre_vb;
-
-            jtgng_vga #(COLORW) u_gngvga (
-                .clk_rgb    ( clk_sys       ),
-                .cen6       ( pxl_cen       ), //  6 MHz
-                .clk_vga    ( clk_vga       ), // 25 MHz
-                .rst        ( rst           ), // synchronize with game
-                .red        ( game_r        ),
-                .green      ( game_g        ),
-                .blue       ( game_b        ),
-                .LHBL       ( LHBL          ),
-                .LVBL       ( LVBL          ),
-                .en_mixing  ( en_mixing     ),
-                .vga_red    ( pre_r         ),
-                .vga_green  ( pre_g         ),
-                .vga_blue   ( pre_b         ),
-                .vga_hsync  ( scan2x_hs     ),
-                .vga_vsync  ( scan2x_vs     ),
-                .vga_vb     ( pre_vb        ),
-                .vga_hb     ( pre_hb        )
-            );
-            assign scan2x_r      = extend8b( pre_r );
-            assign scan2x_g      = extend8b( pre_g );
-            assign scan2x_b      = extend8b( pre_b );
-            assign scan2x_de     = !pre_vb && !pre_hb;
-            assign scan2x_cen    = 1'b1;
-            assign scan2x_clk    = clk_vga;
-            assign hdmi_clk      = scan2x_clk;
-            assign hdmi_cen      = scan2x_cen;
-            assign hdmi_r        = scan2x_r;
-            assign hdmi_g        = scan2x_g;
-            assign hdmi_b        = scan2x_b;
-            assign hdmi_de       = scan2x_de;
-            assign hdmi_hs       = scan2x_hs;
-            assign hdmi_vs       = scan2x_vs;
-            assign hdmi_sl       = 2'b0;
-        end
-        2: begin // MiSTer mixer
-            wire hq2x_en = scanlines==3'd1;
-            reg [1:0] sl;
-            always @(posedge clk_sys)
-                case( scanlines )
-                    default: sl <= 2'd0;
-                    3'd2:    sl <= 2'd1;
-                    3'd3:    sl <= 2'd2;
-                    3'd4:    sl <= 2'd3;
-                endcase // scanlines
-            wire [1:0] nc_r, nc_g, nc_b;
-            localparam HALF_DEPTH = COLORW==4;
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
-            wire mixer_ce = pxl_cen | (~scandoubler & ~gamma_bus[19] & ~direct_video);
-            video_mixer #(
-                .LINE_LENGTH(VIDEO_WIDTH+4),
-                .HALF_DEPTH(HALF_DEPTH)) 
-            u_video_mixer (
-                .clk_vid        ( clk_sys       ),
-                .ce_pix         ( pxl_cen       ),
-                .ce_pix_out     ( scan2x_cen    ),
-                .scandoubler    ( scandoubler   ),        
-                .scanlines      ( sl            ),
-                .hq2x           ( hq2x_en       ),
-                .R              ( mr_mixer_r    ),
-                .G              ( mr_mixer_g    ),
-                .B              ( mr_mixer_b    ),
-                .mono           ( 1'b0          ),
-                .gamma_bus      ( gamma_bus     ),
-                .HSync          ( hs            ),
-                .VSync          ( vs            ),
-                .HBlank         ( ~LHBL         ),
-                .VBlank         ( ~LVBL         ),
-                .VGA_R          ( scan2x_r      ),
-                .VGA_G          ( scan2x_g      ),
-                .VGA_B          ( scan2x_b      ),
-                .VGA_HS         ( scan2x_hs     ),
-                .VGA_VS         ( scan2x_vs     ),
-                .VGA_DE         ( scan2x_de     )
-            );
-            assign scan2x_clk = clk_sys;
-            assign hdmi_clk   = scan2x_clk;
-            assign hdmi_cen   = scan2x_cen;
-            assign hdmi_r     = scan2x_r;
-            assign hdmi_g     = scan2x_g;
-            assign hdmi_b     = scan2x_b;
-            assign hdmi_de    = scan2x_de;
-            assign hdmi_hs    = scan2x_hs;
-            assign hdmi_vs    = scan2x_vs;
-            assign hdmi_sl    = sl[1:0];
-        end
-        3: begin // MiSTer cleaner, use for interlaced games
-            wire [1:0] nc_r, nc_g, nc_b;
-            localparam HALF_DEPTH = COLORW==4;
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_r = extend8( game_r );
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_g = extend8( game_g );
-            wire [ (HALF_DEPTH?3:7):0 ] mr_mixer_b = extend8( game_b );
-            video_cleaner u_cleaner (
-                .clk_vid    ( clk_sys    ),
-                .ce_pix     ( pxl2_cen   ),
-
-                .R          ( mr_mixer_r ),
-                .G          ( mr_mixer_g ),
-                .B          ( mr_mixer_b ),
-
-                .HSync      ( hs         ),
-                .VSync      ( vs         ),
-                .HBlank     ( ~LHBL      ),
-                .VBlank     ( ~LVBL      ),
-
-                // video output signals
-                .VGA_R      ( scan2x_r   ),
-                .VGA_G      ( scan2x_g   ),
-                .VGA_B      ( scan2x_b   ),
-                .VGA_HS     ( scan2x_hs  ),
-                .VGA_VS     ( scan2x_vs  ),
-                .VGA_DE     ( scan2x_de  ),
-                
-                // optional aligned blank
-                .HBlank_out (            ),
-                .VBlank_out (            )
-            );
-            assign scan2x_clk = clk_sys;
-            assign hdmi_clk   = scan2x_clk;
-            assign hdmi_cen   = scan2x_cen;
-            assign hdmi_r     = scan2x_r;
-            assign hdmi_g     = scan2x_g;
-            assign hdmi_b     = scan2x_b;
-            assign hdmi_de    = scan2x_de;
-            assign hdmi_hs    = scan2x_hs;
-            assign hdmi_vs    = scan2x_vs;
-            assign hdmi_sl    = 2'b0;
-        end
-        4: begin // MiSTer arcade_fx
-            arcade_fx #(.WIDTH(VIDEO_WIDTH),.DW(arcade_fx_dw)) u_fx(
-                .clk_video      ( clk_sys       ),
-                .ce_pix         ( pxl_cen       ),
-
-                .RGB_in         ( {game_r, game_g, game_b } ),
-                .HSync          ( hs            ),
-                .VSync          ( vs            ),
-                .HBlank         ( hblank        ),
-                .VBlank         ( vblank        ),
-
-                .VGA_CLK        ( scan2x_clk    ),
-                .VGA_CE         ( scan2x_cen    ),
-                .VGA_R          ( scan2x_r      ),
-                .VGA_G          ( scan2x_g      ),
-                .VGA_B          ( scan2x_b      ),
-                .VGA_HS         ( scan2x_hs     ),
-                .VGA_VS         ( scan2x_vs     ),
-                .VGA_DE         ( scan2x_de     ),
-
-                .HDMI_CLK       ( hdmi_clk      ),
-                .HDMI_CE        ( hdmi_cen      ),
-                .HDMI_R         ( hdmi_r        ),
-                .HDMI_G         ( hdmi_g        ),
-                .HDMI_B         ( hdmi_b        ),
-                .HDMI_HS        ( hdmi_hs       ),
-                .HDMI_VS        ( hdmi_vs       ),
-                .HDMI_DE        ( hdmi_de       ),
-                .HDMI_SL        ( hdmi_sl       ),
-
-                .fx             ( scanlines     ),
-                .forced_scandoubler( scandoubler),
-                .gamma_bus      ( gamma_bus     )
-            );
-        end
-        5: begin // by pass
-            assign scan2x_r    = game_r;
-            assign scan2x_g    = game_g;
-            assign scan2x_b    = game_b;
-            assign scan2x_hs   = hs;
-            assign scan2x_vs   = vs;
-            assign scan2x_clk  = clk_sys;
-            assign scan2x_cen  = pxl_cen;
-            assign scan2x_de   = LVBL && LHBL;
-        end
-        6: begin // vertical games
-            arcade_rotate_fx #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(COLORW*3),.CCW(1)) 
-            u_rotate_fx(
-                .clk_video  ( clk_sys       ),
-                .ce_pix     ( pxl_cen       ),
-            
-                .RGB_in     ( game_rgb      ),
-                .HBlank     ( hblank        ),
-                .VBlank     ( vblank        ),
-                .HSync      ( hs            ),
-                .VSync      ( vs            ),
-            
-                .VGA_CLK    (  scan2x_clk   ),
-                .VGA_CE     (  scan2x_cen   ),
-                .VGA_R      (  scan2x_r     ),
-                .VGA_G      (  scan2x_g     ),
-                .VGA_B      (  scan2x_b     ),
-                .VGA_HS     (  scan2x_hs    ),
-                .VGA_VS     (  scan2x_vs    ),
-                .VGA_DE     (  scan2x_de    ),
-            
-                .HDMI_CLK   (  hdmi_clk     ),
-                .HDMI_CE    (  hdmi_cen     ),
-                .HDMI_R     (  hdmi_r       ),
-                .HDMI_G     (  hdmi_g       ),
-                .HDMI_B     (  hdmi_b       ),
-                .HDMI_HS    (  hdmi_hs      ),
-                .HDMI_VS    (  hdmi_vs      ),
-                .HDMI_DE    (  hdmi_de      ),
-                .HDMI_SL    (  hdmi_sl      ),
-                .gamma_bus  ( gamma_bus     ),
-
-            
-                .fx                ( scanlines   ),
-                .forced_scandoubler( scandoubler ),
-                .direct_video      ( direct_video),
-                .no_rotate         ( ~rotate[0]  ) // the no_rotate name
-                    // is misleading. A low value in no_rotate will actually
-                    // rotate the game video. If the game is vertical, a low value
-                    // presents the game correctly on a horizontal screen
-            );
-        end
-    endcase
-endgenerate
+`endif
 `endif
 
 endmodule // jtgng_board

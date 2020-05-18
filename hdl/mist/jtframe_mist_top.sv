@@ -16,19 +16,9 @@
     Version: 1.0
     Date: 22-2-2019 */
 
-`timescale 1ns/1ps
-
 // This is the MiST top level
-// It will instantiate the appropriate game core according
-// to the macro GAMETOP
-// It will get the config string for the microcontroller
-// from the include file conf_str.v
 
-`ifndef MISTTOP
-    `define MISTTOP top
-`endif
-
-module `MISTTOP(
+module mist_top(
     input   [1:0]   CLOCK_27,
     output  [5:0]   VGA_R,
     output  [5:0]   VGA_G,
@@ -73,7 +63,6 @@ localparam CONF_STR="JTGNG;;";
 `else
 // Config string
 `define SEPARATOR "",
-`include "conf_str.v"
 
 localparam CONF_STR = {
     `CORENAME,";;",
@@ -91,12 +80,8 @@ localparam CONF_STR = {
     // "OE,Separate Joysticks,Yes,No;",    // If no, then player 2 joystick
     //     // is assimilated to player 1 joystick
     // `endif
-    `ifdef MISTER_VIDEO_MIXER
-        "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
-    `else
-        `ifdef JTGNG_VGA
-            "O3,Screen filter,On,Off;",
-        `endif
+    `ifndef JTFRAME_SCAN2X
+    "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
     `endif
     `ifndef JTFRAME_OSD_NOSND    
         `ifdef JT12
@@ -122,7 +107,9 @@ localparam CONF_STR = {
     `ifdef JTFRAME_MRA_DIP
         "DIP;",
     `else
-        `CORE_OSD
+        `ifdef CORE_OSD
+            `CORE_OSD
+        `endif
     `endif
     "T0,RST;",
     "V,patreon.com/topapate;"
@@ -169,7 +156,7 @@ wire [COLORW-1:0] red;
 wire [COLORW-1:0] green;
 wire [COLORW-1:0] blue;
 
-wire LHBL_dly, LVBL_dly, hs, vs;
+wire LHBL, LVBL, hs, vs;
 wire [15:0] snd_left, snd_right;
 
 `ifndef STEREO_GAME
@@ -189,6 +176,8 @@ wire refresh_en;
 wire clk_vga_in, clk_vga, pll_locked;
 
 `ifdef JTFRAME_CLK96
+wire clk48;
+
 jtframe_pll96 u_pll_game (
     .inclk0 ( CLOCK_27[0] ),
     .c0     ( clk48       ), // 48 MHz
@@ -226,8 +215,8 @@ wire       pxl_cen, pxl2_cen;
 `ifdef SIMULATION
 assign sim_pxl_clk = clk_sys;
 assign sim_pxl_cen = pxl_cen;
-assign sim_vb = ~LVBL_dly;
-assign sim_hb = ~LHBL_dly;
+assign sim_vb = ~LVBL;
+assign sim_hb = ~LHBL;
 `endif
 
 `ifndef SIGNED_SND
@@ -262,8 +251,8 @@ u_frame(
     .game_r         ( red            ),
     .game_g         ( green          ),
     .game_b         ( blue           ),
-    .LHBL           ( LHBL_dly       ),
-    .LVBL           ( LVBL_dly       ),
+    .LHBL           ( LHBL           ),
+    .LVBL           ( LVBL           ),
     .hs             ( hs             ),
     .vs             ( vs             ),
     .pxl_cen        ( pxl_cen        ),
@@ -357,7 +346,7 @@ u_frame(
 `ifdef TESTINPUTS
     test_inputs u_test_inputs(
         .loop_rst       ( loop_rst       ),
-        .LVBL           ( LVBL_dly       ),
+        .LVBL           ( LVBL           ),
         .game_joystick1 ( game_joy1[6:0] ),
         .button_1p      ( game_start[0]  ),
         .coin_left      ( game_coin[0]   )
@@ -418,8 +407,8 @@ u_game(
     .red         ( red            ),
     .green       ( green          ),
     .blue        ( blue           ),
-    .LHBL_dly    ( LHBL_dly       ),
-    .LVBL_dly    ( LVBL_dly       ),
+    .LHBL_dly    ( LHBL           ),
+    .LVBL_dly    ( LVBL           ),
     .HS          ( hs             ),
     .VS          ( vs             ),
 

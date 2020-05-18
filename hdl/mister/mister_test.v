@@ -150,7 +150,13 @@ emu UUT(
     .sim_pxl_cen( pxl_cen       ),
     .sim_pxl_clk( pxl_clk       ),
     .sim_vb     ( VGA_VB        ),
-    .sim_hb     ( VGA_HB        )    
+    .sim_hb     ( VGA_HB        ),
+    // Unused
+    .USER_IN    ( 7'd0          ),
+    .USER_OSD   (               ),
+    .USER_MODE  (               ),
+    .USER_OUT   (               )
+    //.ioctl_file_ext(            )
 );
 
 endmodule

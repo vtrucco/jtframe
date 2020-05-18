@@ -44,7 +44,7 @@ module jtframe_dual_ram #(parameter dw=8, aw=10,
     input   [aw-1:0] addr1,
     input   we1,
     output reg [dw-1:0] q1
-    `ifdef SIMULATION
+    `ifdef JTFRAME_DUAL_RAM_DUMP
     ,input dump
     `endif
 );
@@ -99,7 +99,7 @@ always @(posedge clk1) begin
 end
 
 // Content dump for simulation debugging
-`ifdef SIMULATION
+`ifdef JTFRAME_DUAL_RAM_DUMP
 integer fdump=0, dumpcnt;
 
 always @(posedge dump) begin

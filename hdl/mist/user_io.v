@@ -403,7 +403,7 @@ always @(posedge clk_sys) begin
 	reg       key_extended_r;
 
 	if( rst ) begin
-		core_mod <= ~7'b0;
+		core_mod <= 7'b01; // see readme file for documentation on each bit
 	end else begin
 		//synchronize between SPI and sys clock domains
 		spi_receiver_strobeD <= spi_receiver_strobe_r;

@@ -64,7 +64,7 @@ wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
 reg               show;
 
-jtframe_ram #(.dw(9), .aw(MSGW),.synfile("msg.hex")) u_msg(
+jtframe_ram #(.dw(9), .aw(MSGW),.synbinfile("msg.bin")) u_msg(
     .clk    ( clk       ),
     .cen    ( 1'b1      ),
     .data   ( 9'd0      ),

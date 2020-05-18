@@ -9,8 +9,17 @@ module sync_fix
 reg pol;
 assign sync_out = sync_in ^ pol;
 
+integer pos, neg, cnt;
+
+`ifdef SIMULATION
+initial begin
+    pos = 0;
+    neg = 0;
+    cnt = 0;
+end
+`endif
+
 always @(posedge clk) begin
-    integer pos = 0, neg = 0, cnt = 0;
     reg s1,s2;
 
     s1 <= sync_in;
