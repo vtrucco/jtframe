@@ -56,6 +56,7 @@ JTFRAME=$MODULES/jtframe
 # This is the FTP host to which files will be copied
 HOST=mr
 FTP_FOLDER=JT
+CORESTAMP=$(date +"%Y%m%d")
 
 if [ ! -e "$JTFRAME" ]; then
     echo "ERROR: cannot locate jtframe folder."
@@ -221,15 +222,20 @@ function link_if_missing {
     fi
 }
 
+function report {
+    printf "%-14s\t%s\t%s\t%s\t%s\t%s\n" \
+        $PRJ $TARGET $CORESTAMP $SEED $1 "$(date +"%Y-%m-%d %T")">> $JTROOT/log/builds.log
+}
+
 echo ==============================================
 echo jt$PRJ $TARGET compilation starts at $(date +%T) with seed $SEED on $(hostname)
 if [ "$MACROS" != "" ]; then
-    echo Macros used: $MACROS
+    echo Explicit macros: $MACROS
 fi
 
 ################ compilation
 if [ $SKIP_COMPILE = FALSE ]; then
-    if ! which quartus_sh; then 
+    if ! which quartus_sh>/dev/null; then 
         echo "ERROR: cannot find quartus_sh in the path. Please add the correct path"
         echo "to the PATH environment variable"
         exit 1
@@ -261,7 +267,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
         fi
     fi
     if [ ! -e font0.hex ]; then
-        ln -sr $JTFRAME/bin/font0.hex
+        ln -srf $JTFRAME/bin/font0.hex
     fi
     ############################################3
     # Recompile
@@ -285,9 +291,15 @@ if [ $SKIP_COMPILE = FALSE ]; then
         if ! grep "Full Compilation was successful" "$LOG"; then
             grep -i error "$LOG" -A 2
             echo "ERROR while compiling the project. Aborting"
+            report FAIL
             exit 1
         fi
-        grep "Worst-case.*-[0-9.]*" "$LOG" || figlet PASS
+        if grep "Worst-case.*-[0-9.]*" "$LOG"; then
+            report FAIL
+        else
+            figlet PASS
+            report PASS
+        fi
     else
         # Simulation
         echo Preparing simulation netlist. Logfile:
@@ -317,7 +329,7 @@ if [ -z $RENAME ]; then
 else
     SHORT=jt$RENAME
 fi
-RELEASE=${SHORT}_$(date +"%Y%m%d")
+RELEASE=${SHORT}_$CORESTAMP
 
 if [ $SEED != 1 ]; then
     SEED_SUFFIX=_$SEED

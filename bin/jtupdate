@@ -1,5 +1,5 @@
 #!/bin/bash
-TARGET="mist mister sidi"
+TARGET=
 EXTRA="-d JTFRAME_RELEASE -g"
 NETWORK=
 DRYRUN=
@@ -8,7 +8,7 @@ CORES=".*"
 while [ $# -gt 0 ]; do
     case "$1" in
         -mister|-mist|-sidi)
-            TARGET=${1:1}
+            TARGET="$TARGET ${1:1}"
             ;;
         -target)
             shift
@@ -41,13 +41,13 @@ while [ $# -gt 0 ]; do
         -h | -help | --help)
             cat <<EOF
 Updates all JT cores. Usage:
-    jtupdate    update MiST target by default
+    jtupdate    -mist -sidi ...
 
     -mist   updates MiST target (uses all CPU cores, paralel compilation)
+    -sidi   updates MiST target (uses all CPU cores, paralel compilation)
     -mister updates MiSTer target (one JT core at a time)
     -all    updates both MiST and MiSTer
     -cores  list of cores to update as \"gng 1943\"
-    -sidi   compile for SiDi. Cannot update for SiDi and MiST at the same time
     -test   test build. Disables sound and HDMI. Does not define JTFRAME_RELEASE.
     :       options for jtcore script can be added after a colon
 EOF
@@ -64,12 +64,26 @@ EOF
     shift
 done
 
+if [ -z "$TARGET" ]; then
+    echo You need to specify a target platform.
+    exit 1
+fi
+
+TASKS=/tmp/$RANDOM_$RANDOM
+
 (
     for i in $TARGET; do 
         if [ -e $i.cores ]; then cat $i.cores; fi; 
     done 
-) | grep "$CORES" | 
-parallel --no-run-if-empty --colsep " "  --shuf  --workdir $JTROOT \
+) | grep "$CORES" > $TASKS
+
+if [ $(cat $TASKS|wc -l) = 0 ]; then
+    echo no target.cores files were found. For example mister.cores.
+    echo jtupdate must be called from the folder where these files exist.
+    exit 1
+fi
+
+cat $TASKS | parallel --no-run-if-empty --colsep " "  --shuf  --workdir $JTROOT \
     $DRYRUN $NETWORK \
     --delay 0.25 $JTFRAME/bin/jtcore {} $EXTRA | tee $JTROOT/log/update.log    
 
