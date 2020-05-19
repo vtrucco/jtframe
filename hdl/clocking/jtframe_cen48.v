@@ -78,17 +78,20 @@ module jtframe_cen3p57(
     output reg cen_1p78
 );
 
-wire [10:0] step=11'd105;
-wire [10:0] lim =11'd1408;
-wire [10:0] absmax = lim+step;
+parameter CLK24=0;
+
+localparam [10:0] STEP=11'd105<<CLK24;
+localparam [10:0] LIM    = 11'd1408;
+
+wire [10:0] absmax = LIM+STEP;
 
 reg  [10:0] cencnt=11'd0;
 reg  [10:0] next;
 reg  [10:0] next2;
 
 always @(*) begin
-    next  = cencnt+11'd105;
-    next2 = next-lim;
+    next  = cencnt+STEP;
+    next2 = next-LIM;
 end
 
 reg alt=1'b0;
@@ -101,7 +104,7 @@ always @(posedge clk) begin
         cencnt <= 11'd0;
         alt    <= 1'b0;
     end else
-    if( next >= lim ) begin
+    if( next >= LIM ) begin
         cencnt <= next2;
         cen_3p57 <= 1'b1;
         alt    <= ~alt;
@@ -119,11 +122,14 @@ module jtframe_cenp384(
     output reg cen_p384
 );
 
+parameter CLK24=0;
+localparam [6:0] STEP=7'd1<<CLK24;
+
 reg  [6:0] cencnt=7'd0;
 
 always @(posedge clk) begin
     cen_p384 <= 1'b0;
-    cencnt <= cencnt+7'd1;
+    cencnt <= cencnt+STEP;
     if( cencnt >= 7'd124 ) begin
         cencnt   <= 7'd0;
         cen_p384 <= 1'b1;
@@ -158,4 +164,5 @@ always @(posedge clk) begin
         muxcnt <= muxcnt[2] ? 3'd1 : muxcnt + 3'b1;
     end
 end
-endmodule // jtgng_cen
+endmodule
+
