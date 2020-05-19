@@ -223,8 +223,13 @@ function link_if_missing {
 }
 
 function report {
-    printf "%-14s\t%s\t%s\t%s\t%s\t%s\n" \
-        $PRJ $TARGET $CORESTAMP $SEED $1 "$(date +"%Y-%m-%d %T")">> $JTROOT/log/builds.log
+    PRJCOMMIT=$(git rev-parse --short HEAD)
+    cd $JTFRAME
+    JTFRAMECOMMIT=$(git rev-parse --short HEAD)
+    cd -
+    printf "%-14s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+        $PRJ $TARGET $CORESTAMP $SEED $1 \
+        $PRJCOMMIT $JTFRAMECOMMIT >> $JTROOT/log/builds.log
 }
 
 echo ==============================================
