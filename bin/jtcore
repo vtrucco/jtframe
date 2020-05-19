@@ -16,7 +16,7 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
                     DEBUG_NOHDMI        skips MiSTer HDMI related logic. Speeds up compilation.
     -qq         very quick compilation. Defines NOSUND and DEBUG_NOHDMI. Sets MiSTer as target.
     -credits    Defines NOSOUND, DEBUG_NOHDMI and NOMAIN. Sets MiSTer as target.
-    -q | -quick quick compilation. Defines NOSUND.
+    -q | -quick quick compilation. Defines NOSUND and OSD_NOBCK
     -ftp-folder Destination folder in MiSTer FTP to which final RBF will be copied
                 The full name is made by preceding this by a _
                 and adding /cores after it.
@@ -140,9 +140,9 @@ function parse_args {
                 MACROS="$1 $MACROS"
                 ;;
             -q|-quick)
-                MACROS="$MACROS NOSOUND";;
+                MACROS="$MACROS NOSOUND OSD_NOBCK";;
             -qq|-veryquick)
-                MACROS="$MACROS NOSOUND DEBUG_NOHDMI"
+                MACROS="$MACROS NOSOUND OSD_NOBCK DEBUG_NOHDMI"
                 TARGET=mister;;
             -credits)
                 MACROS="$MACROS NOSOUND DEBUG_NOHDMI NOMAIN"
