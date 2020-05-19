@@ -35,16 +35,17 @@ generate
     for (i=0; i < W; i=i+1) begin: flip_flop
         always @(posedge clk) begin
             if(rst) begin
-                q[i] <= 1'b0;
-                qn[i] <= 1'b1;
+                q[i]         <= 0;
+                qn[i]        <= 1;
+                last_edge[i] <= 1;
             end
-            else if(cen) begin
+            else begin
                 last_edge[i] <= sigedge[i];
-                if( clr[i] ) begin
+                if( cen && clr[i] ) begin
                     q[i]  <= 1'b0;
                     qn[i] <= 1'b1;
                 end else
-                if( set[i] ) begin
+                if( cen && set[i] ) begin
                     q[i]  <= 1'b1;
                     qn[i] <= 1'b0;
                 end else

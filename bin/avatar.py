@@ -159,8 +159,12 @@ corename=sys.argv[1]
 
 if os.path.exists(jtroot_path+"cores/"):
     corepath=jtroot_path+"cores/"+corename
+    jtroot_path=jtroot_path+"cores/"
 else:
     corepath=jtroot_path
+
+print "corepath=", corepath
+print "jtroot_path=", jtroot_path
 
 avatar_filename = corepath+"/patrons/avatars"
 file = open( avatar_filename )
