@@ -763,7 +763,7 @@ for_siu_edge:
       s_ext1isr_d <= '0';
       s_ext1isrh_d <= '0';
     else
-      if Rising_Edge(clk) and clk='1' and cen='1' then  
+      if Rising_Edge(clk) and cen='1' then  
 
         state <= s_nextstate;                        -- update current state
 
@@ -933,7 +933,7 @@ for_siu_edge:
       sbuf <= (others => (others => '0'));
       ssel <= conv_unsigned(0,8);                          
       p2 <= conv_unsigned(255,8);                            
-      ie <= conv_std_logic_vector(0,8);                            
+      ie <= conv_std_logic_vector(0,8);
       p3 <= conv_unsigned(255,8);                            
       ip <= conv_std_logic_vector(0,8);                            
       psw <= conv_std_logic_vector(0,8);  

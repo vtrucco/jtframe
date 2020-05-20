@@ -61,7 +61,7 @@ initial begin
         f=$fopen(simfile,"rb");
         if( f != 0 ) begin
             readcnt=$fread( mem, f );
-            $display("INFO: Read %s (%d byes) for %m",simfile, readcnt);
+            $display("INFO: Read %s (%d bytes) for %m",simfile, readcnt);
             $fclose(f);
         end else begin
             $display("WARNING: %m cannot open file: %s", simfile);
@@ -70,11 +70,11 @@ initial begin
     else begin
         if( simhexfile != "" ) begin
             $readmemh(simhexfile,mem);
-            $display("INFO: Read %s for %m", simhexfile);
+            $display("INFO: Read %s (hex) for %m", simhexfile);
         end else begin
             if( synfile!= "" ) begin
                 $readmemh(synfile,mem);
-                $display("INFO: Read %s for %m", synfile);
+                $display("INFO: Read %s (hex) for %m", synfile);
             end else
                 for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
                     mem[readcnt] = {dw{1'b0}};
