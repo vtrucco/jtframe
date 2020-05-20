@@ -25,7 +25,17 @@ BEGIN {
         fixed=gensub(/\"/, "\\\\\"", "g" )
         if( match(fixed,"=")==0 )
             fixed=fixed "=<None>"
-        printf "set_global_assignment -name VERILOG_MACRO \"%s\"\n",fixed
+        switch(mode) {
+        case "ncverilog":
+            printf "+define+%s\n",$0
+            break
+        case "iverilog":
+            printf "-D %s\n",$0
+            break
+        default:
+            printf "set_global_assignment -name VERILOG_MACRO \"%s\"\n",fixed
+            break
+        }
     }
     next
 }

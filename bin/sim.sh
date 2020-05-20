@@ -11,8 +11,10 @@ MAXFRAME=
 SIM_MS=1
 SIMULATOR=iverilog
 TOP=game_test
+TARGET=
 MIST=
 MIST_PLL=
+DEFFILE=
 PLL_FILE=$JTROOT/modules/jtframe/hdl/clocking/fast_pll.v
 SIMFILE=sim.f
 MACROPREFIX=-D
@@ -162,6 +164,14 @@ case "$1" in
         ;;
     -test)
         EXTRA="$EXTRA ${MACROPREFIX}DIP_TEST";;
+    -def)
+        shift
+        if [ ! -e "$1" ]; then
+            echo "Cannot find macro definition file $1"
+            exit 1
+        fi
+        DEFFILE="$1"
+        ;;
     -pause)
         EXTRA="$EXTRA ${MACROPREFIX}DIP_PAUSE";;
     "-frame")
@@ -184,6 +194,7 @@ case "$1" in
     #################### MiST setup
     "-mist")
         TOP=mist_test
+        TARGET=mist
         if [ $SIMULATOR = iverilog ]; then
             MIST=$(add_dir $JTFRAME/hdl/mist mist.f)
         else
@@ -206,6 +217,7 @@ case "$1" in
     #################### MiSTer setup
     -mister|-mr)
         TOP=mister_test
+        TARGET=mister
         if [ $SIMULATOR = iverilog ]; then
             MIST=$(add_dir $JTFRAME/hdl/mister mister.f)
         else
@@ -359,6 +371,7 @@ JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
         SIMINFO         Show simulation options available thorugh define commands
         SCANDOUBLER_DISABLE=1   Disables the scan doubler module
     -deep     Save all signals for scope verification
+    -def      Path to a macro definition file to add to simulation
     -frame    Number of frames to simulate
     -lint     Run verilator as lint tool
     -load     Load the ROM file using the SPI communication. Slower.
@@ -428,6 +441,15 @@ if [[ $TOP = mist_test || $TOP = mister_test ]]; then
     MIST="$MIST $PLL_FILE"
 fi
 
+# Search for a macro definition file
+# Only supported for iverilog and ncverilog
+if [ -n "$DEFFILE" ]; then
+    awk -f $JTFRAME/bin/jtmacros.awk target=$TARGET mode=$SIMULATOR $DEFFILE > core.def
+    COREDEF="-f core.def"
+else
+    COREDEF=
+fi
+
 case $SIMULATOR in
 iverilog)
     $SHOWCMD iverilog -g2005-sv $MIST \
@@ -436,7 +458,7 @@ iverilog)
         $JTFRAME/hdl/cpu/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
-        $MAXFRAME -DIVERILOG $EXTRA \
+        $MAXFRAME -DIVERILOG $COREDEF $EXTRA \
     || exit 1
     $SHOWCMD sim -lxt;;
 ncverilog)
@@ -447,7 +469,7 @@ ncverilog)
         $DUMP $LOADROM \
         $MAXFRAME \
         -ncvhdl_args,-V93 $JTFRAME/hdl/cpu/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
-        $EXTRA_VHDL \
+        $EXTRA_VHDL $COREDEF \
         $JTFRAME/hdl/cpu/tv80/*.v \
         $EXTRA -l /dev/null || exit $?;;
 verilator)

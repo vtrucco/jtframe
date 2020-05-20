@@ -891,7 +891,7 @@ for_siu_edge:
 -- outputs: SFR, gprbit
 ------------------------------------------------------------------------------ 
  
-  p_write_ram : process (reset,clk) 
+  p_write_ram : process (reset,clk,cen) 
   begin
     if reset='1' then 
       ram_en_o <= '0'; 
