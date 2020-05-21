@@ -49,7 +49,8 @@ source ${MODULES}/jtframe/hdl/mister/sys/sys.tcl
 source ${MODULES}/jtframe/hdl/mister/sys/sys_analog.tcl
 
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:${MODULES}/jtframe/hdl/mister/sys/build_id.tcl"
-set_global_assignment -name SDC_FILE ${MODULES}/jtframe/hdl/mister/sys/sys_top.sdc
+# SDC file is copied and edited in the target folder
+set_global_assignment -name SDC_FILE sys_top.sdc
 
 # MiSTer Framework
 set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mister/sys/pll.qip

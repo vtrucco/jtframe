@@ -192,7 +192,24 @@ clk6                 | JTFRAME_CLK6
 clk24                | JTFRAME_CLK24
 clk48                | JTFRAME_CLK96
 
-Note that although clk6 and clk24 are obtained without affecting the main clock input, if **JTFRAME_CLK96** is defined, the main clock input moves up from 48MHz to 96MHz. The 48MHz clock can the be obtained from clk48.
+Note that although clk6 and clk24 are obtained without affecting the main clock input, if **JTFRAME_CLK96** is defined, the main clock input moves up from 48MHz to 96MHz. The 48MHz clock can the be obtained from clk48. This implies that the SDRAM will be clocked at 96MHz instead of 48MHz. The constraints in the SDC files have to match this clock variation.
+
+If STA was to be run on these pins, the SDRAM clock would have to be assigned the correct PLL output in the SDC file but this is hard to do because the TCL language subset used by Quartus seems to lack control flow statements. So we are required to do another text edit hack on the fly, which is not nice. Apart from changing the PLL output, when using 96MHz clock the input data should have a multicycle path constraint as it takes an extra clock cycle for the data to be ready. If you just change the PLL clock then you'll find plenty of timing problems unless you define the multicycle path constraint.
+
+This is the code needed:
+
+```
+create_generated_clock -name SDRAM_CLK -source \
+    [get_pins {emu|pll|pll_inst|altera_pll_i|general[5].gpll~PLL_OUTPUT_COUNTER|divclk}] \
+    -divide_by 1 \
+    [get_ports SDRAM_CLK]
+
+set_multicycle_path -from [get_ports {SDRAM_DQ[*]}] -to [get_clocks {emu|pll|pll_inst|altera_pll_i|general[4].gpll~PLL_OUTPUT_COUNTER|divclk}] -setup -end 2
+
+set_multicycle_path -from [get_ports {SDRAM_DQ[*]}] -to [get_clocks {emu|pll|pll_inst|altera_pll_i|general[4].gpll~PLL_OUTPUT_COUNTER|divclk}] -hold -end 2
+```
+
+The script **jtcore** handles this process transparently.
 
 By default unless **JTFRAME_MR_FASTIO** is already defined, **JTFRAME_CLK96** will define it to 1. This enables fast ROM download in MiSTer using 16-bit mode in _hps_io_.
 

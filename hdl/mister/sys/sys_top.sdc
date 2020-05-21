@@ -8,13 +8,6 @@ create_clock -period "100.0 MHz" [get_pins -compatibility_mode spi|sclk_out] -na
 derive_pll_clocks
 derive_clock_uncertainty
 
-
-create_generated_clock -name SDRAM_CLK -source \
-    [get_pins {emu|pll|pll_inst|altera_pll_i|general[1].gpll~PLL_OUTPUT_COUNTER|divclk}] \
-    -divide_by 1 \
-    [get_ports SDRAM_CLK]
-
-
 # Decouple different clock groups (to simplify routing)
 set_clock_groups -exclusive \
    -group [get_clocks { *|pll|pll_inst|altera_pll_i|*[*].*|divclk}] \
