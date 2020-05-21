@@ -73,7 +73,7 @@ TASKS=/tmp/$RANDOM_$RANDOM
 
 (
     for i in $TARGET; do 
-        if [ -e $i.cores ]; then cat $i.cores; fi; 
+        if [ -e $i.cores ]; then cat $i.cores; echo ; fi; 
     done 
 ) | grep "$CORES" > $TASKS
 
