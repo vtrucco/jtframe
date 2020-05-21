@@ -286,10 +286,6 @@ if [ $SKIP_COMPILE = FALSE ]; then
         echo -e "\n" set_global_assignment -name VERILOG_MACRO \"$m\" >> jt$PRJ.qsf
     done
     echo -e "\nset_global_assignment -name seed $SEED" >> jt$PRJ.qsf
-    # Prepare MiSTer QIP file
-    MRFW=$JTFRAME/hdl/mister/template/sys
-    sed s/osd.v/d/ $MRFW/sys.qip > $MRFW/custom-sys.qip
-    sed -i s/hps_io.v/d/ $MRFW/custom-sys.qip
     if [ $SIM = FALSE ]; then
         # Compilation
         quartus_sh --flow compile jt$PRJ > "$LOG"
