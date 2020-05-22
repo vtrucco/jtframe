@@ -47,6 +47,10 @@ set_false_path -from {FB_BASE[*] FB_BASE[*] FB_WIDTH[*] FB_HEIGHT[*] FB_HMIN[*] 
 set_false_path -to   {vol_att[*] scaler_flt[*] led_overtake[*] led_state[*]}
 set_false_path -from {vol_att[*] scaler_flt[*] led_overtake[*] led_state[*]}
 
+set_false_path -from [get_keepers {emu:emu|jtframe_mister:u_frame|hps_io:u_hps_io|ioctl_index[*]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|game_rst}]
+
+set_false_path -from [get_keepers {emu:emu|jtframe_mister:u_frame|hps_io:u_hps_io|ioctl_download}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|game_rst}]
+
 #**************************************************************
 # Set Input Delay
 #**************************************************************

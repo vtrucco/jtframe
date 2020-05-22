@@ -209,6 +209,8 @@ set_multicycle_path -from [get_ports {SDRAM_DQ[*]}] -to [get_clocks {emu|pll|pll
 set_multicycle_path -from [get_ports {SDRAM_DQ[*]}] -to [get_clocks {emu|pll|pll_inst|altera_pll_i|general[4].gpll~PLL_OUTPUT_COUNTER|divclk}] -hold -end 2
 ```
 
+This only applies to MiSTer. For MiST the approach is different and there are two different PLL modules which produce the SDRAM clock at the same pin. So a single `create_generated_clock` applies to both. Due to different SDRAM shifts used, the multicycle path constraint does not seem needed in MiST.
+
 The script **jtcore** handles this process transparently.
 
 By default unless **JTFRAME_MR_FASTIO** is already defined, **JTFRAME_CLK96** will define it to 1. This enables fast ROM download in MiSTer using 16-bit mode in _hps_io_.
