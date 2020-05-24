@@ -5,6 +5,7 @@ jtframe_mist_base.v
 ../sound/hybrid_pwm_sd.v
 -sv user_io.v
 data_io.v
+../keyboard/jtframe_4wayjoy.v
 ../ver/spitx.v
 ../ver/video_dump.v
 ../video/jtgng_vga.v
