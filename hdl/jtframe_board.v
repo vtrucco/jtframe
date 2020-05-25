@@ -137,7 +137,6 @@ module jtframe_board #(parameter
 wire  [ 2:0]  scanlines;
 wire          en_mixing;
 wire          osd_pause;
-reg           last_osdpause;
 
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
 wire key_reset, key_pause, rot_control;
@@ -325,7 +324,6 @@ always @(posedge clk_sys)
         soft_rst     <= 1'b0;
         gfx_en       <= 4'hf;
     end else begin
-        last_osdpause<= osd_pause;
         last_pause   <= key_pause;
         last_reset   <= key_reset;
         last_joypause <= joy_pause; // joy is active low!
@@ -363,7 +361,7 @@ always @(posedge clk_sys)
         if( downloading )
             game_pause<=0;
         else // toggle
-            if( (key_pause && !last_pause) || (joy_pause && !last_joypause) || (osd_pause&&!last_osdpause))
+            if( (key_pause && !last_pause) || (joy_pause && !last_joypause) || osd_pause)
                 game_pause   <= ~game_pause;
         `else 
         game_pause <= 1'b1;

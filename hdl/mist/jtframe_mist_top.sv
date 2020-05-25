@@ -101,7 +101,7 @@ localparam CONF_STR = {
     "OA,Test mode,Off,On;",
     `endif
     `ifndef JTFRAME_OSD_NOCREDITS
-    "TC,Credits,Off,On;",
+    "OC,Credits,Off,On;",
     `endif
     `SEPARATOR
     `ifdef JTFRAME_MRA_DIP

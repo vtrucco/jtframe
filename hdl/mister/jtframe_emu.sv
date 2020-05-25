@@ -163,7 +163,7 @@ localparam CONF_STR = {
     "OMN,Serial SNAC DB15,Off,1 Player,2 Players;",    
     "R0,Reset;",
     `ifndef JTFRAME_OSD_NOCREDITS
-    "TC,Credits,Off,On;",
+    "OC,Credits,Off,On;",
     `endif
     `ifdef CORE_KEYMAP
     `CORE_KEYMAP
