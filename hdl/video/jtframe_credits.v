@@ -334,12 +334,18 @@ wire [COLW*3-1:0] dim = { 1'b0, old2[R1:R0+1], 1'b0, old2[G1:G0+1], 1'b0, old2[B
 
 function [COLW*3-1:0] extend;
     input [11:0] rgb4;
-    extend = COLW==4 ? rgb4 :
+    extend = 
+        COLW==5 ? {
+            rgb4[11:8], rgb4[11],
+            rgb4[7:4],  rgb4[7],
+            rgb4[3:0],  rgb4[3]
+        } : (
+        COLW==4 ? rgb4 :
         { 
             rgb4[11:8], rgb4[11:8],
             rgb4[7:4],  rgb4[7:4],
             rgb4[3:0],  rgb4[3:0]
-        };
+        });
 endfunction
 
 always @(posedge clk, posedge rst) begin
