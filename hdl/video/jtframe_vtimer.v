@@ -50,6 +50,7 @@ initial begin
 end
 `endif
 
+// Default values suit Contra arcade
 parameter [8:0] V_START  = 9'd0,
                 VB_START = 9'd239,
                 VB_END   = 9'd255,
@@ -57,8 +58,8 @@ parameter [8:0] V_START  = 9'd0,
                 VS_END   = (VS_START+9'd3),
                 HB_END   = 9'd395,
                 HB_START = HB_END-9'd116,
-                HS_START = 9'h130,
-                HS_END   = HS_START+9'h10;
+                HS_START = 9'd330,
+                HS_END   = HS_START+9'd27; // Default 4.5us for a 6MHz clock
 
 // H counter
 always @(posedge clk) if(pxl_cen) begin
