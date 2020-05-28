@@ -77,6 +77,7 @@ void makeROM( Node& root, Game* g ) {
     }
     n.add_attr("zip",zips);
     n.add_attr("type","merged");
+    n.add_attr("md5","None"); // important or MiSTer will not let the game boot
     for( ROMRegion* region : g->getRegionList() ) {
         n.comment( region->name );
         for( ROM* r : region->roms ) {
