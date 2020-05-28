@@ -98,8 +98,6 @@ module emu
     // 1 - D-/TX
     // 2..6 - USR2..USR6
     // Set USER_OUT to 1 to read from USER_IN.
-    output        USER_OSD,
-    output        USER_MODE,
     input   [6:0] USER_IN,
     output  [6:0] USER_OUT
     `ifdef SIMULATION
@@ -160,7 +158,6 @@ localparam CONF_STR = {
     `CORE_OSD
     `endif
     `SEPARATOR
-    "OMN,Serial SNAC DB15,Off,1 Player,2 Players;",    
     "R0,Reset;",
     `ifndef JTFRAME_OSD_NOCREDITS
     "OC,Credits,Off,On;",
@@ -180,9 +177,7 @@ assign VGA_F1=1'b0;
 wire   field;
 assign VGA_F1=field;
 `endif
-
-wire JOY_CLK, JOY_LOAD;
-wire JOY_DATA = USER_IN[5];
+assign USER_OUT = '1;
 
 wire [3:0] hoffset, voffset;
 
@@ -263,12 +258,6 @@ wire        rst_req   = RESET | status[0] | buttons[1];
 assign LED_DISK  = 2'b0;
 assign LED_POWER = 2'b0;
 
-parameter SNAC_B1 = 22;
-parameter SNAC_B0 = 21;
-
-assign USER_OUT  = |status[SNAC_B1:SNAC_B0] ? {5'b11111,JOY_CLK,JOY_LOAD} : '1;
-assign USER_MODE = |status[SNAC_B1:SNAC_B0];
-
 // SDRAM
 wire         loop_rst;
 wire         sdram_req;
@@ -318,9 +307,7 @@ localparam BUTTONS=`BUTTONS;
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
     .BUTTONS       ( BUTTONS        ),
-    .COLORW        ( COLORW         ),
-    .SNAC_B1       ( SNAC_B1        ),
-    .SNAC_B0       ( SNAC_B0        )
+    .COLORW        ( COLORW         )
     `ifdef VIDEO_WIDTH
     ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
     `endif
@@ -433,11 +420,6 @@ u_frame(
     .scan2x_clk     ( VGA_CLK        ),
     .scan2x_cen     ( VGA_CE         ),
     .scan2x_de      ( VGA_DE         ),
-     //DB15
-    .JOY_CLK        ( JOY_CLK        ),
-    .JOY_LOAD       ( JOY_LOAD       ),
-    .JOY_DATA       ( JOY_DATA       ),
-    .USER_OSD       ( USER_OSD       ), 
     // Debug
     .gfx_en         ( gfx_en         )
 );

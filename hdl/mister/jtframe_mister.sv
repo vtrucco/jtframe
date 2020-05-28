@@ -24,9 +24,7 @@ module jtframe_mister #(parameter
     CONF_STR                = "",
     COLORW                  = 4,
     VIDEO_WIDTH             = 384,
-    VIDEO_HEIGHT            = 224,
-    SNAC_B1                 = 22,   // position of SNAC cfg bits in status word
-    SNAC_B0                 = 21
+    VIDEO_HEIGHT            = 224
 )(
     input           clk_sys,
     input           clk_rom,
@@ -133,17 +131,11 @@ module jtframe_mister #(parameter
     inout             dip_flip,
     output    [ 1:0]  dip_fxlevel,
     output    [31:0]  dipsw,
-    //DB15 
-    output            JOY_CLK,
-    output            JOY_LOAD,
-    input             JOY_DATA,
-    output            USER_OSD,
     // Debug
     output            LED,
     output   [3:0]    gfx_en
 );
 
-wire [15:0] joydb15_1,joydb15_2;
 wire [21:0] gamma_bus;
 
 wire [ 7:0] ioctl_index;
@@ -156,26 +148,8 @@ assign { voffset, hoffset } = status[31:24];
 
 assign downloading = ioctl_download &&ioctl_index==8'd0;
 assign LED  = downloading | dwnld_busy;
-assign USER_OSD = joydb15_1[10] & joydb15_1[6];
 
-// control
-joy_db15 joy_db15
-(
-  .clk       ( clk_sys   ), //48MHz
-  .JOY_CLK   ( JOY_CLK   ),
-  .JOY_DATA  ( JOY_DATA  ),
-  .JOY_LOAD  ( JOY_LOAD  ),
-  .joystick1 ( joydb15_1 ),
-  .joystick2 ( joydb15_2 )    
-);
-
-wire [1:0]    snac = status[SNAC_B1:SNAC_B0]; // Options MN
-
-wire [15:0]   joystick_USB_1, joystick_USB_2, joystick_USB_3, joystick_USB_4;
-wire [15:0]   joystick1 = |snac ? {BUTTONS<6 ? joydb15_1[9] : 1'b0,joydb15_1[11],joydb15_1[10],joydb15_1[3+BUTTONS:0]} : joystick_USB_1;
-wire [15:0]   joystick2 =  snac[1]   ? {BUTTONS<6 ? joydb15_2[9] : 1'b0,joydb15_2[11],joydb15_2[10],joydb15_2[3+BUTTONS:0]} : snac[0] ? joystick_USB_1 : joystick_USB_2;
-wire [15:0]   joystick3 =  snac[1]   ? joystick_USB_1 : (snac[0] ? joystick_USB_2 : joystick_USB_3);
-wire [15:0]   joystick4 =  snac[1]   ? joystick_USB_2 : (snac[0] ? joystick_USB_3 : joystick_USB_4);
+wire [15:0]   joystick1, joystick2, joystick3, joystick4;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire          force_scan2x, direct_video;
 
@@ -352,11 +326,10 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .ioctl_dout      ( dwnld_data     ),
     .ioctl_index     ( ioctl_index    ),
 
-    .joy_raw         ( joydb15_1[5:0] ),   
-    .joystick_0      ( joystick_USB_1 ),
-    .joystick_1      ( joystick_USB_2 ),
-    .joystick_2      ( joystick_USB_3 ),
-    .joystick_3      ( joystick_USB_4 ),
+    .joystick_0      ( joystick1      ),
+    .joystick_1      ( joystick2      ),
+    .joystick_2      ( joystick3      ),
+    .joystick_3      ( joystick4      ),
     .joystick_analog_0( joystick_analog_0   ),
     .joystick_analog_1( joystick_analog_1   ),
     .ps2_kbd_clk_out ( ps2_kbd_clk    ),

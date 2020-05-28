@@ -1,5 +1,6 @@
 set_global_assignment -name QIP_FILE           [join [list $::quartus(qip_path) template/sys/pll_q [regexp -inline {[0-9]+} $quartus(version)] .qip] {}]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) template/sys/sys_top.v ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) template/sys/hps_io.v ]
 set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) template/sys/sys_top.sdc ]
 set_global_assignment -name VHDL_FILE          [file join $::quartus(qip_path) template/sys/ascal.vhd ]
 set_global_assignment -name VHDL_FILE          [file join $::quartus(qip_path) template/sys/pll_hdmi_adj.vhd ]
