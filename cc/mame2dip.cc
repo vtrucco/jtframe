@@ -16,6 +16,7 @@ set<string> swapregions;
 set<string> fillregions;
 set<string> ignoreregions;
 map<string,int> startregions;
+map<string,int> fracregions;
 
 int main(int argc, char * argv[] ) {
     bool print=false;
@@ -41,6 +42,12 @@ int main(int argc, char * argv[] ) {
         }
         if( a=="-ignore" ) {
             ignoreregions.insert(string(argv[++k]));
+            continue;
+        }
+        if( a=="-frac" ) {
+            string reg(argv[++k]);
+            int frac=strtol( argv[++k], NULL, 0 );
+            fracregions[reg]=frac;
             continue;
         }
         if( a=="-rbf" ) {
@@ -135,28 +142,79 @@ void makeROM( Node& root, Game* g ) {
         snprintf(title,128,"%s - starts at 0x%X", region->name.c_str(), dumped );
         n.comment( title );
         bool swap = swapregions.count(region->name)>0;
-        bool fill = fillregions.count(region->name)>0;        
-        Node& parent = swap ? n.add("interleave") : n;
-        if( swap ) parent.add_attr("output","16");
-        int offset=0;
-        for( ROM* r : region->roms ) {
-            // Fill in gaps between ROM chips
-            if( offset != r->offset && fill) {
-                Node& part = parent.add("part","FF");
-                int rep = r->offset - offset;
-                char buf[32];
-                snprintf(buf,32,"0x%X",rep);
-                part.add_attr("repeat",buf);
-                dumped += rep;
+        bool fill = fillregions.count(region->name)>0;     
+        // is it a fractioned region?
+        auto frac_idx = fracregions.find(region->name);
+        int frac=0;
+        if( frac_idx!= fracregions.end() ) {
+            frac = frac_idx->second;
+        }
+        string frac_output="0";
+        switch( frac ) {
+            case 2: frac_output="16"; break;
+            case 4: frac_output="32"; break;
+            case 0: break;
+            default: cout << "WARNING: unsupported frac value for region " 
+                          << region->name << "\n"; 
+                     continue;
+        }
+        if( frac==0 ) {
+            int offset=0;
+            for( ROM* r : region->roms ) {
+                // Fill in gaps between ROM chips
+                if( offset != r->offset && fill) {
+                    Node& part = n.add("part","FF");
+                    int rep = r->offset - offset;
+                    char buf[32];
+                    snprintf(buf,32,"0x%X",rep);
+                    part.add_attr("repeat",buf);
+                    dumped += rep;
+                }
+                Node& parent = swap ? n.add("interleave") : n;
+                if( swap ) {
+                    parent.add_attr("output","16");
+                }
+                Node& part = parent.add("part");
+                part.add_attr("name",r->name);
+                part.add_attr("crc",r->crc);
+                if( swap ) {
+                    part.add_attr("map","12");
+                }
+                offset = r->offset + r->size;
+                dumped += r->size;
             }
-            Node& part = parent.add("part");
-            part.add_attr("name",r->name);
-            part.add_attr("crc",r->crc);
-            if( swap ) {
-                part.add_attr("map","12");
+        } else {
+            // Fractioned ROMs
+            // First check that the count is correct
+            if( region->roms.size()%frac != 0 ) {
+                cout << "WARNING: Total number of ROM entries does not much fraction value"
+                    " for region " << region->name << "\n";
+                continue;
             }
-            offset = r->offset + r->size;
-            dumped += r->size;
+            const int roms_size = region->roms.size();
+            ROM** roms = new ROM*[roms_size];
+            int aux=0;
+            int step=roms_size/frac;
+            for( ROM* r : region->roms ) roms[aux++] = r;
+            // Dump ROMs
+            for( aux=0; aux<roms_size/frac; aux++ ) {
+                Node& inter=n.add("interleave");
+                inter.add_attr("output",frac_output);
+                for( int chunk=0; chunk<frac; chunk++) {
+                    ROM*r = roms[aux+chunk*step];
+                    Node& part = inter.add("part");
+                    part.add_attr("name",r->name);
+                    part.add_attr("crc",r->crc);
+                    char *mapping = new char[frac+1];
+                    for( int k=0; k<frac; k++ ) mapping[k]='0';
+                    mapping[frac]=0;
+                    mapping[frac-1-chunk]='1';
+                    part.add_attr("map",mapping);
+                    delete[] mapping;
+                    dumped += r->size;
+                }
+            }
+            delete[] roms;
         }
     }
     char endsize[128];
