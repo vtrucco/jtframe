@@ -56,7 +56,8 @@ class Game {
     ListRegions regions;
 public:
     std::string name, full_name, cloneof;
-    Game( std::string _name ) : name(_name) {}
+    int rotate;
+    Game( std::string _name ) : name(_name), rotate(0) {}
     ~Game();
 
     void addDIP( DIPsw* d );

@@ -57,6 +57,10 @@ void MameParser::startElement( const XMLCh *const uri,
     if( _localname == "rom" ) {
         parse_rom( attrs );
     }
+    if( _localname == "display" ) {
+        GET_STR_ATTR( rotate );
+        current->rotate = atol(rotate.c_str());
+    }
 }
 
 void MameParser::endElement( const XMLCh *const uri,

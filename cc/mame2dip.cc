@@ -10,13 +10,17 @@
 
 using namespace std;
 
-void makeMRA( Game* g );
+void makeMRA( Game* g, string& rbf );
 
 set<string> swapregions;
+set<string> fillregions;
+set<string> ignoreregions;
+map<string,int> startregions;
 
 int main(int argc, char * argv[] ) {
     bool print=false;
     string fname="mame.xml";
+    string rbf;
     bool   fname_assigned=false;
 
     for( int k=1; k<argc; k++ ) {
@@ -25,11 +29,34 @@ int main(int argc, char * argv[] ) {
             swapregions.insert(string(argv[++k]));
             continue;
         }
+        if( a=="-fill" ) {
+            fillregions.insert(string(argv[++k]));
+            continue;
+        }
+        if( a=="-start" ) {
+            string reg(argv[++k]);
+            int offset=strtol( argv[++k], NULL, 0 );
+            startregions[reg]=offset;
+            continue;
+        }
+        if( a=="-ignore" ) {
+            ignoreregions.insert(string(argv[++k]));
+            continue;
+        }
+        if( a=="-rbf" ) {
+            rbf =argv[++k];
+            continue;
+        }
         if( a == "-help" || a =="-h" ) {
             cout << "mame2dip: converts MAME dipswitch definition to MRA format\n"
                     "          by Jose Tejada. Part of JTFRAME\n"
                     "Usage:\n"
                     "          first argument:  path to file containing 'mame -listxml' output\n"
+                    "    -swapbytes <region> swap bytes for named region\n"
+                    "    -fill <region>      fill gaps between files within region\n"
+                    "    -ignore <region>    ignore a given region\n"
+                    "    -start <region>     set start of region in MRA file\n"
+                    "    -rbf   <name>       set RBF file name\n"
             ;
             return 0;
         }
@@ -45,7 +72,7 @@ int main(int argc, char * argv[] ) {
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
         cout << g.second->name << '\n';
-        makeMRA(g.second);
+        makeMRA(g.second, rbf);
     }
     return 0;
 }
@@ -86,20 +113,55 @@ void makeROM( Node& root, Game* g ) {
     n.add_attr("zip",zips);
     n.add_attr("type","merged");
     n.add_attr("md5","None"); // important or MiSTer will not let the game boot
+    int dumped=0;
     for( ROMRegion* region : g->getRegionList() ) {
-        n.comment( region->name );
+        if ( ignoreregions.count(region->name)>0 ) continue;
+        auto start_offset = startregions.find(region->name);
+        if( start_offset != startregions.end() ) {
+            int s = start_offset->second;
+            int rep = s-dumped;
+            if( rep<0 ) {
+                cout << "WARNING: required start value is too low for "
+                " region " << region->name << '\n';
+            } else if( rep>0 ) {
+                Node& fill = n.add("part","FF");
+                char buf[32];
+                snprintf(buf,32,"0x%X",rep);
+                fill.add_attr("repeat",buf);
+                dumped=s;
+            }
+        }
+        char title[128];
+        snprintf(title,128,"%s - starts at 0x%X", region->name.c_str(), dumped );
+        n.comment( title );
         bool swap = swapregions.count(region->name)>0;
+        bool fill = fillregions.count(region->name)>0;        
         Node& parent = swap ? n.add("interleave") : n;
         if( swap ) parent.add_attr("output","16");
+        int offset=0;
         for( ROM* r : region->roms ) {
+            // Fill in gaps between ROM chips
+            if( offset != r->offset && fill) {
+                Node& part = parent.add("part","FF");
+                int rep = r->offset - offset;
+                char buf[32];
+                snprintf(buf,32,"0x%X",rep);
+                part.add_attr("repeat",buf);
+                dumped += rep;
+            }
             Node& part = parent.add("part");
             part.add_attr("name",r->name);
             part.add_attr("crc",r->crc);
             if( swap ) {
                 part.add_attr("map","12");
             }
+            offset = r->offset + r->size;
+            dumped += r->size;
         }
     }
+    char endsize[128];
+    snprintf(endsize,128,"Total 0x%X bytes - %d kBytes",dumped,dumped>>10);
+    n.comment(endsize);
 }
 
 void makeDIP( Node& root, Game* g ) {
@@ -190,7 +252,19 @@ void makeJOY( Node& root, Game* g ) {
     n.add_attr("default","A,B,R,L,Start");
 }
 
-void makeMRA( Game* g ) {
+void makeMOD( Node& root, Game* g ) {
+    int mod_value = 0;
+    if( g->rotate!=0 ) {
+        root.comment("Vertical game");
+        mod_value |= 1;
+    }
+    char buf[4];
+    snprintf(buf,4,"%02X",mod_value);
+    Node& mod=root.add("rom",buf);
+    mod.add_attr("index","1");
+}
+
+void makeMRA( Game* g, string& rbf ) {
     string indent;
     Node root("misterromdescription");
 
@@ -202,8 +276,12 @@ void makeMRA( Game* g ) {
 
     root.add("name",g->name); // should be full_name. Not implemented yet
     root.add("setname",g->name);
+    if( rbf.length()>0 ) {
+        root.add("rbf",rbf);
+    }
 
     makeROM( root, g );
+    makeMOD( root, g );
     makeDIP( root, g );
     makeJOY( root, g );
 
