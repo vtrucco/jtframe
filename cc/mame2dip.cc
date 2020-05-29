@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <list>
+#include <set>
 
 #include "mamegame.hpp"
 
@@ -11,12 +12,19 @@ using namespace std;
 
 void makeMRA( Game* g );
 
+set<string> swapregions;
+
 int main(int argc, char * argv[] ) {
     bool print=false;
     string fname="mame.xml";
     bool   fname_assigned=false;
+
     for( int k=1; k<argc; k++ ) {
         string a = argv[k];
+        if( a=="-swapbytes" ) {
+            swapregions.insert(string(argv[++k]));
+            continue;
+        }
         if( a == "-help" || a =="-h" ) {
             cout << "mame2dip: converts MAME dipswitch definition to MRA format\n"
                     "          by Jose Tejada. Part of JTFRAME\n"
@@ -80,10 +88,16 @@ void makeROM( Node& root, Game* g ) {
     n.add_attr("md5","None"); // important or MiSTer will not let the game boot
     for( ROMRegion* region : g->getRegionList() ) {
         n.comment( region->name );
+        bool swap = swapregions.count(region->name)>0;
+        Node& parent = swap ? n.add("interleave") : n;
+        if( swap ) parent.add_attr("output","16");
         for( ROM* r : region->roms ) {
-            Node& part = n.add("part");
+            Node& part = parent.add("part");
             part.add_attr("name",r->name);
             part.add_attr("crc",r->crc);
+            if( swap ) {
+                part.add_attr("map","12");
+            }
         }
     }
 }
@@ -170,14 +184,28 @@ void makeDIP( Node& root, Game* g ) {
     }
 }
 
+void makeJOY( Node& root, Game* g ) {
+    Node& n = root.add("buttons");
+    n.add_attr("names","Fire,Jump,Start,Coin,Pause");
+    n.add_attr("default","A,B,R,L,Start");
+}
+
 void makeMRA( Game* g ) {
     string indent;
     Node root("misterromdescription");
+
+    Node& about = root.add("about","");
+    about.add_attr("author","jotego");
+    about.add_attr("webpage","https://patreon.com/topapate");
+    about.add_attr("source","https://github.com/jotego/jtbubl");
+    about.add_attr("twitter","@topapate");
+
     root.add("name",g->name); // should be full_name. Not implemented yet
     root.add("setname",g->name);
 
     makeROM( root, g );
     makeDIP( root, g );
+    makeJOY( root, g );
 
     string fout_name = g->name+".mra";
     ofstream fout(fout_name);
@@ -185,6 +213,27 @@ void makeMRA( Game* g ) {
         cout << "ERROR: cannot create " << fout_name << '\n';
         return;
     }
+    fout <<
+"<!--          FPGA compatible core of arcade hardware by Jotego\n"
+"\n"
+"              This core is available for hardware compatible with MiST and MiSTer\n"
+"              Other FPGA systems may be supported by the time you read this.\n"
+"              This work is not mantained by the MiSTer project. Please contact the\n"
+"              core author for issues and updates.\n"
+"\n"
+"              (c) Jose Tejada, 2020. Please support the author\n"
+"              Patreon: https://patreon.com/topapate\n"
+"              Paypal:  https://paypal.me/topapate\n"
+"\n"
+"              The author does not endorse or participate in illegal distribution\n"
+"              of copyrighted material. This work can be used with legally\n"
+"              obtained ROM dumps or with compatible homebrew software\n"
+"\n"
+"              This file license is GNU GPLv2.\n"
+"              You can read the whole license file in\n"
+"              https://opensource.org/licenses/gpl-2.0.php\n"
+"\n"
+"-->\n\n";
     root.dump(fout);
 }
 
