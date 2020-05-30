@@ -30,17 +30,16 @@
 // with the BLANK value. The data is deleted BLANK_DLY clock cycles
 // after rd went low
 
-`timescale 1ns/1ps
-
 module jtframe_obj_buffer #(parameter 
     DW=8, 
-    AW=10, 
+    AW=9, 
     ALPHAW=4, 
     ALPHA=4'HF, 
     BLANK=32'hFF,
     BLANK_DLY=2
 )(
     input   clk,
+    input   LHBL,
     // New data writes
     input   [DW-1:0] wr_data,
     input   [AW-1:0] wr_addr,
@@ -51,13 +50,25 @@ module jtframe_obj_buffer #(parameter
     output reg [DW-1:0] rd_data
 );
 
-
+reg     line, last_LHBL;
 wire    new_we = wr_data[ALPHAW-1:0] != ALPHA[ALPHAW-1:0] && we;
 
 reg [BLANK_DLY-1:0] dly;
 wire                delete_we = dly[0];
 wire [DW-1:0]       blank_data = BLANK[DW-1:0];
 wire [DW-1:0]       dump_data;
+
+`ifdef SIMULATION
+initial begin
+    line = 0;
+end
+`endif
+
+always @(posedge clk) begin
+    last_LHBL <= LHBL;
+    if( !LHBL && last_LHBL )
+        line <= ~line;
+end
 
 always @(posedge clk) begin
     if( rd ) begin
@@ -68,17 +79,17 @@ always @(posedge clk) begin
     if( delete_we ) rd_data <= dump_data;
 end
 
-jtframe_dual_ram #(.aw(AW),.dw(DW)) u_line(
+jtframe_dual_ram #(.aw(AW+1),.dw(DW)) u_line(
     .clk0   ( clk           ),
     .clk1   ( clk           ),
     // Port 0
     .data0  ( wr_data       ),
-    .addr0  ( wr_addr       ),
+    .addr0  ( {line,wr_addr}),
     .we0    ( new_we        ),
     .q0     (               ),
     // Port 1
     .data1  ( blank_data    ),
-    .addr1  ( rd_addr       ),
+    .addr1  ({~line,rd_addr}),
     .we1    ( delete_we     ),
     .q1     ( dump_data     )
 );
