@@ -78,12 +78,15 @@ function get_named_arg {
 # Which core is this for?
 SYSNAME=$(get_named_arg -sysname $*)
 MODULES=$(get_named_arg -modules $*)
-JTFRAME=$MODULES/jtframe
 PERCORE=
 
-if [ "$MODULES" = "" ]; then
-    echo "ERROR: Missing required argument -modules"
+if [ -z "$JTFRAME" ];then
+    echo "You need to define the path to JTFRAME"
     exit 1
+fi
+
+if [ "$MODULES" = "" ]; then
+    MODULES=$JTFRAME/..
 fi
 
 # switch to NCVerilog if available

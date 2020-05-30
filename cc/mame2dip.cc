@@ -329,7 +329,7 @@ void makeMRA( Game* g, string& rbf ) {
     Node& about = root.add("about","");
     about.add_attr("author","jotego");
     about.add_attr("webpage","https://patreon.com/topapate");
-    about.add_attr("source","https://github.com/jotego/jtbubl");
+    about.add_attr("source","https://github.com/jotego");
     about.add_attr("twitter","@topapate");
 
     root.add("name",g->name); // should be full_name. Not implemented yet

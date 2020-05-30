@@ -7,7 +7,7 @@ int main() {
     while( true ) {
         unsigned char b[1024];
         cin.read( (char*) b,1024);
-        for( int k=0; k<1024; k+=2 ) {
+        for( int k=0; k<cin.gcount(); k+=2 ) {
             unsigned c = b[k];
             unsigned d = b[k+1];
             c = (c<<8)|d;
