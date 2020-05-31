@@ -44,7 +44,7 @@ initial begin
         if( f != 0 ) begin
             readcnt=$fseek( f, offset, 0 );
             readcnt=$fread( mem, f );
-            $display("INFO: %m file %s loaded",simfile);
+            $display("INFO: Read %14s (%4d bytes) for %m",simfile, readcnt);
             $fclose(f);
         end else begin
             $display("WARNING: %m cannot open %s", simfile);
