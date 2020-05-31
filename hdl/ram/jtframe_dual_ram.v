@@ -54,9 +54,6 @@ module jtframe_dual_ram #(parameter dw=8, aw=10,
 `ifdef SIMULATION
 integer f, readcnt;
 initial begin
-    for( readcnt=0; readcnt<(2**aw); readcnt=readcnt+1 ) begin
-        mem[readcnt] <= {aw{1'b0}};
-    end
     if( simfile != "" ) begin
         f=$fopen(simfile,"rb");
         if( f != 0 ) begin
@@ -76,7 +73,7 @@ initial begin
                 $readmemh(synfile,mem);
                 $display("INFO: Read %14s (hex) for %m", synfile);
             end else
-                for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
+                for( readcnt=0; readcnt<2**aw; readcnt=readcnt+1 )
                     mem[readcnt] = {dw{1'b0}};
         end
     end
