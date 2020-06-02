@@ -32,12 +32,17 @@ wire [1:0] predly;
 
 assign preLBL = predly==2'b11;
 
-jtframe_sh #(.width(2),.stages(DLY-1)) u_dly(
-    .clk    ( clk          ),
-    .clk_en ( pxl_cen      ),
-    .din    ( {LHBL, LVBL} ),
-    .drop   ( predly       )
-);
+generate
+    if( DLY>1 )
+        jtframe_sh #(.width(2),.stages(DLY-1)) u_dly(
+            .clk    ( clk          ),
+            .clk_en ( pxl_cen      ),
+            .din    ( {LHBL, LVBL} ),
+            .drop   ( predly       )
+        );
+    else
+        assign predly = {LHBL, LVBL};
+endgenerate
 
 always @(posedge clk) begin
     rgb_out <= predly==2'b11 ? rgb_in : {DW{1'b0}};
