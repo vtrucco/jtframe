@@ -45,21 +45,23 @@ module jtframe_sys6809(
 );
 
 // cen generation
-wire E, Q;
-reg  cen_E, cen_Q;
-assign cpu_cen = Q;
+wire        gate;
+reg         cen_E, cen_Q;
+wire        BA, BS;
+reg  [ 1:0] cencnt=2'd0;
+reg         last_cen;
 
-wire   BA, BS;
+assign cpu_cen = cen_Q;
 assign irq_ack = {BA,BS}==2'b01;
 
-reg [1:0] cencnt=2'd0;
-
 always @(posedge clk) if(cen) begin
-    cencnt <=  cencnt+2'd1;
+    if( gate ) last_cen <= cencnt[1];
+    if( gate || cencnt[1]==last_cen )
+        cencnt <= cencnt+2'd1;
 end
 always @(posedge clk) begin
-    cen_E  <= cencnt==2'b00 & cen;
-    cen_Q  <= cencnt==2'b10 & cen;
+    cen_E  <= cencnt==2'b00 && cen && gate;
+    cen_Q  <= cencnt==2'b10 && cen && gate;
 end
 
 // RAM
@@ -75,12 +77,12 @@ jtframe_ram #(.aw(RAM_AW)) u_ram(
     .q      ( ram_dout    )
 );
 
-jtframe_dual_wait #(1) u_wait(
+jtframe_z80wait #(1) u_wait(
     .rst_n      ( rstn      ),
     .clk        ( clk       ),
-    .cen_in     ( { cen_E, cen_Q }    ),
-    .cen_out    ( { E,Q          }    ),
-    .gate       ( waitn     ),
+    .cen_in     ( cen       ),
+    .cen_out    (           ),
+    .gate       ( gate      ),
     // manage access to shared memory
     .dev_busy   ( bus_busy  ),
     // manage access to ROM data from SDRAM
@@ -97,8 +99,8 @@ mc6809i u_cpu(
     .ADDR    ( A       ),
     .RnW     ( RnW     ),
     .clk     ( clk     ),
-    .cen_E   ( E       ),
-    .cen_Q   ( Q       ),
+    .cen_E   ( cen_E   ),
+    .cen_Q   ( cen_Q   ),
     .BS      ( BS      ),
     .BA      ( BA      ),
     .nIRQ    ( nIRQ    ),
