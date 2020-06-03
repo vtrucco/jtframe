@@ -535,7 +535,7 @@ endgenerate
 
 
 //always @(negedge NMISample2 or posedge wNMIClear)
-always @(posedge clk) begin : NMIlatch
+always @(posedge clk) if(cen_Q) begin : NMIlatch
     reg last_NMISample2, last_wNMIClear;
     last_NMISample2 <= NMISample2;
     last_wNMIClear  <= wNMIClear;

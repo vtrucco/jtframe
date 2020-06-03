@@ -18,6 +18,12 @@
 
 */
 
+// Clock cycle misses due to ROM waits are recovered
+// Becareful not to have rstn high while SDRAM module is
+// still in reset as missing cycles will be count
+// You should reset this with loop_rst at the game level, rather than
+// just rst
+
 module jtframe_sys6809(
     input           rstn, 
     input           clk,
@@ -46,22 +52,42 @@ module jtframe_sys6809(
 
 // cen generation
 wire        gate;
+reg         last_gate, last_EQ;
 reg         cen_E, cen_Q;
-wire        BA, BS;
+wire        BA, BS, EQ;
 reg  [ 1:0] cencnt=2'd0;
 reg         last_cen;
+reg  [ 3:0] misses;
+wire        catchup;
 
 assign cpu_cen = cen_Q;
+assign EQ      = cen_E | cen_Q;
 assign irq_ack = {BA,BS}==2'b01;
+assign catchup = misses>0;
 
 always @(posedge clk) if(cen) begin
+    last_gate <= gate;
+    last_EQ   <= EQ;
+    if( !rstn ) begin
+        misses  <= 4'd0;
+    end else begin 
+        if( !last_EQ && !EQ && !(&misses))
+            misses <= misses+4'd1;
+    end
     if( gate ) last_cen <= cencnt[1];
-    if( gate || cencnt[1]==last_cen )
-        cencnt <= cencnt+2'd1;
+    if( gate || cencnt[1]==last_cen ) begin
+        if( !catchup )
+            cencnt <= cencnt+2'd1;
+        else begin
+            cencnt <= {~cencnt[1],1'b0};
+            misses <= misses-4'd1;
+        end
+    end
 end
-always @(posedge clk) begin
-    cen_E  <= cencnt==2'b00 && cen && gate;
-    cen_Q  <= cencnt==2'b10 && cen && gate;
+
+always @(*) begin
+    cen_E = cencnt==2'b00 && cen && gate;
+    cen_Q = cencnt==2'b10 && cen && gate;
 end
 
 // RAM
