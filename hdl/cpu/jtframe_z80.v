@@ -128,16 +128,8 @@ module jtframe_z80_romwait (
     input         rom_ok
 );
 
-wire wait_n;
-/*
-reg  rstsyncn=1'b0;
-
+wire   wait_n;
 assign cpu_cen = cen;
-
-always @(posedge clk) begin
-    if( !rst_n  ) rstsyncn <= 1'b0;
-    if( cpu_cen && rst_n ) rstsyncn <= 1'b1;
-end*/
 
 jtframe_rom_wait u_wait(
     .rst_n    ( rst_n     ),
