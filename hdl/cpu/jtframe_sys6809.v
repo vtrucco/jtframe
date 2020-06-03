@@ -18,6 +18,71 @@
 
 */
 
+module jtframe_6809wait(
+    input           rstn, 
+    input           clk,
+    input           cen,       // This is normally the input clock to the CPU
+    output          cpu_cen,   // 1/4th of cen
+    input           dev_busy,
+    input           rom_cs,
+    input           rom_ok,
+    output reg      cen_E,
+    output reg      cen_Q
+);
+    // cen generation
+    wire        gate;
+    reg         last_gate, last_EQ;
+    wire        EQ;
+    reg  [ 1:0] cencnt=2'd0;
+    reg         last_cen;
+    reg  [ 3:0] misses;
+    wire        catchup;
+
+    assign cpu_cen = cen_Q;
+    assign EQ      = cen_E | cen_Q;
+    assign catchup = misses>0;
+
+    always @(posedge clk) if(cen) begin
+        last_gate <= gate;
+        last_EQ   <= EQ;
+        if( !rstn ) begin
+            misses  <= 4'd0;
+        end else begin 
+            if( !last_EQ && !EQ && !(&misses))
+                misses <= misses+4'd1;
+        end
+        if( gate ) last_cen <= cencnt[1];
+        if( gate || cencnt[1]==last_cen ) begin
+            if( !catchup )
+                cencnt <= cencnt+2'd1;
+            else begin
+                cencnt <= {~cencnt[1],1'b0};
+                misses <= misses-4'd1;
+            end
+        end
+    end
+
+    always @(*) begin
+        cen_E = cencnt==2'b00 && cen && gate;
+        cen_Q = cencnt==2'b10 && cen && gate;
+    end
+
+    jtframe_z80wait #(1) u_wait(
+        .rst_n      ( rstn      ),
+        .clk        ( clk       ),
+        .cen_in     ( cen       ),
+        .cen_out    (           ),
+        .gate       ( gate      ),
+        // manage access to shared memory
+        .dev_busy   ( dev_busy  ),
+        // manage access to ROM data from SDRAM
+        .rom_cs     ( rom_cs    ),
+        .rom_ok     ( rom_ok    )
+    );
+endmodule
+
+
+///////////////////////////////////////////////////////
 // Do not use with cen set to 1
 
 module jtframe_sys6809(
@@ -46,119 +111,83 @@ module jtframe_sys6809(
     input   [7:0]   cpu_din
 );
 
-// cen generation
-wire        gate;
-reg         last_gate, last_EQ;
-reg         cen_E, cen_Q;
-wire        BA, BS, EQ;
-reg  [ 1:0] cencnt=2'd0;
-reg         last_cen;
-reg  [ 3:0] misses;
-wire        catchup;
+    // RAM
+    parameter RAM_AW=12;
+    wire    ram_we = ram_cs & ~RnW;
+    wire    cen_E, cen_Q;
+    wire    BA, BS;
 
-assign cpu_cen = cen_Q;
-assign EQ      = cen_E | cen_Q;
-assign irq_ack = {BA,BS}==2'b01;
-assign catchup = misses>0;
+    assign  irq_ack = {BA,BS}==2'b01;
 
-always @(posedge clk) if(cen) begin
-    last_gate <= gate;
-    last_EQ   <= EQ;
-    if( !rstn ) begin
-        misses  <= 4'd0;
-    end else begin 
-        if( !last_EQ && !EQ && !(&misses))
-            misses <= misses+4'd1;
+    jtframe_6809wait u_wait(
+        .rstn       ( rstn      ), 
+        .clk        ( clk       ),
+        .cen        ( cen       ),
+        .cpu_cen    ( cpu_cen   ),
+        .rom_cs     ( rom_cs    ),
+        .rom_ok     ( rom_ok    ),
+        .dev_busy   ( bus_busy  ),
+        .cen_E      ( cen_E     ),
+        .cen_Q      ( cen_Q     )
+    );
+
+    jtframe_ram #(.aw(RAM_AW)) u_ram(
+        .clk    ( clk         ),
+        .cen    ( cen_Q       ), // using cpu_cen instead of cen_Q creates a wrong sprite on the screen
+        .data   ( cpu_dout    ),
+        .addr   ( A[RAM_AW-1:0]),
+        .we     ( ram_we      ),
+        .q      ( ram_dout    )
+    );
+
+    // cycle accurate core
+    wire [111:0] RegData;
+
+    mc6809i u_cpu(
+        .D       ( cpu_din ),
+        .DOut    ( cpu_dout),
+        .ADDR    ( A       ),
+        .RnW     ( RnW     ),
+        .clk     ( clk     ),
+        .cen_E   ( cen_E   ),
+        .cen_Q   ( cen_Q   ),
+        .BS      ( BS      ),
+        .BA      ( BA      ),
+        .nIRQ    ( nIRQ    ),
+        .nFIRQ   ( nFIRQ   ),
+        .nNMI    ( nNMI    ),
+        .AVMA    (         ),
+        .BUSY    (         ),
+        .LIC     (         ),
+        .nDMABREQ( 1'b1    ),
+        .nHALT   ( 1'b1    ),   
+        .nRESET  ( rstn    ),
+        .RegData ( RegData )
+    );
+    
+    `ifdef SIMULATION
+    wire [ 7:0] reg_a  = RegData[7:0];
+    wire [ 7:0] reg_b  = RegData[15:8];
+    wire [15:0] reg_x  = RegData[31:16];
+    wire [15:0] reg_y  = RegData[47:32];
+    wire [15:0] reg_s  = RegData[63:48];
+    wire [15:0] reg_u  = RegData[79:64];
+    wire [ 7:0] reg_cc = RegData[87:80];
+    wire [ 7:0] reg_dp = RegData[95:88];
+    wire [15:0] reg_pc = RegData[111:96];
+    reg [95:0] last_regdata;
+
+    integer fout;
+    initial begin
+        fout = $fopen("m6809.log","w");
     end
-    if( gate ) last_cen <= cencnt[1];
-    if( gate || cencnt[1]==last_cen ) begin
-        if( !catchup )
-            cencnt <= cencnt+2'd1;
-        else begin
-            cencnt <= {~cencnt[1],1'b0};
-            misses <= misses-4'd1;
+    always @(posedge rom_cs) begin
+        last_regdata <= RegData[95:0];
+        if( last_regdata != RegData[95:0] ) begin
+            $fwrite(fout,"%X, X %X, Y %X, A %X, B %X\n",
+                reg_pc, reg_x, reg_y, reg_a, reg_b);
         end
     end
-end
-
-always @(*) begin
-    cen_E = cencnt==2'b00 && cen && gate;
-    cen_Q = cencnt==2'b10 && cen && gate;
-end
-
-// RAM
-parameter RAM_AW=12;
-wire ram_we = ram_cs & ~RnW;
-
-jtframe_ram #(.aw(RAM_AW)) u_ram(
-    .clk    ( clk         ),
-    .cen    ( cen_Q       ), // using cpu_cen instead of cen_Q creates a wrong sprite on the screen
-    .data   ( cpu_dout    ),
-    .addr   ( A[RAM_AW-1:0]),
-    .we     ( ram_we      ),
-    .q      ( ram_dout    )
-);
-
-jtframe_z80wait #(1) u_wait(
-    .rst_n      ( rstn      ),
-    .clk        ( clk       ),
-    .cen_in     ( cen       ),
-    .cen_out    (           ),
-    .gate       ( gate      ),
-    // manage access to shared memory
-    .dev_busy   ( bus_busy  ),
-    // manage access to ROM data from SDRAM
-    .rom_cs     ( rom_cs    ),
-    .rom_ok     ( rom_ok    )
-);
-
-// cycle accurate core
-wire [111:0] RegData;
-
-mc6809i u_cpu(
-    .D       ( cpu_din ),
-    .DOut    ( cpu_dout),
-    .ADDR    ( A       ),
-    .RnW     ( RnW     ),
-    .clk     ( clk     ),
-    .cen_E   ( cen_E   ),
-    .cen_Q   ( cen_Q   ),
-    .BS      ( BS      ),
-    .BA      ( BA      ),
-    .nIRQ    ( nIRQ    ),
-    .nFIRQ   ( nFIRQ   ),
-    .nNMI    ( nNMI    ),
-    .AVMA    (         ),
-    .BUSY    (         ),
-    .LIC     (         ),
-    .nDMABREQ( 1'b1    ),
-    .nHALT   ( 1'b1    ),   
-    .nRESET  ( rstn    ),
-    .RegData ( RegData )
-);
-`ifdef SIMULATION
-wire [ 7:0] reg_a  = RegData[7:0];
-wire [ 7:0] reg_b  = RegData[15:8];
-wire [15:0] reg_x  = RegData[31:16];
-wire [15:0] reg_y  = RegData[47:32];
-wire [15:0] reg_s  = RegData[63:48];
-wire [15:0] reg_u  = RegData[79:64];
-wire [ 7:0] reg_cc = RegData[87:80];
-wire [ 7:0] reg_dp = RegData[95:88];
-wire [15:0] reg_pc = RegData[111:96];
-reg [95:0] last_regdata;
-
-integer fout;
-initial begin
-    fout = $fopen("m6809.log","w");
-end
-always @(posedge rom_cs) begin
-    last_regdata <= RegData[95:0];
-    if( last_regdata != RegData[95:0] ) begin
-        $fwrite(fout,"%X, X %X, Y %X, A %X, B %X\n",
-            reg_pc, reg_x, reg_y, reg_a, reg_b);
-    end
-end
-`endif
+    `endif
 
 endmodule
