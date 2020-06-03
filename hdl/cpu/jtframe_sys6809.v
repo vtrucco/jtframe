@@ -18,11 +18,7 @@
 
 */
 
-// Clock cycle misses due to ROM waits are recovered
-// Becareful not to have rstn high while SDRAM module is
-// still in reset as missing cycles will be count
-// You should reset this with loop_rst at the game level, rather than
-// just rst
+// Do not use with cen set to 1
 
 module jtframe_sys6809(
     input           rstn, 
