@@ -31,7 +31,7 @@ module jtframe_6809wait(
 );
     // cen generation
     wire        gate;
-    reg         last_gate, last_EQ;
+    reg         last_EQ;
     wire        EQ;
     reg  [ 1:0] cencnt=2'd0;
     reg         last_cen;
@@ -43,7 +43,6 @@ module jtframe_6809wait(
     assign catchup = misses>0;
 
     always @(posedge clk) if(cen) begin
-        last_gate <= gate;
         last_EQ   <= EQ;
         if( !rstn ) begin
             misses  <= 4'd0;

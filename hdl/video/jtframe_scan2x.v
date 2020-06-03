@@ -46,7 +46,7 @@ always@(posedge clk or negedge rst_n)
         alt_pxl <= 1'b0;
     end else if(basex2_cen) begin
     if( !waitHS ) begin
-        rdaddr  <= rdaddr < (HLEN-1) ? (rdaddr+1) : 0;
+        rdaddr  <= rdaddr < (HLEN-1'b1) ? (rdaddr+1'b1) : 0;
         x2_pxl  <= x2_HS ? {DW{1'b0}} : oddline ? mem0[rdaddr] : mem1[rdaddr];
         alt_pxl <= ~alt_pxl;
         if( alt_pxl ) begin

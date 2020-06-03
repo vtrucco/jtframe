@@ -32,12 +32,12 @@ module osd (
 	output reg	 osd_shown
 );
 
-parameter OSD_X_OFFSET = 10'd0;
-parameter OSD_Y_OFFSET = 10'd0;
+parameter [9:0] OSD_X_OFFSET = 10'd0;
+parameter [9:0] OSD_Y_OFFSET = 10'd0;
 parameter [5:0] OSD_COLOR = ~6'b0;
 
-localparam OSD_WIDTH   = 10'd256;
-localparam OSD_HEIGHT  = 10'd128;
+localparam [9:0] OSD_WIDTH   = 10'd256;
+localparam [9:0] OSD_HEIGHT  = 10'd128;
 
 // *********************************************************************************
 // spi client

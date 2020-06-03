@@ -125,7 +125,7 @@ always @(posedge clk) begin
                     // Scroll runs at max speed when the visible pages are over
                     // otherwise it runs at SPEED
                     if( scr_base == SPEED || vrender>MAXVISIBLE ) begin
-                        vpos <= vpos + 1;
+                        vpos <= vpos + 1'b1;
                         scr_base <= 4'd0;
                     end else scr_base <= scr_base + 4'd1;
                 end
