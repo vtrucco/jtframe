@@ -40,10 +40,10 @@ localparam DW=COLORW*3;
 
 reg  [DW-1:0] mem0[0:HLEN-1];
 reg  [DW-1:0] mem1[0:HLEN-1];
-reg  [DW-1:0] curpixel;
+reg  [DW-1:0] preout;
 reg  [AW-1:0] wraddr, rdaddr, hscnt0, hscnt1;
 reg  [   3:0] cen_cnt, div_cnt; // supports up to 96MHz for a 6 MHz pixel clock
-reg           oddline;
+reg           oddline, scanline;
 reg           last_HS, last_HS_base;
 reg           waitHS;
 
@@ -88,14 +88,19 @@ reg alt_pxl; // this is needed in case pxl2_cen and pxl_cen are not aligned.
 
 always@(posedge clk or negedge rst_n) begin
     if( !rst_n ) begin
-        x2_pxl <= {DW{1'b0}};
+        preout <= {DW{1'b0}};
     end else begin
         if( half_time )
-            x2_pxl   <= next;
+            preout <= next;
         else if(cen_cnt==4'd0)
-            x2_pxl <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : x2_pxl,
+            preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
                              next);
     end
+end
+
+// scan lines are black
+always @(posedge clk) begin
+    x2_pxl <= scanline ? blend( {DW{1'b0}}, preout) : preout;
 end
 
 always@(posedge clk or negedge rst_n)
@@ -121,12 +126,16 @@ always@(posedge clk or negedge rst_n)
 
 always @(posedge clk or negedge rst_n)
     if( !rst_n ) begin
-        x2_HS <= 1'b0;
+        x2_HS    <= 0;
+        scanline <= 0;
     end else begin
         if( HS_posedge ) hscnt1 <= wraddr;
         if( HS_negedge ) hscnt0 <= wraddr;
-        if( rdaddr == hscnt0 ) x2_HS <= 1'b0;
-        if( rdaddr == hscnt1 ) x2_HS <= 1'b1;
+        if( rdaddr == hscnt0 ) x2_HS <= 0;
+        if( rdaddr == hscnt1 ) begin
+            x2_HS    <= 1;
+            if(!x2_HS) scanline <= ~scanline;
+        end
     end
 
 endmodule // jtframe_scan2x
