@@ -20,9 +20,15 @@
 
 // Gates the clock enable signals for two clock cycles if rom_cs 
 // has risen or if the rom address has changed while rom_cs was high
+
 // Depending on how the CPU and the rom_cs decoder logic, rom_cs might
 // not toggle in between ROM address changes, so the address must be
 // tracked
+
+// if rom_cs is constantly high, rom_ok will take one clock cycle to come
+// down after an address change. If the cen frequency allows for at least
+// two clock cycles between two cen pulses, then checking the ROM address
+// is not necessary
 
 module jtframe_gatecen #(parameter ROMW=12)(
     input             clk,
