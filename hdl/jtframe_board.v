@@ -473,11 +473,11 @@ assign scan2x_de   = LVBL && LHBL;
         endcase
     endfunction
     // Note that VIDEO_WIDTH must include blanking for JTFRAME_SCAN2X
-    jtframe_scan2x #(.DW(COLORW*3), .HLEN(VIDEO_WIDTH)) u_scan2x(
+    jtframe_scan2x #(.COLORW(COLORW), .HLEN(VIDEO_WIDTH)) u_scan2x(
         .rst_n      ( rst_n        ),
         .clk        ( clk_sys      ),
-        .base_cen   ( pxl_cen      ),
-        .basex2_cen ( pxl2_cen     ),
+        .pxl_cen    ( pxl_cen      ),
+        .pxl2_cen   ( pxl2_cen     ),
         .base_pxl   ( game_rgb     ),
         .x2_pxl     ( rgbx2        ),
         .HS         ( hs           ),
