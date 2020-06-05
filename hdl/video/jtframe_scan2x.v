@@ -17,11 +17,9 @@
     Date: 25-9-2019 */
 
 // Simple scan doubler
-//                       Min      Max
-// clock/pxl_cen ratio    4     96/6=16
-//
 // CRT-like output:
 //  -simple blending of neighbouring pixels
+//  -50% scan lines
 
 module jtframe_scan2x #(parameter COLORW=4, HLEN=512)(
     input       rst_n,
@@ -74,18 +72,28 @@ always@(posedge clk or negedge rst_n)
         if(HS_posedge ) waitHS  <= 1'b0;
     end
 
+`ifdef JTFRAME_CLK96
+localparam CLKSTEPS=8;
+localparam [CLKSTEPS-1:0] BLEND_ST = 8'b10;
+`else
+localparam CLKSTEPS=4;
+`endif
+
+localparam [CLKSTEPS-1:0] PURE_ST  = 0;
+localparam [CLKSTEPS-1:0] BLEND_ST = 2;
+
 reg alt_pxl; // this is needed in case pxl2_cen and pxl_cen are not aligned.
-reg [1:0] mixst;
+reg [CLKSTEPS-1:0] mixst;
 
 always@(posedge clk or negedge rst_n) begin
     if( !rst_n ) begin
         preout <= {DW{1'b0}};
     end else begin
-        mixst <= { mixst[0],pxl2_cen};
-        if(mixst==2'b10)
+        mixst <= { mixst[1:0],pxl2_cen};
+        if(mixst==BLEND_ST)
             preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
                              next);
-        else if( mixst==2'b00)
+        else if( mixst==PURE_ST )
             preout <= next;
     end
 end
