@@ -23,7 +23,7 @@
 // CRT-like output:
 //  -simple blending of neighbouring pixels
 
-module jtframe_scan2x #(parameter COLORW=4, HLEN=256)(
+module jtframe_scan2x #(parameter COLORW=4, HLEN=512)(
     input       rst_n,
     input       clk,
     input       pxl_cen,
@@ -35,28 +35,24 @@ module jtframe_scan2x #(parameter COLORW=4, HLEN=256)(
     output  reg x2_HS
 );
 
-localparam AW=HLEN<=256 ? 8 : (HLEN<=512 ? 9:10 );
+localparam AW=HLEN<=512 ? 9:10;
 localparam DW=COLORW*3;
 
-reg  [DW-1:0] mem0[0:HLEN-1];
-reg  [DW-1:0] mem1[0:HLEN-1];
 reg  [DW-1:0] preout;
 reg  [AW-1:0] wraddr, rdaddr, hscnt0, hscnt1;
-reg  [   3:0] cen_cnt, div_cnt; // supports up to 96MHz for a 6 MHz pixel clock
 reg           oddline, scanline;
 reg           last_HS, last_HS_base;
-reg           waitHS;
+reg           waitHS, line;
 
 wire          HS_posedge     =  HS && !last_HS;
 wire          HSbase_posedge =  HS && !last_HS_base;
 wire          HS_negedge     = !HS &&  last_HS;
-wire          half_time      =  cen_cnt > {1'b0,div_cnt[3:1]};
-wire [DW-1:0] next           =  oddline ? mem0[rdaddr] : mem1[rdaddr];
+wire [DW-1:0] next;
 
 function [COLORW-1:0] ave;
     input [COLORW-1:0] a;
     input [COLORW-1:0] b;
-    ave = {1'b0, a[COLORW-1:1] } + { 1'b0, b[COLORW-1:1] };
+    ave = ({1'b0,a}+{1'b0,b})>>1;
 endfunction
 
 function [DW-1:0] blend;
@@ -68,14 +64,8 @@ function [DW-1:0] blend;
         ave(a[COLORW-1:0],b[COLORW-1:0]) };
 endfunction
 
-always @(posedge clk) if(pxl_cen)   last_HS_base <= HS;
+always @(posedge clk) if(pxl_cen)  last_HS_base <= HS;
 always @(posedge clk) if(pxl2_cen) last_HS <= HS;
-
-// Derive pxl4_cen
-always @(posedge clk) begin
-    cen_cnt <= pxl2_cen ? 4'd0 : cen_cnt+4'd1;
-    if( pxl2_cen ) div_cnt <= cen_cnt;
-end
 
 always@(posedge clk or negedge rst_n)
     if( !rst_n )
@@ -85,16 +75,18 @@ always@(posedge clk or negedge rst_n)
     end
 
 reg alt_pxl; // this is needed in case pxl2_cen and pxl_cen are not aligned.
+reg [1:0] mixst;
 
 always@(posedge clk or negedge rst_n) begin
     if( !rst_n ) begin
         preout <= {DW{1'b0}};
     end else begin
-        if( half_time )
-            preout <= next;
-        else if(cen_cnt==4'd0)
+        mixst <= { mixst[0],pxl2_cen};
+        if(mixst==2'b10)
             preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
                              next);
+        else if( mixst==2'b00)
+            preout <= next;
     end
 end
 
@@ -111,31 +103,49 @@ always@(posedge clk or negedge rst_n)
         alt_pxl <= 1'b0;
     end else if(pxl2_cen) begin
         if( !waitHS ) begin
-            rdaddr   <= rdaddr < (HLEN-1'b1) ? (rdaddr+1'b1) : 0;
+            rdaddr   <= rdaddr != hscnt1 ? rdaddr+1 : {AW{1'b0}};
             alt_pxl <= ~alt_pxl;
             if( alt_pxl ) begin
                 if( HSbase_posedge ) oddline <= ~oddline;
-                wraddr <= HSbase_posedge ? 0 : (wraddr+1);
-                if( oddline )
-                    mem1[wraddr] <= base_pxl;
-                else
-                    mem0[wraddr] <= base_pxl;
+                wraddr <= HSbase_posedge ? {AW{1'b0}} : (wraddr+1);
             end 
         end
     end
 
-always @(posedge clk or negedge rst_n)
+always @(posedge clk or negedge rst_n) begin
     if( !rst_n ) begin
         x2_HS    <= 0;
         scanline <= 0;
-    end else begin
+        line     <= 0;
+        hscnt1   <= {AW{1'b1}};
+        hscnt0   <= {AW{1'b1}};
+    end else if(pxl2_cen) begin
         if( HS_posedge ) hscnt1 <= wraddr;
-        if( HS_negedge ) hscnt0 <= wraddr;
+        if( HS_negedge ) begin
+            hscnt0 <= wraddr=={AW{1'b0}} ? {AW{1'b1}} : wraddr;
+            line   <= ~line;
+        end
         if( rdaddr == hscnt0 ) x2_HS <= 0;
         if( rdaddr == hscnt1 ) begin
             x2_HS    <= 1;
             if(!x2_HS) scanline <= ~scanline;
         end
     end
+end
+
+jtframe_dual_ram #(.dw(DW),.aw(AW+1)) u_buffer(
+    .clk0   ( clk            ),
+    .clk1   ( clk            ),
+    // Port 0: read
+    .data0  ( {DW{1'b0}}     ),
+    .addr0  ( {line, rdaddr} ),
+    .we0    ( 1'b0           ),
+    .q0     ( next           ),
+    // Port 1: write
+    .data1  ( base_pxl       ),
+    .addr1  ( {~line, wraddr}),
+    .we1    ( pxl_cen        ),
+    .q1     (                )
+);
 
 endmodule // jtframe_scan2x

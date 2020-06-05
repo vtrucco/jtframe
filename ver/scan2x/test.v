@@ -31,7 +31,8 @@ jtframe_cen48 u_cen(
 
 // Get a random pixel
 always @(posedge clk) if(pxl_cen) begin
-    base_pxl <= { base_pxl[DW-2:0], base_pxl[4]^base_pxl[DW-1] };
+    //base_pxl <= { base_pxl[DW-2:0], base_pxl[4]^base_pxl[DW-1] };
+    base_pxl <= base_pxl+12'h632;
 end
 
 always @(posedge VS) begin
@@ -56,6 +57,14 @@ jtframe_vtimer u_timer(
     .HS         ( HS        ),
     .VS         ( VS        )
 );
+/*
+jtgng_timer #(.LAYOUT(5)) u_timer(
+    .clk       ( clk      ),
+    .cen6      ( pxl_cen  ),
+    .HS        ( HS       ),
+    .VS        ( VS       )
+);
+*/
 
 initial begin
     $dumpfile("test.lxt");

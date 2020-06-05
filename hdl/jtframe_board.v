@@ -455,6 +455,11 @@ assign scan2x_clk  = clk_sys;
 assign scan2x_cen  = pxl_cen;
 assign scan2x_de   = LVBL && LHBL;
 `else
+// Always use JTFRAME_SCAN2X for MiST and SiDi
+`ifndef MiSTer
+`define JTFRAME_SCAN2X
+`endif
+
 `ifdef JTFRAME_SCAN2X
     // This scan doubler takes very little memory. Some games in MiST
     // can only use this

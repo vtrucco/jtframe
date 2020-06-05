@@ -23,14 +23,11 @@
 //      simfile => binary file to load during simulation
 //      simhexfile => hexadecimal file to load during simulation
 //      synfile => hexadecimal file to load for synthesis
-//      cen_rd  => Use clock enable for reading too, by default it is used
-//                 only for writting.
 
 `timescale 1ns/1ps
 
 module jtframe_dual_ram #(parameter dw=8, aw=10, 
-    simfile="", simhexfile="", synfile="", dumpfile="dump.hex",
-    cen_rd=0
+    simfile="", simhexfile="", synfile="", dumpfile="dump.hex"
 )(
     input   clk0,
     input   clk1,
