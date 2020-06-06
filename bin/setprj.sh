@@ -1,6 +1,15 @@
 #!/bin/bash
 # Define JTROOT before sourcing this file
 
+if (echo $PATH | grep modules/jtframe/bin -q); then
+    unalias jtcore
+    PATH=$(echo $PATH | sed 's/:[^:]*jtframe\/bin//g')
+    PATH=$(echo $PATH | sed 's/:\.//g')
+    unset VER GAME VIDEO HDL OKI
+    unset JT12 JT51 CC MRA ROM CORES
+fi
+
+export JTROOT=$(pwd)
 export JTFRAME=$JTROOT/modules/jtframe
 PATH=$PATH:$JTFRAME/bin:.
 #unalias jtcore
