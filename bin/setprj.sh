@@ -11,7 +11,9 @@ fi
 
 export JTROOT=$(pwd)
 export JTFRAME=$JTROOT/modules/jtframe
-PATH=$PATH:$JTFRAME/bin:.
+# . path comes before JTFRAME/bin as setprj.sh
+# can be in the working directory and in JTFRAME/bin
+PATH=$PATH:.:$JTFRAME/bin
 #unalias jtcore
 alias jtcore="$JTFRAME/bin/jtcore"
 
