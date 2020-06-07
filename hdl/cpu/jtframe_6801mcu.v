@@ -86,9 +86,10 @@ integer aux;
 
 // Ports
 always @(posedge clk ) begin
-    if( !rst ) begin
-        port_map[0] <= 8'd0; // P1 data direction
-    end else begin
+    if( rst ) begin
+        for( aux=0; aux<=MAXPORT; aux=aux+1 )
+            port_map[aux] <= 8'h00;
+    end else if(cen) begin
         if(port_cs) port_map[addr[4:0]] <= dout;
     end
 end
