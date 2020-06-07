@@ -182,7 +182,7 @@ end
 //// Data Bus output
 ////
 //////////////////////////////////
-always_comb
+always @(*)
 begin
     case (dout_ctrl)
      md_hi_dout: //// alu output
@@ -217,7 +217,8 @@ end
 
 logic[15:0] tempof;
 logic[15:0] temppc;
-always_comb
+
+always @(*)
 begin
   case (pc_ctrl)
   add_ea_pc:
@@ -265,7 +266,7 @@ end
 
 logic[15:0] tempind;
 logic[15:0] tempea;
-always_comb
+always @(*)
 begin
   case (ea_ctrl)
   add_ix_ea:
@@ -503,7 +504,8 @@ end
 logic valid_lo, valid_hi;
 logic carry_in;
 logic[7:0] daa_reg;
-always_comb
+//always_comb
+always @(*)
 begin
   case (alu_ctrl)
      alu_adc, alu_sbc,
@@ -800,7 +802,7 @@ end
 // state sequencer
 //
 ////////////////////////////////////
-always_comb
+always @(*)
     begin
           case (state)
           reset_state:        //  released from reset
