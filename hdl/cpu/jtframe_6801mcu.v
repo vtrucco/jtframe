@@ -23,7 +23,8 @@
 // such as the one used in Double Dragon or Bubble Bobble
 
 module jtframe_6801mcu #(
-    parameter ROMW=12
+    parameter ROMW=12,
+    parameter [15:0] MAXPORT=16'd27
 )(
     input              clk,
     input              rst,
@@ -39,6 +40,12 @@ module jtframe_6801mcu #(
     // Ports
     input      [ 7:0]  p1_in,
     output     [ 7:0]  p1_out,
+    input      [ 7:0]  p2_in,
+    output     [ 7:0]  p2_out,
+    input      [ 7:0]  p3_in,
+    output     [ 7:0]  p3_out,
+    input      [ 7:0]  p4_in,
+    output     [ 7:0]  p4_out,
     // external RAM
     input              ext_cs,
     input              ext_dout,
@@ -63,12 +70,16 @@ assign p1_datadir= port_map[0];
 assign p2_datadir= port_map[1];
 assign p3_datadir= port_map[4];
 assign p4_datadir= port_map[5];
+assign p1_out    = port_map[2];
+assign p2_out    = port_map[3];
+assign p3_out    = port_map[6];
+assign p4_out    = port_map[7];
 
 // Address decoder
 always @(*) begin
     rom_cs    = vma && (&addr[15:ROMW]); // ROM is always at the top
     ram_cs    = vma && addr>=16'h40 && addr<16'h140;
-    port_cs   = vma && addr<16'h28;
+    port_cs   = vma && addr<=MAXPORT;
 end
 
 integer aux;
@@ -79,12 +90,6 @@ always @(posedge clk ) begin
         port_map[0] <= 8'd0; // P1 data direction
     end else begin
         if(port_cs) port_map[addr[4:0]] <= dout;
-        else begin
-            // copy only input bits to ports according
-            // to the associated data direction register
-            for( aux=0; aux<8; aux=aux+1 )
-                if( !p1_datadir[aux] ) port_map[2][aux] <= p1_in[aux];
-        end
     end
 end
 
@@ -96,7 +101,15 @@ always @(*) begin
         default: din = rom_data;
         ram_cs:  din = ram_dout;
         ext_cs:  din = ext_dout;
-        port_cs: din = port_map[addr[4:0]];
+        port_cs: begin
+            case( addr[4:0] )
+                5'd2: din = (p1_out & p1_datadir) | (p1_in & ~p1_datadir);
+                5'd3: din = (p2_out & p2_datadir) | (p2_in & ~p2_datadir);
+                5'd6: din = (p3_out & p3_datadir) | (p3_in & ~p3_datadir);
+                5'd7: din = (p4_out & p4_datadir) | (p4_in & ~p4_datadir);
+                default: din = port_map[addr[4:0]];
+            endcase
+        end
     endcase
 end
 
@@ -120,7 +133,7 @@ jtframe_gatecen #(.ROMW(ROMW)) u_gatecen(
     .wait_cen   ( wait_cen  )
 );
 
-m6801 u_mcu(   
+m6801 u_mcu(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .cen        ( wait_cen      ),
@@ -128,7 +141,7 @@ m6801 u_mcu(
     .vma        ( vma           ),
     .address    ( addr          ),
     .data_in    ( din           ),
-    .data_out   ( dout          ), 
+    .data_out   ( dout          ),
     .halt       ( halt          ),
     .halted     ( halted        ),
     .irq        ( irq           ),
