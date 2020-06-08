@@ -504,7 +504,10 @@ assign scan2x_de   = LVBL && LHBL;
     assign hdmi_hs      = 0;
     assign hdmi_vs      = 0;
     assign hdmi_sl      = 2'b0;
-
+    `ifndef MISTER
+        // avoid warning messages
+        assign gamma_bus    = 22'd0; // Unused in MiST
+    `endif
 `else
     localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
 
