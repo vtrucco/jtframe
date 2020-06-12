@@ -138,7 +138,7 @@ wire  [ 2:0]  scanlines;
 wire          en_mixing;
 wire          osd_pause;
 
-wire invert_inputs = GAME_INPUTS_ACTIVE_LOW;
+wire invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
 wire key_reset, key_pause, rot_control;
 reg [7:0] rst_cnt=8'd0;
 reg       game_pause;
@@ -435,10 +435,46 @@ jtframe_sdram u_sdram(
     .SDRAM_CKE      ( SDRAM_CKE     )
 );
 
+wire [COLORW-1:0] pre2x_r, pre2x_g, pre2x_b;
+wire              pre2x_LHBL, pre2x_LVBL;
+
+`ifdef JTFRAME_CREDITS
+    `ifndef JTFRAME_CREDITS_PAGES
+    `define JTFRAME_CREDITS_PAGES 3
+    `endif
+    wire toggle = |(game_start ^ {4{invert_inputs}});
+    // To do: HS and VS should actually be delayed inside jtframe_credits too
+    jtframe_credits #(
+        .PAGES  ( `JTFRAME_CREDITS_PAGES ),
+        .COLW   ( COLORW                 ),
+        .BLKPOL (      0                 )
+    ) (
+        .rst        ( rst           ),
+        .clk        ( clk_sys       ),
+        .pxl_cen    ( pxl_cen       ),
+
+        // input image
+        .HB         ( LHBL          ),
+        .VB         ( LVBL          ),
+        .rgb_in     ( { game_r, game_g, game_b } ),
+        .enable     ( ~dip_pause    ),
+        .toggle     ( toggle        ),
+
+        // output image
+        .HB_out     ( pre2x_LHBL      ),
+        .VB_out     ( pre2x_LVBL      ),
+        .rgb_out    ( {pre2x_r, pre2x_g, pre2x_b } )
+    );
+`else
+    assign { pre2x_r, pre2x_g, pre2x_b } = { game_r, game_g, game_b };
+    assign { pre2x_LHBL, pre2x_LVBL    } = { LHBL, LVBL };
+`endif
+
+
 `ifdef NOVIDEO
-assign scan2x_r    = game_r;
-assign scan2x_g    = game_g;
-assign scan2x_b    = game_b;
+assign scan2x_r    = pre2x_r;
+assign scan2x_g    = pre2x_g;
+assign scan2x_b    = pre2x_b;
 assign scan2x_hs   = hs;
 assign scan2x_vs   = vs;
 assign scan2x_clk  = clk_sys;
@@ -446,9 +482,9 @@ assign scan2x_cen  = pxl_cen;
 assign scan2x_de   = LVBL && LHBL;
 `else
 `ifdef SIMULATION
-assign scan2x_r    = game_r;
-assign scan2x_g    = game_g;
-assign scan2x_b    = game_b;
+assign scan2x_r    = pre2x_r;
+assign scan2x_g    = pre2x_g;
+assign scan2x_b    = pre2x_b;
 assign scan2x_hs   = hs;
 assign scan2x_vs   = vs;
 assign scan2x_clk  = clk_sys;
@@ -456,7 +492,7 @@ assign scan2x_cen  = pxl_cen;
 assign scan2x_de   = LVBL && LHBL;
 `else
 // Always use JTFRAME_SCAN2X for MiST and SiDi
-`ifndef MiSTer
+`ifndef MISTER
 `define JTFRAME_SCAN2X
 `endif
 
@@ -464,7 +500,7 @@ assign scan2x_de   = LVBL && LHBL;
     // This scan doubler takes very little memory. Some games in MiST
     // can only use this
     wire [COLORW*3-1:0] rgbx2;
-    wire [COLORW*3-1:0] game_rgb = {game_r, game_g, game_b };
+    wire [COLORW*3-1:0] game_rgb = {pre2x_r, pre2x_g, pre2x_b };
 
     function [7:0] extend8;
         input [COLORW-1:0] a;
@@ -517,12 +553,12 @@ assign scan2x_de   = LVBL && LHBL;
     // case we need to convert it to 24bpp
     generate
         if( COLORW!=5 ) begin
-            assign game_rgb = {game_r, game_g, game_b };
+            assign game_rgb = {pre2x_r, pre2x_g, pre2x_b };
         end else begin
             assign game_rgb = {
-                game_r, game_r[4:2],
-                game_g, game_g[4:2],
-                game_b, game_b[4:2]
+                pre2x_r, pre2x_r[4:2],
+                pre2x_g, pre2x_g[4:2],
+                pre2x_b, pre2x_b[4:2]
             };
         end
     endgenerate
@@ -539,8 +575,8 @@ assign scan2x_de   = LVBL && LHBL;
         .ce_pix     ( pxl_cen       ),
 
         .RGB_in     ( game_rgb      ),
-        .HBlank     ( ~LHBL         ),
-        .VBlank     ( ~LVBL         ),
+        .HBlank     ( ~pre2x_LHBL   ),
+        .VBlank     ( ~pre2x_LVBL   ),
         .HSync      ( hs            ),
         .VSync      ( vs            ),
 
