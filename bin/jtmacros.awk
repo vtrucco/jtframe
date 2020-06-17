@@ -22,7 +22,7 @@ BEGIN {
 # Convert only lines that start with a letter
 /^[a-zA-Z]/{
     if(dump) {
-        fixed=gensub(/\"/, "\\\\\"", "g" )
+        fixed=gensub(/"/, "\\\\\"", "g" )
         if( match(fixed,"=")==0 )
             fixed=fixed "=<None>"
         switch(mode) {

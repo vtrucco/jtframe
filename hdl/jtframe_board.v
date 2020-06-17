@@ -619,4 +619,4 @@ assign scan2x_de   = LVBL && LHBL;
 `endif
 `endif
 
-endmodule // jtgng_board
+endmodule
