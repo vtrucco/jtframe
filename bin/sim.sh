@@ -100,6 +100,11 @@ if [ "$YM2203" = 1 ]; then
     PERCORE="$PERCORE $(add_dir $MODULES/jt12/hdl jt03.f)"
 fi
 
+if [ "$YM3526" = 1 ]; then
+    echo "INFO: YM3526 support added."
+    PERCORE="$PERCORE $(add_dir $MODULES/jtopl/hdl jtopl.f)"
+fi
+
 if [ "$MSM5205" = 1 ]; then
     echo "INFO: MSM5205 support added."
     PERCORE="$PERCORE $(add_dir $MODULES/jt5205/hdl jt5205.f)"
@@ -449,19 +454,20 @@ fi
 if [ -n "$DEFFILE" ]; then
     awk -f $JTFRAME/bin/jtmacros.awk target=$TARGET mode=$SIMULATOR $DEFFILE > core.def
     COREDEF="-f core.def"
+    sed -i /JTFRAME_CREDITS/d core.def
 else
     COREDEF=
 fi
 
 case $SIMULATOR in
 iverilog)
-    $SHOWCMD iverilog -g2005-sv $MIST \
+    $SHOWCMD iverilog -g2005-sv $MIST $COREDEF \
         -f game.f $PERCORE \
         $(add_dir $JTFRAME/hdl/ver $SIMFILE ) \
         $JTFRAME/hdl/cpu/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
-        $MAXFRAME -DIVERILOG $COREDEF $EXTRA \
+        $MAXFRAME -DIVERILOG $EXTRA \
     || exit 1
     $SHOWCMD sim -lxt;;
 ncverilog)
