@@ -29,6 +29,7 @@ void MameParser::startElement( const XMLCh *const uri,
         const XMLCh *const localname, const XMLCh *const qname, const Attributes & attrs ) 
 {
     TOSTR( _localname, localname );
+    current_element = _localname;
     if( _localname == "machine" ) {
         GET_STR_ATTR( name );
         string cloneof;
@@ -70,6 +71,21 @@ void MameParser::endElement( const XMLCh *const uri,
         current_dip->values.sort();
         current_dip = nullptr;
     }
+}
+
+void MameParser::characters(const XMLCh *const chars, const XMLSize_t length) {
+    XMLCh* copy = new XMLCh[length+1];
+    copy[0] = 0;
+    for(int k=0; k<length; k++ ) {
+        copy[k] = chars[k]>32 && chars[k] != '$' ? chars[k] : 0;
+    }
+    copy[length] = 0;
+    TOSTR( _chars, chars );    
+    if( current_element == "description" && length>3 ) {
+        //cout << "Description chunk " << _chars << " - length " << length << '\n';
+        current->description += _chars;
+    }
+    delete[] copy;
 }
 
 void MameParser::parse_rom( const Attributes & attrs ) {

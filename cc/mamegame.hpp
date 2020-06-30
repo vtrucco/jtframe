@@ -55,7 +55,7 @@ class Game {
     std::list<DIPsw*> dips;
     ListRegions regions;
 public:
-    std::string name, full_name, cloneof;
+    std::string name, description, cloneof;
     int rotate;
     Game( std::string _name ) : name(_name), rotate(0) {}
     ~Game();
@@ -80,9 +80,10 @@ class MameParser : public DefaultHandler {
     DIPsw* current_dip;
     GameMap& games;
     void parse_rom( const Attributes & attrs );
+    std::string current_element;
 public:
     MameParser(GameMap& _games) : games(_games) {
-        current = nullptr;
+        current = nullptr;        
     }
     // void startDocument();
     // void endDocument();
@@ -93,6 +94,7 @@ public:
     );
     void endElement( const XMLCh *const uri,
         const XMLCh *const localname, const XMLCh *const qname );
+    void characters(const XMLCh *const chars, const XMLSize_t length);
 };
 
 

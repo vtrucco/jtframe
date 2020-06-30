@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void makeMRA( Game* g, string& rbf );
+void makeMRA( Game* g, string& rbf, string& dipbase );
 
 set<string> swapregions;
 set<string> fillregions;
@@ -21,7 +21,7 @@ map<string,int> fracregions;
 int main(int argc, char * argv[] ) {
     bool print=false;
     string fname="mame.xml";
-    string rbf;
+    string rbf, dipbase("16");
     bool   fname_assigned=false;
 
     for( int k=1; k<argc; k++ ) {
@@ -38,6 +38,10 @@ int main(int argc, char * argv[] ) {
             string reg(argv[++k]);
             int offset=strtol( argv[++k], NULL, 0 );
             startregions[reg]=offset;
+            continue;
+        }
+        if( a=="-dipbase" ) {
+            dipbase=argv[++k];
             continue;
         }
         if( a=="-ignore" ) {
@@ -60,10 +64,11 @@ int main(int argc, char * argv[] ) {
                     "Usage:\n"
                     "          first argument:  path to file containing 'mame -listxml' output\n"
                     "    -swapbytes <region> swap bytes for named region\n"
-                    "    -fill <region>      fill gaps between files within region\n"
-                    "    -ignore <region>    ignore a given region\n"
-                    "    -start <region>     set start of region in MRA file\n"
-                    "    -rbf   <name>       set RBF file name\n"
+                    "    -fill    <region>   fill gaps between files within region\n"
+                    "    -ignore  <region>   ignore a given region\n"
+                    "    -start   <region>   set start of region in MRA file\n"
+                    "    -rbf     <name>     set RBF file name\n"
+                    "    -dipbase <number>   First bit to use as DIP setting in MiST status word\n"
             ;
             return 0;
         }
@@ -79,7 +84,7 @@ int main(int argc, char * argv[] ) {
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
         cout << g.second->name << '\n';
-        makeMRA(g.second, rbf);
+        makeMRA(g.second, rbf, dipbase);
     }
     return 0;
 }
@@ -222,7 +227,7 @@ void makeROM( Node& root, Game* g ) {
     n.comment(endsize);
 }
 
-void makeDIP( Node& root, Game* g ) {
+void makeDIP( Node& root, Game* g, string& dipbase ) {
     ListDIPs& dips=g->getDIPs();
     int base=-8;
     bool ommit_parenthesis=true;
@@ -230,7 +235,7 @@ void makeDIP( Node& root, Game* g ) {
     if( dips.size() ) {
         Node& n = root.add("switches");
         n.add_attr("default","FF,FF");
-        n.add_attr("base","16");
+        n.add_attr("base",dipbase);
         for( DIPsw* dip : dips ) {
             if( dip->tag != last_tag /*|| dip->location != last_location*/ ) {
                 n.comment( dip->tag );
@@ -322,7 +327,7 @@ void makeMOD( Node& root, Game* g ) {
     mod.add_attr("index","1");
 }
 
-void makeMRA( Game* g, string& rbf ) {
+void makeMRA( Game* g, string& rbf, string& dipbase ) {
     string indent;
     Node root("misterromdescription");
 
@@ -332,7 +337,7 @@ void makeMRA( Game* g, string& rbf ) {
     about.add_attr("source","https://github.com/jotego");
     about.add_attr("twitter","@topapate");
 
-    root.add("name",g->name); // should be full_name. Not implemented yet
+    root.add("name",g->description);
     root.add("setname",g->name);
     if( rbf.length()>0 ) {
         root.add("rbf",rbf);
@@ -340,10 +345,10 @@ void makeMRA( Game* g, string& rbf ) {
 
     makeROM( root, g );
     makeMOD( root, g );
-    makeDIP( root, g );
+    makeDIP( root, g, dipbase );
     makeJOY( root, g );
 
-    string fout_name = g->name+".mra";
+    string fout_name = g->description+".mra";
     ofstream fout(fout_name);
     if( !fout.good() ) {
         cout << "ERROR: cannot create " << fout_name << '\n';
