@@ -153,8 +153,23 @@ case "$SYSNAME" in
             EXTRA="$EXTRA ${MACROPREFIX}POPEYECEN"
             ;;
 esac
-EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"${GAME_ROM_PATH}\""
 
+# Adds ROM file information
+# By default GAME_ROM_PATH gets defined to rom.bin and
+# GAME_ROM_LEN will contain the full length of that file
+# These values can be overriden by the calling go.sh script
+# via exports commands
+if [ -z "$GAME_ROM_PATH" ]; then
+    GAME_ROM_PATH=rom.bin
+fi
+
+EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"${GAME_ROM_PATH}\""
+if [ -e "$GAME_ROM_PATH" ]; then
+    if [ -z "$GAME_ROM_LEN" ]; then
+        GAME_ROM_LEN=$(stat --dereference -c%s $GAME_ROM_PATH)
+    fi
+    EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_LEN=${GAME_ROM_LEN}"
+fi
 
 while [ $# -gt 0 ]; do
 case "$1" in
