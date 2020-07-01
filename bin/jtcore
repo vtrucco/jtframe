@@ -410,8 +410,21 @@ if [ $PROG = TRUE ]; then
     else
         CABLE="USB-Blaster(Altera)"
         FILE=$PRJPATH/${TARGET}/jt$PRJ.cdf
+        if [ ! -e $FILE ]; then
+            cat > $FILE << EOF
+JedecChain;
+    FileRevision(JESD32A);
+    DefaultMfr(6E);
+    P ActionCode(Cfg)
+        Device PartName(EP3C25E144) Path("") File("jt$PRJ.sof") MfrSpec(OpMask(1));
+ChainEnd;
+
+AlteraBegin;
+    ChainType(JTAG);
+AlteraEnd;
+EOF
+        fi
     fi
     quartus_pgm -c "$CABLE" $FILE
 fi
-
 echo completed at $(date)
