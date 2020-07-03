@@ -126,6 +126,7 @@ void makeROM( Node& root, Game* g ) {
     n.add_attr("type","merged");
     n.add_attr("md5","None"); // important or MiSTer will not let the game boot
     int dumped=0;
+    g->moveRegionBack("proms"); // This region should appear last
     for( ROMRegion* region : g->getRegionList() ) {
         if ( ignoreregions.count(region->name)>0 ) continue;
         auto start_offset = startregions.find(region->name);

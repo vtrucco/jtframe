@@ -100,6 +100,17 @@ void MameParser::parse_rom( const Attributes & attrs ) {
     );
 }
 
+void Game::moveRegionBack(std::string name) {
+    for( ListRegions::iterator k=regions.begin(); k!=regions.end(); k++ ) {
+        ROMRegion* tomove = *k;
+        if( tomove->name==name ) {
+            regions.erase(k);
+            regions.push_back(tomove);
+            break;
+        }
+    }
+}
+
 ROMRegion* Game::getRegion( std::string _name ) {
     static ROMRegion *last = nullptr;
     if( last != nullptr ) {

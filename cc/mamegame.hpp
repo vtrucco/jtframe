@@ -65,6 +65,7 @@ public:
     ListDIPs& getDIPs() { return dips; }
     ROMRegion* getRegion( std::string _name );
     ListRegions& getRegionList() { return regions; }
+    void moveRegionBack(std::string name);
 };
 
 class GameMap : public std::map<std::string,Game*> {
