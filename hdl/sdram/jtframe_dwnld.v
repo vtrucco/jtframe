@@ -46,6 +46,10 @@ localparam       PROM_EN   = PROM_START!=~25'd0;
 
 wire             is_prom   = PROM_EN && ioctl_addr>=PROM_START;
 
+`ifdef LOADROM
+`undef JTFRAME_DWNLD_PROM_ONLY
+`endif
+
 `ifndef JTFRAME_DWNLD_PROM_ONLY
 /////////////////////////////////////////////////
 // Normal operation

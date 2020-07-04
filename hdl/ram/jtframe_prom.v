@@ -61,26 +61,28 @@ reg [dw-1:0] mem_check[0:(2**aw)-1];
 reg check_ok=1'b1;
 initial begin
     #(`MEM_CHECK_TIME);
-    f=$fopen(simfile,"rb");
-    if( f!= 0 ) begin
-        readcnt = $fseek( f, offset, 0 );   // return value assigned to readcnt to avoid a warning
-        readcnt = $fread( mem_check, f );
-        $fclose(f);
-        for( readcnt=readcnt-1;readcnt>=0; readcnt=readcnt-1) begin
-            if( mem_check[readcnt] != mem[readcnt] ) begin
-                $display("ERROR: memory content check failed for file %s (%m) @ 0x%x", simfile, readcnt );
-                check_ok = 1'b0;
-                //`ifndef IVERILOG
-                //break;
-                //`else 
-                    readcnt = 0; // force a break
-                //`endif
+    if( simfile != "" ) begin
+        f=$fopen(simfile,"rb");
+        if( f!= 0 ) begin
+            readcnt = $fseek( f, offset, 0 );   // return value assigned to readcnt to avoid a warning
+            readcnt = $fread( mem_check, f );
+            $fclose(f);
+            for( readcnt=readcnt-1;readcnt>=0; readcnt=readcnt-1) begin
+                if( mem_check[readcnt] != mem[readcnt] ) begin
+                    $display("ERROR: memory content check failed for file %s (%m) @ 0x%x", simfile, readcnt );
+                    check_ok = 1'b0;
+                    //`ifndef IVERILOG
+                    //break;
+                    //`else 
+                        readcnt = 0; // force a break
+                    //`endif
+                end
             end
+            if( check_ok ) $display("INFO: %m memory check succedded");
         end
-        if( check_ok ) $display("INFO: %m memory check succedded");
-    end
-    else begin
-        $display("ERROR: Cannot find file %s to check memory %m", simfile );
+        else begin
+            $display("ERROR: Cannot find file %s to check memory %m", simfile );
+        end
     end
 end
 `endif
