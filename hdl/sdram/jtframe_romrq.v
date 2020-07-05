@@ -53,8 +53,8 @@ always @(*) begin
         16: addr_req = {addr[AW-1:1],1'b0};
         32: addr_req = addr;
     endcase
-    hit0 = addr_req === cached_addr0 && good[0];
-    hit1 = addr_req === cached_addr1 && good[1];
+    hit0 = addr_req == cached_addr0 && good[0];
+    hit1 = addr_req == cached_addr1 && good[1];
     req = clr || ( !(hit0 || hit1) && addr_ok && !we);
 end
 
@@ -62,7 +62,11 @@ end
 
 always @(posedge clk, posedge rst)
     if( rst ) begin
-        good      <= 2'b00;
+        good         <= 'd0;
+        cached_data0 <= 'd0;
+        cached_data1 <= 'd0;
+        cached_addr0 <= 'd0;
+        cached_addr1 <= 'd0;
     end else begin
         if( clr ) good <= 2'b00;
         data_ok <= addr_ok && ( hit0 || hit1 || (din_ok&&we));

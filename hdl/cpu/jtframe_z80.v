@@ -64,6 +64,15 @@ module jtframe_sysz80(
     input         rom_ok
 );
 
+`ifdef SIMULATION
+always @(negedge rst_n ) begin
+    if( busrq_n === 1'bz ) begin
+        $display("ERROR: assertion failed at %m.\n\tBus request signal is floating");
+        $finish;;
+    end
+end
+`endif
+
     parameter RAM_AW=12;
     wire ram_we = ram_cs & ~wr_n;
 
