@@ -100,6 +100,11 @@ if [ "$YM2203" = 1 ]; then
     PERCORE="$PERCORE $(add_dir $MODULES/jt12/hdl jt03.f)"
 fi
 
+if [ "$UDP7759" = 1 ]; then
+    echo "INFO: uDP7759 support added."
+    PERCORE="$PERCORE $(add_dir $MODULES/jt7759/hdl jt7759.f)"
+fi
+
 if [ "$YM3526" = 1 ]; then
     echo "INFO: YM3526 support added."
     PERCORE="$PERCORE $(add_dir $MODULES/jtopl/hdl jtopl.f)"
