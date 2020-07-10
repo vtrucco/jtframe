@@ -10,7 +10,6 @@
 
 using namespace std;
 
-void makeMRA( Game* g, string& rbf, string& dipbase );
 
 set<string> swapregions;
 set<string> fillregions;
@@ -18,11 +17,22 @@ set<string> ignoreregions;
 map<string,int> startregions;
 map<string,int> fracregions;
 
+class DIP_shift {
+public:
+    string name;
+    int shift;
+};
+
+typedef list<DIP_shift> shift_list;
+
+void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts );
+
 int main(int argc, char * argv[] ) {
     bool print=false;
     string fname="mame.xml";
     string rbf, dipbase("16");
     bool   fname_assigned=false;
+    shift_list shifts;
 
     for( int k=1; k<argc; k++ ) {
         string a = argv[k];
@@ -44,6 +54,11 @@ int main(int argc, char * argv[] ) {
             dipbase=argv[++k];
             continue;
         }
+        if( a=="-dipshift" ) {
+            assert(argc>k+2);
+            shifts.push_back( {argv[++k], (int)strtol(argv[++k], NULL,0) });
+            continue;
+        }
         if( a=="-ignore" ) {
             ignoreregions.insert(string(argv[++k]));
             continue;
@@ -63,12 +78,13 @@ int main(int argc, char * argv[] ) {
                     "          by Jose Tejada. Part of JTFRAME\n"
                     "Usage:\n"
                     "          first argument:  path to file containing 'mame -listxml' output\n"
-                    "    -swapbytes <region> swap bytes for named region\n"
-                    "    -fill    <region>   fill gaps between files within region\n"
-                    "    -ignore  <region>   ignore a given region\n"
-                    "    -start   <region>   set start of region in MRA file\n"
-                    "    -rbf     <name>     set RBF file name\n"
-                    "    -dipbase <number>   First bit to use as DIP setting in MiST status word\n"
+                    "    -swapbytes <region>        swap bytes for named region\n"
+                    "    -fill      <region>        fill gaps between files within region\n"
+                    "    -ignore    <region>        ignore a given region\n"
+                    "    -start     <region>        set start of region in MRA file\n"
+                    "    -rbf       <name>          set RBF file name\n"
+                    "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
+                    "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
             ;
             return 0;
         }
@@ -84,7 +100,7 @@ int main(int argc, char * argv[] ) {
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
         cout << g.second->name << '\n';
-        makeMRA(g.second, rbf, dipbase);
+        makeMRA(g.second, rbf, dipbase, shifts );
     }
     return 0;
 }
@@ -228,11 +244,12 @@ void makeROM( Node& root, Game* g ) {
     n.comment(endsize);
 }
 
-void makeDIP( Node& root, Game* g, string& dipbase ) {
+void makeDIP( Node& root, Game* g, string& dipbase, shift_list& shifts ) {
     ListDIPs& dips=g->getDIPs();
     int base=-8;
     bool ommit_parenthesis=true;
     string last_tag, last_location;
+    int cur_shift=0;
     if( dips.size() ) {
         Node& n = root.add("switches");
         n.add_attr("default","FF,FF");
@@ -245,6 +262,14 @@ void makeDIP( Node& root, Game* g, string& dipbase ) {
                 last_tag = dip->tag;
                 last_location = dip->location;
                 // cout << "base = " << base << "\ntag " << dip->tag << "\nlocation " << dip->location << '\n';
+                // Look for shift
+                cur_shift = 0;
+                for( auto& k : shifts) {
+                    if( k.name == dip->tag ) {
+                        cur_shift = k.shift;
+                        break;
+                    }
+                }
             }
             Node &dipnode = n.add("dip");
             dipnode.add_attr("name",dip->name);
@@ -272,6 +297,9 @@ void makeDIP( Node& root, Game* g, string& dipbase ) {
             --bit1;
             //if( bit0 > base ) bit0-=base;
             //if( bit1 > base ) bit1-=base;
+            // apply shift
+            bit0 -= cur_shift;
+            bit1 -= cur_shift;
             stringstream bits;
             if( bit1==bit0 )
                 bits << dec << bit0;
@@ -328,7 +356,7 @@ void makeMOD( Node& root, Game* g ) {
     mod.add_attr("index","1");
 }
 
-void makeMRA( Game* g, string& rbf, string& dipbase ) {
+void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts ) {
     string indent;
     Node root("misterromdescription");
 
@@ -346,7 +374,7 @@ void makeMRA( Game* g, string& rbf, string& dipbase ) {
 
     makeROM( root, g );
     makeMOD( root, g );
-    makeDIP( root, g, dipbase );
+    makeDIP( root, g, dipbase, shifts );
     makeJOY( root, g );
 
     string fout_name = g->description+".mra";
