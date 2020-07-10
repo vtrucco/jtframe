@@ -123,9 +123,9 @@ def get_pal(bmp):
     for k in range(len(bmp)):
         j=0
         while j<len(bmp[0]):
-            if(bmp[k][j+3]!=0):
+            if(bmp[k][j+3]==255):
                 curpal.add ( (bmp[k][j]>>4, bmp[k][j+1]>>4, bmp[k][j+2]>>4)  )
-                palorig.add( (bmp[k][j], bmp[k][j+1], bmp[k][j+2])  )
+                palorig.add( (bmp[k][j], bmp[k][j+1], bmp[k][j+2], bmp[k][j+3])  )
             j+=4
     j=0
     pal=dict()

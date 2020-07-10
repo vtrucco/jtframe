@@ -57,13 +57,21 @@ int parse_line( int *buf, ifstream& fin ) {
     int f = line.find_first_not_of(" \t");
     if( line[f] == '#' ) return 0;
     if( line[f] == '\\') {
-        if( line[f+1]=='9') { // parse 9x9 object
+        int row_max=3;
+        int col_max=0;
+        if( line[f+1]=='9') { // parse 3x3 object
+            col_max=3;
+        }
+        if( line[f+1]=='6') { // parse 2x3 object
+            col_max=2;
+        }
+        if( col_max>0 ) {
             line=line.substr(3);
             int id, x, y, pal;
             int n = sscanf( line.c_str(), "%d, %d, %d, %d\n", &id, &x, &y, &pal );
             if( n!=4 ) throw "ERROR: not enough arguments ";
-            for( int row=0; row<3; row++ )
-                for( int col=0; col<3; col++ )
+            for( int row=0; row<row_max; row++ )
+                for( int col=0; col<col_max; col++ )
                 {
                     buf[0] = id++;
                     buf[1] = x + col*2;
@@ -72,9 +80,8 @@ int parse_line( int *buf, ifstream& fin ) {
                     buf+=4;
                 }
             return 4*9;
-        } else {
-            throw "ERROR: cannot parse line "+line;
         }
+        throw "ERROR: cannot parse line "+line;
     }
     else { // single object
         int id, x, y, pal;

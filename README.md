@@ -324,9 +324,10 @@ There should be one line per image.
 4. Palette
 
 * Line starting with # character are treated as comments
-* A line can start with the scape code **\9,** which means that the following
-  four fields should be expanded to a full 3x3 sprite, adjusting tile code
+* A line can start with the scape code **\6,** which means that the following
+  four fields should be expanded to a full 2x3 sprite, adjusting tile code
   and positions accordingly
+* Another scape code is **\9,** and will expand to a full 3x3 sprite
 * The table end is marked by an object with ID 255
 
 avatar.py needs a .png image that complies with:
@@ -334,6 +335,7 @@ avatar.py needs a .png image that complies with:
 1. x-y sizes are multiples of 8
 2. Maximum 16 colours in the image
 3. Alpha channel present in the PNG
+4. Image format is RGB (not indexed)
 
 Once the three files msg, avatars and lut are available, jtcore will process them as part of the compilation.
 
