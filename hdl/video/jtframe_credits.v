@@ -284,7 +284,7 @@ always @(posedge clk) begin
             16: begin
                 {z,y,x,w}     <= obj_data;
                 obj_addr[1:0] <= 2'b11;
-            end 
+            end
             21: {z,y,x,w}     <= obj_data;
             26: begin
                 buf_we0<= 1'b0;
@@ -334,14 +334,14 @@ wire [COLW*3-1:0] dim = { 1'b0, old2[R1:R0+1], 1'b0, old2[G1:G0+1], 1'b0, old2[B
 
 function [COLW*3-1:0] extend;
     input [11:0] rgb4;
-    extend = 
+    extend =
         COLW==5 ? {
             rgb4[11:8], rgb4[11],
             rgb4[7:4],  rgb4[7],
             rgb4[3:0],  rgb4[3]
         } : (
         COLW==4 ? rgb4 :
-        { 
+        {
             rgb4[11:8], rgb4[11:8],
             rgb4[7:4],  rgb4[7:4],
             rgb4[3:0],  rgb4[3:0]
@@ -350,18 +350,18 @@ endfunction
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        show        <= 1'b0;
-        last_toggle <= 1'b0;
-        last_enable <= 1'b0;
+        show        <= 0;
+        last_toggle <= 0;
+        last_enable <= 0;
     end else begin
         last_toggle <= toggle;
         last_enable <= enable;
 
         if( enable ) begin
-            if( !last_enable ) show <= 1'b1;
+            if( !last_enable ) show <= 1;
             else if( toggle && !last_toggle ) show <= ~show;
         end else begin
-            show <= 1'b0;
+            show <= 0;
         end
     end
 end
@@ -373,7 +373,7 @@ always @(posedge clk) if(pxl_cen) begin
     if( !show )
         rgb_out <= old2;
     else begin
-        if( (!pxl[0] && !obj_ok) || !visible 
+        if( (!pxl[0] && !obj_ok) || !visible
             /*|| (blanks[1:0]^{2{~BLKPOL[0]}}!=2'b00)*/ ) begin
             rgb_out            <= dim;
         end else begin

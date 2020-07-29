@@ -50,7 +50,7 @@ int main( int argc, char *argv[] ) {
     return 0;
 }
 
-int parse_line( int *buf, ifstream& fin ) {    
+int parse_line( int *buf, ifstream& fin ) {
     string line;
     getline( fin, line );
     if( line.length()==0 ) return 0;
@@ -62,7 +62,7 @@ int parse_line( int *buf, ifstream& fin ) {
         if( line[f+1]=='9') { // parse 3x3 object
             col_max=3;
         }
-        if( line[f+1]=='6') { // parse 2x3 object
+        if( line[f+1]=='6') { // parse 3x2 object
             col_max=2;
         }
         if( col_max>0 ) {
@@ -92,6 +92,6 @@ int parse_line( int *buf, ifstream& fin ) {
         buf[2] = --y; // deleted one so when writting LUT on a text editor
             // the line numbers used in the msg file can be entered directly
         buf[3] = pal;
-        return 4;        
+        return 4;
     }
 }

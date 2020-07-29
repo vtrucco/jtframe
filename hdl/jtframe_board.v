@@ -105,7 +105,7 @@ module jtframe_board #(parameter
     input             LHBL,
     input             LVBL,
     input             hs,
-    input             vs, 
+    input             vs,
     input             pxl_cen,
     input             pxl2_cen,
     // HDMI outputs (only for MiSTer)
@@ -119,7 +119,7 @@ module jtframe_board #(parameter
     output            hdmi_hs,
     output            hdmi_vs,
     output            hdmi_de,   // = ~(VBlank | HBlank)
-    output    [ 1:0]  hdmi_sl,   // scanlines fx    
+    output    [ 1:0]  hdmi_sl,   // scanlines fx
     // scan doubler
     input             scan2x_enb,
     output    [7:0]   scan2x_r,
@@ -146,7 +146,7 @@ wire      scandoubler = ~scan2x_enb;
 
 `ifdef JTFRAME_MISTER_VIDEO_DW
 localparam arcade_fx_dw = `JTFRAME_MISTER_VIDEO_DW;
-`else 
+`else
 localparam arcade_fx_dw = COLORW*3;
 `endif
 
@@ -182,7 +182,7 @@ wire rst_flip = 0;
 `endif
 
 always @(negedge clk_rom) begin
-    if( downloading | rst | rst_req 
+    if( downloading | rst | rst_req
         | rst_flip | soft_rst ) begin
         game_rst_cnt <= 8'd0;
         game_rst     <= 1'b1;
@@ -296,7 +296,7 @@ function [9:0] apply_rotation;
     input       rot;
     input       invert;
     begin
-    apply_rotation = {10{invert}} ^ 
+    apply_rotation = {10{invert}} ^
         (!rot ? joy_in : { joy_in[9:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
     end
 endfunction
@@ -330,25 +330,25 @@ always @(posedge clk_sys)
 
         // joystick, coin, start and service inputs are inverted
         // as indicated in the instance parameter
-        
+
         `ifdef SIM_INPUTS
         game_coin  = {4{invert_inputs}} ^ { 2'b0, sim_inputs[frame_cnt][1:0] };
         game_start = {4{invert_inputs}} ^ { 2'b0, sim_inputs[frame_cnt][3:2] };
         game_joystick1 <= {10{invert_inputs}} ^ { 4'd0, sim_inputs[frame_cnt][9:4]};
         `else
         game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, invert_inputs);
-        game_coin      <= {4{invert_inputs}} ^ 
+        game_coin      <= {4{invert_inputs}} ^
             ({  joy4_sync[COIN_BIT],joy3_sync[COIN_BIT],
                 joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
-        
-        game_start     <= {4{invert_inputs}} ^ 
-            ({  joy4_sync[START_BIT],joy3_sync[START_BIT],  
+
+        game_start     <= {4{invert_inputs}} ^
+            ({  joy4_sync[START_BIT],joy3_sync[START_BIT],
                 joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start);
         `endif
         game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, invert_inputs);
         game_joystick3 <= apply_rotation(joy3_sync | key_joy3, rot_control, invert_inputs);
         game_joystick4 <= apply_rotation(joy4_sync           , rot_control, invert_inputs);
-        
+
         soft_rst <= key_reset && !last_reset;
 
         `ifndef JTFRAME_RELEASE
@@ -363,7 +363,7 @@ always @(posedge clk_sys)
         else // toggle
             if( (key_pause && !last_pause) || (joy_pause && !last_joypause) || osd_pause)
                 game_pause   <= ~game_pause;
-        `else 
+        `else
         game_pause <= 1'b1;
         `endif
         game_service <= key_service ^ invert_inputs;
@@ -417,11 +417,11 @@ jtframe_sdram u_sdram(
     .prog_rd        ( prog_rd       ),
     .prog_addr      ( prog_addr     ),
     .prog_data      ( prog_data     ),
-    .prog_mask      ( prog_mask     ),    
+    .prog_mask      ( prog_mask     ),
     .prog_bank      ( prog_bank     ),
     .sdram_addr     ( sdram_addr    ),
     .sdram_bank     ( sdram_bank    ),
-    .sdram_ack      ( sdram_ack     ),    
+    .sdram_ack      ( sdram_ack     ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ      ),
     .SDRAM_A        ( { sdram_a, SDRAM_A[10:0] } ),
@@ -447,8 +447,8 @@ wire              pre2x_LHBL, pre2x_LVBL;
     jtframe_credits #(
         .PAGES  ( `JTFRAME_CREDITS_PAGES ),
         .COLW   ( COLORW                 ),
-        .BLKPOL (      0                 )
-    ) (
+        .BLKPOL (      0                 ) // 0 for active low signals
+    ) u_credits(
         .rst        ( rst           ),
         .clk        ( clk_sys       ),
         .pxl_cen    ( pxl_cen       ),
@@ -459,7 +459,6 @@ wire              pre2x_LHBL, pre2x_LVBL;
         .rgb_in     ( { game_r, game_g, game_b } ),
         .enable     ( ~dip_pause    ),
         .toggle     ( toggle        ),
-
         // output image
         .HB_out     ( pre2x_LHBL      ),
         .VB_out     ( pre2x_LVBL      ),
@@ -562,14 +561,14 @@ assign scan2x_de   = LVBL && LHBL;
             };
         end
     endgenerate
-    
+
     // VIDEO_WIDTH does not include blanking:
     arcade_video #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(VIDEO_DW)
         // Disable Gamma correction for MiST/SiDi
         `ifndef MISTER
         ,.GAMMA(0)
         `endif
-        ) 
+        )
     u_arcade_video(
         .clk_video  ( clk_sys       ),
         .ce_pix     ( pxl_cen       ),
