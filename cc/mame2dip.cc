@@ -4,6 +4,7 @@
 #include <string>
 #include <list>
 #include <set>
+#include <ctype.h>
 
 #include "mamegame.hpp"
 
@@ -25,12 +26,13 @@ public:
 
 typedef list<DIP_shift> shift_list;
 
-void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts );
+void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const string& buttons );
+void clean_filename( string& fname );
 
 int main(int argc, char * argv[] ) {
     bool print=false;
     string fname="mame.xml";
-    string rbf, dipbase("16");
+    string rbf, dipbase("16"), buttons;
     bool   fname_assigned=false;
     shift_list shifts;
 
@@ -73,6 +75,15 @@ int main(int argc, char * argv[] ) {
             rbf =argv[++k];
             continue;
         }
+        if( a=="-buttons" ) {
+            while( ++k < argc && argv[k][0]!='-' ) {
+                if(buttons.size()==0)
+                    buttons=argv[k];
+                else
+                    buttons+=string(" ") + string(argv[k]);
+            }
+            continue;
+        }
         if( a == "-help" || a =="-h" ) {
             cout << "mame2dip: converts MAME dipswitch definition to MRA format\n"
                     "          by Jose Tejada. Part of JTFRAME\n"
@@ -85,6 +96,7 @@ int main(int argc, char * argv[] ) {
                     "    -rbf       <name>          set RBF file name\n"
                     "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
                     "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
+                    "    -buttons   shoot jump etc  Gives names to the input buttons\n"
             ;
             return 0;
         }
@@ -100,7 +112,7 @@ int main(int argc, char * argv[] ) {
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
         cout << g.second->name << '\n';
-        makeMRA(g.second, rbf, dipbase, shifts );
+        makeMRA(g.second, rbf, dipbase, shifts, buttons );
     }
     return 0;
 }
@@ -164,7 +176,7 @@ void makeROM( Node& root, Game* g ) {
         snprintf(title,128,"%s - starts at 0x%X", region->name.c_str(), dumped );
         n.comment( title );
         bool swap = swapregions.count(region->name)>0;
-        bool fill = fillregions.count(region->name)>0;     
+        bool fill = fillregions.count(region->name)>0;
         // is it a fractioned region?
         auto frac_idx = fracregions.find(region->name);
         int frac=0;
@@ -176,8 +188,8 @@ void makeROM( Node& root, Game* g ) {
             case 2: frac_output="16"; break;
             case 4: frac_output="32"; break;
             case 0: break;
-            default: cout << "WARNING: unsupported frac value for region " 
-                          << region->name << "\n"; 
+            default: cout << "WARNING: unsupported frac value for region "
+                          << region->name << "\n";
                      continue;
         }
         if( frac==0 ) {
@@ -257,7 +269,7 @@ void makeDIP( Node& root, Game* g, string& dipbase, shift_list& shifts ) {
         for( DIPsw* dip : dips ) {
             if( dip->tag != last_tag /*|| dip->location != last_location*/ ) {
                 n.comment( dip->tag );
-                //if( last_tag.size() ) 
+                //if( last_tag.size() )
                 base+=8;
                 last_tag = dip->tag;
                 last_location = dip->location;
@@ -338,10 +350,37 @@ void makeDIP( Node& root, Game* g, string& dipbase, shift_list& shifts ) {
     }
 }
 
-void makeJOY( Node& root, Game* g ) {
+void makeJOY( Node& root, Game* g, string buttons ) {
     Node& n = root.add("buttons");
-    n.add_attr("names","Fire,Jump,Start,Coin,Pause");
-    n.add_attr("default","A,B,R,L,Start");
+    if( buttons.size()==0 ) {
+        buttons="Fire Jump";
+    }
+    string names,mapped;
+    int count=0;
+    const char *pad_buttons[]={"Y","X","B","A","L","R","Select","Start"};
+    size_t last=0, pos = buttons.find_first_of(' ');
+    do {
+        if(count>0) {
+            names+=",";
+            mapped+=",";
+        }
+        buttons[last] = toupper( buttons[last] );
+        names  += pos==string::npos ? buttons.substr(last) : buttons.substr(last,pos-last);
+        mapped += pad_buttons[count];
+        if(pos==string::npos) break;
+        last=pos+1;
+        pos=buttons.find_first_of(' ', last);
+        count++;
+    } while(true);
+    if( count>4 ) {
+        cout << "ERROR: more than four buttons were defined. That is not supported yet.\n";
+        cout << "       start, coin and pause will not be automatically added\n";
+    } else {
+        names +=",Start,Coin,Pause";
+        mapped+=",R,L,Start";
+    }
+    n.add_attr("names",names.c_str());
+    n.add_attr("default",mapped.c_str());
 }
 
 void makeMOD( Node& root, Game* g ) {
@@ -356,7 +395,7 @@ void makeMOD( Node& root, Game* g ) {
     mod.add_attr("index","1");
 }
 
-void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts ) {
+void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const string& buttons ) {
     string indent;
     Node root("misterromdescription");
 
@@ -375,9 +414,11 @@ void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts ) {
     makeROM( root, g );
     makeMOD( root, g );
     makeDIP( root, g, dipbase, shifts );
-    makeJOY( root, g );
+    makeJOY( root, g, buttons );
 
-    string fout_name = g->description+".mra";
+    string fout_name = g->description;
+    clean_filename(fout_name);
+    fout_name+=".mra";
     ofstream fout(fout_name);
     if( !fout.good() ) {
         cout << "ERROR: cannot create " << fout_name << '\n';
@@ -420,7 +461,7 @@ void Node::add_attr( string n, string v) {
 
 void Node::comment( string v ) {
     Node *nd = new Node(v);
-    nodes.push_back(nd);    
+    nodes.push_back(nd);
     nd->is_comment = true;
 }
 
@@ -458,4 +499,29 @@ void Node::dump(ostream& os, string indent ) {
 Node::~Node() {
     for( Node* n: nodes ) delete n;
     for( Attr* a: attrs ) delete a;
+}
+
+void clean_filename( string& fname ) {
+    if( fname.size()==0 ) {
+        fname="no-description";
+        cout << "ERROR: no description in XML file\n";
+        return;
+    }
+    char *s = new char[ fname.size()+1 ];
+    char *c = s;
+    for( int k=0; k<fname.size(); k++ ) {
+        if( fname[k]=='/' ) {
+            *c++='-';
+        } else
+        if( fname[k]>=32 && fname[k]!='\'') {
+            *c++=fname[k];
+        }
+    }
+    *c=0;
+    // Remove trailing blanks
+    while( *--c==' ' || *c=='\t' ) {
+        *c=0;
+    }
+    fname=s;
+    delete[]s;
 }
