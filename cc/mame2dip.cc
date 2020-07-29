@@ -26,13 +26,13 @@ public:
 
 typedef list<DIP_shift> shift_list;
 
-void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const string& buttons );
+void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const string& buttons, const string& altfolder );
 void clean_filename( string& fname );
 
 int main(int argc, char * argv[] ) {
     bool print=false;
     string fname="mame.xml";
-    string rbf, dipbase("16"), buttons;
+    string rbf, dipbase("16"), buttons, altfolder;
     bool   fname_assigned=false;
     shift_list shifts;
 
@@ -75,6 +75,10 @@ int main(int argc, char * argv[] ) {
             rbf =argv[++k];
             continue;
         }
+        if( a=="-altfolder" ) {
+            altfolder = argv[++k];
+            continue;
+        }
         if( a=="-buttons" ) {
             while( ++k < argc && argv[k][0]!='-' ) {
                 if(buttons.size()==0)
@@ -82,6 +86,7 @@ int main(int argc, char * argv[] ) {
                 else
                     buttons+=string(" ") + string(argv[k]);
             }
+            if( k<argc && argv[k][0]=='-' ) k--;
             continue;
         }
         if( a == "-help" || a =="-h" ) {
@@ -97,6 +102,7 @@ int main(int argc, char * argv[] ) {
                     "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
                     "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
                     "    -buttons   shoot jump etc  Gives names to the input buttons\n"
+                    "    -altfolder path            Path where MRA for clone games will be added\n"
             ;
             return 0;
         }
@@ -112,7 +118,7 @@ int main(int argc, char * argv[] ) {
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
         cout << g.second->name << '\n';
-        makeMRA(g.second, rbf, dipbase, shifts, buttons );
+        makeMRA(g.second, rbf, dipbase, shifts, buttons, altfolder );
     }
     return 0;
 }
@@ -391,11 +397,13 @@ void makeMOD( Node& root, Game* g ) {
     }
     char buf[4];
     snprintf(buf,4,"%02X",mod_value);
-    Node& mod=root.add("rom",buf);
+    Node& mod=root.add("rom");
     mod.add_attr("index","1");
+    Node& part = mod.add("part",buf);
+
 }
 
-void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const string& buttons ) {
+void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const string& buttons, const string& altfolder ) {
     string indent;
     Node root("misterromdescription");
 
@@ -419,6 +427,10 @@ void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const s
     string fout_name = g->description;
     clean_filename(fout_name);
     fout_name+=".mra";
+    // MRA file for a clone is created in a subfolder - if specified
+    if( g->cloneof.size() && altfolder.size() ) {
+        fout_name = altfolder + "/" + fout_name;
+    }
     ofstream fout(fout_name);
     if( !fout.good() ) {
         cout << "ERROR: cannot create " << fout_name << '\n';
@@ -513,7 +525,7 @@ void clean_filename( string& fname ) {
         if( fname[k]=='/' ) {
             *c++='-';
         } else
-        if( fname[k]>=32 && fname[k]!='\'') {
+        if( fname[k]>=32 && fname[k]!='\'' && fname[k]!=':') {
             *c++=fname[k];
         }
     }
