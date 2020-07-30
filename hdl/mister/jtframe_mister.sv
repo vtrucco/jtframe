@@ -125,7 +125,7 @@ module jtframe_mister #(parameter
     output            hdmi_vs,
     output            hdmi_clk,
     output            hdmi_de,   // = ~(VBlank | HBlank)
-    output    [ 1:0]  hdmi_sl,   // scanlines fx   
+    output    [ 1:0]  hdmi_sl,   // scanlines fx
     // non standard:
     output            dip_pause,
     inout             dip_flip,
@@ -153,42 +153,9 @@ wire [15:0]   joystick1, joystick2, joystick3, joystick4;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire          force_scan2x, direct_video;
 
-wire [7:0]    pre_scan2x_r;
-wire [7:0]    pre_scan2x_g;
-wire [7:0]    pre_scan2x_b;
-wire          pre_scan2x_hs;
-wire          pre_scan2x_vs;
-wire          pre_scan2x_clk;
-wire          pre_scan2x_cen;
-wire          pre_scan2x_de;
-
 reg  [6:0]    core_mod;
 
 wire          hs_resync, vs_resync;
-
-// This slows down synthesis on MiSTer a lot
-// if pre_scan signals come from a 25MHz clock domain
-always @(*) begin
-    if( force_scan2x ) begin
-        scan2x_r    = pre_scan2x_r;
-        scan2x_g    = pre_scan2x_g;
-        scan2x_b    = pre_scan2x_b;
-        scan2x_hs   = pre_scan2x_hs;
-        scan2x_vs   = pre_scan2x_vs;
-        scan2x_clk  = pre_scan2x_clk;
-        scan2x_cen  = pre_scan2x_cen;
-        scan2x_de   = pre_scan2x_de;
-    end else begin
-        scan2x_r    = {2{game_r}}>>(COLORW*2-8);
-        scan2x_g    = {2{game_g}}>>(COLORW*2-8);
-        scan2x_b    = {2{game_b}}>>(COLORW*2-8);
-        scan2x_hs   = hs_resync;
-        scan2x_vs   = vs_resync;
-        scan2x_clk  = clk_sys;
-        scan2x_cen  = pxl_cen;
-        scan2x_de   = LVBL & LHBL; 
-    end
-end
 
 jtframe_resync u_resync(
     .clk        ( clk_sys       ),
@@ -244,7 +211,7 @@ end
 `ifndef JTFRAME_MR_FASTIO
     `ifdef JTFRAME_CLK96
         `define JTFRAME_MR_FASTIO 1
-    `else 
+    `else
         `define JTFRAME_MR_FASTIO 0
     `endif
 `endif
@@ -368,7 +335,7 @@ jtframe_board #(
     .board_joystick1( joystick1       ),
     .board_joystick2( joystick2       ),
     .board_joystick3( joystick3       ),
-    .board_joystick4( joystick4       ),    
+    .board_joystick4( joystick4       ),
     .game_joystick1 ( game_joystick1  ),
     .game_joystick2 ( game_joystick2  ),
     .game_joystick3 ( game_joystick3  ),
@@ -400,14 +367,14 @@ jtframe_board #(
     .hdmi_ary       ( hdmi_ary        ),
     .rotate         ( rotate          ),
     // Scan doubler output
-    .scan2x_r       ( pre_scan2x_r    ),
-    .scan2x_g       ( pre_scan2x_g    ),
-    .scan2x_b       ( pre_scan2x_b    ),
-    .scan2x_hs      ( pre_scan2x_hs   ),
-    .scan2x_vs      ( pre_scan2x_vs   ),
-    .scan2x_clk     ( pre_scan2x_clk  ),
-    .scan2x_cen     ( pre_scan2x_cen  ),
-    .scan2x_de      ( pre_scan2x_de   ),
+    .scan2x_r       ( scan2x_r        ),
+    .scan2x_g       ( scan2x_g        ),
+    .scan2x_b       ( scan2x_b        ),
+    .scan2x_hs      ( scan2x_hs       ),
+    .scan2x_vs      ( scan2x_vs       ),
+    .scan2x_clk     ( scan2x_clk      ),
+    .scan2x_cen     ( scan2x_cen      ),
+    .scan2x_de      ( scan2x_de       ),
     .scan2x_enb     ( ~force_scan2x   ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ        ),
@@ -447,7 +414,7 @@ jtframe_board #(
     .LHBL           ( LHBL            ),
     .LVBL           ( LVBL            ),
     .hs             ( hs              ),
-    .vs             ( vs              ), 
+    .vs             ( vs              ),
     .pxl_cen        ( pxl_cen         ),
     .pxl2_cen       ( pxl2_cen        ),
     // Debug
