@@ -4,6 +4,7 @@ EXTRA="-d JTFRAME_RELEASE -g"
 NETWORK=
 DRYRUN=
 CORES=".*"
+MAX_JOBS=
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -30,6 +31,10 @@ while [ $# -gt 0 ]; do
                 fi
             done
             ;;
+        -jobs)
+            shift
+            MAX_JOBS="--jobs $1"
+            ;;
         -network)
             shift
             if [ ! -e "$1" ]; then
@@ -48,7 +53,9 @@ Updates all JT cores. Usage:
     -mister updates MiSTer target (one JT core at a time)
     -all    updates both MiST and MiSTer
     -cores  list of cores to update as \"gng 1943\"
+    -dry    dry run
     -test   test build. Disables sound and HDMI. Does not define JTFRAME_RELEASE.
+    -jobs   Maximum number of jobs to run in parallel. For MiSTer 2 is recommended.
     :       options for jtcore script can be added after a colon
 EOF
         exit 0;
@@ -72,9 +79,9 @@ fi
 TASKS=/tmp/$RANDOM_$RANDOM
 
 (
-    for i in $TARGET; do 
-        if [ -e $i.cores ]; then cat $i.cores; echo ; fi; 
-    done 
+    for i in $TARGET; do
+        if [ -e $i.cores ]; then cat $i.cores; echo ; fi;
+    done
 ) | grep "$CORES" > $TASKS
 
 if [ $(cat $TASKS|wc -l) = 0 ]; then
@@ -84,6 +91,6 @@ if [ $(cat $TASKS|wc -l) = 0 ]; then
 fi
 
 cat $TASKS | parallel --no-run-if-empty --colsep " "  --shuf  --workdir $JTROOT \
-    $DRYRUN $NETWORK \
-    --delay 0.25 $JTFRAME/bin/jtcore {} $EXTRA | tee $JTROOT/log/update.log    
+    $DRYRUN $NETWORK $MAX_JOBS\
+    --delay 0.25 $JTFRAME/bin/jtcore {} $EXTRA | tee $JTROOT/log/update.log
 
