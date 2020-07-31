@@ -413,8 +413,8 @@ jtframe_board #(
     .game_b         ( game_b          ),
     .LHBL           ( LHBL            ),
     .LVBL           ( LVBL            ),
-    .hs             ( hs              ),
-    .vs             ( vs              ),
+    .hs             ( hs_resync       ),
+    .vs             ( vs_resync       ),
     .pxl_cen        ( pxl_cen         ),
     .pxl2_cen       ( pxl2_cen        ),
     // Debug
