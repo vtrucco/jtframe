@@ -26,7 +26,7 @@ string get_str_attr( const Attributes & attrs, const char* name ) {
 #define GET_STR_ATTR( a ) string a( get_str_attr(attrs, #a) );
 
 void MameParser::startElement( const XMLCh *const uri,
-        const XMLCh *const localname, const XMLCh *const qname, const Attributes & attrs ) 
+        const XMLCh *const localname, const XMLCh *const qname, const Attributes & attrs )
 {
     TOSTR( _localname, localname );
     current_element = _localname;
@@ -80,7 +80,7 @@ void MameParser::characters(const XMLCh *const chars, const XMLSize_t length) {
         copy[k] = chars[k]>32 && chars[k] != '$' ? chars[k] : 0;
     }
     copy[length] = 0;
-    TOSTR( _chars, chars );    
+    TOSTR( _chars, chars );
     if( current_element == "description" && length>3 ) {
         //cout << "Description chunk " << _chars << " - length " << length << '\n';
         current->description += _chars;
@@ -128,7 +128,7 @@ ROMRegion* Game::getRegion( std::string _name ) {
 }
 
 void Game::addDIP( DIPsw* d ) {
-    dips.push_back(d);   
+    dips.push_back(d);
 }
 
 void Game::dump() {
@@ -142,9 +142,12 @@ Game::~Game() {
     for( auto k : dips ) {
         delete k;
     }
+    for( auto k : regions ) {
+        delete k;
+    }
 }
 
-int toint(string s, int base) {    
+int toint(string s, int base) {
     return strtol( s.c_str(), NULL, base);
 }
 
@@ -203,4 +206,32 @@ int parse_MAME_xml( GameMap& games, const char *xmlFile ) {
     delete parser;
     XMLPlatformUtils::Terminate();
     return 0;
+}
+
+void Game::sortRegions(const char *order) {
+    int len;
+    if( order==NULL || (len=strlen(order))==0 ) return;
+    ListRegions sorted;
+    char *copy = new char[ len+1 ];
+    char *aux;
+    strcpy( copy, order );
+    aux = strtok( copy, " ");
+    while( aux!= NULL ) {
+        for(ListRegions::iterator k =regions.begin(); k!=regions.end(); k++ ) {
+            class ROMRegion* cur = (*k);
+            if( cur->name == aux ) {
+                sorted.push_back(cur);
+                regions.erase(k);
+                break;
+            }
+        }
+        aux=strtok(NULL, " ");
+    }
+    // copy the rest of the list
+    while(regions.size()>0) {
+        sorted.push_back(regions.front());
+        regions.pop_front();
+    }
+    regions.swap(sorted);
+    delete[] copy;
 }

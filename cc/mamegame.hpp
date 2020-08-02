@@ -65,6 +65,7 @@ public:
     ListDIPs& getDIPs() { return dips; }
     ROMRegion* getRegion( std::string _name );
     ListRegions& getRegionList() { return regions; }
+    void sortRegions(const char *order);
     void moveRegionBack(std::string name);
 };
 
@@ -84,14 +85,14 @@ class MameParser : public DefaultHandler {
     std::string current_element;
 public:
     MameParser(GameMap& _games) : games(_games) {
-        current = nullptr;        
+        current = nullptr;
     }
     // void startDocument();
     // void endDocument();
     void startElement   ( const XMLCh *const uri,
         const XMLCh *const localname,
         const XMLCh *const qname,
-        const Attributes & attrs 
+        const Attributes & attrs
     );
     void endElement( const XMLCh *const uri,
         const XMLCh *const localname, const XMLCh *const qname );

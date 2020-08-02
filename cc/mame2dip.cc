@@ -1,9 +1,11 @@
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <list>
 #include <set>
+#include <vector>
 #include <ctype.h>
 
 #include "mamegame.hpp"
@@ -24,9 +26,27 @@ public:
     int shift;
 };
 
+class Header {
+    int *buf;
+    int _size;
+    int pos, offset_lut;
+    vector<string> regions;
+public:
+    Header(int size);
+    ~Header();
+    int get_size() { return _size; }
+    int* data() { return buf; }
+    void push( int v );
+    // Offset list
+    bool set_offset_lut( int start ) { offset_lut = start; return start<_size && start>=0; }
+    void add_region(const char *s) { regions.push_back(s); }
+    bool set_offset( string& s, int offset );
+};
+
 typedef list<DIP_shift> shift_list;
 
-void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const string& buttons, const string& altfolder );
+void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
+    const string& buttons, const string& altfolder, Header* header );
 void clean_filename( string& fname );
 
 int main(int argc, char * argv[] ) {
@@ -35,7 +55,9 @@ int main(int argc, char * argv[] ) {
     string rbf, dipbase("16"), buttons, altfolder;
     bool   fname_assigned=false;
     shift_list shifts;
-
+    Header *header=NULL;
+    string region_order;
+try{
     for( int k=1; k<argc; k++ ) {
         string a = argv[k];
         if( a=="-swapbytes" ) {
@@ -89,20 +111,80 @@ int main(int argc, char * argv[] ) {
             if( k<argc && argv[k][0]=='-' ) k--;
             continue;
         }
+        // Header support
+        if( a=="-header" ) {
+            if( header!=NULL ) {
+                throw "ERROR: header had already been defined\n";
+
+            }
+            int aux=strtol(argv[++k], NULL, 0);
+            if( aux<=0 || aux>128 ) {
+                throw "ERROR: header must be smaller than 128 bytes\n";
+            }
+            header = new Header(aux);
+            continue;
+        }
+        if( a=="-header-data" ) {
+            if( header==NULL) {
+                throw "ERROR: header size has not been defined\n";
+            }
+            while( ++k<argc && argv[k][0]!='-' ) {
+                int aux=strtol(argv[k], NULL, 0);
+                if( aux<0 || aux>255 ) {
+                    throw "ERROR: header data must be written in possitive bytes\n";
+                }
+                header->push(aux);
+            }
+            if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        if( a=="-header-offset" ) {
+            if( header==NULL) {
+                throw "ERROR: header size has not been defined\n";
+            }
+            assert( ++k < argc );
+            int aux = strtol( argv[k], NULL, 0);
+            if( !header->set_offset_lut( aux ) ) {
+                throw "ERROR: header offset LUT is out of bounds\n";
+            }
+            while( ++k<argc && argv[k][0]!='-') header->add_region(argv[k]);
+            continue;
+        }
+        if( a=="-order" ) {
+            while( ++k < argc && argv[k][0]!='-' ) {
+                region_order = region_order + argv[k] + string(" ");
+            }
+            if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        // Help
         if( a == "-help" || a =="-h" ) {
-            cout << "mame2dip: converts MAME dipswitch definition to MRA format\n"
+            cout << "mame2dip: converts MAME XML dump to MRA format\n"
                     "          by Jose Tejada. Part of JTFRAME\n"
                     "Usage:\n"
                     "          first argument:  path to file containing 'mame -listxml' output\n"
-                    "    -swapbytes <region>        swap bytes for named region\n"
-                    "    -fill      <region>        fill gaps between files within region\n"
-                    "    -ignore    <region>        ignore a given region\n"
-                    "    -start     <region>        set start of region in MRA file\n"
                     "    -rbf       <name>          set RBF file name\n"
-                    "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
-                    "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
                     "    -buttons   shoot jump etc  Gives names to the input buttons\n"
                     "    -altfolder path            Path where MRA for clone games will be added\n"
+                    " DIP options\n"
+                    "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
+                    "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
+                    " Region options\n"
+                    "    -order     regions         define the dump order of regions. Those not enumerated\n"
+                    "                               will get dumped last\n"
+                    "    -ignore    <region>        ignore a given region\n"
+                    "    -start     <region>        set start of region in MRA file\n"
+                    "    -swapbytes <region>        swap bytes for named region\n"
+                    "    -frac      <region> <#>    divide region in fractions\n"
+                    "    -fill      <region>        fill gaps between files within region\n"
+                    " Header options \n"
+                    "    -header    size            Defines an empty (zeroes) header of the given size\n"
+                    "    -header-data value         Pushes data to the header. It can be defined multiple times\n"
+                    "    -header-offset start regions\n"
+                    "                               Start is the first byte where the regions offsets will be dumped\n"
+                    "                               The bottom 8 bits of the offsets are dropped. Each offset is written\n"
+                    "                               as two bytes. \"regions\" is a list of words with the MAME name of\n"
+                    "                               the ROM regions\n"
             ;
             return 0;
         }
@@ -110,16 +192,24 @@ int main(int argc, char * argv[] ) {
             fname = argv[k];
             fname_assigned = true;
         } else {
-            cout << "ERROR: Unknown argument " << argv[k] << "\n";
-            return 1;
+            cout << "Unknown argument " << argv[k] << "\n";
+            throw "ERROR\n";
         }
     }
+} catch( const char *s ) {
+    cout << s;
+    delete header;
+    return 1;
+}
     GameMap games;
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
-        cout << g.second->name << '\n';
-        makeMRA(g.second, rbf, dipbase, shifts, buttons, altfolder );
+        Game* game=g.second;
+        cout << game->name << '\n';
+        game->sortRegions(region_order.c_str());
+        makeMRA(game, rbf, dipbase, shifts, buttons, altfolder, header );
     }
+    delete header; header=NULL;
     return 0;
 }
 
@@ -141,15 +231,16 @@ class Node {
     bool is_comment;
 public:
     string name, value;
-    Node( string n, string v="" ) : name(n), value(v), is_comment(false) { }
+    Node( string n, string v="" );
     Node& add( string n, string v="");
+    Node& add_front( string n, string v="");
     void add_attr( string n, string v="");
     void dump(ostream& os, string indent="" );
     void comment( string v );
     virtual ~Node();
 };
 
-void makeROM( Node& root, Game* g ) {
+void makeROM( Node& root, Game* g, Header* header ) {
     Node& n = root.add("rom");
     n.add_attr("index","0");
     string zips = g->name+".zip";
@@ -180,6 +271,7 @@ void makeROM( Node& root, Game* g ) {
         }
         char title[128];
         snprintf(title,128,"%s - starts at 0x%X", region->name.c_str(), dumped );
+        if( header ) header->set_offset( region->name, dumped );
         n.comment( title );
         bool swap = swapregions.count(region->name)>0;
         bool fill = fillregions.count(region->name)>0;
@@ -260,6 +352,18 @@ void makeROM( Node& root, Game* g ) {
     char endsize[128];
     snprintf(endsize,128,"Total 0x%X bytes - %d kBytes",dumped,dumped>>10);
     n.comment(endsize);
+    // Process header
+    if( header ) {
+        stringstream ss;
+        int *b = header->data();
+        for( int k=0; k<header->get_size(); k++ ) {
+            if( k>0 && (k%8==0) )
+                ss << '\n';
+            if( k%8==0 ) ss << "        ";
+            ss << hex << setfill('0') << setw(2)  << b[k] << ' ';
+        }
+        Node& h = n.add_front("part", ss.str() );
+    }
 }
 
 void makeDIP( Node& root, Game* g, string& dipbase, shift_list& shifts ) {
@@ -403,7 +507,9 @@ void makeMOD( Node& root, Game* g ) {
 
 }
 
-void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const string& buttons, const string& altfolder ) {
+void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
+    const string& buttons, const string& altfolder,
+    Header* header ) {
     string indent;
     Node root("misterromdescription");
 
@@ -419,7 +525,7 @@ void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts, const s
         root.add("rbf",rbf);
     }
 
-    makeROM( root, g );
+    makeROM( root, g, header );
     makeMOD( root, g );
     makeDIP( root, g, dipbase, shifts );
     makeJOY( root, g, buttons );
@@ -466,6 +572,12 @@ Node& Node::add( string n, string v ) {
     return *nd;
 }
 
+Node& Node::add_front( string n, string v ) {
+    Node *nd = new Node(n, v);
+    nodes.push_front(nd);
+    return *nd;
+}
+
 void Node::add_attr( string n, string v) {
     Attr* a = new Attr({n,v});
     attrs.push_back(a);
@@ -494,6 +606,7 @@ void Node::dump(ostream& os, string indent ) {
                 string aux = value.size()>80 ? "\n" : "";
                 os << aux;
                 os << value << aux;
+                if( value.find_first_of('\n')!=string::npos ) os << indent;
             } else {
                 os << '\n';
                 for( Node* n : nodes ) {
@@ -536,4 +649,44 @@ void clean_filename( string& fname ) {
     }
     fname=s;
     delete[]s;
+}
+
+Header::Header(int size ) {
+    buf = new int[size];
+    _size = size;
+    pos=0;
+}
+
+Header::~Header() {
+    delete []buf;
+    buf=NULL;
+}
+
+void Header::push(int v) {
+    if(pos<_size-1) buf[pos++] = v;
+}
+
+bool Header::set_offset( string& s, int offset ) {
+    int k=0;
+    bool found=false;
+    while( k<regions.size() ) {
+        if( regions[k]==s ) {
+            found=true;
+            break;
+        }
+        k++;
+    }
+    if( found ) {
+        int j=offset_lut+k*2;
+        if( j+2 >= _size ) return false;
+        offset>>=8;
+        buf[j++] = (offset>>8)&0xff;
+        buf[j]   = offset&0xff;
+        return true;
+    }
+    return false;
+}
+
+Node::Node( string n, string v ) : name(n), value(v), is_comment(false) {
+    while(v.back()==' ') v.pop_back();
 }
