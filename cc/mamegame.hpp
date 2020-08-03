@@ -29,6 +29,7 @@ public:
     std::string name;
     ListROMs roms;
     ~ROMRegion();
+    void sort(const char *order);
 };
 
 
@@ -63,7 +64,7 @@ public:
     void addDIP( DIPsw* d );
     void dump();
     ListDIPs& getDIPs() { return dips; }
-    ROMRegion* getRegion( std::string _name );
+    ROMRegion* getRegion( std::string _name, bool create=true );
     ListRegions& getRegionList() { return regions; }
     void sortRegions(const char *order);
     void moveRegionBack(std::string name);

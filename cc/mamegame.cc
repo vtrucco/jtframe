@@ -111,9 +111,9 @@ void Game::moveRegionBack(std::string name) {
     }
 }
 
-ROMRegion* Game::getRegion( std::string _name ) {
+ROMRegion* Game::getRegion( std::string _name, bool create ) {
     static ROMRegion *last = nullptr;
-    if( last != nullptr ) {
+    if( last != nullptr && create ) {
         if( last->name == _name ) return last;
     }
     for( ROMRegion *r : regions ) {
@@ -122,9 +122,14 @@ ROMRegion* Game::getRegion( std::string _name ) {
             return last;
         }
     }
-    last = new ROMRegion( {_name} );
-    regions.push_back(last);
-    return last;
+    if( create ) {
+        last = new ROMRegion( {_name} );
+        // cout << "Created region " << _name << '(' << last << ")\n";
+        regions.push_back(last);
+        return last;
+    } else {
+        return nullptr;
+    }
 }
 
 void Game::addDIP( DIPsw* d ) {
@@ -233,5 +238,37 @@ void Game::sortRegions(const char *order) {
         regions.pop_front();
     }
     regions.swap(sorted);
+    delete[] copy;
+}
+
+void ROMRegion::sort(const char *order) {
+    int len;
+    if( order==NULL || (len=strlen(order))==0 ) return;
+    ListROMs sorted;
+    char *copy = new char[ len+1 ];
+    char *aux;
+    strcpy( copy, order );
+    aux = strtok( copy, " ");
+    map<int,ROM*> mapped;
+    int k=0;
+    for( ROM* r : roms ) {
+        mapped[k++]=r;
+        //cout << r->name << " - ";
+    }
+    //cout << '\n';
+    while( aux!= NULL ) {
+        int i = strtol(aux,NULL,0);
+        auto found = mapped.find(i);
+        if( found==mapped.end() ) {
+            cout << "Warning: requested ROM for ROM ordering is out of bounds\n";
+            cout << "         looking for " << i << '\n';
+        } else {
+            sorted.push_back( found->second );
+        }
+        aux=strtok(NULL, " ");
+    }
+    roms.swap(sorted);
+    //for(ROM*r:roms) cout << r->name << " - ";
+    //cout << '\n';
     delete[] copy;
 }

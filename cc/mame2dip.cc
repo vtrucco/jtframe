@@ -49,6 +49,11 @@ void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
     const string& buttons, const string& altfolder, Header* header );
 void clean_filename( string& fname );
 
+struct ROMorder {
+    string region;
+    string order;
+};
+
 int main(int argc, char * argv[] ) {
     bool print=false;
     string fname="mame.xml";
@@ -57,6 +62,7 @@ int main(int argc, char * argv[] ) {
     shift_list shifts;
     Header *header=NULL;
     string region_order;
+    list<ROMorder> rom_order;
 try{
     for( int k=1; k<argc; k++ ) {
         string a = argv[k];
@@ -150,11 +156,23 @@ try{
             while( ++k<argc && argv[k][0]!='-') header->add_region(argv[k]);
             continue;
         }
+        // ROM order
         if( a=="-order" ) {
             while( ++k < argc && argv[k][0]!='-' ) {
                 region_order = region_order + argv[k] + string(" ");
             }
             if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        if( a=="-order-roms" ) {
+            assert( ++k < argc );
+            ROMorder o;
+            o.region = argv[k];
+            while( ++k < argc && argv[k][0]!='-' ) {
+                o.order = o.order + argv[k] + string(" ");
+            }
+            if( k<argc && argv[k][0]=='-' ) k--;
+            rom_order.push_back(o);
             continue;
         }
         // Help
@@ -172,6 +190,8 @@ try{
                     " Region options\n"
                     "    -order     regions         define the dump order of regions. Those not enumerated\n"
                     "                               will get dumped last\n"
+                    "    -order-roms region # # #   ROMs of specified regions are re-ordered. Index starts\n"
+                    "                               with zero. Unspecified ROMs will not be used.\n"
                     "    -ignore    <region>        ignore a given region\n"
                     "    -start     <region>        set start of region in MRA file\n"
                     "    -swapbytes <region>        swap bytes for named region\n"
@@ -206,6 +226,15 @@ try{
     for( auto& g : games ) {
         Game* game=g.second;
         cout << game->name << '\n';
+        // Sort ROMs
+        for( auto o : rom_order ) {
+            ROMRegion* region = game->getRegion( o.region, false );
+            if( region==NULL ) {
+                cout << "WARNING: order-roms argument cannot be applied to " << game->name << '\n';
+                break;
+            }
+            region->sort(o.order.c_str());
+        }
         game->sortRegions(region_order.c_str());
         makeMRA(game, rbf, dipbase, shifts, buttons, altfolder, header );
     }
