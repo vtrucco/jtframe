@@ -26,11 +26,14 @@ module jtframe_sh #(parameter width=5, stages=24 )
 
 reg [stages-1:0] bits[width-1:0];
 
+// This makes the argument stages=1 valid:
+localparam WM = stages>1 ? stages-2 : 0;
+
 generate
     genvar i;
     for (i=0; i < width; i=i+1) begin: bit_shifter
         always @(posedge clk) if(clk_en) begin
-                bits[i] <= {bits[i][stages-2:0], din[i]};
+                bits[i] <= {bits[i][WM:0], din[i]};
             end
         assign drop[i] = bits[i][stages-1];
     end
