@@ -131,8 +131,8 @@ In MiST, DIP switches are incorporated into the status word. As some bits in the
 Macro                | Effect
 ---------------------|----------------------------
 JTFRAME_SIM_DIPS     | 32-bit value of DIPs used in simulation only
-JTFRAME_OSD_NOLOAD   | Do not display _load file_ 
-JTFRAME_OSD_NOCREDITS| Do not display _Credits_ 
+JTFRAME_OSD_NOLOAD   | Do not display _load file_
+JTFRAME_OSD_NOCREDITS| Do not display _Credits_
 JTFRAME_OSD_FLIP     | Display flip option (only for vertical games)
 JTFRAME_OSD_NOSND    | Do not display sound options
 
@@ -219,7 +219,7 @@ A model for SDRAM mt48lc16m16a2 is included in JTFRAME. The model will load the 
 
 The current contents of the SDRAM can be dumped at the beginning of each frame (falling edge of vertical blank) if **JTFRAME_SAVESDRAM** is defined. Because this is quite an overhead, it is possible to restrict it to dump only a certain **DUMP_START** frame count has been reached. All frames will be dumped after it. The macro **DUMP_START** is the same one used for setting the start of signal dump to the __VCD__ file.
 
-To simulate the SDRAM load operation use **-load** on sim.sh. The normal download speed 1/270ns=3.7MHz. This is faster than the real systems but speeds up simulation. It is possible to slow it down by adding dead clock cycles to each transfer. The macro **JTFRAME_SIM_LOAD_EXTRA** can be defined with the required number of extra cycles. 
+To simulate the SDRAM load operation use **-load** on sim.sh. The normal download speed 1/270ns=3.7MHz. This is faster than the real systems but speeds up simulation. It is possible to slow it down by adding dead clock cycles to each transfer. The macro **JTFRAME_SIM_LOAD_EXTRA** can be defined with the required number of extra cycles.
 
 # Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
@@ -279,7 +279,7 @@ For MiST, OSD control of *arcade_video* features is enabled with macro **MISTER_
 ## Aspect Ratio
 In MiSTer the aspect ratio through the scaler can be controlled via the core. By default it is possible to switch between 16:9 and 4:3. However, if the game AR is different, the following macros can be used to redefine it:
 
-Macro       |  Default    |   Meaning        
+Macro       |  Default    |   Meaning
 ------------|-------------|----------------------
 JTFRAME_ARX |     4       | horizontal magnitude
 JTFRAME_ARY |     3       | vertical   magnitude
@@ -305,7 +305,7 @@ M6809
 I8051
 
 # Credits Screen
-Credits can be displayed using the module *jtframe_credits*. This module needs the following files inside the patrons folder:
+Credits can be displayed using the module *JTFRAME_CREDITS*. This module needs the following files inside the patrons folder:
 
 Input File | Output File    | Tool      | Function
 -----------|----------------|-----------|--------------------------------------------
@@ -340,12 +340,12 @@ avatar.py needs a .png image that complies with:
 
 Once the three files msg, avatars and lut are available, jtcore will process them as part of the compilation.
 
-## jtframe_credits
+## JTFRAME_CREDITS
 
-Features 1-bpp text font and 4-bpp objects. Enable it with macro **JTFRAME_CREDITS**. By default there are three pages of memory reserved for this. If a different number is needed define the macro **JTFRAME_CREDITS_PAGES** with the right value.
+Features 1-bpp text font and 4-bpp objects. Enable it with macro **JTFRAME_CREDITS**. By default there are three pages of memory reserved for this. If a different number is needed define the macro **JTFRAME_CREDITS_PAGES** with the right value. Avatars are enabled with **JTFRAME_AVATARS**
 
 ## msg2hex
-Converts from a text file (patrons/msg) to a hex file usable by *jtframe_credits*.
+Converts from a text file (patrons/msg) to a hex file usable by *JTFRAME_CREDITS*.
 Type text for ASCII conversion. Escape characters can be introduced by \ with the following meaning:
 
 Escape              |  Meaning
@@ -376,7 +376,7 @@ M68000         |             |           | 5200                |  6            |
 JTFRAME MiST   | Jose Tejada | GPLv3     | 2400 jtframe_scan2x |  4            | JTFRAME
 JTFRAME MiST*  | Jose Tejada | GPLv3     | 4600 arcade_video   |  4            | JTFRAME
 jtframe_rom    | Jose Tejada | GPLv3     | 120*slot+80         |               | JTFRAME
-jtframe_credits| Jose Tejada | GPLv3     | 180                 |  6            | JTFRAME
+JTFRAME_CREDITS| Jose Tejada | GPLv3     | 180                 |  6            | JTFRAME
 
 # Licensing
 

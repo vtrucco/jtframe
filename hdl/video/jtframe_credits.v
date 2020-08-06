@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 14-3-2020 */
 
-`timescale 1ns/1ps
-
 // 8x8 tiles
 
 module jtframe_credits #(
@@ -148,7 +146,7 @@ end
 // Object Generator
 
 
-`ifdef AVATARS
+`ifdef JTFRAME_AVATARS
 reg  [ 7:0] buf_din;
 reg         buf_we0, buf_we1;
 reg  [ 7:0] buf_addr0;
