@@ -155,7 +155,8 @@ bit     |  meaning                | Enabled with macro
 1       | Flip screen             | VERTICAL_SCREEN && JTFRAME_OSD_FLIP
 2       | Rotate controls         | VERTICAL_SCREEN (MiST)
 2       | Rotate screen           | VERTICAL_SCREEN (MiSTer)
-3-5     | Scandoubler Fx          | MISTER_VIDEO_MIXER
+3-4     | Scan lines              | Scan-line mode (MiST only)
+3-5     | Scandoubler Fx          | Scan line mode and HQ2X enable (MiSTer only)
 6-7     | FX Volume               | JT12
 8       | ADPCM                   | JTFRAME_ADPCM && !JT12 && !JTFRAME_OSD_NOSND
 8       | PSG                     | JT12 && !JTFRAME_OSD_NOSND

@@ -28,6 +28,7 @@ module jtframe_scan2x #(parameter COLORW=4, HLEN=512)(
     input       pxl2_cen,
     input       [COLORW*3-1:0]    base_pxl,
     input       HS,
+    input [1:0] sl_mode,  // scanline enable
 
     output  reg [COLORW*3-1:0]    x2_pxl,
     output  reg x2_HS
@@ -46,6 +47,7 @@ wire          HS_posedge     =  HS && !last_HS;
 wire          HSbase_posedge =  HS && !last_HS_base;
 wire          HS_negedge     = !HS &&  last_HS;
 wire [DW-1:0] next;
+wire [DW-1:0] dim2, dim4;
 
 function [COLORW-1:0] ave;
     input [COLORW-1:0] a;
@@ -98,9 +100,19 @@ always@(posedge clk or negedge rst_n) begin
     end
 end
 
+assign dim2 = blend( {DW{1'b0}}, preout);
+assign dim4 = blend( {DW{1'b0}}, dim2 );
+
 // scan lines are black
 always @(posedge clk) begin
-    x2_pxl <= scanline ? blend( {DW{1'b0}}, preout) : preout;
+    if( scanline ) begin
+        case( sl_mode )
+            2'd0: x2_pxl <= preout;
+            2'd1: x2_pxl <= dim2;
+            2'd2: x2_pxl <= dim4;
+            2'd3: x2_pxl <= {DW{1'b0}};
+        endcase
+    end else x2_pxl <= preout;
 end
 
 always@(posedge clk or negedge rst_n)
@@ -116,7 +128,7 @@ always@(posedge clk or negedge rst_n)
             if( alt_pxl ) begin
                 if( HSbase_posedge ) oddline <= ~oddline;
                 wraddr <= HSbase_posedge ? {AW{1'b0}} : (wraddr+1);
-            end 
+            end
         end
     end
 

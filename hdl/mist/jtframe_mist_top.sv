@@ -80,10 +80,8 @@ localparam CONF_STR = {
     // "OE,Separate Joysticks,Yes,No;",    // If no, then player 2 joystick
     //     // is assimilated to player 1 joystick
     // `endif
-    //`ifndef JTFRAME_SCAN2X
-    //"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
-    //`endif
-    `ifndef JTFRAME_OSD_NOSND    
+    "O34,Scan lines, none, bright, dark, pure;",
+    `ifndef JTFRAME_OSD_NOSND
         `ifdef JT12
         "O67,FX volume, high, very high, very low, low;",
         "O8,PSG,On,Off;",
@@ -229,7 +227,7 @@ assign sim_hb = ~LHBL;
 
 localparam BUTTONS=`BUTTONS;
 
-jtframe_mist #( 
+jtframe_mist #(
     .CONF_STR     ( CONF_STR       ),
     .SIGNED_SND   ( `SIGNED_SND    ),
     .BUTTONS      ( BUTTONS        ),
@@ -366,7 +364,7 @@ wire sample;
 
 `ifdef JTFRAME_4PLAYERS
 localparam STARTW=4;
-`else 
+`else
 localparam STARTW=2;
 `endif
 
@@ -462,7 +460,7 @@ u_game(
     .dip_pause   ( dip_pause      ),
     .dip_flip    ( dip_flip       ),
     .dip_test    ( dip_test       ),
-    .dip_fxlevel ( dip_fxlevel    ),  
+    .dip_fxlevel ( dip_fxlevel    ),
     `ifdef JTFRAME_MRA_DIP
     .dipsw       ( dipsw          ),
     `endif

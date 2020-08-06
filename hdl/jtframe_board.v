@@ -514,14 +514,15 @@ assign scan2x_de   = LVBL && LHBL;
     endfunction
     // Note that VIDEO_WIDTH must include blanking for JTFRAME_SCAN2X
     jtframe_scan2x #(.COLORW(COLORW), .HLEN(VIDEO_WIDTH)) u_scan2x(
-        .rst_n      ( rst_n        ),
-        .clk        ( clk_sys      ),
-        .pxl_cen    ( pxl_cen      ),
-        .pxl2_cen   ( pxl2_cen     ),
-        .base_pxl   ( game_rgb     ),
-        .x2_pxl     ( rgbx2        ),
-        .HS         ( hs           ),
-        .x2_HS      ( scan2x_hs    )
+        .rst_n      ( rst_n          ),
+        .clk        ( clk_sys        ),
+        .pxl_cen    ( pxl_cen        ),
+        .pxl2_cen   ( pxl2_cen       ),
+        .base_pxl   ( game_rgb       ),
+        .x2_pxl     ( rgbx2          ),
+        .HS         ( hs             ),
+        .x2_HS      ( scan2x_hs      ),
+        .sl_mode    ( scanlines[1:0] )
     );
     assign scan2x_vs    = vs;
     assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );
