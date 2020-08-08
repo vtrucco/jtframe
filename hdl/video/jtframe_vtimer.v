@@ -16,6 +16,21 @@
     Version: 1.0
     Date: 2-5-2020 */
 
+
+// Generic video timing generator
+// By default vertical blanking and sync toggle with horizontal blanking and sync
+// but some games make these signals toggle in the middle of the vertical ones
+// See Side Arms for an example
+// By default, H/V counters end with the blanking signal, for some games it
+// may be useful to define the end count differently
+// Depending on how the graphic hardware is designed, H/V count start and end values
+// can be important, as well as when signals toggle (like in a 8-multiple of H)
+// but these limitations can be trade off for different ones if the design is changed
+// A default VS pulse of three lines and HS pulse of 4.5us will fit the TV standard
+// but some games use different values
+// See the parameter definition below to alter the needed parameters when
+// instantiating the module
+
 module jtframe_vtimer(
     input               clk,
     input               pxl_cen,
@@ -54,39 +69,47 @@ end
 parameter [8:0] V_START  = 9'd0,
                 VB_START = 9'd239,
                 VB_END   = 9'd255,
+                VCNT_END = VB_END,
                 VS_START = 9'd244,
                 VS_END   = (VS_START+9'd3),
                 HB_END   = 9'd395,
                 HB_START = HB_END-9'd116,
+                HCNT_END = HB_END,
                 HS_START = 9'd330,
-                HS_END   = HS_START+9'd27; // Default 4.5us for a 6MHz clock
+                HS_END   = HS_START+9'd27, // Default 4.5us for a 6MHz clock
+                H_VB     = HB_START,
+                H_VS     = HS_START;
 
 // H counter
 always @(posedge clk) if(pxl_cen) begin
-    Hinit <= H == HB_END;
-    H     <= H == HB_END ? 9'd0 : (H+9'd1);
+    Hinit <= H == HCNT_END;
+    H     <= H == HCNT_END ? 9'd0 : (H+9'd1);
 end
 
 always @(posedge clk) if(pxl_cen) begin
     if( H == HB_END ) begin
         Vinit    <= vdump==VB_END;
-        vrender1 <= vrender1==VB_END ? V_START : vrender1 + 9'd1;
+        vrender1 <= vrender1==VCNT_END ? V_START : vrender1 + 9'd1;
         vrender  <= vrender1;
         vdump    <= vrender;
     end
 
     if( H == HB_START ) begin
         LHBL <= 0;
+    end else if( H == HB_END ) LHBL <= 1;
+    if( H == H_VB ) begin
         { LVBL, LVBL1 } <= { LVBL1, LVBL2 };
         case( vrender1 )
             VB_START: LVBL2 <= 0;
             VB_END:   LVBL2 <= 1;
             default:;
         endcase // vdump
-    end else if( H == HB_END ) LHBL <= 1;
+    end
 
     if (H==HS_START) begin
         HS <= 1;
+    end
+    if( H==H_VS ) begin
         if (vdump==VS_START) VS <= 1;
         if (vdump==VS_END  ) VS <= 0;
     end
