@@ -78,11 +78,12 @@ parameter [8:0] V_START  = 9'd0,
                 HS_START = 9'd330,
                 HS_END   = HS_START+9'd27, // Default 4.5us for a 6MHz clock
                 H_VB     = HB_START,
-                H_VS     = HS_START;
+                H_VS     = HS_START,
+                HINIT    = HCNT_END;
 
 // H counter
 always @(posedge clk) if(pxl_cen) begin
-    Hinit <= H == HCNT_END;
+    Hinit <= H == HINIT;
     H     <= H == HCNT_END ? 9'd0 : (H+9'd1);
 end
 
