@@ -469,18 +469,21 @@ wire              pre2x_LHBL, pre2x_LVBL;
     assign { pre2x_LHBL, pre2x_LVBL    } = { LHBL, LVBL };
 `endif
 
+// By pass scan2x in simulation by default
+// enable it by defining JTFRAME_SIM_SCAN2X
 
-`ifdef NOVIDEO
-assign scan2x_r    = pre2x_r;
-assign scan2x_g    = pre2x_g;
-assign scan2x_b    = pre2x_b;
-assign scan2x_hs   = hs;
-assign scan2x_vs   = vs;
-assign scan2x_clk  = clk_sys;
-assign scan2x_cen  = pxl_cen;
-assign scan2x_de   = LVBL && LHBL;
-`else
 `ifdef SIMULATION
+    `ifdef NOVIDEO
+    `define JTFRAME_DONTSIM_SCAN2X
+    `endif
+    `ifndef JTFRAME_SIM_SCAN2X
+    `define JTFRAME_DONTSIM_SCAN2X
+    `endif
+`endif
+
+
+`ifdef JTFRAME_DONTSIM_SCAN2X
+initial $display("INFO: Scan2x simulation bypassed");
 assign scan2x_r    = pre2x_r;
 assign scan2x_g    = pre2x_g;
 assign scan2x_b    = pre2x_b;
@@ -615,7 +618,6 @@ assign scan2x_de   = LVBL && LHBL;
         .no_rotate         ( 1'b1        )
         `endif
     );
-`endif
 `endif
 `endif
 

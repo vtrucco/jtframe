@@ -91,12 +91,17 @@ always@(posedge clk or negedge rst_n) begin
     if( !rst_n ) begin
         preout <= {DW{1'b0}};
     end else begin
-        mixst <= { mixst[1:0],pxl2_cen};
-        if(mixst==BLEND_ST)
-            preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
-                             next);
-        else if( mixst==PURE_ST )
+        `ifndef JTFRAME_SCAN2X_NOBLEND
+            // mixing can only be done if clk is at least 4x pxl2_cen
+            mixst <= { mixst[1:0],pxl2_cen};
+            if(mixst==BLEND_ST)
+                preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
+                                 next);
+            else if( mixst==PURE_ST )
+                preout <= next;
+        `else
             preout <= next;
+        `endif
     end
 end
 
