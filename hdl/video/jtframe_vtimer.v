@@ -50,16 +50,16 @@ reg LVBL2, LVBL1;
 
 `ifdef SIMULATION
 initial begin
-    Hinit = 0;
-    Vinit = 0;
-    LHBL  = 0;
-    LVBL  = 1;
-    LVBL1 = 1;
-    LVBL2 = 1;
-    HS    = 0;
-    VS    = 0;
-    H     = 100;
-    vrender1 = 100;
+    Hinit    = 0;
+    Vinit    = 0;
+    LHBL     = 0;
+    LVBL     = 1;
+    LVBL1    = 1;
+    LVBL2    = 1;
+    HS       = 0;
+    VS       = 0;
+    H        = 0;
+    vrender1 = 0;
     vrender  = 0;
     vdump    = 0;
 end
@@ -79,6 +79,7 @@ parameter [8:0] V_START  = 9'd0,
                 HS_END   = HS_START+9'd27, // Default 4.5us for a 6MHz clock
                 H_VB     = HB_START,
                 H_VS     = HS_START,
+                H_VNEXT  = HB_END,
                 HINIT    = HCNT_END;
 
 // H counter
@@ -88,7 +89,7 @@ always @(posedge clk) if(pxl_cen) begin
 end
 
 always @(posedge clk) if(pxl_cen) begin
-    if( H == HB_END ) begin
+    if( H == H_VNEXT ) begin
         Vinit    <= vdump==VB_END;
         vrender1 <= vrender1==VCNT_END ? V_START : vrender1 + 9'd1;
         vrender  <= vrender1;
