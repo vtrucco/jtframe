@@ -48,7 +48,7 @@ module jtframe_sdram(
     // that can be joined together thru an OR operation at a
     // higher level. This makes it possible to short the pins
     // of the SDRAM, as done in the MiSTer 128MB module
-    inout       [15:0]  SDRAM_DQ,       // SDRAM Data bus 16 Bits
+    inout  reg  [15:0]  SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output reg  [12:0]  SDRAM_A,        // SDRAM Address bus 13 Bits
     output reg          SDRAM_DQML,     // SDRAM Low-byte Data Mask
     output reg          SDRAM_DQMH,     // SDRAM High-byte Data Mask
@@ -72,7 +72,7 @@ localparam  CMD_LOAD_MODE   = 4'b0000, // 0
 
 `ifdef JTFRAME_SDRAM_REPACK
 localparam REPACK = 1;
-`else 
+`else
 localparam REPACK = 0;
 `endif
 
@@ -97,7 +97,8 @@ generate
 endgenerate
 
 reg [15:0] dq_out;
-reg write_cycle, read_cycle, hold_bus;
+reg        write_cycle, read_cycle, hold_bus;
+wire       hold_en;
 
 // SDRAM bus held down during idle cycles help prevent errors in some SDRAM MiSTer modules
 // MiSTer FPGA doesn't have pull downs, only pull up. The pull up didn't show performance
@@ -108,10 +109,10 @@ reg write_cycle, read_cycle, hold_bus;
 `define JTFRAME_NOHOLDBUS
 `endif
 
-`ifndef JTFRAME_NOHOLDBUS
-assign SDRAM_DQ = write_cycle ? dq_out : ( hold_bus ? 16'h0 : 16'hzzzz);
+`ifdef JTFRAME_NOHOLDBUS
+assign hold_en = 0;
 `else
-assign SDRAM_DQ = write_cycle ? dq_out : 16'hzzzz;
+assign hold_en = 1;
 `endif
 
 reg [8:0] col_addr;
@@ -191,6 +192,7 @@ always @(posedge clk)
         read_cycle  <= 1'b0;
         hold_bus    <= 1'b1;
         SDRAM_BA    <= 2'b0;
+        SDRAM_DQ    <= 16'h0;
     end else if( initialize ) begin
         if( |wait_cnt ) begin
             wait_cnt <= wait_cnt-14'd1;
@@ -235,9 +237,10 @@ always @(posedge clk)
                 end
             endcase
         end
-    end else begin 
+    end else begin
     //////////////////////////////////////////////////////////////////////////////////
     // regular operation
+        SDRAM_DQ <= hold_en ? 16'h0 : 16'hzzzz;
         if( !cnt_state[0] || refresh_ok ||
             (!downloading && read_req  ) || /* when not downloading */
             ( downloading && (writeon || readprog ) ) /* when downloading */) begin
@@ -253,13 +256,7 @@ always @(posedge clk)
             refresh_cycle  <= 1'b0;
             burst_done     <= 1'b0;
             hold_bus       <= 1'b1;
-            //if( read_cycle) begin
-            //    data_read[15: 0] <= data_read[31:16];
-            //    data_read[31:16] <= SDRAM_DQ;
-            //    dq_rdy           <= 1'b1;
-            //end
-            //else
-            dq_rdy   <= 1'b0;
+            dq_rdy         <= 1'b0;
             {SDRAM_DQMH, SDRAM_DQML } <= 2'b00;
             if( set_burst ) begin
                 SDRAM_CMD <= CMD_LOAD_MODE;
@@ -310,12 +307,13 @@ always @(posedge clk)
             // sdram_ack     <= 1'b0;
             SDRAM_A[12:9] <= 4'b0010; // auto precharge;
             SDRAM_A[ 8:0] <= col_addr;
-            {SDRAM_DQMH, SDRAM_DQML } <= write_cycle ? 
+            {SDRAM_DQMH, SDRAM_DQML } <= write_cycle ?
                 ( downloading ? prog_mask : sdram_wrmask )
                 : 2'b00; // reads always take the two bytes in
             SDRAM_CMD   <= write_cycle ? CMD_WRITE :
                 refresh_cycle ? CMD_NOP : CMD_READ;
             dq_rdy      <= 1'b0;
+            if( write_cycle ) SDRAM_DQ <= dq_out;
         end
         if ( cnt_state == ST_THREE ) begin
             if( read_cycle ) hold_bus <= 1'b0;
