@@ -62,6 +62,7 @@ int main(int argc, char * argv[] ) {
     shift_list shifts;
     Header *header=NULL;
     string region_order;
+    list<string> rmdipsw;
     list<ROMorder> rom_order;
 try{
     for( int k=1; k<argc; k++ ) {
@@ -113,6 +114,13 @@ try{
                     buttons=argv[k];
                 else
                     buttons+=string(" ") + string(argv[k]);
+            }
+            if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        if( a=="-rmdipsw" ) {
+            while( ++k < argc && argv[k][0]!='-' ) {
+                rmdipsw.push_back(argv[k]);
             }
             if( k<argc && argv[k][0]=='-' ) k--;
             continue;
@@ -187,6 +195,7 @@ try{
                     " DIP options\n"
                     "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
                     "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
+                    "    -rmdipsw   <name> ...      Deletes the give DIP switch from the output MRA\n"
                     " Region options\n"
                     "    -order     regions         define the dump order of regions. Those not enumerated\n"
                     "                               will get dumped last\n"
@@ -225,6 +234,24 @@ try{
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
         Game* game=g.second;
+        // Remove unused dip swithces
+        ListDIPs& dips=game->getDIPs();
+        list<ListDIPs::iterator> todelete;
+        if( rmdipsw.size()>0 ) {
+            for( ListDIPs::iterator k=dips.begin(); k!=dips.end(); k++ ) {
+                DIPsw* sw = *k;
+                for( auto s : rmdipsw ) {
+                    if( sw->name == s ) {
+                        todelete.push_back(k);
+                        break;
+                    }
+                }
+            }
+        }
+        for( auto k : todelete ) {
+            delete *k;
+            dips.erase(k);
+        }
         cout << game->name << '\n';
         // Sort ROMs
         for( auto o : rom_order ) {
