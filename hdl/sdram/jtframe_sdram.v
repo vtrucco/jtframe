@@ -241,7 +241,7 @@ always @(posedge clk)
     end else begin
     //////////////////////////////////////////////////////////////////////////////////
     // regular operation
-        SDRAM_DQ <= /*(hold_en && hold_bus) ? 16'h0 :*/ 16'hzzzz;
+        SDRAM_DQ <= (hold_en && hold_bus) ? 16'h0 : 16'hzzzz;
         if( !cnt_state[0] || refresh_ok ||
             (!downloading && read_req  ) || /* when not downloading */
             ( downloading && (writeon || readprog ) ) /* when downloading */) begin
@@ -315,8 +315,6 @@ always @(posedge clk)
                 refresh_cycle ? CMD_NOP : CMD_READ;
             dq_rdy      <= 1'b0;
             if( write_cycle ) SDRAM_DQ <= dq_out;
-        end
-        if ( cnt_state == ST_THREE ) begin
             if( read_cycle ) hold_bus <= 1'b0;
         end
         if ( cnt_state == ST_FIVE ) begin
