@@ -67,5 +67,6 @@ set_instance_assignment -name FAST_INPUT_REGISTER ON -to emu:emu|jtframe_mister:
 #set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to *
 #set_instance_assignment -name FAST_INPUT_REGISTER ON -to *
 #set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to *
+set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
 
 # Always leave a blank line at the end

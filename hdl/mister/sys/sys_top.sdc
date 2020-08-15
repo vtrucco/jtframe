@@ -2,7 +2,7 @@
 create_clock -period "50.0 MHz" [get_ports FPGA_CLK1_50]
 create_clock -period "50.0 MHz" [get_ports FPGA_CLK2_50]
 create_clock -period "50.0 MHz" [get_ports FPGA_CLK3_50]
-create_clock -period "100.0 MHz" [get_pins -compatibility_mode *|h2f_user0_clk] 
+create_clock -period "100.0 MHz" [get_pins -compatibility_mode *|h2f_user0_clk]
 create_clock -period "100.0 MHz" [get_pins -compatibility_mode spi|sclk_out] -name spi_sck
 
 derive_pll_clocks
@@ -51,6 +51,10 @@ set_false_path -from [get_keepers {emu:emu|jtframe_mister:u_frame|hps_io:u_hps_i
 
 set_false_path -from [get_keepers {emu:emu|jtframe_mister:u_frame|hps_io:u_hps_io|ioctl_download}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|game_rst}]
 
+# These are static signals that don't need to be concerned with
+set_false_path -from [get_registers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_dip:u_dip|enable_psg}]
+set_false_path -from [get_registers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_dip:u_dip|enable_fm}]
+
 #**************************************************************
 # Set Input Delay
 #**************************************************************
@@ -59,7 +63,7 @@ set_false_path -from [get_keepers {emu:emu|jtframe_mister:u_frame|hps_io:u_hps_i
 # output pins of the SDRAM to change after a new clock edge.
 # This is used to calculate set-up time conditions in the FF
 # latching the signal inside the FPGA
-set_input_delay -clock SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]] 
+set_input_delay -clock SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]]
 
 # This is tOH in the data sheet. It is the time data is hold at the
 # output pins of the SDRAM after a new clock edge.

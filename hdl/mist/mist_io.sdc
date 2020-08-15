@@ -17,7 +17,7 @@ set_time_format -unit ns -decimal_places 3
 
 create_clock -name {CLOCK_27[0]} -period 37.037 -waveform { 0.000 18.518 } [get_ports {CLOCK_27[0]}]
 create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_ports {SPI_SCK}]
-# create_clock -name {u_frame|u_board|u_scandoubler|vga_hsync} -period 31777.000 -waveform { 0.000 15888.500 } 
+# create_clock -name {u_frame|u_board|u_scandoubler|vga_hsync} -period 31777.000 -waveform { 0.000 15888.500 }
 
 
 #**************************************************************
@@ -52,7 +52,7 @@ derive_clock_uncertainty
 # output pins of the SDRAM to change after a new clock edge.
 # This is used to calculate set-up time conditions in the FF
 # latching the signal inside the FPGA
-set_input_delay -clock SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]] 
+set_input_delay -clock SDRAM_CLK -max 6 [get_ports SDRAM_DQ[*]]
 
 # This is tOH in the data sheet. It is the time data is hold at the
 # output pins of the SDRAM after a new clock edge.
@@ -91,6 +91,10 @@ set_false_path -to [get_ports {AUDIO_L}]
 set_false_path -to [get_ports {AUDIO_R}]
 set_false_path -to [get_ports {VGA_*}]
 
+# These are static signals that don't need to be concerned with
+set_false_path -from [get_registers {u_frame|u_board|u_dip|enable_psg}]
+set_false_path -from [get_registers {:u_frame|u_board|u_dip|enable_fm}]
+
 #**************************************************************
 # Set Multicycle Path
 #**************************************************************
@@ -127,8 +131,8 @@ set_input_delay -clock SPI_SCK -max 6.4 [get_ports SPI_SS*]
 set_input_delay -clock SPI_SCK -min 3.2 [get_ports SPI_SS*]
 set_input_delay -clock SPI_SCK -max 6.4 [get_ports CONF_DATA0]
 set_input_delay -clock SPI_SCK -min 3.2 [get_ports CONF_DATA0]
-# 
-# 
+#
+#
 
 set_output_delay -add_delay -max -clock SPI_SCK  6.4 [get_ports SPI_DO]
 set_output_delay -add_delay -min -clock SPI_SCK  3.2 [get_ports SPI_DO]
