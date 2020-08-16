@@ -48,6 +48,7 @@ typedef list<DIP_shift> shift_list;
 void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
     const string& buttons, const string& altfolder, Header* header );
 void clean_filename( string& fname );
+void rename_regions( Game *g, list<string>& renames );
 
 struct ROMorder {
     string region;
@@ -62,13 +63,16 @@ int main(int argc, char * argv[] ) {
     shift_list shifts;
     Header *header=NULL;
     string region_order;
-    list<string> rmdipsw;
+    list<string> rmdipsw, renames;
     list<ROMorder> rom_order;
 try{
     for( int k=1; k<argc; k++ ) {
         string a = argv[k];
         if( a=="-swapbytes" ) {
-            swapregions.insert(string(argv[++k]));
+            while( ++k < argc && argv[k][0]!='-' ) {
+                swapregions.insert(argv[k]);
+            }
+            if( k<argc && argv[k][0]=='-' ) k--;
             continue;
         }
         if( a=="-fill" ) {
@@ -121,6 +125,17 @@ try{
         if( a=="-rmdipsw" ) {
             while( ++k < argc && argv[k][0]!='-' ) {
                 rmdipsw.push_back(argv[k]);
+            }
+            if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        if( a=="-rename" ) {
+            while( ++k < argc && argv[k][0]!='-' ) {
+                if( strchr( argv[k], '=' )==NULL ) {
+                    throw "ERROR: wrong syntax in rename argument\n"
+                          "       correct format is newname=oldname\n";
+                }
+                renames.push_back(argv[k]);
             }
             if( k<argc && argv[k][0]=='-' ) k--;
             continue;
@@ -192,11 +207,11 @@ try{
                     "    -rbf       <name>          set RBF file name\n"
                     "    -buttons   shoot jump etc  Gives names to the input buttons\n"
                     "    -altfolder path            Path where MRA for clone games will be added\n"
-                    " DIP options\n"
+                    "\n DIP options\n"
                     "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
                     "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
                     "    -rmdipsw   <name> ...      Deletes the give DIP switch from the output MRA\n"
-                    " Region options\n"
+                    "\n Region options\n"
                     "    -order     regions         define the dump order of regions. Those not enumerated\n"
                     "                               will get dumped last\n"
                     "    -order-roms region # # #   ROMs of specified regions are re-ordered. Index starts\n"
@@ -206,7 +221,9 @@ try{
                     "    -swapbytes <region>        swap bytes for named region\n"
                     "    -frac      <region> <#>    divide region in fractions\n"
                     "    -fill      <region>        fill gaps between files within region\n"
-                    " Header options \n"
+                    "    -rename    old=new?        rename region old by new. Add ? to skip warning messages\n"
+                    "                               if old is not found.\n"
+                    "\n Header options \n"
                     "    -header    size            Defines an empty (zeroes) header of the given size\n"
                     "    -header-data value         Pushes data to the header. It can be defined multiple times\n"
                     "    -header-offset start regions\n"
@@ -234,6 +251,8 @@ try{
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
         Game* game=g.second;
+        // Rename ROM regions
+        rename_regions( game, renames );
         // Remove unused dip swithces
         ListDIPs& dips=game->getDIPs();
         list<ListDIPs::iterator> todelete;
@@ -267,6 +286,30 @@ try{
     }
     delete header; header=NULL;
     return 0;
+}
+
+void rename_regions( Game *g, list<string>& renames ) {
+    ListRegions& regions = g->getRegionList();
+    for( string& s : renames ) {
+        size_t strpos = s.find_first_of('=');
+        string newname = s.substr(0, strpos);
+        string oldname = s.substr(strpos+1);
+        bool found=false, nowarning=false;
+        if( oldname[oldname.size()-1]=='?' ) {
+            nowarning = true;
+            oldname = oldname.substr(0, oldname.size()-1);
+        }
+        for( ROMRegion* reg : regions ) {
+            if( reg->name == oldname ) {
+                reg->name=newname;
+                found=true;
+                break;
+            }
+        }
+        if( !found && !nowarning) {
+            cout << "Warning: renamed failed for " << g->name << " region '" << oldname << "'. It was not found\n";
+        }
+    }
 }
 
 void replace( string&aux, const char *find_text, const char* new_text ) {
