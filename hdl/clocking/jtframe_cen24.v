@@ -22,6 +22,7 @@
 module jtframe_cen24(
     input   clk,    // 24 MHz
     output  reg cen12,
+    output      cen8,
     output  reg cen6,
     output  reg cen4,
     output  reg cen3,
@@ -37,10 +38,14 @@ module jtframe_cen24(
 
 reg [3:0] cencnt =4'd0;
 reg [2:0] cencnt3=2'd0;
+reg [2:0] cencnt8=3'd1;
+
+assign cen8 = cencnt8[2];
 
 always @(posedge clk) begin
     cencnt  <= cencnt+4'd1;
     cencnt3 <= cencnt3==3'd5 ? 3'd0 : (cencnt3+3'd1);
+    cencnt8 <= { cencnt8[1:0], cencnt8[2] };
 end
 
 always @(posedge clk) begin
