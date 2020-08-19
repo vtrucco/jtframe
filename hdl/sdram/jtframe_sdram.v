@@ -48,7 +48,7 @@ module jtframe_sdram(
     // that can be joined together thru an OR operation at a
     // higher level. This makes it possible to short the pins
     // of the SDRAM, as done in the MiSTer 128MB module
-    inout  reg  [15:0]  SDRAM_DQ,       // SDRAM Data bus 16 Bits
+    inout       [15:0]  SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output reg  [12:0]  SDRAM_A,        // SDRAM Address bus 13 Bits
     output reg          SDRAM_DQML,     // SDRAM Low-byte Data Mask
     output reg          SDRAM_DQMH,     // SDRAM High-byte Data Mask
@@ -78,9 +78,11 @@ localparam REPACK = 0;
 
 assign SDRAM_CKE  = 1'b1;
 
-reg [15:0] dq_ff;
+reg [15:0] dq_ff, dq_pad;
 reg [15:0] dq_ff0;
 reg        dq_rdy;
+
+assign SDRAM_DQ = dq_pad;
 
 generate
     if (REPACK==1) begin : data_repacking
@@ -141,7 +143,8 @@ reg refresh_ok;
 
 always @(posedge clk or posedge rst) begin
     if(rst) begin
-        set_burst  <= 1'b0;
+        set_burst  <= 0;
+        burst_mode <= 0;
     end else begin
         writeon  <= downloading && prog_we;
         readprog <= downloading && prog_rd;
@@ -172,29 +175,29 @@ localparam [13:0] INIT_WAIT = 14'd5_000;
 always @(posedge clk)
     if( rst ) begin
         // initialization of SDRAM
-        SDRAM_CMD  <= CMD_NOP;
-        SDRAM_DQMH <= 1'b0;
-        SDRAM_DQML <= 1'b0;
-        SDRAM_A    <= 13'd0;
-        init_cmd   <= CMD_NOP;
-        wait_cnt   <= INIT_WAIT; // wait for 100us
-        initialize <= 1'b1;
-        init_state <= 3'd0;
+        SDRAM_CMD     <= CMD_NOP;
+        SDRAM_DQMH    <= 1'b0;
+        SDRAM_DQML    <= 1'b0;
+        SDRAM_A       <= 13'd0;
+        init_cmd      <= CMD_NOP;
+        wait_cnt      <= INIT_WAIT; // wait for 100us
+        initialize    <= 1'b1;
+        init_state    <= 3'd0;
         // Main loop
-        burst_done <= 1'b0;
-        cnt_state  <= 8'd1; //Starts after the precharge
-        dq_rdy     <= 1'b0;
-        sdram_ack  <= 1'b0;
-        refresh_sr <=  'd0;
-        refresh_ok <= 1'b0;
+        burst_done    <= 1'b0;
+        cnt_state     <= 8'd1; //Starts after the precharge
+        dq_rdy        <= 1'b0;
+        sdram_ack     <= 1'b0;
+        refresh_sr    <=  'd0;
+        refresh_ok    <= 1'b0;
         refresh_cycle <= 0;
-        write_cycle <= 1'b0;
-        read_cycle  <= 1'b0;
-        hold_bus    <= 1'b1;
-        SDRAM_BA    <= 2'b0;
-        SDRAM_DQ    <= 16'hzzzz;
+        write_cycle   <= 1'b0;
+        read_cycle    <= 1'b0;
+        hold_bus      <= 1'b1;
+        SDRAM_BA      <= 2'b0;
+        dq_pad        <= 16'hzzzz;
     end else if( initialize ) begin
-        SDRAM_DQ <= 16'hzzzz;
+        dq_pad <= 16'hzzzz;
         if( |wait_cnt ) begin
             wait_cnt <= wait_cnt-14'd1;
             init_cmd  <= CMD_NOP;
@@ -241,7 +244,7 @@ always @(posedge clk)
     end else begin
     //////////////////////////////////////////////////////////////////////////////////
     // regular operation
-        SDRAM_DQ <= (hold_en && hold_bus) ? 16'h0 : 16'hzzzz;
+        dq_pad <= (hold_en && hold_bus) ? 16'h0 : 16'hzzzz;
         if( !cnt_state[0] || refresh_ok ||
             (!downloading && read_req  ) || /* when not downloading */
             ( downloading && (writeon || readprog ) ) /* when downloading */) begin
@@ -252,12 +255,12 @@ always @(posedge clk)
         end
         if( cnt_state == ST_ZERO ) begin // activate or refresh
             dq_out         <= downloading ? { prog_data, prog_data } : data_write;
-            write_cycle    <= 1'b0;
-            read_cycle     <= 1'b0;
-            refresh_cycle  <= 1'b0;
-            burst_done     <= 1'b0;
-            hold_bus       <= 1'b1;
-            dq_rdy         <= 1'b0;
+            write_cycle    <= 0;
+            read_cycle     <= 0;
+            refresh_cycle  <= 0;
+            burst_done     <= 0;
+            hold_bus       <= 1;
+            dq_rdy         <= 0;
             {SDRAM_DQMH, SDRAM_DQML } <= 2'b00;
             if( set_burst ) begin
                 SDRAM_CMD <= CMD_LOAD_MODE;
@@ -276,8 +279,8 @@ always @(posedge clk)
                     write_cycle   <=  writeon;
                     read_cycle    <= ~writeon;
                     refresh_sr    <= 2'd0;
-                    refresh_ok    <= 1'b0;
-                    sdram_ack     <= 1'b1;
+                    refresh_ok    <= 0;
+                    sdram_ack     <= 1;
                 end
                 else if( (read_req || refresh_ok) ) begin // regular use
                     SDRAM_CMD <=
@@ -289,14 +292,14 @@ always @(posedge clk)
                     sdram_ack     <= read_req;
                     write_cycle   <= read_req && !sdram_rnw;
                     refresh_sr    <= 2'd0;
-                    refresh_ok    <= 1'b0;
+                    refresh_ok    <= 0;
                 end
                 else begin
                     if( refresh_en )
                         { refresh_ok, refresh_sr } <=  { refresh_sr, 1'b1 };
                     else begin
                         refresh_sr <= 2'd0;
-                        refresh_ok <= 1'b0;
+                        refresh_ok <= 0;
                     end
                 end
             end
@@ -314,7 +317,7 @@ always @(posedge clk)
             SDRAM_CMD   <= write_cycle ? CMD_WRITE :
                 refresh_cycle ? CMD_NOP : CMD_READ;
             dq_rdy      <= 1'b0;
-            if( write_cycle ) SDRAM_DQ <= dq_out;
+            if( write_cycle ) dq_pad <= dq_out;
             if( read_cycle ) hold_bus <= 1'b0;
         end
         if ( cnt_state == ST_FIVE ) begin
