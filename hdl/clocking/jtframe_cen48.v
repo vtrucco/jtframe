@@ -85,7 +85,7 @@ localparam [10:0] LIM    = 11'd1408;
 
 wire [10:0] absmax = LIM+STEP;
 
-reg  [10:0] cencnt=11'd0;
+reg  [10:0] cencnt;
 reg  [10:0] next;
 reg  [10:0] next2;
 
@@ -113,6 +113,12 @@ always @(posedge clk) begin
         cencnt <= next;
     end
 end
+
+`ifdef SIMULATION
+initial begin
+    cencnt = 11'd0;
+end
+`endif
 endmodule
 
 ////////////////////////////////////////////////////////////////////
