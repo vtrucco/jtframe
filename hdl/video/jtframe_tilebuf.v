@@ -40,7 +40,7 @@ wire [HW-1:0] hnext;
 wire          we;
 
 assign hnext = hscan + 1'd1;
-assign we    = pxl2_cen;
+assign we    = pxl2_cen & rom_ok & !done;
 
 
 always @(posedge clk, posedge rst) begin
@@ -53,11 +53,11 @@ always @(posedge clk, posedge rst) begin
         vscan <= vdump+1'd1;
 
         if( hdump==HOVER ) begin
-            line  <= ~line;
+            if(done) line <= ~line;
             hscan <= HOVER;
             done  <= 0;
         end else
-        if( pxl2_cen && rom_ok && !done ) begin
+        if( we ) begin
             hscan <= hnext;
             if( hnext == HOVER ) done <= 1;
         end
