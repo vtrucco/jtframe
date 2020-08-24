@@ -17,10 +17,11 @@
     Date: 23-8-2020 */
 
 module jtframe_tilebuf #(
-    parameter          HW    = 8,
-                       VW    = 8,
-                       PALW  = 4,
-                       PW    = PALW+4,
+    parameter          HW      = 8,
+                       VW      = 8,
+                       PALW    = 4,
+                       HOFFSET = 0,
+                       PW      = PALW+4,
     parameter [HW-1:0] HOVER = {HW{1'd1}} // H count at which a new line starts
 ) (
     input               rst,
@@ -38,6 +39,7 @@ module jtframe_tilebuf #(
 reg           line, done;
 wire [HW-1:0] hnext;
 wire          we;
+wire [HW-1:0] hread = hdump + HOFFSET[HW-1:0];
 
 assign hnext = hscan + 1'd1;
 assign we    = pxl2_cen & rom_ok & !done;
@@ -74,7 +76,7 @@ jtframe_dual_ram #(.aw(HW+1),.dw(PW)) u_line(
     .q0     (               ),
     // Port 1
     .data1  ( pxl_data      ),
-    .addr1  ({~line,hdump}  ),
+    .addr1  ({~line,hread}  ),
     .we1    ( 1'b0          ),
     .q1     ( pxl_dump      )
 );

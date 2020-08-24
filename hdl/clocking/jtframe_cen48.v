@@ -71,6 +71,9 @@ endmodule
 ////////////////////////////////////////////////////////////////////
 // Generates a 3.57 MHz clock enable signal for a 48MHz clock
 // Result: 105/1408 = 3,579,545.5 MHz, off by 0.5Hz (0.14ppm) :-)
+// This module seems to be related to missing sound in Bionic Commando and Street Fighter 1
+// Touching the initial conditions a bit seems to have fixed it -maybe-
+// I don't quite understand how the error occurs in those two games
 
 module jtframe_cen3p57(
     input      clk,       // 48 MHz
@@ -82,10 +85,11 @@ parameter CLK24=0;
 
 localparam [10:0] STEP=11'd105<<CLK24;
 localparam [10:0] LIM    = 11'd1408;
+localparam        ALT0   = 1;
 
 wire [10:0] absmax = LIM+STEP;
 
-reg  [10:0] cencnt;
+reg  [10:0] cencnt=11'd0;
 reg  [10:0] next;
 reg  [10:0] next2;
 
@@ -94,23 +98,25 @@ always @(*) begin
     next2 = next-LIM;
 end
 
-reg alt=1'b0;
+reg alt=ALT0[0];
 
 always @(posedge clk) begin
-    cen_3p57 <= 1'b0;
-    cen_1p78 <= 1'b0;
     if( cencnt >= absmax ) begin
         // something went wrong: restart
-        cencnt <= 11'd0;
-        alt    <= 1'b0;
+        cencnt   <= 11'd0;
+        alt      <= ALT0[0];
+        cen_3p57 <= 1;
+        cen_1p78 <= 1;
     end else
     if( next >= LIM ) begin
-        cencnt <= next2;
-        cen_3p57 <= 1'b1;
-        alt    <= ~alt;
-        if( alt ) cen_1p78 <= 1'b1;
+        cencnt   <= next2;
+        cen_3p57 <= 1;
+        alt      <= ~alt;
+        if( alt ) cen_1p78 <= 1;
     end else begin
-        cencnt <= next;
+        cencnt   <= next;
+        cen_3p57 <= 0;
+        cen_1p78 <= 0;
     end
 end
 
