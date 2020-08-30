@@ -104,10 +104,9 @@ localparam CONF_STR = {
     `SEPARATOR
     `ifdef JTFRAME_MRA_DIP
         "DIP;",
-    `else
-        `ifdef CORE_OSD
-            `CORE_OSD
-        `endif
+    `endif
+    `ifdef CORE_OSD
+        `CORE_OSD
     `endif
     "T0,RST;",
     "V,patreon.com/topapate;"

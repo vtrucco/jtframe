@@ -167,6 +167,13 @@ bit     |  meaning                | Enabled with macro
 
 If **JTFRAME_FLIP_RESET** is defined a change in dip_flip will reset the game.
 
+To add game specific OSD strings, the recommended way is by adding a line to the **.def** file:
+
+```
+CORE_OSD="O6,Turbo,Off,On;",
+```
+Only one CORE_OSD can be defined, but it an contain multiple values separated by colon.
+
 ## DIP switch information extraction from MAME
 
 First you need to get the xml with all the information:
