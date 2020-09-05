@@ -14,7 +14,7 @@
 
       Author: Jose Tejada Gomez. Twitter: @topapate
       Version: 1.0
-      Date: 24-4-2019 
+      Date: 24-4-2019
 
       Originally based on a file from:
           Milkymist VJ SoC, Sebastien Bourdeauducq and Das Labor
@@ -137,8 +137,12 @@ module jtframe_z80_romwait (
     input         rom_ok
 );
 
-wire   wait_n;
-assign cpu_cen = cen;
+parameter USEWAITN=1;
+
+wire   wait_n, cpu_waitn;
+
+assign cpu_cen   = USEWAITN ? cen : cen&wait_n;
+assign cpu_waitn = USEWAITN ? wait_n : 1'b1;
 
 jtframe_rom_wait u_wait(
     .rst_n    ( rst_n     ),
@@ -154,8 +158,8 @@ jtframe_rom_wait u_wait(
 jtframe_z80 u_cpu(
     .rst_n    ( rst_n     ),
     .clk      ( clk       ),
-    .cen      ( cen       ),
-    .wait_n   ( wait_n    ),
+    .cen      ( cpu_cen   ),
+    .wait_n   ( cpu_waitn ),
     .int_n    ( int_n     ),
     .nmi_n    ( nmi_n     ),
     .busrq_n  ( busrq_n   ),
