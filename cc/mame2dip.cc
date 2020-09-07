@@ -471,15 +471,17 @@ void makeDIP( Node& root, Game* g, string& dipbase, shift_list& shifts ) {
     bool ommit_parenthesis=true;
     string last_tag, last_location;
     int cur_shift=0;
+    int dip_width=8;
     if( dips.size() ) {
         Node& n = root.add("switches");
-        n.add_attr("default","FF,FF");
         n.add_attr("base",dipbase);
+        n.add_attr("default", dipbase=="8" ? "FF,FF,FF" : "FF,FF");
         for( DIPsw* dip : dips ) {
             if( dip->tag != last_tag /*|| dip->location != last_location*/ ) {
                 n.comment( dip->tag );
                 //if( last_tag.size() )
-                base+=8;
+                base+=dip_width;
+                dip_width = 8; // restores it for next DIP SW
                 last_tag = dip->tag;
                 last_location = dip->location;
                 // cout << "base = " << base << "\ntag " << dip->tag << "\nlocation " << dip->location << '\n';
@@ -507,6 +509,7 @@ void makeDIP( Node& root, Game* g, string& dipbase, shift_list& shifts ) {
                 else
                     break;
             }
+            if( bit0-base > 8 ) dip_width = 16;
             for( bit1=bit0; k<32;k++ ) {
                 if( (m&1) == 1 ) {
                     m>>=1;
@@ -581,9 +584,12 @@ void makeJOY( Node& root, Game* g, string buttons ) {
         pos=buttons.find_first_of(' ', last);
         count++;
     } while(true);
-    if( count>4 ) {
-        cout << "ERROR: more than four buttons were defined. That is not supported yet.\n";
+    if( count>6 ) {
+        cout << "ERROR: more than six buttons were defined. That is not supported yet.\n";
         cout << "       start, coin and pause will not be automatically added\n";
+    } else if(count>4) {
+        names +=",Start,Coin,Pause";
+        mapped+=",Select,Start,-";
     } else {
         names +=",Start,Coin,Pause";
         mapped+=",R,L,Start";
