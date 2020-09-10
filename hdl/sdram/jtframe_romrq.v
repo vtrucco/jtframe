@@ -53,8 +53,10 @@ always @(*) begin
         16: addr_req = {addr[AW-1:1],1'b0};
         32: addr_req = addr;
     endcase
-    hit0 = addr_req == cached_addr0 && good[0];
-    hit1 = addr_req == cached_addr1 && good[1];
+    // It is important to leave === for simulations, instead of ==
+    // It shouldn't have any implication for synthesis
+    hit0 = addr_req === cached_addr0 && good[0];
+    hit1 = addr_req === cached_addr1 && good[1];
     req = clr || ( !(hit0 || hit1) && addr_ok && !we);
 end
 
