@@ -285,7 +285,7 @@ localparam START_BIT  = 6+(BUTTONS-2);
 localparam COIN_BIT   = 7+(BUTTONS-2);
 localparam PAUSE_BIT  = 8+(BUTTONS-2);
 
-reg last_pause, last_joypause, last_reset;
+reg last_pause, last_osd_pause, last_joypause, last_reset;
 reg [3:0] last_gfx;
 wire joy_pause = joy1_sync[PAUSE_BIT] | joy2_sync[PAUSE_BIT];
 
@@ -294,10 +294,14 @@ integer cnt;
 function [9:0] apply_rotation;
     input [9:0] joy_in;
     input       rot;
+    input       flip;
     input       invert;
     begin
     apply_rotation = {10{invert}} ^
-        (!rot ? joy_in : { joy_in[9:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
+        (!rot ? joy_in :
+        flip ?
+         { joy_in[9:4], joy_in[1], joy_in[0], joy_in[2], joy_in[3] } :
+         { joy_in[9:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
     end
 endfunction
 
@@ -325,6 +329,7 @@ always @(posedge clk_sys)
         gfx_en       <= 4'hf;
     end else begin
         last_pause   <= key_pause;
+        last_osd_pause <= osd_pause;
         last_reset   <= key_reset;
         last_joypause <= joy_pause; // joy is active low!
 
@@ -336,7 +341,7 @@ always @(posedge clk_sys)
         game_start = {4{invert_inputs}} ^ { 2'b0, sim_inputs[frame_cnt][3:2] };
         game_joystick1 <= {10{invert_inputs}} ^ { 4'd0, sim_inputs[frame_cnt][9:4]};
         `else
-        game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, invert_inputs);
+        game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, ~dip_flip, invert_inputs);
         game_coin      <= {4{invert_inputs}} ^
             ({  joy4_sync[COIN_BIT],joy3_sync[COIN_BIT],
                 joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
@@ -345,9 +350,9 @@ always @(posedge clk_sys)
             ({  joy4_sync[START_BIT],joy3_sync[START_BIT],
                 joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start);
         `endif
-        game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, invert_inputs);
-        game_joystick3 <= apply_rotation(joy3_sync | key_joy3, rot_control, invert_inputs);
-        game_joystick4 <= apply_rotation(joy4_sync           , rot_control, invert_inputs);
+        game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, ~dip_flip, invert_inputs);
+        game_joystick3 <= apply_rotation(joy3_sync | key_joy3, rot_control, ~dip_flip, invert_inputs);
+        game_joystick4 <= apply_rotation(joy4_sync           , rot_control, ~dip_flip, invert_inputs);
 
         soft_rst <= key_reset && !last_reset;
 
@@ -360,9 +365,11 @@ always @(posedge clk_sys)
         `ifndef DIP_PAUSE // Forces pause during simulation
         if( downloading )
             game_pause<=0;
-        else // toggle
-            if( (key_pause && !last_pause) || (joy_pause && !last_joypause) || osd_pause)
+        else begin// toggle
+            if( (key_pause && !last_pause) || (joy_pause && !last_joypause) )
                 game_pause   <= ~game_pause;
+            if (last_osd_pause ^ osd_pause) game_pause <= osd_pause;
+        end
         `else
         game_pause <= 1'b1;
         `endif
