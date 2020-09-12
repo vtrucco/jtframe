@@ -36,9 +36,9 @@ function add_dir {
     processF=no
     echo "Adding dir $1 $2" >&2
     for i in $(cat $1/$2); do
-        if [ "$i" = "-sv" ]; then 
+        if [ "$i" = "-sv" ]; then
             # ignore statements that iVerilog cannot understand
-            continue; 
+            continue;
         fi
         if [ "$processF" = yes ]; then
             processF=no
@@ -514,8 +514,9 @@ esac
 
 if [[ "$VIDEO_DUMP" = TRUE && -e video.raw ]]; then
 # convert -size 384x240 -depth 8 RGBA:video.raw -resize 200% video.png
-    convert $CONVERT_OPTIONS -size ${VIDEOWIDTH}x${VIDEOHEIGHT} \
+    convert -filter Point $CONVERT_OPTIONS -size ${VIDEOWIDTH}x${VIDEOHEIGHT} \
         -depth 8 RGBA:video.raw video.jpg
+    rmdup.sh
 fi
 
 # convert raw sound file to wav format
