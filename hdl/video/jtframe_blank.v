@@ -44,7 +44,7 @@ generate
         assign predly = {LHBL, LVBL};
 endgenerate
 
-always @(posedge clk) begin
+always @(posedge clk) if(pxl_cen) begin
     rgb_out <= predly==2'b11 ? rgb_in : {DW{1'b0}};
     {LHBL_dly, LVBL_dly} <= predly;
 end
