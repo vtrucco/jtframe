@@ -44,9 +44,18 @@ generate
         assign predly = {LHBL, LVBL};
 endgenerate
 
-always @(posedge clk) if(pxl_cen) begin
-    rgb_out <= predly==2'b11 ? rgb_in : {DW{1'b0}};
-    {LHBL_dly, LVBL_dly} <= predly;
-end
+generate
+    if( DLY > 0 ) begin : latch
+        always @(posedge clk) if(pxl_cen) begin
+            rgb_out <= predly==2'b11 ? rgb_in : {DW{1'b0}};
+            {LHBL_dly, LVBL_dly} <= predly;
+        end
+    end else begin : comb // DLY==0
+        always @(*) begin
+            rgb_out = predly==2'b11 ? rgb_in : {DW{1'b0}};
+            {LHBL_dly, LVBL_dly} = predly;
+        end
+    end
+endgenerate
 
 endmodule
