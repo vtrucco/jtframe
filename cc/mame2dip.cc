@@ -13,12 +13,17 @@
 
 using namespace std;
 
+struct Frac {
+    int step; // number of bytes to take at once
+    int count; // number of fractions
+};
+
 
 set<string> swapregions;
 set<string> fillregions;
 set<string> ignoreregions;
 map<string,int> startregions;
-map<string,int> fracregions;
+map<string,Frac> fracregions;
 
 class DIP_shift {
 public:
@@ -28,25 +33,29 @@ public:
 
 class Header {
     int *buf;
-    int _size;
+    int _size, _offsetbits;
     int pos, offset_lut;
+    bool reverse;
     vector<string> regions;
 public:
-    Header(int size);
+    Header(int size, int fill);
     ~Header();
     int get_size() { return _size; }
     int* data() { return buf; }
     void push( int v );
+    bool set_pointer( int p );
     // Offset list
     bool set_offset_lut( int start ) { offset_lut = start; return start<_size && start>=0; }
+    void set_offsetbits( int offsetbits ) { _offsetbits = offsetbits; }
     void add_region(const char *s) { regions.push_back(s); }
     bool set_offset( string& s, int offset );
+    void set_reverse() { reverse = true; }
 };
 
 typedef list<DIP_shift> shift_list;
 
 void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
-    const string& buttons, const string& altfolder, Header* header );
+    const string& buttons, const string& outdir, string altfolder, Header* header );
 void clean_filename( string& fname );
 void rename_regions( Game *g, list<string>& renames );
 
@@ -57,7 +66,7 @@ struct ROMorder {
 
 int main(int argc, char * argv[] ) {
     bool print=false;
-    string fname="mame.xml";
+    string fname="mame.xml", outdir;
     string rbf, dipbase("16"), buttons, altfolder;
     bool   fname_assigned=false;
     shift_list shifts;
@@ -95,17 +104,40 @@ try{
             continue;
         }
         if( a=="-ignore" ) {
-            ignoreregions.insert(string(argv[++k]));
+            while( ++k<argc && argv[k][0]!='-' )
+                ignoreregions.insert(string(argv[k]));
+            if( k<argc && argv[k][0]=='-' ) k--;
             continue;
         }
         if( a=="-frac" ) {
+            Frac frac = {1,1};
+            if( k+2>=argc ) {
+                cout << "ERROR: incomplete frac argument\n";
+                return 1;
+            }
             string reg(argv[++k]);
-            int frac=strtol( argv[++k], NULL, 0 );
+            if( argv[k][0]>='0' && argv[k][0]<='9' ) {
+                frac.step = strtol(argv[k],NULL,0);
+                if(frac.step<1 || frac.step>2) {
+                    cout << "ERROR: frac step can only be 1 or 2\n";
+                    return 1;
+                }
+                reg = argv[++k];
+                if( k>=argc ) {
+                    cout << "ERROR: incomplete frac argument\n";
+                    return 1;
+                }
+            }
+            frac.count=strtol( argv[++k], NULL, 0 );
             fracregions[reg]=frac;
             continue;
         }
         if( a=="-rbf" ) {
-            rbf =argv[++k];
+            rbf=argv[++k];
+            continue;
+        }
+        if( a=="-outdir" ) {
+            outdir=argv[++k];
             continue;
         }
         if( a=="-altfolder" ) {
@@ -116,8 +148,11 @@ try{
             while( ++k < argc && argv[k][0]!='-' ) {
                 if(buttons.size()==0)
                     buttons=argv[k];
-                else
-                    buttons+=string(" ") + string(argv[k]);
+                else {
+                    string b(argv[k]);
+                    if( b=="None" || b=="none" ) b="-";
+                    buttons+=string(" ") + b;
+                }
             }
             if( k<argc && argv[k][0]=='-' ) k--;
             continue;
@@ -150,7 +185,14 @@ try{
             if( aux<=0 || aux>128 ) {
                 throw "ERROR: header must be smaller than 128 bytes\n";
             }
-            header = new Header(aux);
+            int fill=0;
+            if( argv[k+1][0]!='-' ) {
+                fill=strtol(argv[++k], NULL, 0);
+                if( fill<=0 || fill>255 ) {
+                    throw "ERROR: fill value must be between 0 and 255\n";
+                }
+            }
+            header = new Header(aux, fill);
             continue;
         }
         if( a=="-header-data" ) {
@@ -158,13 +200,43 @@ try{
                 throw "ERROR: header size has not been defined\n";
             }
             while( ++k<argc && argv[k][0]!='-' ) {
-                int aux=strtol(argv[k], NULL, 0);
+                int aux=strtol(argv[k], NULL, 16);
                 if( aux<0 || aux>255 ) {
                     throw "ERROR: header data must be written in possitive bytes\n";
                 }
                 header->push(aux);
             }
             if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        if( a=="-header-offset-bits" ) {
+            if( header==NULL) {
+                throw "ERROR: header size has not been defined\n";
+            }
+            ++k;
+            if( k>= argc ) {
+                throw "ERROR: missing value for header offset bits\n";
+            }
+            int aux = strtol( argv[k], NULL, 0);
+            if( aux<0 || aux>16 ) {
+                throw "ERROR: header offset bits value must between 0 and 16\n";
+            }
+            header->set_offsetbits(aux);
+            continue;
+        }
+        if( a=="-header-pointer" ) {
+            if( header==NULL) {
+                throw "ERROR: header size has not been defined\n";
+            }
+            ++k;
+            if( k>= argc ) {
+                throw "ERROR: missing value for header pointer\n";
+            }
+            int aux = strtol( argv[k], NULL, 0);
+            if( aux<0 || aux>header->get_size()-1 ) {
+                throw "ERROR: header pointer is outside the header area\n";
+            }
+            header->set_pointer(aux);
             continue;
         }
         if( a=="-header-offset" ) {
@@ -177,6 +249,14 @@ try{
                 throw "ERROR: header offset LUT is out of bounds\n";
             }
             while( ++k<argc && argv[k][0]!='-') header->add_region(argv[k]);
+            if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        if( a=="-header-offset-reverse" ) {
+            if( header==NULL) {
+                throw "ERROR: header size has not been defined\n";
+            }
+            header->set_reverse();
             continue;
         }
         // ROM order
@@ -207,6 +287,7 @@ try{
                     "    -rbf       <name>          set RBF file name\n"
                     "    -buttons   shoot jump etc  Gives names to the input buttons\n"
                     "    -altfolder path            Path where MRA for clone games will be added\n"
+                    "    -outdir    path            Base path for output MRA files\n"
                     "\n DIP options\n"
                     "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
                     "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
@@ -224,13 +305,16 @@ try{
                     "    -rename    old=new?        rename region old by new. Add ? to skip warning messages\n"
                     "                               if old is not found.\n"
                     "\n Header options \n"
-                    "    -header    size            Defines an empty (zeroes) header of the given size\n"
+                    "    -header    size [fill]     Defines an empty (zeroes) header of the given size\n"
+                    "                               The optional fill value sets the default value of the header bytes\n"
                     "    -header-data value         Pushes data to the header. It can be defined multiple times\n"
                     "    -header-offset start regions\n"
                     "                               Start is the first byte where the regions offsets will be dumped\n"
                     "                               The bottom 8 bits of the offsets are dropped. Each offset is written\n"
                     "                               as two bytes. \"regions\" is a list of words with the MAME name of\n"
                     "                               the ROM regions\n"
+                    "    -header-offset-bits value  Number of bits to cut from offset data. Default is 8.\n"
+                    "    -header-offset-reverse     The two bytes for each data offset will be dumped in reverse order\n"
             ;
             return 0;
         }
@@ -282,7 +366,7 @@ try{
             region->sort(o.order.c_str());
         }
         game->sortRegions(region_order.c_str());
-        makeMRA(game, rbf, dipbase, shifts, buttons, altfolder, header );
+        makeMRA(game, rbf, dipbase, shifts, buttons, outdir, altfolder, header );
     }
     delete header; header=NULL;
     return 0;
@@ -376,20 +460,20 @@ void makeROM( Node& root, Game* g, Header* header ) {
         bool fill = fillregions.count(region->name)>0;
         // is it a fractioned region?
         auto frac_idx = fracregions.find(region->name);
-        int frac=0;
+        Frac frac={0,0};
         if( frac_idx!= fracregions.end() ) {
             frac = frac_idx->second;
         }
         string frac_output="0";
-        switch( frac ) {
-            case 2: frac_output="16"; break;
-            case 4: frac_output="32"; break;
+        switch( frac.count ) {
+            case 2: frac_output= frac.step==1 ? "16" : "32"; break;
+            case 4: frac_output= frac.step==1 ? "32" : "64"; break;
             case 0: break;
             default: cout << "WARNING: unsupported frac value for region "
                           << region->name << "\n";
                      continue;
         }
-        if( frac==0 ) {
+        if( frac.count==0 ) {
             int offset=0;
             for( ROM* r : region->roms ) {
                 // Fill in gaps between ROM chips
@@ -417,7 +501,7 @@ void makeROM( Node& root, Game* g, Header* header ) {
         } else {
             // Fractioned ROMs
             // First check that the count is correct
-            if( region->roms.size()%frac != 0 ) {
+            if( region->roms.size()%frac.count != 0 ) {
                 cout << "WARNING: Total number of ROM entries does not much fraction value"
                     " for region " << region->name << "\n";
                 continue;
@@ -425,22 +509,34 @@ void makeROM( Node& root, Game* g, Header* header ) {
             const int roms_size = region->roms.size();
             ROM** roms = new ROM*[roms_size];
             int aux=0;
-            int step=roms_size/frac;
+            int step=roms_size/frac.count;
             for( ROM* r : region->roms ) roms[aux++] = r;
             // Dump ROMs
-            for( aux=0; aux<roms_size/frac; aux++ ) {
+            for( aux=0; aux<roms_size/frac.count; aux++ ) {
                 Node& inter=n.add("interleave");
                 inter.add_attr("output",frac_output);
-                for( int chunk=0; chunk<frac; chunk++) {
+                for( int chunk=0; chunk<frac.count; chunk++) {
                     ROM*r = roms[aux+chunk*step];
                     Node& part = inter.add("part");
                     part.add_attr("name",r->name);
                     part.add_attr("crc",r->crc);
-                    char *mapping = new char[frac+1];
-                    for( int k=0; k<frac; k++ ) mapping[k]='0';
-                    mapping[frac]=0;
-                    mapping[frac-1-chunk]='1';
-                    part.add_attr("map",mapping);
+                    char *mapping = new char[frac.count+1];
+                    for( int k=0; k<frac.count; k++ ) mapping[k]='0';
+                    mapping[frac.count]=0; // string end
+                    mapping[frac.count-1-chunk]='1';
+                    // Transform the single byte map to multi byte
+                    string multimap;
+                    if( frac.step==1 ) {
+                        multimap=mapping;
+                    } else { // only supports frac.step==2 right now
+                        for( int k=0; k<frac.count; k++ ) {
+                            if(mapping[k]=='0')
+                                multimap += "00";
+                            else
+                                multimap += "21";
+                        }
+                    }
+                    part.add_attr("map",multimap.c_str() );
                     delete[] mapping;
                     dumped += r->size;
                 }
@@ -613,7 +709,7 @@ void makeMOD( Node& root, Game* g ) {
 }
 
 void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
-    const string& buttons, const string& altfolder,
+    const string& buttons, const string& outdir, string altfolder,
     Header* header ) {
     string indent;
     Node root("misterromdescription");
@@ -638,10 +734,10 @@ void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
     string fout_name = g->description;
     clean_filename(fout_name);
     fout_name+=".mra";
-    // MRA file for a clone is created in a subfolder - if specified
-    if( g->cloneof.size() && altfolder.size() ) {
-        fout_name = altfolder + "/" + fout_name;
+    if( !g->cloneof.size() ) {
+        altfolder = "";
     }
+    fout_name = outdir +"/" + altfolder + "/" + fout_name;
     ofstream fout(fout_name);
     if( !fout.good() ) {
         cout << "ERROR: cannot create " << fout_name << '\n';
@@ -756,10 +852,12 @@ void clean_filename( string& fname ) {
     delete[]s;
 }
 
-Header::Header(int size ) {
+Header::Header(int size, int fill ) {
     buf = new int[size];
     _size = size;
     pos=0;
+    for( int k=0; k<size; k++ ) buf[k]=fill;
+    reverse = false;
 }
 
 Header::~Header() {
@@ -769,6 +867,14 @@ Header::~Header() {
 
 void Header::push(int v) {
     if(pos<_size-1) buf[pos++] = v;
+}
+
+bool Header::set_pointer( int p ) {
+    if( p<_size-1 ) {
+        pos=p;
+        return true;
+    } else
+        return false;
 }
 
 bool Header::set_offset( string& s, int offset ) {
@@ -784,9 +890,14 @@ bool Header::set_offset( string& s, int offset ) {
     if( found ) {
         int j=offset_lut+k*2;
         if( j+2 >= _size ) return false;
-        offset>>=8;
-        buf[j++] = (offset>>8)&0xff;
-        buf[j]   = offset&0xff;
+        offset>>=_offsetbits;
+        if( !reverse ) {
+            buf[j++] = (offset>>8)&0xff;
+            buf[j]   =  offset    &0xff;
+        } else {
+            buf[j++] =  offset    &0xff;
+            buf[j]   = (offset>>8)&0xff;
+        }
         return true;
     }
     return false;
