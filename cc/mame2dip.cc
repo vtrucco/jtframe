@@ -55,7 +55,7 @@ public:
 typedef list<DIP_shift> shift_list;
 
 void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
-    const string& buttons, const string& outdir, string altfolder, Header* header );
+    const string& buttons, const string& outdir, string altfolder, Header* header, int mod_or );
 void clean_filename( string& fname );
 void rename_regions( Game *g, list<string>& renames );
 
@@ -66,7 +66,7 @@ struct ROMorder {
 
 int main(int argc, char * argv[] ) {
     bool print=false;
-    string fname="mame.xml", outdir;
+    string fname="mame.xml", outdir=".";
     string rbf, dipbase("16"), buttons, altfolder;
     bool   fname_assigned=false;
     shift_list shifts;
@@ -74,6 +74,7 @@ int main(int argc, char * argv[] ) {
     string region_order;
     list<string> rmdipsw, renames;
     list<ROMorder> rom_order;
+    int mod_or=0;
 try{
     for( int k=1; k<argc; k++ ) {
         string a = argv[k];
@@ -259,6 +260,11 @@ try{
             header->set_reverse();
             continue;
         }
+        // MOD options
+        if( a=="-4way" ) {
+            mod_or |= 2;
+            continue;
+        }
         // ROM order
         if( a=="-order" ) {
             while( ++k < argc && argv[k][0]!='-' ) {
@@ -315,6 +321,8 @@ try{
                     "                               the ROM regions\n"
                     "    -header-offset-bits value  Number of bits to cut from offset data. Default is 8.\n"
                     "    -header-offset-reverse     The two bytes for each data offset will be dumped in reverse order\n"
+                    "\n Mod byte options \n"
+                    "    -4way                      Sets 4-way joystick input\n"
             ;
             return 0;
         }
@@ -366,7 +374,7 @@ try{
             region->sort(o.order.c_str());
         }
         game->sortRegions(region_order.c_str());
-        makeMRA(game, rbf, dipbase, shifts, buttons, outdir, altfolder, header );
+        makeMRA(game, rbf, dipbase, shifts, buttons, outdir, altfolder, header, mod_or );
     }
     delete header; header=NULL;
     return 0;
@@ -694,8 +702,8 @@ void makeJOY( Node& root, Game* g, string buttons ) {
     n.add_attr("default",mapped.c_str());
 }
 
-void makeMOD( Node& root, Game* g ) {
-    int mod_value = 0;
+void makeMOD( Node& root, Game* g, int mod_or ) {
+    int mod_value = mod_or;
     if( g->rotate!=0 ) {
         root.comment("Vertical game");
         mod_value |= 1;
@@ -710,7 +718,7 @@ void makeMOD( Node& root, Game* g ) {
 
 void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
     const string& buttons, const string& outdir, string altfolder,
-    Header* header ) {
+    Header* header, int mod_or ) {
     string indent;
     Node root("misterromdescription");
 
@@ -727,7 +735,7 @@ void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
     }
 
     makeROM( root, g, header );
-    makeMOD( root, g );
+    makeMOD( root, g, mod_or );
     makeDIP( root, g, dipbase, shifts );
     makeJOY( root, g, buttons );
 
