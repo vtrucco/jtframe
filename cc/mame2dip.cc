@@ -31,6 +31,8 @@ public:
     int shift;
 };
 
+typedef list<DIP_shift> shift_list;
+
 class Header {
     int *buf;
     int _size, _offsetbits;
@@ -48,14 +50,10 @@ public:
     bool set_offset_lut( int start ) { offset_lut = start; return start<_size && start>=0; }
     void set_offsetbits( int offsetbits ) { _offsetbits = offsetbits; }
     void add_region(const char *s) { regions.push_back(s); }
-    bool set_offset( string& s, int offset );
+    bool set_offset( const string& s, int offset );
     void set_reverse() { reverse = true; }
 };
 
-typedef list<DIP_shift> shift_list;
-
-void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
-    const string& buttons, const string& outdir, string altfolder, Header* header, int mod_or );
 void clean_filename( string& fname );
 void rename_regions( Game *g, list<string>& renames );
 
@@ -64,17 +62,31 @@ struct ROMorder {
     string order;
 };
 
+struct MRAmaker {
+    string buttons, altfolder, outdir, dipbase, rbf;
+    int mod_or;
+    bool qsound;
+    class Header *header;
+    shift_list shifts;
+    MRAmaker() : qsound(false), header(NULL), outdir("."), mod_or(0), dipbase("16") { }
+    ~MRAmaker() {
+        if(header) {
+            delete header;
+            header = NULL;
+        }
+    }
+    void makeMRA( Game* g );
+};
+
+
 int main(int argc, char * argv[] ) {
     bool print=false;
-    string fname="mame.xml", outdir=".";
-    string rbf, dipbase("16"), buttons, altfolder;
+    string fname="mame.xml";
     bool   fname_assigned=false;
-    shift_list shifts;
-    Header *header=NULL;
     string region_order;
     list<string> rmdipsw, renames;
     list<ROMorder> rom_order;
-    int mod_or=0;
+    MRAmaker maker;
 try{
     for( int k=1; k<argc; k++ ) {
         string a = argv[k];
@@ -96,12 +108,12 @@ try{
             continue;
         }
         if( a=="-dipbase" ) {
-            dipbase=argv[++k];
+            maker.dipbase=argv[++k];
             continue;
         }
         if( a=="-dipshift" ) {
             assert(argc>k+2);
-            shifts.push_back( {argv[++k], (int)strtol(argv[++k], NULL,0) });
+            maker.shifts.push_back( {argv[++k], (int)strtol(argv[++k], NULL,0) });
             continue;
         }
         if( a=="-ignore" ) {
@@ -134,18 +146,19 @@ try{
             continue;
         }
         if( a=="-rbf" ) {
-            rbf=argv[++k];
+            maker.rbf=argv[++k];
             continue;
         }
         if( a=="-outdir" ) {
-            outdir=argv[++k];
+            maker.outdir=argv[++k];
             continue;
         }
         if( a=="-altfolder" ) {
-            altfolder = argv[++k];
+            maker.altfolder = argv[++k];
             continue;
         }
         if( a=="-buttons" ) {
+            string& buttons=maker.buttons;
             while( ++k < argc && argv[k][0]!='-' ) {
                 if(buttons.size()==0)
                     buttons=argv[k];
@@ -178,7 +191,7 @@ try{
         }
         // Header support
         if( a=="-header" ) {
-            if( header!=NULL ) {
+            if( maker.header!=NULL ) {
                 throw "ERROR: header had already been defined\n";
 
             }
@@ -193,11 +206,11 @@ try{
                     throw "ERROR: fill value must be between 0 and 255\n";
                 }
             }
-            header = new Header(aux, fill);
+            maker.header = new Header(aux, fill);
             continue;
         }
         if( a=="-header-data" ) {
-            if( header==NULL) {
+            if( maker.header==NULL) {
                 throw "ERROR: header size has not been defined\n";
             }
             while( ++k<argc && argv[k][0]!='-' ) {
@@ -205,13 +218,13 @@ try{
                 if( aux<0 || aux>255 ) {
                     throw "ERROR: header data must be written in possitive bytes\n";
                 }
-                header->push(aux);
+                maker.header->push(aux);
             }
             if( k<argc && argv[k][0]=='-' ) k--;
             continue;
         }
         if( a=="-header-offset-bits" ) {
-            if( header==NULL) {
+            if( maker.header==NULL) {
                 throw "ERROR: header size has not been defined\n";
             }
             ++k;
@@ -222,11 +235,11 @@ try{
             if( aux<0 || aux>16 ) {
                 throw "ERROR: header offset bits value must between 0 and 16\n";
             }
-            header->set_offsetbits(aux);
+            maker.header->set_offsetbits(aux);
             continue;
         }
         if( a=="-header-pointer" ) {
-            if( header==NULL) {
+            if( maker.header==NULL) {
                 throw "ERROR: header size has not been defined\n";
             }
             ++k;
@@ -234,35 +247,35 @@ try{
                 throw "ERROR: missing value for header pointer\n";
             }
             int aux = strtol( argv[k], NULL, 0);
-            if( aux<0 || aux>header->get_size()-1 ) {
+            if( aux<0 || aux>maker.header->get_size()-1 ) {
                 throw "ERROR: header pointer is outside the header area\n";
             }
-            header->set_pointer(aux);
+            maker.header->set_pointer(aux);
             continue;
         }
         if( a=="-header-offset" ) {
-            if( header==NULL) {
+            if( maker.header==NULL) {
                 throw "ERROR: header size has not been defined\n";
             }
             assert( ++k < argc );
             int aux = strtol( argv[k], NULL, 0);
-            if( !header->set_offset_lut( aux ) ) {
+            if( !maker.header->set_offset_lut( aux ) ) {
                 throw "ERROR: header offset LUT is out of bounds\n";
             }
-            while( ++k<argc && argv[k][0]!='-') header->add_region(argv[k]);
+            while( ++k<argc && argv[k][0]!='-') maker.header->add_region(argv[k]);
             if( k<argc && argv[k][0]=='-' ) k--;
             continue;
         }
         if( a=="-header-offset-reverse" ) {
-            if( header==NULL) {
+            if( maker.header==NULL) {
                 throw "ERROR: header size has not been defined\n";
             }
-            header->set_reverse();
+            maker.header->set_reverse();
             continue;
         }
-        // MOD options
+        // MOD MRAmaker
         if( a=="-4way" ) {
-            mod_or |= 2;
+            maker.mod_or |= 2;
             continue;
         }
         // ROM order
@@ -284,6 +297,10 @@ try{
             rom_order.push_back(o);
             continue;
         }
+        if( a=="-qsound" ) {
+            maker.qsound=true;
+            continue;
+        }
         // Help
         if( a == "-help" || a =="-h" ) {
             cout << "mame2dip: converts MAME XML dump to MRA format\n"
@@ -294,11 +311,11 @@ try{
                     "    -buttons   shoot jump etc  Gives names to the input buttons\n"
                     "    -altfolder path            Path where MRA for clone games will be added\n"
                     "    -outdir    path            Base path for output MRA files\n"
-                    "\n DIP options\n"
+                    "\n DIP MRAmaker\n"
                     "    -dipbase   <number>        First bit to use as DIP setting in MiST status word\n"
                     "    -dipshift  <name> <number> Shift bits of DIPSW name by given ammount\n"
                     "    -rmdipsw   <name> ...      Deletes the give DIP switch from the output MRA\n"
-                    "\n Region options\n"
+                    "\n Region MRAmaker\n"
                     "    -order     regions         define the dump order of regions. Those not enumerated\n"
                     "                               will get dumped last\n"
                     "    -order-roms region # # #   ROMs of specified regions are re-ordered. Index starts\n"
@@ -310,7 +327,7 @@ try{
                     "    -fill      <region>        fill gaps between files within region\n"
                     "    -rename    old=new?        rename region old by new. Add ? to skip warning messages\n"
                     "                               if old is not found.\n"
-                    "\n Header options \n"
+                    "\n Header MRAmaker \n"
                     "    -header    size [fill]     Defines an empty (zeroes) header of the given size\n"
                     "                               The optional fill value sets the default value of the header bytes\n"
                     "    -header-data value         Pushes data to the header. It can be defined multiple times\n"
@@ -321,8 +338,10 @@ try{
                     "                               the ROM regions\n"
                     "    -header-offset-bits value  Number of bits to cut from offset data. Default is 8.\n"
                     "    -header-offset-reverse     The two bytes for each data offset will be dumped in reverse order\n"
-                    "\n Mod byte options \n"
+                    "\n Mod byte MRAmaker \n"
                     "    -4way                      Sets 4-way joystick input\n"
+                    "\n Common ROMs\n"
+                    "    -qsound                    Adds chunk for loading q-sound internal ROM\n"
             ;
             return 0;
         }
@@ -336,7 +355,6 @@ try{
     }
 } catch( const char *s ) {
     cout << s;
-    delete header;
     return 1;
 }
     GameMap games;
@@ -374,9 +392,8 @@ try{
             region->sort(o.order.c_str());
         }
         game->sortRegions(region_order.c_str());
-        makeMRA(game, rbf, dipbase, shifts, buttons, outdir, altfolder, header, mod_or );
+        maker.makeMRA(game);
     }
-    delete header; header=NULL;
     return 0;
 }
 
@@ -552,6 +569,7 @@ void makeROM( Node& root, Game* g, Header* header ) {
             delete[] roms;
         }
     }
+    header->set_offset( string("EOF"),dumped);
     char endsize[128];
     snprintf(endsize,128,"Total 0x%X bytes - %d kBytes",dumped,dumped>>10);
     n.comment(endsize);
@@ -716,9 +734,18 @@ void makeMOD( Node& root, Game* g, int mod_or ) {
 
 }
 
-void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
-    const string& buttons, const string& outdir, string altfolder,
-    Header* header, int mod_or ) {
+void makeQSound( Node& root ) {
+    Node& rom = root.add("rom");
+    rom.add_attr("index","0");
+    rom.add_attr("zip","qsound.zip");
+    rom.add_attr("md5","None");
+    Node& part = rom.add("part");
+    part.add_attr("name","dl-1425.bin");
+    part.add_attr("crc","d6cf5ef5");
+    part.add_attr("length","0x2000");
+}
+
+void MRAmaker::makeMRA( Game* g ) {
     string indent;
     Node root("misterromdescription");
 
@@ -735,17 +762,19 @@ void makeMRA( Game* g, string& rbf, string& dipbase, shift_list& shifts,
     }
 
     makeROM( root, g, header );
+    if( qsound ) makeQSound( root );
     makeMOD( root, g, mod_or );
     makeDIP( root, g, dipbase, shifts );
     makeJOY( root, g, buttons );
 
     string fout_name = g->description;
+    string auxfolder = altfolder;
     clean_filename(fout_name);
     fout_name+=".mra";
     if( !g->cloneof.size() ) {
-        altfolder = "";
+        auxfolder = "";
     }
-    fout_name = outdir +"/" + altfolder + "/" + fout_name;
+    fout_name = outdir +"/" + auxfolder + "/" + fout_name;
     ofstream fout(fout_name);
     if( !fout.good() ) {
         cout << "ERROR: cannot create " << fout_name << '\n';
@@ -885,7 +914,7 @@ bool Header::set_pointer( int p ) {
         return false;
 }
 
-bool Header::set_offset( string& s, int offset ) {
+bool Header::set_offset( const string& s, int offset ) {
     int k=0;
     bool found=false;
     while( k<regions.size() ) {
@@ -895,7 +924,7 @@ bool Header::set_offset( string& s, int offset ) {
         }
         k++;
     }
-    if( found ) {
+    if( found || s=="EOF") {
         int j=offset_lut+k*2;
         if( j+2 >= _size ) return false;
         offset>>=_offsetbits;
