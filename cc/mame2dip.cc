@@ -84,6 +84,7 @@ int main(int argc, char * argv[] ) {
     string fname="mame.xml";
     bool   fname_assigned=false;
     string region_order;
+    string machine;
     list<string> rmdipsw, renames;
     list<ROMorder> rom_order;
     MRAmaker maker;
@@ -95,6 +96,15 @@ try{
                 swapregions.insert(argv[k]);
             }
             if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        if( a=="-machine" ) {
+            k++;
+            if( k>=argc ) {
+                cout << "ERROR: expecting machine name after -machine\n";
+                return 1;
+            }
+            machine = argv[k];
             continue;
         }
         if( a=="-fill" ) {
@@ -308,6 +318,7 @@ try{
                     "Usage:\n"
                     "          first argument:  path to file containing 'mame -listxml' output\n"
                     "    -rbf       <name>          set RBF file name\n"
+                    "    -machine   <name>          process only the given machine\n"
                     "    -buttons   shoot jump etc  Gives names to the input buttons\n"
                     "    -altfolder path            Path where MRA for clone games will be added\n"
                     "    -outdir    path            Base path for output MRA files\n"
@@ -361,6 +372,9 @@ try{
     parse_MAME_xml( games, fname.c_str() );
     for( auto& g : games ) {
         Game* game=g.second;
+        if( machine.size() ) {
+            if( game->name != machine ) continue;
+        }
         // Rename ROM regions
         rename_regions( game, renames );
         // Remove unused dip swithces
@@ -528,7 +542,9 @@ void makeROM( Node& root, Game* g, Header* header ) {
             // First check that the count is correct
             if( region->roms.size()%frac.count != 0 ) {
                 cout << "WARNING: Total number of ROM entries does not much fraction value"
-                    " for region " << region->name << "\n";
+                    " for region " << region->name << " of game " << g->name << "\n";
+                cout << "roms size  = " << region->roms.size() << '\n';
+                cout << "frac count = " << frac.count << '\n';
                 continue;
             }
             const int roms_size = region->roms.size();
@@ -569,7 +585,7 @@ void makeROM( Node& root, Game* g, Header* header ) {
             delete[] roms;
         }
     }
-    header->set_offset( string("EOF"),dumped);
+    if(header) header->set_offset( string("EOF"),dumped);
     char endsize[128];
     snprintf(endsize,128,"Total 0x%X bytes - %d kBytes",dumped,dumped>>10);
     n.comment(endsize);
