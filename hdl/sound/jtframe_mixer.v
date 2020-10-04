@@ -1,6 +1,6 @@
 /* This file is part of JTFRAME.
 
- 
+
     JTFRAME program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +17,7 @@
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
     Date: 20-12-2019
-    
+
 */
 
 // Generic mixer: improves on the jt12_mixer in JT12 repository
@@ -64,7 +64,7 @@ end
 
 wire signed [WM+7:0] ch0_pre, ch1_pre, ch2_pre, ch3_pre;
 wire signed [WM+3:0] pre_sum;
-reg  signed [WM-1:0] ch0_amp, ch1_amp, ch2_amp, ch3_amp, sum;
+reg  signed [WM-1:0] sum;
 
 // rescale to WM
 wire signed [WM-1:0] scaled0 = { ch0, {WM-W0{1'b0}} };
@@ -87,11 +87,6 @@ assign mixed   = sum[WM-1:WM-WOUT];
 
 // Apply gain
 always @(posedge clk) if(cen) begin
-    ch0_amp <= ch0_pre[WM+7:8];
-    ch1_amp <= ch1_pre[WM+7:8];
-    ch2_amp <= ch2_pre[WM+7:8];
-    ch3_amp <= ch3_pre[WM+7:8];
-
     sum     <= pre_sum > MAXPOS ? MAXPOS[WM-1:0] : (
                pre_sum < MAXNEG ? MAXNEG[WM-1:0] :pre_sum[WM-1:0] );
 end
