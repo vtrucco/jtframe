@@ -62,7 +62,9 @@ struct ROMorder {
     string order;
 };
 
-struct MRAmaker {
+class MRAmaker {
+    void makeROM( class Node& root, Game* g );
+public:
     string buttons, altfolder, outdir, dipbase, rbf;
     int mod_or;
     bool qsound;
@@ -462,13 +464,14 @@ public:
     virtual ~Node();
 };
 
-void makeROM( Node& root, Game* g, Header* header ) {
+void MRAmaker::makeROM( Node& root, Game* g ) {
     Node& n = root.add("rom");
     n.add_attr("index","0");
     string zips = g->name+".zip";
     if( g->cloneof.size() ) {
         zips = zips + "|" + g->cloneof+".zip";
     }
+    if( qsound ) zips += "|qsound.zip";
     n.add_attr("zip",zips);
     n.add_attr("type","merged");
     n.add_attr("md5","None"); // important or MiSTer will not let the game boot
@@ -586,6 +589,16 @@ void makeROM( Node& root, Game* g, Header* header ) {
         }
     }
     if(header) header->set_offset( string("EOF"),dumped);
+    if(qsound) {
+        char title[128];
+        snprintf(title,128,"QSound firmware - starts at 0x%X", dumped );
+        n.comment(title);
+        Node& part = n.add("part");
+        part.add_attr("name","dl-1425.bin");
+        part.add_attr("crc","d6cf5ef5");
+        part.add_attr("length","0x2000");
+        dumped+=0x2000;
+    }
     char endsize[128];
     snprintf(endsize,128,"Total 0x%X bytes - %d kBytes",dumped,dumped>>10);
     n.comment(endsize);
@@ -749,7 +762,7 @@ void makeMOD( Node& root, Game* g, int mod_or ) {
     Node& part = mod.add("part",buf);
 
 }
-
+/*
 void makeQSound( Node& root ) {
     Node& rom = root.add("rom");
     rom.add_attr("index","0");
@@ -759,7 +772,7 @@ void makeQSound( Node& root ) {
     part.add_attr("name","dl-1425.bin");
     part.add_attr("crc","d6cf5ef5");
     part.add_attr("length","0x2000");
-}
+}*/
 
 void MRAmaker::makeMRA( Game* g ) {
     string indent;
@@ -777,8 +790,8 @@ void MRAmaker::makeMRA( Game* g ) {
         root.add("rbf",rbf);
     }
 
-    makeROM( root, g, header );
-    if( qsound ) makeQSound( root );
+    makeROM( root, g );
+    // if( qsound ) makeQSound( root );
     makeMOD( root, g, mod_or );
     makeDIP( root, g, dipbase, shifts );
     makeJOY( root, g, buttons );

@@ -3,7 +3,7 @@
 function show_usage() {
     cat << EOF
 JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
-    First argument is the project name, like gng, or 1943
+    Argument without - is the project name, like gng, or 1943
 
     -skip       skips compilation and goes directly to prepare the release file
                 using the RBF file available.
@@ -33,66 +33,6 @@ EOF
    exit 0
 }
 
-# Is the root folder environment variable set?
-
-if [ "$JTROOT" = "" ]; then
-    cd ${0%%modules/jtframe/bin/jtcore}
-    if [ -e setprj.sh ]; then
-        source setprj.sh --quiet
-    else
-        echo "WARNING: cannot find setprj.sh in " $(pwd)
-    fi
-fi
-
-if [ "$JTROOT" = "" ]; then
-    echo "ERROR: Missing JTROOT environment variable. Define it to"
-    echo "point to the root folder of the project to compile."
-    exit 1
-fi
-
-cd $JTROOT
-MODULES=$JTROOT/modules
-JTFRAME=$MODULES/jtframe
-# This is the FTP host to which files will be copied
-HOST=mr
-FTP_FOLDER=JT
-CORESTAMP=$(date +"%Y%m%d")
-
-if [ ! -e "$JTFRAME" ]; then
-    echo "ERROR: cannot locate jtframe folder."
-    echo "       It should be at $JTFRAME"
-    exit 1
-fi
-
-# Is the project defined?
-PRJ=$1
-
-case "$PRJ" in
-    "")
-        echo "ERROR: Missing project name."
-        show_usage
-        exit 1;;
-    -help | -h | --help)
-        show_usage;;
-esac
-
-if [ ${PRJ:0:1} = - ]; then
-    echo "ERROR: Missing project name."
-    exit 1
-fi    
-
-if [ -e $JTROOT/cores/$PRJ ]; then
-    PRJPATH=$JTROOT/cores/$PRJ
-elif [ -e $JTROOT/$PRJ ]; then
-    PRJPATH=$JTROOT/$PRJ
-elif [ -e $JTROOT/hdl ]; then
-    PRJPATH=$JTROOT
-else
-    echo "ERROR: Cannot find a valid project path"
-    exit 1
-fi
-shift
-
 SIM=FALSE
 GIT=FALSE
 PROG=FALSE
@@ -104,6 +44,7 @@ RENAME=
 MACROS=
 SEED=1
 OUTPUTDIR=output_files
+PRJ=
 
 function parse_args {
     while [ $# -gt 0 ]; do
@@ -149,8 +90,14 @@ function parse_args {
                 TARGET=mister;;
             -help | -h)
                 show_usage;;
-            *)  echo "ERROR: Unknown option $1";
-                exit 1;;
+            *)  if [ -z "$PRJ" ]; then
+                    PRJ=$1
+                else
+                    echo "Project name had already been defined to " $PRJ
+                    echo "ERROR: Unknown option $1";
+                    exit 1
+                fi
+                ;;
         esac
         shift
     done
@@ -158,6 +105,66 @@ function parse_args {
 
 parse_args $JTCORE_DEFAULT
 parse_args $*
+
+# Is the root folder environment variable set?
+
+if [ "$JTROOT" = "" ]; then
+    cd ${0%%modules/jtframe/bin/jtcore}
+    if [ -e setprj.sh ]; then
+        source setprj.sh --quiet
+    else
+        echo "WARNING: cannot find setprj.sh in " $(pwd)
+    fi
+fi
+
+if [ "$JTROOT" = "" ]; then
+    echo "ERROR: Missing JTROOT environment variable. Define it to"
+    echo "point to the root folder of the project to compile."
+    exit 1
+fi
+
+cd $JTROOT
+MODULES=$JTROOT/modules
+JTFRAME=$MODULES/jtframe
+# This is the FTP host to which files will be copied
+HOST=mr
+if [ -z "$FTP_FOLDER" ]; then
+    FTP_FOLDER=JT
+fi
+CORESTAMP=$(date +"%Y%m%d")
+
+if [ ! -e "$JTFRAME" ]; then
+    echo "ERROR: cannot locate jtframe folder."
+    echo "       It should be at $JTFRAME"
+    exit 1
+fi
+
+# Is the project defined?
+case "$PRJ" in
+    "")
+        echo "ERROR: Missing project name."
+        show_usage
+        exit 1;;
+    -help | -h | --help)
+        show_usage;;
+esac
+
+if [ ${PRJ:0:1} = - ]; then
+    echo "ERROR: Missing project name."
+    exit 1
+fi
+
+if [ -e $JTROOT/cores/$PRJ ]; then
+    PRJPATH=$JTROOT/cores/$PRJ
+elif [ -e $JTROOT/$PRJ ]; then
+    PRJPATH=$JTROOT/$PRJ
+elif [ -e $JTROOT/hdl ]; then
+    PRJPATH=$JTROOT
+else
+    echo "ERROR: Cannot find a valid project path"
+    exit 1
+fi
+shift
 
 OUTPUTDIR=output_${SEED}
 
@@ -225,7 +232,7 @@ function link_if_missing {
     if [ ! -e $1 ]; then
         if [ -e ../mist/$1 ]; then
             ln -sr ../mist/$1 && echo "Linked file $1" && git add $1 -f
-        else 
+        else
             echo WARNING: Missing $1
         fi
     fi
@@ -249,7 +256,7 @@ fi
 
 ################ compilation
 if [ $SKIP_COMPILE = FALSE ]; then
-    if ! which quartus_sh>/dev/null; then 
+    if ! which quartus_sh>/dev/null; then
         echo "ERROR: cannot find quartus_sh in the path. Please add the correct path"
         echo "to the PATH environment variable"
         exit 1
@@ -362,7 +369,7 @@ if [ -e $JTROOT/../jtbin ]; then
     BINFOLDER=$JTROOT/../jtbin/$ZIPFOLDER/$PRJ
     BINRBF=$BINFOLDER/releases/${RELEASE}
     mkdir -p $BINFOLDER
-    mkdir -p $BINFOLDER/releases    
+    mkdir -p $BINFOLDER/releases
     cp $RELEASE.rbf ${BINRBF}.rbf -v
     if [ -n "$SEED_SUFFIX" ]; then
         cp $RELEASE.rbf ${BINRBF}${SEED_SUFFIX}.rbf -v

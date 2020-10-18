@@ -26,6 +26,7 @@ fi
 
 export ROM=$JTROOT/rom
 CC=$JTROOT/cc
+DOC=$JTROOT/doc
 MRA=$ROM/mra
 export MODULES=$JTROOT/modules
 JT12=$MODULES/jt12
@@ -38,7 +39,7 @@ function swcore {
     good=
     for i in ${string[@]};do
         if [ $next = 0 ]; then
-            j=${j}${i}/            
+            j=${j}${i}/
         else
             next=0
             j=${j}$1/
@@ -50,7 +51,7 @@ function swcore {
     done
     if [[ $good && -d $j ]]; then
         cd $j
-    else       
+    else
         cd $JTROOT/cores/$1
     fi
     pwd
