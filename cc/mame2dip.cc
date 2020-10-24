@@ -64,6 +64,7 @@ struct ROMorder {
 
 class MRAmaker {
     void makeROM( class Node& root, Game* g );
+    int parse_rom_offset( Node& root, ROMRegion* region );
 public:
     string buttons, altfolder, outdir, dipbase, rbf;
     int mod_or;
@@ -80,6 +81,11 @@ public:
     void makeMRA( Game* g );
 };
 
+struct ConfigRegion {
+    int word_length;
+    bool reverse;
+};
+
 
 int main(int argc, char * argv[] ) {
     bool print=false;
@@ -89,6 +95,7 @@ int main(int argc, char * argv[] ) {
     string machine;
     list<string> rmdipsw, renames;
     list<ROMorder> rom_order;
+    map<string,ConfigRegion> region_widths;
     MRAmaker maker;
 try{
     for( int k=1; k<argc; k++ ) {
@@ -132,6 +139,32 @@ try{
             while( ++k<argc && argv[k][0]!='-' )
                 ignoreregions.insert(string(argv[k]));
             if( k<argc && argv[k][0]=='-' ) k--;
+            continue;
+        }
+        if( a=="-setword" ) {
+            if( k+2>=argc ) {
+                cout << "ERROR: incomplete setword argument\n";
+                return 1;
+            }
+            string reg_name = argv[++k];
+            int reg_width = atol(argv[++k]);
+            if( reg_width!=16 && reg_width!=32 && reg_width!=64 ) {
+                cout << "ERROR: setword can only be used to set widths of 16, 32 and 64 bits\n";
+                return 1;
+            }
+            ConfigRegion cfg = { reg_width, false };
+            if( k+1 < argc ) {
+                if( argv[k+1][0] != '-' ) {
+                    ++k;
+                    if( strcmp(argv[k],"reverse") ==0 )
+                        cfg.reverse = true;
+                    else {
+                        cout << "ERROR: unexpected '" << argv[k] << "' after -setword command\n";
+                        return 1;
+                    }
+                }
+            }
+            region_widths[reg_name]=cfg;
             continue;
         }
         if( a=="-frac" ) {
@@ -340,6 +373,11 @@ try{
                     "    -fill      <region>        fill gaps between files within region\n"
                     "    -rename    old=new?        rename region old by new. Add ? to skip warning messages\n"
                     "                               if old is not found.\n"
+                    "    -setword <region> <bits> [reverse]  "
+                    "                               sets the word width in bits of a region.\n"
+                    "                               Valid values are 16, 32 and 64 only.\n"
+                    "                               The optional reverse keyword will reverse the order\n"
+                    "                               of the ROM files inside each interleave section.\n"
                     "\n Header MRAmaker \n"
                     "    -header    size [fill]     Defines an empty (zeroes) header of the given size\n"
                     "                               The optional fill value sets the default value of the header bytes\n"
@@ -407,6 +445,16 @@ try{
             }
             region->sort(o.order.c_str());
         }
+        // Add width information
+        for( auto& wr : region_widths ) {
+            ROMRegion* region = game->getRegion( wr.first, false );
+            if( region==nullptr ) {
+                cout << "Error: cannot find region " << wr.first << " used in -setword argument\n";
+                return 1;
+            }
+            region->word_length = wr.second.word_length;
+            region->reverse = wr.second.reverse;
+        }
         game->sortRegions(region_order.c_str());
         maker.makeMRA(game);
     }
@@ -459,10 +507,82 @@ public:
     Node& add( string n, string v="");
     Node& add_front( string n, string v="");
     void add_attr( string n, string v="");
+    void add_attr( string n, int v );
     void dump(ostream& os, string indent="" );
     void comment( string v );
     virtual ~Node();
 };
+
+int dump_rom( Node& parent, ROM* r, string map_str="" ) {
+    Node& part = parent.add("part");
+    part.add_attr("name",r->name);
+    part.add_attr("crc",r->crc);
+    if( map_str.size()>0 ) {
+        part.add_attr("map",map_str);
+    }
+    return r->size;
+}
+
+string make_map_string( int k, int step_bytes, int word_bytes ) {
+    char s[]="00000000";
+    if( word_bytes<=8 && step_bytes*(k+1)<=8 ) {
+        s[word_bytes] = 0;
+        int p = word_bytes-(k+1)*step_bytes;
+        for( ; step_bytes>0; step_bytes--,p++ ) {
+            s[p] = '0' + step_bytes;
+        }
+    }
+    return string(s);
+}
+
+int MRAmaker::parse_rom_offset( Node& root, ROMRegion* region ) {
+    list <ListROMs*> groups;
+    int offset=-1;
+    bool groups_exist=false;
+    int dumped=0;
+
+    if( region->word_length<16 ) return 0;
+
+    for( ROM* r : region->roms ) {
+        int cur_offset = r->offset & ~7;
+        // cout << r->name << " " << hex << cur_offset << " (" << hex << offset << ")" << '\n';
+        if( cur_offset != offset) {
+            ListROMs* newgroup = new ListROMs;
+            newgroup->push_back(r);
+            groups.push_back(newgroup);
+            offset = cur_offset;
+        } else {
+            groups.back()->push_back(r);
+            groups_exist = true; // there is at least one group
+        }
+    }
+    if( groups_exist ) {
+        for( ListROMs* g : groups ) {
+            const int steps = g->size();
+            if( steps==1 ) {
+                dumped += dump_rom( root, g->front() );
+            } else {
+                Node& n = root.add("interleave");
+                n.add_attr("output",region->word_length);
+                int word_bytes = region->word_length/8;
+                int step_bytes = word_bytes/steps;
+                bool reverse = region->reverse;
+                ListROMs::iterator cur_rom = reverse ? g->end() : g->begin();
+                if(reverse ) cur_rom--;
+                for( int k=0; k<steps; k++ ) {
+                    string map_str = make_map_string(k, step_bytes, word_bytes);
+                    dumped += dump_rom( n, *cur_rom, map_str );
+                    if(reverse) cur_rom--; else cur_rom++;
+                }
+            }
+        }
+    }
+    // clear memory
+    for( ListROMs* g : groups ) {
+        delete g;
+    }
+    return dumped;
+}
 
 void MRAmaker::makeROM( Node& root, Game* g ) {
     Node& n = root.add("rom");
@@ -516,29 +636,34 @@ void MRAmaker::makeROM( Node& root, Game* g ) {
                      continue;
         }
         if( frac.count==0 ) {
-            int offset=0;
-            for( ROM* r : region->roms ) {
-                // Fill in gaps between ROM chips
-                if( offset != r->offset && fill) {
-                    Node& part = n.add("part","FF");
-                    int rep = r->offset - offset;
-                    char buf[32];
-                    snprintf(buf,32,"0x%X",rep);
-                    part.add_attr("repeat",buf);
-                    dumped += rep;
+            int group_dump = parse_rom_offset( n, region );
+            if( group_dump==0 ) {
+                int offset=0;
+                for( ROM* r : region->roms ) {
+                    // Fill in gaps between ROM chips
+                    if( offset != r->offset && fill) {
+                        Node& part = n.add("part","FF");
+                        int rep = r->offset - offset;
+                        char buf[32];
+                        snprintf(buf,32,"0x%X",rep);
+                        part.add_attr("repeat",buf);
+                        dumped += rep;
+                    }
+                    Node& parent = swap ? n.add("interleave") : n;
+                    if( swap ) {
+                        parent.add_attr("output","16");
+                    }
+                    Node& part = parent.add("part");
+                    part.add_attr("name",r->name);
+                    part.add_attr("crc",r->crc);
+                    if( swap ) {
+                        part.add_attr("map","12");
+                    }
+                    offset = r->offset + r->size;
+                    dumped += r->size;
                 }
-                Node& parent = swap ? n.add("interleave") : n;
-                if( swap ) {
-                    parent.add_attr("output","16");
-                }
-                Node& part = parent.add("part");
-                part.add_attr("name",r->name);
-                part.add_attr("crc",r->crc);
-                if( swap ) {
-                    part.add_attr("map","12");
-                }
-                offset = r->offset + r->size;
-                dumped += r->size;
+            } else {
+                dumped += group_dump;
             }
         } else {
             // Fractioned ROMs
@@ -848,6 +973,12 @@ Node& Node::add_front( string n, string v ) {
 void Node::add_attr( string n, string v) {
     Attr* a = new Attr({n,v});
     attrs.push_back(a);
+}
+
+void Node::add_attr( string n, int v) {
+    char s[128];
+    sprintf(s,"%d",v);
+    add_attr( n, s );
 }
 
 void Node::comment( string v ) {

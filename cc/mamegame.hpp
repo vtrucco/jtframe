@@ -28,6 +28,9 @@ class ROMRegion {
 public:
     std::string name;
     ListROMs roms;
+    int word_length;
+    bool reverse;
+    ROMRegion( const std::string& _name ) : name(_name ), word_length(8), reverse(false) { }
     ~ROMRegion();
     void sort(const char *order);
 };

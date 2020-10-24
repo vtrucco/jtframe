@@ -123,7 +123,7 @@ ROMRegion* Game::getRegion( std::string _name, bool create ) {
         }
     }
     if( create ) {
-        last = new ROMRegion( {_name} );
+        last = new ROMRegion( _name );
         // cout << "Created region " << _name << '(' << last << ")\n";
         regions.push_back(last);
         return last;

@@ -32,4 +32,4 @@ mamefilter:
 mamegame.o:
 
 mame2dip: mame2dip.cc mamegame.o
-	g++ mame2dip.cc mamegame.o -o mame2dip -lxerces-c
+	g++ -g mame2dip.cc mamegame.o -o mame2dip -lxerces-c
