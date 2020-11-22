@@ -20,14 +20,14 @@ wire sample  = scnt==0;
 wire sample2 = sample || scnt==1872;
 
 always @(posedge clk) begin
-    scnt <= scnt == 3745 ? 0 : scnt+1;
+    scnt <= scnt == 3746 ? 0 : scnt+1;
 end
 
 reg  signed [15:0] l_in, r_in;
 wire signed [15:0] l_out, r_out;
 
 reg l_s, r_s;
-wire signed [16:0] step = 17'd300;
+wire signed [16:0] step = 17'd100;
 
 wire signed [16:0] next_up = { l_in[15], l_in } + step;
 wire signed [16:0] next_dn = { l_in[15], l_in } - step;
@@ -47,7 +47,7 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
-jtframe_uprate2_fir uut(
+jtframe_uprate3_fir uut(
     .rst    ( rst    ),
     .clk    ( clk    ),
     .sample ( sample ),
@@ -61,7 +61,7 @@ initial begin
     $dumpfile("test.lxt");
     $dumpvars;
     $dumpon;
-    #9_000_000 $finish;
+    #22_000_000 $finish;
 end
 
 endmodule

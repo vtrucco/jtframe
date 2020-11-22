@@ -20,7 +20,14 @@
 
 */
 
-module jtframe_fir2(
+// Generic FIR filter for stereo signals
+// Max 127 coefficients
+
+// Parameters
+// KMAX = number of coefficients (8 bit value)
+// COEFFS = hex file with filter coefficients
+
+module jtframe_fir(
     input             rst,
     input             clk,
     input             sample,
@@ -30,7 +37,8 @@ module jtframe_fir2(
     output reg signed [15:0] r_out
 );
 
-parameter [7:0] KMAX = 8'd68;
+parameter [6:0] KMAX = 7'd68;
+parameter COEFFS = "filter.hex";
 
 reg signed [15:0] ram[0:511];   // dual port RAM
 reg [6:0] pt_wr, pt_rd, cnt;
@@ -46,7 +54,7 @@ endfunction
 
 function [6:0] loop_inc;
     input [6:0] s;
-    loop_inc = s == KMAX ? 8'd0 : s+8'd1;
+    loop_inc = s == KMAX-7'd1 ? 7'd0 : s+7'd1;
 endfunction
 
 function signed [15:0] sat;
@@ -58,13 +66,13 @@ always@(posedge clk, posedge rst) begin
     if( rst ) begin
         l_out <= 16'd0;
         r_out <= 16'd0;
-        pt_rd <= 8'd0;
-        pt_wr <= 8'd0;
-        cnt   <= 8'd0;
+        pt_rd <= 7'd0;
+        pt_wr <= 7'd0;
+        cnt   <= 7'd0;
     end else begin
         if( sample ) begin
             pt_rd <= pt_wr;
-            cnt   <= KMAX;
+            cnt   <= 0;
             ram[ { 2'd1, pt_wr } ] <= l_in;
             ram[ { 2'd2, pt_wr } ] <= r_in;
             pt_wr <= loop_inc( pt_wr );
@@ -74,7 +82,7 @@ always@(posedge clk, posedge rst) begin
             p_r   <= 32'd0;
             st    <= 0;
         end else begin
-            if( cnt != 8'd0 ) begin
+            if( cnt < KMAX ) begin
                 st <= ~st;
                 if( st == 0 ) begin
                     coeff <= ram[ {2'd0, cnt } ];
@@ -83,7 +91,7 @@ always@(posedge clk, posedge rst) begin
                     p_r <= ram[ {2'd2, pt_rd } ] * coeff;
                     acc_l <= acc_l + ext(p_l);
                     acc_r <= acc_r + ext(p_r);
-                    cnt <= cnt-8'd1;
+                    cnt <= cnt+7'd1;
                     pt_rd <= loop_inc( pt_rd );
                 end
             end else begin
@@ -95,7 +103,7 @@ always@(posedge clk, posedge rst) begin
 end
 
 initial begin
-    $readmemh( "fir2_69.hex", ram );
+    $readmemh( COEFFS, ram );
 end
 endmodule
 

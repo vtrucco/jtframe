@@ -20,10 +20,13 @@
 
 */
 
-module jtframe_uprate2_fir(
+// Make sure that the period can be divided by 3, otherwise there will be noise
+
+module jtframe_uprate3_fir(
     input         rst,
     input         clk,
     input         sample,
+    output reg    upsample,
     input  signed [15:0] l_in,
     input  signed [15:0] r_in,
     output signed [15:0] l_out,
@@ -32,23 +35,27 @@ module jtframe_uprate2_fir(
 
 //parameter N=3746;
 //localparam W=log2(N)-1;
-localparam W=13;
+localparam W=14;
 
-reg [W-1:0] cnt, period;
-reg         sample2;
+reg [W-1:0] cnt, period, cnt3x;
 reg signed [15:0] l_pad, r_pad;
+
+always @(*) begin
+    cnt3x = cnt<<1;
+    cnt3x = cnt3x + cnt;
+end
 
 always @(posedge clk, posedge rst ) begin
     if( rst ) begin
         cnt     <= {W{1'd0}};
         period  <= {W{1'd0}};
-        sample2 <= 0;
+        upsample <= 0;
     end else begin
-        if( cnt == (period>>1) || sample ) begin
-            sample2 <= 1;
+        if( cnt3x == (period<<1) || cnt3x == period || sample ) begin
+            upsample <= 1;
             l_pad   <= sample ? l_in : 16'd0;
             r_pad   <= sample ? r_in : 16'd0;
-        end else sample2 <= 0;
+        end else upsample <= 0;
         if( sample ) begin
             cnt    <= { {W-1{1'd0}}, 1'd1}; // must start from 1
             period <= cnt;
@@ -58,10 +65,10 @@ always @(posedge clk, posedge rst ) begin
     end
 end
 
-jtframe_fir2 fir2(
+jtframe_fir #(.KMAX(126),.COEFFS("uprate3.hex")) fir3(
     .rst    ( rst       ),
     .clk    ( clk       ),
-    .sample ( sample2   ),
+    .sample ( upsample  ),
     .l_in   ( l_pad     ),
     .r_in   ( r_pad     ),
     .l_out  ( l_out     ),
