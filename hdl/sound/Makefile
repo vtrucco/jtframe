@@ -1,12 +1,12 @@
-all: fir2_69.hex uprate3.hex
+all: uprate2.hex uprate3.hex
 
-fir2_69.hex: filter fir_coeff
-	fir_coeff > fir2_69.hex
+uprate2.hex: filter2 fir_coeff
+	fir_coeff filter2 > uprate2.hex
 
 uprate3.hex: filter3 fir_coeff
 	fir_coeff filter3 > uprate3.hex
 
-filter: jtframe_fir2.m
+filter2: jtframe_fir2.m
 	octave jtframe_fir2.m
 
 filter3: jtframe_fir3.m
