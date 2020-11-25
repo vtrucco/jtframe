@@ -7,7 +7,7 @@ uprate3.hex: filter3 fir_coeff
 	fir_coeff filter3 > uprate3.hex
 
 firjt49.hex: firjt49 fir_coeff
-	fir_coeff firjt49 > firjt49
+	fir_coeff firjt49 > firjt49.hex
 
 filter2: jtframe_fir2.m
 	octave jtframe_fir2.m
