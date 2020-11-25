@@ -38,32 +38,15 @@ localparam AW=HLEN<=512 ? 9:10;
 localparam DW=COLORW*3;
 
 reg  [DW-1:0] preout;
-reg  [AW-1:0] wraddr, rdaddr, hscnt0, hscnt1;
-reg           oddline, scanline;
-reg           last_HS, last_HS_base;
-reg           waitHS, line;
+reg  [AW-1:0] wraddr, rdaddr, hlen, hswidth;
+reg           scanline;
+reg           last_HS;
+reg           line;
 
 wire          HS_posedge     =  HS && !last_HS;
-wire          HSbase_posedge =  HS && !last_HS_base;
 wire          HS_negedge     = !HS &&  last_HS;
 wire [DW-1:0] next;
 wire [DW-1:0] dim2, dim4;
-
-`ifdef SIMULATION
-initial begin
-    x2_HS    = 0;
-    scanline = 0;
-    line     = 0;
-    hscnt1   = {AW{1'b1}};
-    hscnt0   = {AW{1'b1}};
-    wraddr   = {AW{1'b0}};
-    rdaddr   = {AW{1'b0}};
-    oddline  = 1'b0;
-    alt_pxl  = 1'b0;
-    waitHS   = 1'b1;
-    preout   = {DW{1'b0}};
-end
-`endif
 
 function [COLORW-1:0] ave;
     input [COLORW-1:0] a;
@@ -80,13 +63,6 @@ function [DW-1:0] blend;
         ave(a[COLORW-1:0],b[COLORW-1:0]) };
 endfunction
 
-always @(posedge clk) if(pxl_cen)  last_HS_base <= HS;
-always @(posedge clk) if(pxl2_cen) last_HS <= HS;
-
-always@(posedge clk) begin
-    if(HS_posedge ) waitHS  <= 1'b0;
-end
-
 `ifdef JTFRAME_CLK96
 localparam CLKSTEPS=8;
 localparam [CLKSTEPS-1:0] BLEND_ST = 8'b10;
@@ -99,18 +75,22 @@ localparam [CLKSTEPS-1:0] PURE_ST  = 0;
 reg alt_pxl; // this is needed in case pxl2_cen and pxl_cen are not aligned.
 reg [CLKSTEPS-1:0] mixst;
 
-always@(posedge clk )  begin
-    `ifndef JTFRAME_SCAN2X_NOBLEND
-        // mixing can only be done if clk is at least 4x pxl2_cen
-        mixst <= { mixst[1:0],pxl2_cen};
-        if(mixst==BLEND_ST)
-            preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
-                             next);
-        else if( mixst==PURE_ST )
+always@(posedge clk or negedge rst_n) begin
+    if( !rst_n ) begin
+        preout <= {DW{1'b0}};
+    end else begin
+        `ifndef JTFRAME_SCAN2X_NOBLEND
+            // mixing can only be done if clk is at least 4x pxl2_cen
+            mixst <= { mixst[1:0],pxl2_cen};
+            if(mixst==BLEND_ST)
+                preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
+                                 next);
+            else if( mixst==PURE_ST )
+                preout <= next;
+        `else
             preout <= next;
-    `else
-        preout <= next;
-    `endif
+        `endif
+    end
 end
 
 assign dim2 = blend( {DW{1'b0}}, preout);
@@ -128,27 +108,31 @@ always @(posedge clk) begin
     end else x2_pxl <= preout;
 end
 
-always@(posedge clk ) if(pxl2_cen) begin
-    if( !waitHS ) begin
-        rdaddr   <= rdaddr != hscnt1 ? rdaddr+1 : {AW{1'b0}};
-        alt_pxl <= ~alt_pxl;
-        if( alt_pxl ) begin
-            if( HSbase_posedge ) oddline <= ~oddline;
-            wraddr <= HSbase_posedge ? {AW{1'b0}} : (wraddr+1);
+always @(posedge clk) if(pxl2_cen) begin
+    alt_pxl <= ~alt_pxl;
+    last_HS <= HS;
+    if( HS_posedge ) begin
+        wraddr   <= {AW{1'b0}};
+        rdaddr   <= {AW{1'b0}};
+        hlen     <= wraddr;
+        line     <= ~line;
+        scanline <= 0;
+        x2_HS    <= 1;
+    end else begin
+        if(alt_pxl) wraddr <= wraddr + 1'd1;
+        if( rdaddr == hlen ) begin
+            rdaddr   <= {AW{1'b0}};
+            x2_HS    <= 1;
+            scanline <= 1;
+        end else begin
+            rdaddr <= rdaddr+1'd1;
+            if( rdaddr == hswidth ) begin
+                x2_HS <= 0;
+            end
         end
     end
-end
-
-always @(posedge clk) if(pxl2_cen) begin
-    if( HS_posedge ) hscnt1 <= wraddr;
     if( HS_negedge ) begin
-        hscnt0 <= wraddr=={AW{1'b0}} ? {AW{1'b1}} : wraddr;
-        line   <= ~line;
-    end
-    if( rdaddr == hscnt0 ) x2_HS <= 0;
-    if( rdaddr == hscnt1 ) begin
-        x2_HS    <= 1;
-        if(!x2_HS) scanline <= ~scanline;
+        hswidth <= wraddr;
     end
 end
 
