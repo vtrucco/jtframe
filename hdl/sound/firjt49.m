@@ -2,8 +2,8 @@
 pkg load signal
 
 Fs=1.5e6/16;
-f1=15000/Fs;
-f2=24000/Fs;
+f1=14000/Fs;
+f2=20000/Fs;
 N=127
 hc=round(fir1(N-1,f1,'low')*2^15);
 printf("Stopband attenuation %d dB\n", N*22*(f2-f1))

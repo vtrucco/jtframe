@@ -269,7 +269,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
         jt${PRJ}_msg.py || echo "WARNING: No message file"
     fi
     cd $PRJPATH/$TARGET || exit 1
-    ############################################3
+    ############################################
     # Credits via jtframe_credits:
     MSGFILE=msg
     if [[ -e $PRJPATH/patrons/msg && ! -e $MSGFILE ]]; then
@@ -290,7 +290,13 @@ if [ $SKIP_COMPILE = FALSE ]; then
     if [ ! -e font0.hex ]; then
         ln -srf $JTFRAME/bin/font0.hex
     fi
-    ############################################3
+    ############################################
+    # Link filter files in case they are needed
+    for i in $JTFRAME/hdl/sound/*.hex; do
+        ln -srf $i
+    done
+
+    ############################################
     # Recompile
     rm -rf db incremental_db output_files
     mkdir -p $JTROOT/log/$TARGET
