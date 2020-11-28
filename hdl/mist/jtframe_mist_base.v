@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 27-10-2017 */
 
-`timescale 1ns/1ps
-
 module jtframe_mist_base #(parameter
     CONF_STR        = "CORE",
     CONF_STR_LEN    = 4,
@@ -38,7 +36,7 @@ module jtframe_mist_base #(parameter
     input           LHBL,
     input           LVBL,
     input           hs,
-    input           vs, 
+    input           vs,
     input           pxl_cen,
     // Scan-doubler video
     input   [5:0]   scan2x_r,
@@ -150,7 +148,7 @@ user_io #(.STRLEN(CONF_STR_LEN), .ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_use
     // Analog joysticks
     .joystick_analog_0  ( joystick_analog_0 ),
     .joystick_analog_1  ( joystick_analog_1 ),
-    
+
     .status         ( status    ),
     .ypbpr          ( ypbpr     ),
     .scandoubler_disable ( scan2x_enb ),
@@ -192,7 +190,7 @@ data_io #(.ROM_DIRECT_UPLOAD(1'b1)) u_datain (
     .SPI_SS4            ( SPI_SS4           ),
     .SPI_DI             ( SPI_DI            ),
     .SPI_DO             ( SPI_DO            ),
-    
+
     .clk_sys            ( clk_rom           ),
     .clkref_n           ( 1'b0              ), // this is not a clock.
     .ioctl_download     ( ioctl_download    ),
@@ -293,9 +291,10 @@ assign VIDEO_B  = ypbpr?Pb:osd_b_o;
 assign VIDEO_HS = (scan2x_enb | ypbpr) ? CSync_osd : HSync_osd;
 assign VIDEO_VS = (scan2x_enb | ypbpr) ? 1'b1 : VSync_osd;
 `else
-assign VIDEO_R  = game_r;// { game_r, game_r[3:2] };
-assign VIDEO_G  = game_g;// { game_g, game_g[3:2] };
-assign VIDEO_B  = game_b;// { game_b, game_b[3:2] };
+// for simulation only:
+assign VIDEO_R  = game_r;
+assign VIDEO_G  = game_g;
+assign VIDEO_B  = game_b;
 assign VIDEO_HS = hs;
 assign VIDEO_VS = vs;
 `endif

@@ -29,7 +29,8 @@ module jtframe_dip(
     output             rot_control,
     output reg         en_mixing,
     output reg [ 2:0]  scanlines,
-    output reg [ 1:0]  hz_mode,
+    output reg         bw_en,
+    output reg         blend_en,
 
     output reg         enable_fm,
     output reg         enable_psg,
@@ -89,15 +90,16 @@ wire   widescreen  = status[11];    // only MiSTer
 `ifdef MISTER
 always @(*) begin
     scanlines = status[5:3];
-    hz_mode   = 2'd0;
+    bw_en     = 1'd0;
+    blend_en  = 1'd0;
 end
 `else
 always @(*) begin
     case( status[4:3] )
-        2'd0: { scanlines, hz_mode } = { 3'd0, 2'd0 }; // pass thru
-        2'd1: { scanlines, hz_mode } = { 3'd0, 2'd1 }; // no scanlines, linear interpolation
-        2'd2: { scanlines, hz_mode } = { 3'd0, 2'd2 }; // analogue
-        2'd3: { scanlines, hz_mode } = { 3'd1, 2'd2 }; // dark
+        2'd0: { scanlines, bw_en, blend_en } = { 3'd0, 2'd0 }; // pass thru
+        2'd1: { scanlines, bw_en, blend_en } = { 3'd0, 2'd1 }; // no scanlines, linear interpolation
+        2'd2: { scanlines, bw_en, blend_en } = { 3'd0, 2'd3 }; // analogue
+        2'd3: { scanlines, bw_en, blend_en } = { 3'd1, 2'd3 }; // analogue + scan lines
     endcase // status[4:3]
 end
 `endif

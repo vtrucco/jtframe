@@ -147,6 +147,7 @@ wire          prog_we, prog_rd;
 `ifndef COLORW
 `define COLORW 4
 `endif
+
 localparam COLORW=`COLORW;
 
 wire [COLORW-1:0] red;

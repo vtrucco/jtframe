@@ -50,9 +50,9 @@ module jtframe_wirebw #(parameter WIN=4, WOUT=5) (
     output [WOUT-1:0] b_out
 );
 
-jtframe_sh #(.width(2), .stages(6)) u_sh(
+jtframe_sh #(.width(2), .stages(1)) u_sh(
     .clk    ( clk              ),
-    .clk_en ( 1'b1             ),
+    .clk_en ( spl_in           ),
     .din    ( {HS_in, VS_in}   ),
     .drop   ( {HS_out, VS_out} )
 );
@@ -62,7 +62,7 @@ jtframe_wirebw_unit #(.WIN(WIN),.WOUT(WOUT)) u_rfilter(
     .spl_in ( spl_in    ),
     .enable ( enable    ),
     .din    ( r_in      ),
-    .dut    ( r_out     ),
+    .dout   ( r_out     ),
     .spl_out( spl_out   )
 );
 
@@ -71,7 +71,7 @@ jtframe_wirebw_unit #(.WIN(WIN),.WOUT(WOUT)) u_gfilter(
     .spl_in ( spl_in    ),
     .enable ( enable    ),
     .din    ( g_in      ),
-    .dut    ( g_out     ),
+    .dout   ( g_out     ),
     .spl_out( spl_out   )
 );
 
@@ -80,7 +80,7 @@ jtframe_wirebw_unit #(.WIN(WIN),.WOUT(WOUT)) u_bfilter(
     .spl_in ( spl_in    ),
     .enable ( enable    ),
     .din    ( b_in      ),
-    .dut    ( b_out     ),
+    .dout   ( b_out     ),
     .spl_out( spl_out   )
 );
 
@@ -93,7 +93,7 @@ module jtframe_wirebw_unit #(
               WC   = 5, // coefficient width
               N    = 5, // order, this is only meant to be used with N=3, 5, 7 atmost
               AW=WIN+WC+3, // accumulator width
-    parameter [N*WC-1:0] COEFF = { 5'd0, 5'd8, 5'd18, 5'd8, 5'd0 }
+    parameter [N*WC-1:0] COEFF = { 5'd0, 5'd7, 5'd20, 5'd7, 5'd0 }
 ) (
     input       clk,        // at least N clock pulses between spl_in strobes
     input       spl_in,     // input sample strobe
@@ -123,6 +123,11 @@ always @(*) begin
     if ( result > {WOUT{1'b1}} ) result = { {AW-WOUT{1'b0}}, {WOUT{1'b1}} } ;
 end
 
+function [WOUT-1:0] ext; // extends the input from WIN to WOUT
+    input [WIN-1:0] a;
+    ext = { a, {WOUT-WIN{1'b0}} } | (a>>(2*WIN-WOUT)) ;
+endfunction
+
 always @( posedge clk ) begin
     if( spl_in ) begin
         mem   <= { mem[MW-WIN-1:0], din };
@@ -141,7 +146,7 @@ always @( posedge clk ) begin
     end
 
     if( steps[N]   ) begin
-        dout    <= enable ? result[WOUT-1:0] : din;
+        dout    <= enable ? result[WOUT-1:0] : ext(din);
         spl_out <= 1;
     end else begin
         spl_out <= 0;
