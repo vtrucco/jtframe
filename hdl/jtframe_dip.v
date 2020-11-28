@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 20-10-2019 */
 
-`timescale 1ns/1ps
-
 module jtframe_dip(
     input              clk,
     input      [31:0]  status,
@@ -30,7 +28,8 @@ module jtframe_dip(
     output reg [ 1:0]  rotate,
     output             rot_control,
     output reg         en_mixing,
-    output     [ 2:0]  scanlines,
+    output reg [ 2:0]  scanlines,
+    output reg [ 1:0]  hz_mode,
 
     output reg         enable_fm,
     output reg         enable_psg,
@@ -49,7 +48,8 @@ module jtframe_dip(
 // "F,rom;",
 // "O2,Aspect Ratio,Original,Wide;",
 // "OD,Original screen,No,Yes;",
-// "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+// "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;", -- MiSTer
+// "O34,Video Mode, pass thru, linear, analogue, dark;",  -- MiST
 // "O6,Test mode,OFF,ON;",
 // "O7,PSG,ON,OFF;",
 // "O8,FM ,ON,OFF;",
@@ -87,9 +87,19 @@ assign dip_flip    = ~status[1];
 
 wire   widescreen  = status[11];    // only MiSTer
 `ifdef MISTER
-assign scanlines   = status[5:3];
+always @(*) begin
+    scanlines = status[5:3];
+    hz_mode   = 2'd0;
+end
 `else
-assign scanlines   = {1'b0, status[4:3]};
+always @(*) begin
+    case( status[4:3] )
+        2'd0: { scanlines, hz_mode } = { 3'd0, 2'd0 }; // pass thru
+        2'd1: { scanlines, hz_mode } = { 3'd0, 2'd1 }; // no scanlines, linear interpolation
+        2'd2: { scanlines, hz_mode } = { 3'd0, 2'd2 }; // analogue
+        2'd3: { scanlines, hz_mode } = { 3'd1, 2'd2 }; // dark
+    endcase // status[4:3]
+end
 `endif
 `ifndef JTFRAME_OSD_NOCREDITS
 assign osd_pause   = status[12];

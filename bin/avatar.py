@@ -72,11 +72,11 @@ def dump_block( rowc, colc, bmp, pal, palidx ):
                 pr("%X"%pxl)
             (zy,xw) = break_4pixels( c%4, pxl )
             if(c%4==0):
-                bufzy[bufpos] = zy; 
-                bufxw[bufpos] = xw; 
+                bufzy[bufpos] = zy;
+                bufxw[bufpos] = xw;
             else:
-                bufzy[bufpos] |= zy&255; 
-                bufxw[bufpos] |= xw&255; 
+                bufzy[bufpos] |= zy&255;
+                bufxw[bufpos] |= xw&255;
             if( c%4 == 3 ):
                 bufpos+=1
             c+=1
@@ -108,9 +108,9 @@ def show_mask():
         j=3
         while j<len(bmp[0]):
             if(bmp[k][j]>0):
-                pr("*") 
+                pr("*")
             else:
-                pr(" ") 
+                pr(" ")
             j+=4
         pr('\n')
 

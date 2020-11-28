@@ -381,6 +381,7 @@ if [ -e $JTROOT/../jtbin ]; then
         cp $RELEASE.rbf ${BINRBF}${SEED_SUFFIX}.rbf -v
     fi
     OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
+    OTHER="$OTHER $(append_if_exists doc/jt$PRJ.md README.md README.txt )"
     if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
     # If there is a mounted SD card with the right name, copy the file to it too
     if [ -d /media/$USER/${TARGET^^} ]; then

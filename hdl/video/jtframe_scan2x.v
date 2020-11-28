@@ -21,6 +21,17 @@
 //  -simple blending of neighbouring pixels
 //  -50% scan lines
 
+// sl_mode for scan lines
+// 0 = no scan lines
+// 1 = dimmed
+// 2 = more dimmed
+// 3 = blank scan lines
+
+// hz_mode for horizontal pixel blending
+// 0 = no blending
+// 1 = linear interpolation
+// 2 = blank (zero)
+
 module jtframe_scan2x #(parameter COLORW=4, HLEN=512)(
     input       rst_n,
     input       clk,
@@ -28,7 +39,8 @@ module jtframe_scan2x #(parameter COLORW=4, HLEN=512)(
     input       pxl2_cen,
     input       [COLORW*3-1:0]    base_pxl,
     input       HS,
-    input [1:0] sl_mode,  // scanline enable
+    input [1:0] sl_mode,  // scanline modes
+    input [1:0] hz_mode,  // horizontal blending modes
 
     output  reg [COLORW*3-1:0]    x2_pxl,
     output  reg x2_HS
@@ -82,10 +94,14 @@ always@(posedge clk or negedge rst_n) begin
         `ifndef JTFRAME_SCAN2X_NOBLEND
             // mixing can only be done if clk is at least 4x pxl2_cen
             mixst <= { mixst[1:0],pxl2_cen};
-            if(mixst==BLEND_ST)
-                preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
+            if(mixst==BLEND_ST) begin
+                case( hz_mode )
+                    default: preout <= next;
+                    2'd1: preout <= blend( rdaddr=={AW{1'b0}} ? {DW{1'b0}} : preout,
                                  next);
-            else if( mixst==PURE_ST )
+                    2'd3: preout <= {DW{1'b0}};
+                endcase
+            end else if( mixst==PURE_ST )
                 preout <= next;
         `else
             preout <= next;

@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 7-3-2019 */
 
-`timescale 1ns/1ps
-
 module jtframe_mist #(parameter
     SIGNED_SND             = 1'b0,
     BUTTONS                = 2,

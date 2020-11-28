@@ -135,6 +135,7 @@ module jtframe_board #(parameter
 );
 
 wire  [ 2:0]  scanlines;
+wire  [ 1:0]  hz_mode;
 wire          en_mixing;
 wire          osd_pause;
 
@@ -387,6 +388,7 @@ jtframe_dip u_dip(
     .rot_control( rot_control   ),
     .en_mixing  ( en_mixing     ),
     .scanlines  ( scanlines     ),
+    .hz_mode    ( hz_mode       ),
     .enable_fm  ( enable_fm     ),
     .enable_psg ( enable_psg    ),
     .osd_pause  ( osd_pause     ),
@@ -532,7 +534,8 @@ assign scan2x_de   = LVBL && LHBL;
         .x2_pxl     ( rgbx2          ),
         .HS         ( hs             ),
         .x2_HS      ( scan2x_hs      ),
-        .sl_mode    ( scanlines[1:0] )
+        .sl_mode    ( scanlines[1:0] ),
+        .hz_mode    ( hz_mode        )
     );
     assign scan2x_vs    = vs;
     assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );
