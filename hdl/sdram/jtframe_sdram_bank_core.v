@@ -16,6 +16,19 @@
     Version: 1.0
     Date: 29-11-2020 */
 
+
+// This controller uses bank interleaving. It can achieve 66% efficiency
+// Efficiency is measured as number of clock cycles in which data is being read
+// It is possible to get 80% efficiency by issuing ACTIVE commands without
+// a NOP in between. But there is a hard limitation in SDRAM clock frequency
+// then at ~70MHz. Nonetheless, at 90% efficiency means that 70MHz@90% is
+// as good as 96MHz@66%
+// This controller, as it is, cannot make it to 90% as it is designed to have
+// the NOP in between. That means that when used at 48MHz we are not operating
+// at the highest theoretical efficiency
+// More than 90% is not possible with only 4 banks and 2-word bursts. With
+// longer bursts, it would be possible to keep the SDRAM busy permanently.
+
 module jtframe_sdram_bank_core(
     input               rst,
     input               clk,

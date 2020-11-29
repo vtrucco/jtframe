@@ -24,6 +24,12 @@ wire        sdram_nras;
 wire        sdram_ncs;
 wire        sdram_cke;
 
+`ifndef PERIOD
+`define PERIOD 10.416
+`endif
+
+localparam PERIOD=`PERIOD;
+
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         addr_req <= 23'd0;
@@ -111,7 +117,7 @@ mt48lc16m16a2 sdram(
 
 initial begin
     clk=0;
-    forever #5.2 clk=~clk;
+    forever #(PERIOD/2) clk=~clk;
 end
 
 initial begin
