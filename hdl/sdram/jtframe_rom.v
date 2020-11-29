@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 6-12-2019 */
 
-`timescale 1ns/1ps
-
 // 9 slots for SDRAM read-only access
 // slot 0 --> maximum priority
 // slot 8 --> minimum priority
