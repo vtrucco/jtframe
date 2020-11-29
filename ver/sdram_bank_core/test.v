@@ -5,8 +5,9 @@ module test;
 reg        rst, clk, init_done, waiting;
 
 reg [22:0] addr_req;
-reg        rd_req, rfsh_en;
-reg [ 1:0] ba_req;
+reg        rd_req, wr_req, rfsh_en;
+reg [ 1:0] ba_req, din_m;
+reg [15:0] din;
 
 wire [31:0] dout;
 wire        ack, rdy;
@@ -27,6 +28,7 @@ always @(posedge clk, posedge rst) begin
     if( rst ) begin
         addr_req <= 23'd0;
         rd_req   <= 0;
+        wr_req   <= 0;
         ba_req   <= 2'd0;
         waiting  <= 0;
         rfsh_en  <= 1;
@@ -34,13 +36,22 @@ always @(posedge clk, posedge rst) begin
         if( !waiting ) begin
             if( $urandom%100 > 50 ) begin
                 addr_req[19:0] <= $urandom;
+                if( $urandom%100>95 ) begin
+                    rd_req <= 0;
+                    wr_req <= 1;
+                    din    <= $urandom;
+                    din_m  <= $urandom;
+                end else begin
+                    rd_req <= 1;
+                    wr_req <= 0;
+                end
                 ba_req   <= $urandom;
-                rd_req   <= 1;
                 waiting  <= 1;
             end
         end else if( ack ) begin
             waiting <= 0;
             rd_req <= 0;
+            wr_req <= 0;
         end
     end
 end
@@ -50,13 +61,14 @@ jtframe_sdram_bank_core uut(
     .clk        ( clk           ),
     .addr       ( addr_req      ),
     .rd         ( rd_req        ),
-    .wr         ( 1'b0          ),
+    .wr         ( wr_req        ),
     .rfsh_en    ( rfsh_en       ),
     .ba_rq      ( ba_req        ),
     .ack        ( ack           ),
     .rdy        ( rdy           ),
     .ba_rdy     ( ba_rdy        ),
-    .din        ( 16'd0         ),
+    .din        ( din           ),
+    .din_m      ( din_m         ),
     .dout       ( dout          ),
     // SDRAM pins
     .sdram_dq   ( sdram_dq      ),

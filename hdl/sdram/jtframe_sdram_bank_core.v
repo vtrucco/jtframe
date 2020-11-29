@@ -29,6 +29,7 @@ module jtframe_sdram_bank_core(
     output reg          rdy,
     output reg [   1:0] ba_rdy,
     input      [  15:0] din,
+    input      [   1:0] din_m,  // write mask
     output     [  31:0] dout,
 
     // SDRAM interface
@@ -48,7 +49,9 @@ module jtframe_sdram_bank_core(
     output              sdram_cke       // SDRAM Clock Enable
 );
 
-localparam ROW=13, COW=10,
+parameter COW=9; // 9 for 32MB SDRAM, 10 for 64MB
+
+localparam ROW=13,
            BQL=4,
            READ_BIT = 2, DQLO_BIT=5, DQHI_BIT=6;
 
@@ -71,8 +74,9 @@ reg [ 3:0] init_cmd;
 reg        init;
 
 reg       [7:0] ba0_st, ba1_st, ba2_st, ba3_st, all_st;
-reg             activate, read, get_low, get_high, post_act, hold_bus;
+reg             activate, read, get_low, get_high, post_act, hold_bus, wrtng;
 reg       [3:0] cmd;
+reg       [1:0] wrmask;
 reg      [15:0] dq_pad, dq_ff, dq_ff0;
 reg             rfshing, refresh, end_rfsh;
 
@@ -86,8 +90,12 @@ assign sdram_cke = 1;
 assign { sdram_dqmh, sdram_dqml } = sdram_a[12:11]; // This is a limitation in MiSTer's 128MB module
 assign sdram_dq = dq_pad;
 
-
 assign dout = { dq_ff, dq_ff0 };
+
+`ifdef SIMULATION
+wire [9:0] col_fifo0 = col_fifo[0];
+wire [9:0] col_fifo1 = col_fifo[1];
+`endif
 
 function [7:0] next;
     input [7:0] cur;
@@ -103,7 +111,7 @@ endfunction
 always @(*) begin
     all_st   =  ba0_st | ba1_st | ba2_st | ba3_st;
     hold_bus =  all_st[5:4]==2'd0; // next cycle will be a bus access
-    activate = !all_st[READ_BIT] && rd && !rfshing;
+    activate = ( (!all_st[READ_BIT] && rd) || (all_st[7:1]==7'd0 && wr)) && !rfshing;
     case( ba_rq )
         2'd0: if( !ba0_st[0] ) activate = 0;
         2'd1: if( !ba1_st[0] ) activate = 0;
@@ -124,6 +132,7 @@ always @(posedge clk, posedge rst) begin
         ba2_st   <= 8'd1;
         ba3_st   <= 8'd1;
         rfshing  <= 0;
+        wrtng    <= 0;
         // initialization loop
         init     <= 1;
         wait_cnt <= INIT_WAIT; // wait for 100us
@@ -184,7 +193,7 @@ always @(posedge clk, posedge rst) begin
             endcase
         end
     end else begin // Regular operation
-        dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
+        if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
         ba0_st <= next( ba0_st, 2'd0 );
         ba1_st <= next( ba1_st, 2'd1 );
         ba2_st <= next( ba2_st, 2'd2 );
@@ -207,9 +216,12 @@ always @(posedge clk, posedge rst) begin
             cmd           <= CMD_ACTIVE;
             sdram_ba      <= ba_rq;
             ba_fifo[1]    <= ba_rq;
+            wrtng         <= wr;
+            wrmask        <= din_m;
             ack           <= 1;
             post_act      <= 1;
             { sdram_a, col_fifo[1] } <= addr;
+            if( wr ) dq_pad <= din;
         end
         if( post_act ) begin
             col_fifo[0] <= col_fifo[1];
@@ -218,19 +230,21 @@ always @(posedge clk, posedge rst) begin
             post_act    <= 0;
         end
         if( read ) begin
-            cmd           <= CMD_READ;
-            sdram_a[12:11]<= 2'b00; // DQM signals
+            cmd           <= wrtng ? CMD_WRITE : CMD_READ;
+            sdram_a[12:11]<= wrtng ? wrmask : 2'b00; // DQM signals for reading
             sdram_a[10]   <= 1;     // precharge
             sdram_a[9:0]  <= col_fifo[0];
             sdram_ba      <= ba_fifo[0];
             ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[0];
         end
         if( get_low ) begin
+            if( wr ) sdram_a[12:11] <= 2'b11; // disable writting for next cycle
             dq_ff  <= sdram_dq;
         end
         if( get_high ) begin
             dq_ff0 <= dq_ff;
             dq_ff  <= sdram_dq;
+            dq_pad <= 16'hzzzz; // restores it in case there had been a write
         end
     end
 end
