@@ -19,9 +19,11 @@
 module jtframe_sdram_bank_core(
     input               rst,
     input               clk,
+    // requests
     input      [  22:0] addr,
     input               rd,
     input               wr,
+    input               rfsh_en,   // ok to refresh
     input      [   1:0] ba_rq,
     output reg          ack,
     output reg          rdy,
@@ -51,7 +53,7 @@ localparam ROW=13, COW=10,
            READ_BIT = 2, DQLO_BIT=5, DQHI_BIT=6;
 
 localparam CMD_LOAD_MODE   = 4'b0000, // 0
-           CMD_AUTOREFRESH = 4'b0001, // 1
+           CMD_REFRESH = 4'b0001, // 1
            CMD_PRECHARGE   = 4'b0010, // 2
            CMD_ACTIVE      = 4'b0011, // 3
            CMD_WRITE       = 4'b0100, // 4
@@ -72,6 +74,7 @@ reg       [7:0] ba0_st, ba1_st, ba2_st, ba3_st, all_st;
 reg             activate, read, get_low, get_high, post_act, hold_bus;
 reg       [3:0] cmd;
 reg      [15:0] dq_pad, dq_ff, dq_ff0;
+reg             rfshing, refresh, end_rfsh;
 
 reg [  COW-1:0] col_fifo[0:1];
 reg [      1:0] ba_fifo[0:1];
@@ -92,7 +95,7 @@ function [7:0] next;
     // state shifts automatically after READ command has been issued
     // state shifts from 0 bit on ACTIVE cmd
     // state shifts from 2 bit on READ cmd
-    next = ((activate && ba_rq==ba) || (read && ba_fifo[0]==ba) || (!cur[0] && !cur[2]) ) ?
+    next = ((activate && ba_rq==ba) || (read && ba_fifo[0]==ba) || (!cur[0] && !cur[2]) ) || rfshing ?
            { cur[6:0], cur[7] } :  // advance
            cur; // wait
 endfunction
@@ -100,16 +103,18 @@ endfunction
 always @(*) begin
     all_st   =  ba0_st | ba1_st | ba2_st | ba3_st;
     hold_bus =  all_st[5:4]==2'd0; // next cycle will be a bus access
-    activate = !all_st[READ_BIT] && rd;
+    activate = !all_st[READ_BIT] && rd && !rfshing;
     case( ba_rq )
         2'd0: if( !ba0_st[0] ) activate = 0;
         2'd1: if( !ba1_st[0] ) activate = 0;
         2'd2: if( !ba2_st[0] ) activate = 0;
         2'd3: if( !ba3_st[0] ) activate = 0;
     endcase
-    read     = all_st[READ_BIT];
-    get_low  = all_st[DQLO_BIT];
-    get_high = all_st[DQHI_BIT];
+    read     = all_st[READ_BIT] && !rfshing;
+    refresh  = all_st[7:1]==7'd0 && rfsh_en && !rd && !wr && !rfshing;
+    end_rfsh = rfshing && all_st[7];
+    get_low  = all_st[DQLO_BIT] && !rfshing;
+    get_high = all_st[DQHI_BIT] && !rfshing;
 end
 
 always @(posedge clk, posedge rst) begin
@@ -118,6 +123,7 @@ always @(posedge clk, posedge rst) begin
         ba1_st   <= 8'd1;
         ba2_st   <= 8'd1;
         ba3_st   <= 8'd1;
+        rfshing  <= 0;
         // initialization loop
         init     <= 1;
         wait_cnt <= INIT_WAIT; // wait for 100us
@@ -132,6 +138,7 @@ always @(posedge clk, posedge rst) begin
         ack      <= 0;
         rdy      <= 0;
         ba_rdy   <= 0;
+        ba_queue <= {BQL*2{1'b0}};
         dq_ff    <= 16'd0;
         dq_ff0   <= 16'd0;
     end else if( init ) begin
@@ -148,11 +155,11 @@ always @(posedge clk, posedge rst) begin
                     wait_cnt   <= 14'd2;
                 end
                 3'd1: begin
-                    init_cmd <= CMD_AUTOREFRESH;
+                    init_cmd <= CMD_REFRESH;
                     wait_cnt <= 14'd11;
                 end
                 3'd2: begin
-                    init_cmd <= CMD_AUTOREFRESH;
+                    init_cmd <= CMD_REFRESH;
                     wait_cnt <= 14'd11;
                 end
                 3'd3: begin
@@ -184,11 +191,18 @@ always @(posedge clk, posedge rst) begin
         ba3_st <= next( ba3_st, 2'd3 );
         ba_queue[ (BQL-1)*2-1: 0 ] <= ba_queue[ BQL*2-1: 2 ];
         // output strobes
-        rdy    <= all_st[DQHI_BIT];
+        rdy    <= all_st[DQHI_BIT] && !rfshing;
         ba_rdy <= ba_queue[1:0];
         // Default transitions
         cmd    <= CMD_NOP;
 
+        if( refresh ) begin
+            cmd         <= CMD_REFRESH;
+            sdram_a[10] <= 1;
+            rfshing  <= 1;
+        end else if( end_rfsh ) begin
+            rfshing  <= 0;
+        end
         if( activate ) begin
             cmd           <= CMD_ACTIVE;
             sdram_ba      <= ba_rq;

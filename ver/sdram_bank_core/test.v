@@ -5,7 +5,7 @@ module test;
 reg        rst, clk, init_done, waiting;
 
 reg [22:0] addr_req;
-reg        rd_req;
+reg        rd_req, rfsh_en;
 reg [ 1:0] ba_req;
 
 wire [31:0] dout;
@@ -29,12 +29,15 @@ always @(posedge clk, posedge rst) begin
         rd_req   <= 0;
         ba_req   <= 2'd0;
         waiting  <= 0;
+        rfsh_en  <= 1;
     end else if(init_done) begin
         if( !waiting ) begin
-            addr_req[19:0] <= $urandom;
-            ba_req   <= $urandom;
-            rd_req   <= 1;
-            waiting  <= 1;
+            if( $urandom%100 > 50 ) begin
+                addr_req[19:0] <= $urandom;
+                ba_req   <= $urandom;
+                rd_req   <= 1;
+                waiting  <= 1;
+            end
         end else if( ack ) begin
             waiting <= 0;
             rd_req <= 0;
@@ -48,6 +51,7 @@ jtframe_sdram_bank_core uut(
     .addr       ( addr_req      ),
     .rd         ( rd_req        ),
     .wr         ( 1'b0          ),
+    .rfsh_en    ( rfsh_en       ),
     .ba_rq      ( ba_req        ),
     .ack        ( ack           ),
     .rdy        ( rdy           ),
