@@ -39,39 +39,39 @@ always @(posedge clk, posedge rst) begin
         waiting  <= 0;
         rfsh_en  <= 1;
     end else if(init_done) begin
+        `ifdef MAX_THROUGHPUT
+        if(ack || !rd_req) begin
+            rd_req <= 1;
+            addr_req[19:0] <= $urandom;
+            ba_req   <= ba_req + 2'd1;
+            waiting  <= 1;
+        end
+        `else
         if( !waiting ) begin
-            `ifdef MAX_THROUGHPUT
-                rd_req <= 1;
+            if( $urandom%100 > 50 ) begin
                 addr_req[19:0] <= $urandom;
-                ba_req   <= ba_req + 2'd1;
-                waiting  <= 1;
-            `else
-                if( $urandom%100 > 50 ) begin
-                    addr_req[19:0] <= $urandom;
-                    if( $urandom%100>95 ) begin
-                        rd_req <= 0;
-                        wr_req <= 1;
-                        din    <= $urandom;
-                        din_m  <= $urandom;
-                    end else begin
-                        rd_req <= 1;
-                        wr_req <= 0;
-                    end
-                    ba_req   <= $urandom;
-                    waiting  <= 1;
+                if( $urandom%100>95 ) begin
+                    rd_req <= 0;
+                    wr_req <= 1;
+                    din    <= $urandom;
+                    din_m  <= $urandom;
+                end else begin
+                    rd_req <= 1;
+                    wr_req <= 0;
                 end
-            `endif
+                ba_req   <= $urandom;
+                waiting  <= 1;
+            end
         end else if( ack ) begin
             waiting <= 0;
             wr_req <= 0;
-            `ifndef MAX_THROUGHPUT
             rd_req <= 0;
-            `endif
         end
+        `endif
     end
 end
 
-jtframe_sdram_bank_core uut(
+jtframe_sdram_bank_core #(.AW(23)) uut(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .addr       ( addr_req      ),

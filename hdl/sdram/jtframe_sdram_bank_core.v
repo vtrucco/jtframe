@@ -29,11 +29,11 @@
 // More than 90% is not possible with only 4 banks and 2-word bursts. With
 // longer bursts, it would be possible to keep the SDRAM busy permanently.
 
-module jtframe_sdram_bank_core(
+module jtframe_sdram_bank_core #(parameter AW=22)(
     input               rst,
     input               clk,
     // requests
-    input      [  22:0] addr,
+    input      [AW-1:0] addr,
     input               rd,
     input               wr,
     input               rfsh_en,   // ok to refresh
@@ -62,9 +62,8 @@ module jtframe_sdram_bank_core(
     output              sdram_cke       // SDRAM Clock Enable
 );
 
-parameter COW=9; // 9 for 32MB SDRAM, 10 for 64MB
-
 localparam ROW=13,
+           COW= AW==22 ? 9 : 10, // 9 for 32MB SDRAM, 10 for 64MB
            BQL=4,
            READ_BIT = 2, DQLO_BIT=5, DQHI_BIT=6;
 
@@ -243,11 +242,11 @@ always @(posedge clk, posedge rst) begin
             post_act    <= 0;
         end
         if( read ) begin
-            cmd           <= wrtng ? CMD_WRITE : CMD_READ;
-            sdram_a[12:11]<= wrtng ? wrmask : 2'b00; // DQM signals for reading
-            sdram_a[10]   <= 1;     // precharge
-            sdram_a[9:0]  <= col_fifo[0];
-            sdram_ba      <= ba_fifo[0];
+            cmd              <= wrtng ? CMD_WRITE : CMD_READ;
+            sdram_a[12:11]   <= wrtng ? wrmask : 2'b00; // DQM signals for reading
+            sdram_a[10]      <= 1;     // precharge
+            sdram_a[COW-1:0] <= col_fifo[0];
+            sdram_ba         <= ba_fifo[0];
             ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[0];
         end
         if( get_low ) begin
