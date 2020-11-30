@@ -27,21 +27,25 @@ module jtframe_sdram_bank_mux #(parameter AW=22) (
     input      [  15:0] ba0_din,
     input      [   1:0] ba0_din_m,  // write mask
     output              ba0_rdy,
+    output              ba0_ack,
 
     // Bank 1: Read only
     input      [AW-1:0] ba1_addr,
     input               ba1_rd,
     output              ba1_rdy,
+    output              ba1_ack,
 
     // Bank 2: Read only
     input      [AW-1:0] ba2_addr,
     input               ba2_rd,
     output              ba2_rdy,
+    output              ba2_ack,
 
     // Bank 3: Read only
     input      [AW-1:0] ba3_addr,
     input               ba3_rd,
     output              ba3_rdy,
+    output              ba3_ack,
 
     // ROM downloading
     input               prog_en,
@@ -88,6 +92,11 @@ assign ba1_rdy = ctl_rdy && ctl_ba_rdy==2'd1;
 assign ba2_rdy = ctl_rdy && ctl_ba_rdy==2'd2;
 assign ba3_rdy = ctl_rdy && ctl_ba_rdy==2'd3;
 
+assign ba0_ack = ctl_ack && fifo_out[1:0]==2'd0;
+assign ba1_ack = ctl_ack && fifo_out[1:0]==2'd1;
+assign ba2_ack = ctl_ack && fifo_out[1:0]==2'd2;
+assign ba3_ack = ctl_ack && fifo_out[1:0]==2'd3;
+
 // FIFO
 assign fifo_out = fifo[RQW-1:0];
 assign fifo_top = fifo[FFW-1:FFW-RQW];
@@ -112,10 +121,6 @@ always @(*) begin
     end
 end
 
-task push(input [RQW-1:0] a);
-    fifo[FFW-1:FFW-RQW] <= a;
-endtask
-
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         queued <= 4'd0;
@@ -125,22 +130,29 @@ always @(posedge clk, posedge rst) begin
             fifo   <= {FFW{1'd0}};
         end else begin
             if( push_ok ) begin
-                if( (ba0_rd || ba0_wr) && !queued[0] )
-                    push( { ba0_addr, ba0_rd, ba0_wr, 2'd0 } );
-                else
-                if( ba1_rd && !queued[1] )
-                    push( { ba1_addr, ba1_rd, 1'd0, 2'd1 } );
-                else
-                if( ba2_rd && !queued[2] )
-                    push( { ba2_addr, ba2_rd, 1'd0, 2'd2 } );
-                else
-                if( ba3_rd && !queued[3] )
-                    push( { ba3_addr, ba3_rd, 1'd0, 2'd3 } );
-                else
-                    push( {RQW{1'd0}} );
+                if( (ba0_rd || ba0_wr) && !queued[0] ) begin
+                    fifo[FFW-1:FFW-RQW] <= { ba0_addr, ba0_rd, ba0_wr, 2'd0 };
+                    queued[0] <= 1;
+                end else
+                if( ba1_rd && !queued[1] ) begin
+                    fifo[FFW-1:FFW-RQW] <= { ba1_addr, ba1_rd, 1'd0, 2'd1 };
+                    queued[1] <= 1;
+                end else
+                if( ba2_rd && !queued[2] ) begin
+                    fifo[FFW-1:FFW-RQW] <= { ba2_addr, ba2_rd, 1'd0, 2'd2 };
+                    queued[2] <= 1;
+                end else
+                if( ba3_rd && !queued[3] ) begin
+                    fifo[FFW-1:FFW-RQW] <= { ba3_addr, ba3_rd, 1'd0, 2'd3 };
+                    queued[3] <= 1;
+                end else begin
+                    fifo[FFW-1:FFW-RQW] <= {RQW{1'd0}};
+                end
             end
             if( shift_ok )
                 fifo[FFW-1-RQW:0] <= fifo[FFW-1:RQW];
+            if( ctl_rdy )
+                queued[ ctl_ba_rdy ] <= 0;
         end
     end
 end

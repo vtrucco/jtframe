@@ -29,6 +29,10 @@
 // More than 90% is not possible with only 4 banks and 2-word bursts. With
 // longer bursts, it would be possible to keep the SDRAM busy permanently.
 
+// AW      |  Bank size        |  Total size
+// 22      |  4 MBx2 = 8MB     |   32 MB
+// 23      |  8 MBx2 =16MB     |   64 MB
+
 module jtframe_sdram_bank_core #(parameter AW=22)(
     input               rst,
     input               clk,

@@ -19,6 +19,7 @@
 module jtframe_sdram_bank #(parameter AW=22)(
     input               rst,
     input               clk,
+
     // Bank 0: allows R/W
     input      [AW-1:0] ba0_addr,
     input               ba0_rd,
@@ -26,21 +27,25 @@ module jtframe_sdram_bank #(parameter AW=22)(
     input      [  15:0] ba0_din,
     input      [   1:0] ba0_din_m,  // write mask
     output              ba0_rdy,
+    output              ba0_ack,
 
     // Bank 1: Read only
     input      [AW-1:0] ba1_addr,
     input               ba1_rd,
     output              ba1_rdy,
+    output              ba1_ack,
 
     // Bank 2: Read only
     input      [AW-1:0] ba2_addr,
     input               ba2_rd,
     output              ba2_rdy,
+    output              ba2_ack,
 
     // Bank 3: Read only
     input      [AW-1:0] ba3_addr,
     input               ba3_rd,
     output              ba3_rdy,
+    output              ba3_ack,
 
     // ROM downloading
     input               prog_en,
@@ -97,21 +102,25 @@ jtframe_sdram_bank_mux #(.AW(AW)) u_mux(
     .ba0_din    ( ba0_din       ),
     .ba0_din_m  ( ba0_din_m     ),  // write mask
     .ba0_rdy    ( ba0_rdy       ),
+    .ba0_ack    ( ba0_ack       ),
 
     // Bank 1: Read only
     .ba1_addr   ( ba1_addr      ),
     .ba1_rd     ( ba1_rd        ),
     .ba1_rdy    ( ba1_rdy       ),
+    .ba1_ack    ( ba1_ack       ),
 
     // Bank 2: Read only
     .ba2_addr   ( ba2_addr      ),
     .ba2_rd     ( ba2_rd        ),
     .ba2_rdy    ( ba2_rdy       ),
+    .ba2_ack    ( ba2_ack       ),
 
     // Bank 3: Read only
     .ba3_addr   ( ba3_addr      ),
     .ba3_rd     ( ba3_rd        ),
     .ba3_rdy    ( ba3_rdy       ),
+    .ba3_ack    ( ba3_ack       ),
 
     // ROM downloading
     .prog_en    ( prog_en       ),
