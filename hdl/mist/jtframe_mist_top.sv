@@ -64,8 +64,6 @@ localparam CONF_STR="JTGNG;;";
 // Config string
 `define SEPARATOR "",
 
-localparam SDRAMW = 22;
-
 localparam CONF_STR = {
     `CORENAME,";;",
     // Common MiSTer options
@@ -130,33 +128,23 @@ wire rst_req   = status[0];
 wire sdram_req;
 
 wire [21:0]   prog_addr;
-wire [ 7:0]   prog_data;
+wire [15:0]   prog_data;
 wire [ 1:0]   prog_mask, prog_bank;
-wire          prog_we, prog_rd;
+wire          prog_we, prog_rd, prog_rdy;
 
 // ROM access from game
-wire [SDRAMW-1:0] ba0_addr;
-wire              ba0_rd;
-wire              ba0_wr;
-wire     [  15:0] ba0_din;
-wire     [   1:0] ba0_din_m;
-wire              ba0_rdy;
-wire              ba0_ack;
-wire [SDRAMW-1:0] ba1_addr;
-wire              ba1_rd;
-wire              ba1_rdy;
-wire              ba1_ack;
-wire [SDRAMW-1:0] ba2_addr;
-wire              ba2_rd;
-wire              ba2_rdy;
-wire              ba2_ack;
-wire [SDRAMW-1:0] ba3_addr;
-wire              ba3_rd;
-wire              ba3_rdy;
-wire              ba3_ack;
-
-wire              rfsh_en;
-wire     [  31:0] sdram_dout;
+wire [21:0] ba0_addr;
+wire        ba0_rd, ba0_wr, ba0_rdy, ba0_ack;
+wire [15:0] ba0_din;
+wire [ 1:0] ba0_din_m;
+wire [21:0] ba1_addr;
+wire        ba1_rd, ba1_rdy, ba1_ack;
+wire [21:0] ba2_addr;
+wire        ba2_rd, ba2_rdy, ba2_ack;
+wire [21:0] ba3_addr;
+wire        ba3_rd, ba3_rdy, ba3_ack;
+wire        rfsh_en;
+wire [31:0] sdram_dout;
 
 `ifndef COLORW
 `define COLORW 4
@@ -334,12 +322,13 @@ u_frame(
     .prog_we        ( prog_we        ),
     .prog_mask      ( prog_mask      ),
     .prog_bank      ( prog_bank      ),
+    .prog_rdy       ( prog_rdy      ),
 
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),
 
     .rfsh_en        ( rfsh_en        ),
-    .sdram_dout     ( data_read      ),
+    .sdram_dout     ( sdram_dout     ),
 //////////// board
     .rst            ( rst            ),
     .rst_n          ( rst_n          ), // unused
@@ -526,11 +515,6 @@ u_game(
     // Debug
     .gfx_en      ( gfx_en         )
 );
-
-`ifndef JTFRAME_SDRAM_BANKS
-assign sdram_bank = 2'b0;
-assign prog_bank  = 2'b0;
-`endif
 
 `ifdef SIMULATION
 integer fsnd;

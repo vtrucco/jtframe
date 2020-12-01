@@ -114,7 +114,7 @@ jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW)) u_slot2(
     .sdram_addr( slot2_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
-    .dout      ( slot1_dout             ),
+    .dout      ( slot2_dout             ),
     .req       ( req[2]                 ),
     .data_ok   ( ok[2]                  ),
     .we        ( data_sel[2]            )

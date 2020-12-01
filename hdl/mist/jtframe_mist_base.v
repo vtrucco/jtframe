@@ -25,7 +25,6 @@ module jtframe_mist_base #(parameter
     input           rst,
     input           clk_sys,
     input           clk_rom,
-    input           SDRAM_CLK,      // SDRAM Clock
     output          osd_shown,
     output  [6:0]   core_mod,
     // Base video

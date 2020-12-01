@@ -41,8 +41,8 @@ module jtframe_board #(parameter
     input  [SDRAMW-1:0] ba0_addr,
     input               ba0_rd,
     input               ba0_wr,
-    input      [  15:0] ba0_din,
-    input      [   1:0] ba0_din_m,  // write mask
+    input        [15:0] ba0_din,
+    input        [ 1:0] ba0_din_m,  // write mask
     output              ba0_rdy,
     output              ba0_ack,
     input  [SDRAMW-1:0] ba1_addr,
@@ -59,16 +59,16 @@ module jtframe_board #(parameter
     output              ba3_ack,
 
     input               rfsh_en,   // ok to refresh
-    output     [  31:0] sdram_dout,
+    output       [31:0] sdram_dout,
     // ROM programming
-    input  [SDRAMW:0] prog_addr,
-    input  [ 7:0]     prog_data,
-    input  [ 1:0]     prog_mask,
-    input  [ 1:0]     prog_bank,
-    input             prog_we,
-    input             prog_rd,
-    output            prog_rdy,
-    input             downloading,
+    input  [SDRAMW-1:0] prog_addr,
+    input        [15:0] prog_data,
+    input        [ 1:0] prog_mask,
+    input        [ 1:0] prog_bank,
+    input               prog_we,
+    input               prog_rd,
+    output              prog_rdy,
+    input               downloading,
     // SDRAM interface
     inout  [15:0]     SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output [12:0]     SDRAM_A,        // SDRAM Address bus 13 Bits

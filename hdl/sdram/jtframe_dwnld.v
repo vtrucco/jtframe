@@ -34,8 +34,9 @@ module jtframe_dwnld(
     input      [ 7:0]    ioctl_data,
     input                ioctl_wr,
     output reg [21:0]    prog_addr,
-    output reg [ 7:0]    prog_data,
+    output     [15:0]    prog_data,
     output reg [ 1:0]    prog_mask, // active low
+    output               prog_rd,
     output reg           prog_we,
     output reg [ 1:0]    prog_ba,
 
@@ -52,7 +53,12 @@ parameter [24:0] BA1_START = ~25'd0,
 localparam       BA_EN     = (BA1_START!=~25'd0 || BA2_START!=~25'd0 || BA3_START!=~25'd0);
 localparam       PROM_EN   = PROM_START!=~25'd0;
 
-wire             is_prom   = PROM_EN && ioctl_addr>=PROM_START;
+reg  [ 7:0] data_out;
+wire        is_prom;
+
+assign is_prom   = PROM_EN && ioctl_addr>=PROM_START;
+assign prog_data = {2{data_out}};
+assign prog_rd   = 0;
 
 `ifdef LOADROM
 `undef JTFRAME_DWNLD_PROM_ONLY
@@ -91,7 +97,7 @@ always @(posedge clk) begin
             prog_we   <= 1;
             prog_ba   <= bank;
         end
-        prog_data <= ioctl_data;
+        data_out  <= ioctl_data;
         prog_mask <= ioctl_addr[0] ? 2'b10 : 2'b01;
     end
     else begin
@@ -136,7 +142,7 @@ always @(posedge clk) begin
         prom_we   <= 1;
         prog_we   <= 0;
         prog_mask <= 2'b11;
-        prog_data <= mem[dumpcnt];
+        data_out  <= mem[dumpcnt];
         prog_addr <= dumpcnt[21:0];
         dumpcnt   <= dumpcnt+1;
     end else begin

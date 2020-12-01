@@ -27,22 +27,13 @@ module jtframe_ram_2slots #(parameter
 )(
     input               rst,
     input               clk,
-    input               vblank,
 
     input  [SLOT0_AW-1:0] slot0_addr,
     input  [SLOT1_AW-1:0] slot1_addr,
 
-    input  [  SDRAMW-1:0] slot0_offset,
-    input  [  SDRAMW-1:0] slot1_offset,
-
-
     //  output data
     output [SLOT0_DW-1:0] slot0_dout,
     output [SLOT1_DW-1:0] slot1_dout,
-
-    //  input data
-    input  [SLOT0_DW-1:0] slot0_din,
-    input  [SLOT1_DW-1:0] slot1_din,
 
     input               slot0_cs,
     input               slot1_cs,
@@ -50,11 +41,10 @@ module jtframe_ram_2slots #(parameter
     output              slot0_ok,
     output              slot1_ok,
 
+    // Slot 0 accepts 16-bit writes
     input               slot0_wen,
-    input               slot0_clr,
-
-    // Slot 1 accepts 16-bit writes
-    input  [1:0]        slot1_wrmask,
+    input  [SLOT0_DW-1:0] slot0_din,
+    input  [1:0]        slot0_wrmask,
 
     // SDRAM controller interface
     input               sdram_ack,

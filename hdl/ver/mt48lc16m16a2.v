@@ -39,7 +39,7 @@
 
 `timescale 1ns / 1ps
 
-module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, 
+module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
     downloading, VS, frame_cnt );
 
     parameter addr_bits =      13;
@@ -84,12 +84,10 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         // end else begin
         //     $display("ERROR: Cannot open file %s", filename);
         // end
-        $readmemh("sdram.hex",  Bank0 );
-        `ifdef JTFRAME_SDRAM_BANKS
+        $readmemh("sdram_bank0.hex",  Bank0 );
         $readmemh("sdram_bank1.hex",  Bank1 );
         $readmemh("sdram_bank2.hex",  Bank2 );
         $readmemh("sdram_bank3.hex",  Bank3 );
-        `endif
         `ifdef TESTROM
         file=$fopen("test.bin", "rb");
         romfilecnt=$fread( Bank0, file );
@@ -129,7 +127,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         // as verilog has a hard 32 limit on it
         always @(negedge downloading) begin : dump_contents
             integer dumpcnt,f;
-            f=$fopen("sdram.hex","w");
+            f=$fopen("sdram_bank0.hex","w");
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
                 $fwrite(f,"%h\n",Bank0[dumpcnt]);
             $fclose(f);
@@ -150,7 +148,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 $fwrite(f,"%h\n",Bank3[dumpcnt]);
             `endif
             $fclose(f);
-            $display("INFO: SDRAM memory content dumped to sdram.hex at %t",$time);
+            $display("INFO: SDRAM memory content dumped to sdram_bank?.hex at %t",$time);
         end
         `endif
     `endif
@@ -235,7 +233,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
     `ifdef JTFRAME_SDRAM_DEBUG
     assign Debug=1;
-    `else 
+    `else
     assign Debug=0;
     `endif
 

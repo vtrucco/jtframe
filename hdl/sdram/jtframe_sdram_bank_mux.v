@@ -86,6 +86,7 @@ wire           reg_rd, reg_wr;
 wire [    1:0] reg_ba;
 
 assign dout    = ctl_dout;
+assign prog_rdy= prog_en & ctl_ack;
 
 assign ba0_rdy = ctl_rdy && ctl_ba_rdy==2'd0;
 assign ba1_rdy = ctl_rdy && ctl_ba_rdy==2'd1;
