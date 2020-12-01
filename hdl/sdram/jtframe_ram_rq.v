@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 28-2-2019 */
 
-`timescale 1ns/1ps
-
 ////////////////////////////////////////////////////////////
 /////// read/write type
 /////// simple pass through
@@ -31,7 +29,7 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
     input               addr_ok,    // signals that value in addr is valid
     input [31:0]        din,        // data read from SDRAM
     input               din_ok,
-    input               wrin,   
+    input               wrin,
     input               we,
     output reg          req,
     output reg          req_rnw,
@@ -54,14 +52,17 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
             data_ok <= 1'b0;
         end else begin
             last_cs <= addr_ok;
-            if( cs_posedge ) begin
+            if( cs_negedge ) data_ok <= 1'b0;
+            if( we ) begin
+                req <= 0;
+            end else if( cs_posedge ) begin
                 req        <= 1'b1;
-                req_rnw    <= ~wrin; 
+                req_rnw    <= ~wrin;
                 data_ok    <= 1'b0;
                 sdram_addr <= size_ext + offset;
             end
-            if( cs_negedge ) data_ok <= 1'b0;
-            if( din_ok && we ) begin
+
+            if( din_ok ) begin
                 req     <= 1'b0;
                 req_rnw <= 1'b1;
                 data_ok <= 1'b1;

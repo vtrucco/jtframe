@@ -118,6 +118,7 @@ if( rst ) begin
 end else begin
     if( sdram_ack ) begin
         sdram_rd   <= 0;
+        sdram_wr   <= 0;
         wait_cycle <= 0;
     end
 
@@ -131,6 +132,7 @@ end else begin
         if( active[0] ) begin
             sdram_addr  <= slot0_addr_req;
             data_write  <= slot0_din;
+            sdram_wrmask<= slot0_wrmask;
             sdram_rd    <= !req_rnw;
             sdram_wr    <= req_rnw;
             data_sel[0] <= 1;
