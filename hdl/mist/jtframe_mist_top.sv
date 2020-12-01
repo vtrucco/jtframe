@@ -276,7 +276,6 @@ u_frame(
     .VGA_HS         ( VGA_HS         ),
     .VGA_VS         ( VGA_VS         ),
     // SDRAM interface
-    .SDRAM_CLK      ( SDRAM_CLK      ),
     .SDRAM_DQ       ( SDRAM_DQ       ),
     .SDRAM_A        ( SDRAM_A        ),
     .SDRAM_DQML     ( SDRAM_DQML     ),
@@ -468,8 +467,8 @@ u_game(
     // ROM load
     .downloading ( downloading    ),
     .dwnld_busy  ( dwnld_busy     ),
-    .dout       ( sdram_dout    ),
-    .rfsh_en    ( rfsh_en       ),
+    .data_read   ( sdram_dout     ),
+    .refresh_en  ( rfsh_en        ),
     // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
     .ba0_rd     ( ba0_rd        ),
@@ -498,13 +497,12 @@ u_game(
     .ba3_ack    ( ba3_ack       ),
 
     // ROM-load interface
-    .prog_en    ( downloading   ),
     .prog_addr  ( prog_addr     ),
     .prog_ba    ( prog_bank     ),
     .prog_rd    ( prog_rd       ),
     .prog_we    ( prog_we       ),
-    .prog_din   ( prog_data     ),
-    .prog_din_m ( prog_mask     ),
+    .prog_data  ( prog_data     ),
+    .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
 
     // DIP switches

@@ -50,7 +50,7 @@ module jtframe_ram_2slots #(parameter
     output              slot0_ok,
     output              slot1_ok,
 
-    input               slot0_wr,
+    input               slot0_wen,
     input               slot0_clr,
 
     // Slot 1 accepts 16-bit writes
@@ -91,7 +91,7 @@ jtframe_ram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .addr_ok   ( slot0_cs               ),
     .offset    ( offset0                ),
     .wrdata    ( slot0_din              ),
-    .wrin      ( slot0_wr               ),
+    .wrin      ( slot0_wen              ),
     .req_rnw   ( req_rnw                ),
     .sdram_addr( slot0_addr_req         ),
     .din       ( data_read              ),

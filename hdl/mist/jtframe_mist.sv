@@ -47,6 +47,14 @@ module jtframe_mist #(parameter
     output       [5:0] VGA_B,
     output             VGA_HS,
     output             VGA_VS,
+    // ROM programming
+    input        [21:0] prog_addr,
+    input        [ 7:0] prog_data,
+    input        [ 1:0] prog_mask,
+    input        [ 1:0] prog_bank,
+    input               prog_we,
+    input               prog_rd,
+    output              prog_rdy,
     // ROM access from game
     input  [SDRAMW-1:0] ba0_addr,
     input               ba0_rd,
@@ -292,13 +300,12 @@ jtframe_board #(
     .ba3_ack    ( ba3_ack       ),
 
     // ROM-load interface
-    .prog_en    ( downloading   ),
     .prog_addr  ( prog_addr     ),
-    .prog_ba    ( prog_bank     ),
+    .prog_bank  ( prog_bank     ),
     .prog_rd    ( prog_rd       ),
     .prog_we    ( prog_we       ),
-    .prog_din   ( prog_data     ),
-    .prog_din_m ( prog_mask     ),
+    .prog_data  ( prog_data     ),
+    .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
     // SDRAM interface
     .SDRAM_DQ   ( SDRAM_DQ      ),
@@ -313,7 +320,7 @@ jtframe_board #(
     .SDRAM_CKE  ( SDRAM_CKE     ),
 
     // Common signals
-    .dout       ( sdram_dout    ),
+    .sdram_dout ( sdram_dout    ),
     .rfsh_en    ( rfsh_en       ),
 
     // Base video
