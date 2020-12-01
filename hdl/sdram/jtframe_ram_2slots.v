@@ -133,8 +133,8 @@ end else begin
             sdram_addr  <= slot0_addr_req;
             data_write  <= slot0_din;
             sdram_wrmask<= slot0_wrmask;
-            sdram_rd    <= !req_rnw;
-            sdram_wr    <= req_rnw;
+            sdram_rd    <= req_rnw;
+            sdram_wr    <= ~req_rnw;
             data_sel[0] <= 1;
         end else if( active[1]) begin
             sdram_addr  <= slot1_addr_req;
