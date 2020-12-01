@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 28-2-2019 */
 
-`timescale 1ns/1ps
-
 // Three types of slots:
 // 0 = read only    ( default )
 // 1 = write only
@@ -32,7 +30,7 @@ module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0)(
     input               addr_ok,    // signals that value in addr is valid
     input [31:0]        din,        // data read from SDRAM
     input               din_ok,
-    input               wrin,   
+    input               wrin,
     input               we,
     output              req,
     output              req_rnw,
@@ -43,7 +41,7 @@ module jtframe_sdram_rq #(parameter AW=18, DW=8, TYPE=0)(
 );
 
 
-generate 
+generate
 
 ////////////////////////////////////////////////////////////
 /////// read/write type
@@ -59,7 +57,7 @@ if( TYPE==2 ) begin : rw_type
         .addr_ok    ( addr_ok       ),    // signals that value in addr is valid
         .din        ( din           ),        // data read from SDRAM
         .din_ok     ( din_ok        ),
-        .wrin       ( wrin          ),   
+        .wrin       ( wrin          ),
         .we         ( we            ),
         .req        ( req           ),
         .req_rnw    ( req_rnw       ),

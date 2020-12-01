@@ -18,6 +18,7 @@
 
 // Produces the right signals for jtframe_sdram to get the ROM data
 // A prom_we signal is used for the second half of the ROM byte stream
+
 // For system simulation, it is useful sometimes to be able to load the
 // PROM data quickly at the beginning of the simulation. If the PROM
 // modules are isolated, this can be done manually typing the path to
@@ -36,12 +37,19 @@ module jtframe_dwnld(
     output reg [ 7:0]    prog_data,
     output reg [ 1:0]    prog_mask, // active low
     output reg           prog_we,
+    output reg [ 1:0]    prog_ba,
+
     output reg           prom_we,
     input                sdram_ack
 );
 
 parameter        SIMFILE   = "rom.bin";
 parameter [24:0] PROM_START= ~25'd0;
+parameter [24:0] BA1_START = ~25'd0,
+                 BA2_START = ~25'd0,
+                 BA3_START = ~25'd0;
+
+localparam       BA_EN     = (BA1_START!=~25'd0 || BA2_START!=~25'd0 || BA3_START!=~25'd0);
 localparam       PROM_EN   = PROM_START!=~25'd0;
 
 wire             is_prom   = PROM_EN && ioctl_addr>=PROM_START;
@@ -53,6 +61,23 @@ wire             is_prom   = PROM_EN && ioctl_addr>=PROM_START;
 `ifndef JTFRAME_DWNLD_PROM_ONLY
 /////////////////////////////////////////////////
 // Normal operation
+reg  [ 1:0] bank;
+reg  [24:0] offset;
+reg  [24:0] eff_addr;
+
+always @(*) begin
+    bank = !BA_EN ? 2'd0 : (
+            ioctl_addr >= BA3_START ? 2'd3 : (
+            ioctl_addr >= BA2_START ? 2'd2 : (
+            ioctl_addr >= BA1_START ? 2'd1 : 2'd0 )));
+    case( bank )
+        2'd0: offset = 25'd0;
+        2'd1: offset = BA1_START;
+        2'd2: offset = BA2_START;
+        2'd3: offset = BA3_START;
+    endcase // bank
+    eff_addr = ioctl_addr-offset;
+end
 
 always @(posedge clk) begin
     if ( ioctl_wr && downloading ) begin
@@ -61,12 +86,13 @@ always @(posedge clk) begin
             prom_we   <= 1;
             prog_we   <= 0;
         end else begin
-            prog_addr <= ioctl_addr[22:1];
+            prog_addr <= eff_addr[22:1];
             prom_we   <= 0;
             prog_we   <= 1;
+            prog_ba   <= bank;
         end
         prog_data <= ioctl_data;
-        prog_mask <= ioctl_addr[0] ? 2'b10 : 2'b01;            
+        prog_mask <= ioctl_addr[0] ? 2'b10 : 2'b01;
     end
     else begin
         if(!downloading || sdram_ack) prog_we  <= 0;

@@ -42,11 +42,12 @@ module jtframe_sdram_bank_core #(parameter AW=22)(
     input               wr,
     input               rfsh_en,   // ok to refresh
     input      [   1:0] ba_rq,
-    output reg          ack,
-    output reg          rdy,
     output reg [   1:0] ba_rdy,
     input      [  15:0] din,
     input      [   1:0] din_m,  // write mask
+
+    output reg          ack,
+    output reg          rdy,
     output     [  31:0] dout,
 
     // SDRAM interface

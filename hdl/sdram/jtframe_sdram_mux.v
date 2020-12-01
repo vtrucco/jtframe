@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 6-12-2019 */
 
-`timescale 1ns/1ps
-
 // 10 slots for SDRAM access
 // slot 0 --> maximum priority
 // slot 9 --> minimum priority
@@ -90,7 +88,7 @@ module jtframe_sdram_mux #(parameter
     output  reg         ready=1'b0,
 
     input  [9:0]        slot_cs,
-    input  [9:0]        slot_wr,    
+    input  [9:0]        slot_wr,
     output [9:0]        slot_ok,
     input  [9:0]        slot_clr,
 
@@ -338,7 +336,7 @@ end else begin
         sdram_req <= 1'b0;
         wait_cycle <= 1'b0;
     end
-        
+
     refresh_en <= 1'b0;
     // accept a new request
     slot_we <= data_sel;

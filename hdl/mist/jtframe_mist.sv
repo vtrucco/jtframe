@@ -35,43 +35,52 @@ module jtframe_mist #(parameter
     input [COLORW-1:0] game_r,
     input [COLORW-1:0] game_g,
     input [COLORW-1:0] game_b,
-    input           LHBL,
-    input           LVBL,
-    input           hs,
-    input           vs,
-    input           pxl_cen,
-    input           pxl2_cen,
+    input              LHBL,
+    input              LVBL,
+    input              hs,
+    input              vs,
+    input              pxl_cen,
+    input              pxl2_cen,
     // MiST VGA pins
-    output  [5:0]   VGA_R,
-    output  [5:0]   VGA_G,
-    output  [5:0]   VGA_B,
-    output          VGA_HS,
-    output          VGA_VS,
+    output       [5:0] VGA_R,
+    output       [5:0] VGA_G,
+    output       [5:0] VGA_B,
+    output             VGA_HS,
+    output             VGA_VS,
+    // ROM access from game
+    input  [SDRAMW-1:0] ba0_addr,
+    input               ba0_rd,
+    input               ba0_wr,
+    input      [  15:0] ba0_din,
+    input      [   1:0] ba0_din_m,  // write mask
+    output              ba0_rdy,
+    output              ba0_ack,
+    input  [SDRAMW-1:0] ba1_addr,
+    input               ba1_rd,
+    output              ba1_rdy,
+    output              ba1_ack,
+    input  [SDRAMW-1:0] ba2_addr,
+    input               ba2_rd,
+    output              ba2_rdy,
+    output              ba2_ack,
+    input  [SDRAMW-1:0] ba3_addr,
+    input               ba3_rd,
+    output              ba3_rdy,
+    output              ba3_ack,
+
+    input               rfsh_en,   // ok to refresh
+    output     [  31:0] sdram_dout,
     // SDRAM interface
-    inout  [15:0]   SDRAM_DQ,       // SDRAM Data bus 16 Bits
-    output [12:0]   SDRAM_A,        // SDRAM Address bus 13 Bits
+    inout    [15:0] SDRAM_DQ,       // SDRAM Data bus 16 Bits
+    output   [12:0] SDRAM_A,        // SDRAM Address bus 13 Bits
     output          SDRAM_DQML,     // SDRAM Low-byte Data Mask
     output          SDRAM_DQMH,     // SDRAM High-byte Data Mask
     output          SDRAM_nWE,      // SDRAM Write Enable
     output          SDRAM_nCAS,     // SDRAM Column Address Strobe
     output          SDRAM_nRAS,     // SDRAM Row Address Strobe
     output          SDRAM_nCS,      // SDRAM Chip Select
-    output [1:0]    SDRAM_BA,       // SDRAM Bank Address
-    input           SDRAM_CLK,      // SDRAM Clock
+    output    [1:0] SDRAM_BA,       // SDRAM Bank Address
     output          SDRAM_CKE,      // SDRAM Clock Enable
-    // ROM access from game
-    input           sdram_req,
-    output          sdram_ack,
-    input  [21:0]   sdram_addr,
-    input  [ 1:0]   sdram_bank,
-    output [31:0]   data_read,
-    output          data_rdy,
-    output          loop_rst,
-    input           refresh_en,
-    // Write back to SDRAM
-    input  [ 1:0]   sdram_wrmask,
-    input           sdram_rnw,
-    input  [15:0]   data_write,
     // SPI interface to arm io controller
     inout           SPI_DO,
     input           SPI_DI,
@@ -81,17 +90,12 @@ module jtframe_mist #(parameter
     input           SPI_SS4,
     input           CONF_DATA0,
     // ROM load from SPI
-    output [24:0]   ioctl_addr,
-    output [ 7:0]   ioctl_data,
+    output   [24:0] ioctl_addr,
+    output   [ 7:0] ioctl_data,
     output          ioctl_wr,
-    input  [21:0]   prog_addr,
-    input  [ 7:0]   prog_data,
-    input  [ 1:0]   prog_mask,
-    input  [ 1:0]   prog_bank,
-    input           prog_we,
-    input           prog_rd,
-    output          downloading,
     input           dwnld_busy,
+    output          downloading,
+
 //////////// board
     output          rst,      // synchronous reset
     output          rst_n,    // asynchronous reset
@@ -127,6 +131,8 @@ module jtframe_mist #(parameter
     output          LED,
     output   [3:0]  gfx_en
 );
+
+localparam SDRAMW=22;
 
 // control
 wire [31:0]   joystick1, joystick2, joystick3, joystick4;
@@ -256,36 +262,59 @@ jtframe_board #(
     .dip_fxlevel    ( dip_fxlevel     ),
     // screen
     .rotate         ( rotate          ),
+
     // SDRAM interface
-    .SDRAM_DQ       ( SDRAM_DQ        ),
-    .SDRAM_A        ( SDRAM_A         ),
-    .SDRAM_DQML     ( SDRAM_DQML      ),
-    .SDRAM_DQMH     ( SDRAM_DQMH      ),
-    .SDRAM_nWE      ( SDRAM_nWE       ),
-    .SDRAM_nCAS     ( SDRAM_nCAS      ),
-    .SDRAM_nRAS     ( SDRAM_nRAS      ),
-    .SDRAM_nCS      ( SDRAM_nCS       ),
-    .SDRAM_BA       ( SDRAM_BA        ),
-    .SDRAM_CKE      ( SDRAM_CKE       ),
-    // SDRAM controller
-    .loop_rst       ( loop_rst        ),
-    .sdram_addr     ( sdram_addr      ),
-    .sdram_req      ( sdram_req       ),
-    .sdram_bank     ( sdram_bank      ),
-    .sdram_ack      ( sdram_ack       ),
-    .data_read      ( data_read       ),
-    .data_rdy       ( data_rdy        ),
-    .refresh_en     ( refresh_en      ),
-    .prog_addr      ( prog_addr       ),
-    .prog_data      ( prog_data       ),
-    .prog_mask      ( prog_mask       ),
-    .prog_we        ( prog_we         ),
-    .prog_rd        ( prog_rd         ),
-    .prog_bank      ( prog_bank       ),
-    // write back support
-    .sdram_wrmask   ( sdram_wrmask    ),
-    .sdram_rnw      ( sdram_rnw       ),
-    .data_write     ( data_write      ),
+    // Bank 0: allows R/W
+    .ba0_addr   ( ba0_addr      ),
+    .ba0_rd     ( ba0_rd        ),
+    .ba0_wr     ( ba0_wr        ),
+    .ba0_din    ( ba0_din       ),
+    .ba0_din_m  ( ba0_din_m     ),  // write mask
+    .ba0_rdy    ( ba0_rdy       ),
+    .ba0_ack    ( ba0_ack       ),
+
+    // Bank 1: Read only
+    .ba1_addr   ( ba1_addr      ),
+    .ba1_rd     ( ba1_rd        ),
+    .ba1_rdy    ( ba1_rdy       ),
+    .ba1_ack    ( ba1_ack       ),
+
+    // Bank 2: Read only
+    .ba2_addr   ( ba2_addr      ),
+    .ba2_rd     ( ba2_rd        ),
+    .ba2_rdy    ( ba2_rdy       ),
+    .ba2_ack    ( ba2_ack       ),
+
+    // Bank 3: Read only
+    .ba3_addr   ( ba3_addr      ),
+    .ba3_rd     ( ba3_rd        ),
+    .ba3_rdy    ( ba3_rdy       ),
+    .ba3_ack    ( ba3_ack       ),
+
+    // ROM-load interface
+    .prog_en    ( downloading   ),
+    .prog_addr  ( prog_addr     ),
+    .prog_ba    ( prog_bank     ),
+    .prog_rd    ( prog_rd       ),
+    .prog_we    ( prog_we       ),
+    .prog_din   ( prog_data     ),
+    .prog_din_m ( prog_mask     ),
+    .prog_rdy   ( prog_rdy      ),
+    // SDRAM interface
+    .SDRAM_DQ   ( SDRAM_DQ      ),
+    .SDRAM_A    ( SDRAM_A       ),
+    .SDRAM_DQML ( SDRAM_DQML    ),
+    .SDRAM_DQMH ( SDRAM_DQMH    ),
+    .SDRAM_nWE  ( SDRAM_nWE     ),
+    .SDRAM_nCAS ( SDRAM_nCAS    ),
+    .SDRAM_nRAS ( SDRAM_nRAS    ),
+    .SDRAM_nCS  ( SDRAM_nCS     ),
+    .SDRAM_BA   ( SDRAM_BA      ),
+    .SDRAM_CKE  ( SDRAM_CKE     ),
+
+    // Common signals
+    .dout       ( sdram_dout    ),
+    .rfsh_en    ( rfsh_en       ),
 
     // Base video
     .osd_rotate     ( rotate          ),

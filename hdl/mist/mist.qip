@@ -6,7 +6,6 @@ set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) d
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) rgb2ypbpr.sv                   ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sound/hybrid_pwm_sd.v       ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sound/hifi_1bit_dac.v       ]
-set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_sdram.v       ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../ram/jtframe_dual_clk_ram.v  ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../keyboard/jtframe_keyboard.v ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../keyboard/jtframe_4wayjoy.v  ]
@@ -14,6 +13,17 @@ set_global_assignment -name VHDL_FILE          [file join $::quartus(qip_path) .
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../jtframe_board.v             ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../jtframe_dip.v               ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtframe_credits.v     ]
+
+# Bank interleaving SDRAM controller
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_sdram_bank.v      ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_sdram_bank_core.v ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_sdram_bank_mux.v  ]
+
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_ram_2slots.v  ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_rom_2slots.v  ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_rom_3slots.v  ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_romrq.v       ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_ram_rq.v      ]
 
 # Constraints
 set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) mist_io.sdc                    ]

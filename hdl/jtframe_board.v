@@ -21,6 +21,7 @@ module jtframe_board #(parameter
     // coin and start buttons will be mapped.
     GAME_INPUTS_ACTIVE_LOW  = 1'b1,
     COLORW                  = 4,
+    SDRAMW                  = 22,
     VIDEO_WIDTH             = 384,
     VIDEO_HEIGHT            = 224
 )(
@@ -37,20 +38,30 @@ module jtframe_board #(parameter
 
     input  [ 6:0]     core_mod,
     // ROM access from game
-    input             sdram_req,
-    output            sdram_ack,
-    input             refresh_en,
-    input  [21:0]     sdram_addr,
-    input  [ 1:0]     sdram_bank,
-    output [31:0]     data_read,
-    output            data_rdy,
-    output            loop_rst,
-    // Write back to SDRAM
-    input  [ 1:0]     sdram_wrmask,
-    input             sdram_rnw,
-    input  [15:0]     data_write,
+    input  [SDRAMW-1:0] ba0_addr,
+    input               ba0_rd,
+    input               ba0_wr,
+    input      [  15:0] ba0_din,
+    input      [   1:0] ba0_din_m,  // write mask
+    output              ba0_rdy,
+    output              ba0_ack,
+    input  [SDRAMW-1:0] ba1_addr,
+    input               ba1_rd,
+    output              ba1_rdy,
+    output              ba1_ack,
+    input  [SDRAMW-1:0] ba2_addr,
+    input               ba2_rd,
+    output              ba2_rdy,
+    output              ba2_ack,
+    input  [SDRAMW-1:0] ba3_addr,
+    input               ba3_rd,
+    output              ba3_rdy,
+    output              ba3_ack,
+
+    input               rfsh_en,   // ok to refresh
+    output     [  31:0] sdram_dout,
     // ROM programming
-    input  [21:0]     prog_addr,
+    input  [SDRAMW:0] prog_addr,
     input  [ 7:0]     prog_data,
     input  [ 1:0]     prog_mask,
     input  [ 1:0]     prog_bank,
@@ -161,7 +172,7 @@ always @(posedge clk_sys)
 // for the clk_sys domain
 reg pre_rst_n;
 always @(posedge clk_sys)
-    if( rst | downloading | loop_rst ) begin
+    if( rst | downloading ) begin
         pre_rst_n <= 1'b0;
         rst_n <= 1'b0;
     end else begin
@@ -399,50 +410,61 @@ jtframe_dip u_dip(
     .dip_fxlevel( dip_fxlevel   )
 );
 
-// This strange arrangement is what MiSTer 128MB board needs:
-wire [12:11] sdram_a;
-wire         sdram_dqml, sdram_dqmh;
+jtframe_sdram_bank #(.AW(SDRAMW)) u_sdram(
+    .rst        ( rst           ),
+    .clk        ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
 
-assign       SDRAM_DQML = sdram_a[11] | sdram_dqml;
-assign       SDRAM_DQMH = sdram_a[12] | sdram_dqmh;
-assign       SDRAM_A[11] = SDRAM_DQML;
-assign       SDRAM_A[12] = SDRAM_DQMH;
+    // Bank 0: allows R/W
+    .ba0_addr   ( ba0_addr      ),
+    .ba0_rd     ( ba0_rd        ),
+    .ba0_wr     ( ba0_wr        ),
+    .ba0_din    ( ba0_din       ),
+    .ba0_din_m  ( ba0_din_m     ),  // write mask
+    .ba0_rdy    ( ba0_rdy       ),
+    .ba0_ack    ( ba0_ack       ),
 
-jtframe_sdram u_sdram(
-    .rst            ( rst           ),
-    .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
-    .loop_rst       ( loop_rst      ),
-    .read_req       ( sdram_req     ),
-    .data_read      ( data_read     ),
-    .data_rdy       ( data_rdy      ),
-    .refresh_en     ( refresh_en    ),
-    // Write back to SDRAM
-    .sdram_wrmask   ( sdram_wrmask  ),
-    .sdram_rnw      ( sdram_rnw     ),
-    .data_write     ( data_write    ),
+    // Bank 1: Read only
+    .ba1_addr   ( ba1_addr      ),
+    .ba1_rd     ( ba1_rd        ),
+    .ba1_rdy    ( ba1_rdy       ),
+    .ba1_ack    ( ba1_ack       ),
+
+    // Bank 2: Read only
+    .ba2_addr   ( ba2_addr      ),
+    .ba2_rd     ( ba2_rd        ),
+    .ba2_rdy    ( ba2_rdy       ),
+    .ba2_ack    ( ba2_ack       ),
+
+    // Bank 3: Read only
+    .ba3_addr   ( ba3_addr      ),
+    .ba3_rd     ( ba3_rd        ),
+    .ba3_rdy    ( ba3_rdy       ),
+    .ba3_ack    ( ba3_ack       ),
 
     // ROM-load interface
-    .downloading    ( downloading   ),
-    .prog_we        ( prog_we       ),
-    .prog_rd        ( prog_rd       ),
-    .prog_addr      ( prog_addr     ),
-    .prog_data      ( prog_data     ),
-    .prog_mask      ( prog_mask     ),
-    .prog_bank      ( prog_bank     ),
-    .sdram_addr     ( sdram_addr    ),
-    .sdram_bank     ( sdram_bank    ),
-    .sdram_ack      ( sdram_ack     ),
+    .prog_en    ( downloading   ),
+    .prog_addr  ( prog_addr     ),
+    .prog_ba    ( prog_bank     ),
+    .prog_rd    ( prog_rd       ),
+    .prog_we    ( prog_we       ),
+    .prog_din   ( prog_data     ),
+    .prog_din_m ( prog_mask     ),
+    .prog_rdy   ( prog_rdy      ),
     // SDRAM interface
-    .SDRAM_DQ       ( SDRAM_DQ      ),
-    .SDRAM_A        ( { sdram_a, SDRAM_A[10:0] } ),
-    .SDRAM_DQML     ( sdram_dqml    ),
-    .SDRAM_DQMH     ( sdram_dqmh    ),
-    .SDRAM_nWE      ( SDRAM_nWE     ),
-    .SDRAM_nCAS     ( SDRAM_nCAS    ),
-    .SDRAM_nRAS     ( SDRAM_nRAS    ),
-    .SDRAM_nCS      ( SDRAM_nCS     ),
-    .SDRAM_BA       ( SDRAM_BA      ),
-    .SDRAM_CKE      ( SDRAM_CKE     )
+    .SDRAM_DQ   ( SDRAM_DQ      ),
+    .SDRAM_A    ( SDRAM_A       ),
+    .SDRAM_DQML ( SDRAM_DQML    ),
+    .SDRAM_DQMH ( SDRAM_DQMH    ),
+    .SDRAM_nWE  ( SDRAM_nWE     ),
+    .SDRAM_nCAS ( SDRAM_nCAS    ),
+    .SDRAM_nRAS ( SDRAM_nRAS    ),
+    .SDRAM_nCS  ( SDRAM_nCS     ),
+    .SDRAM_BA   ( SDRAM_BA      ),
+    .SDRAM_CKE  ( SDRAM_CKE     ),
+
+    // Common signals
+    .dout       ( sdram_dout    ),
+    .rfsh_en    ( rfsh_en       )
 );
 
 wire [COLORW-1:0] pre2x_r, pre2x_g, pre2x_b;
