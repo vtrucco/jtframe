@@ -128,21 +128,18 @@ end else begin
         wait_cycle   <= |active;
         data_sel     <= {SW{1'd0}};
         sdram_wrmask <= 2'b11;
-        case( 1'b1 )
-            active[0]: begin
-                sdram_addr  <= slot0_addr_req;
-                data_write  <= slot0_din;
-                sdram_rd    <= !req_rnw;
-                sdram_wr    <= req_rnw;
-                data_sel[0] <= 1;
-            end
-            active[1]: begin
-                sdram_addr  <= slot1_addr_req;
-                sdram_rd    <= 1;
-                sdram_wr    <= 0;
-                data_sel[1] <= 1;
-            end
-        endcase
+        if( active[0] ) begin
+            sdram_addr  <= slot0_addr_req;
+            data_write  <= slot0_din;
+            sdram_rd    <= !req_rnw;
+            sdram_wr    <= req_rnw;
+            data_sel[0] <= 1;
+        end else if( active[1]) begin
+            sdram_addr  <= slot1_addr_req;
+            sdram_rd    <= 1;
+            sdram_wr    <= 0;
+            data_sel[1] <= 1;
+        end
     end
 end
 

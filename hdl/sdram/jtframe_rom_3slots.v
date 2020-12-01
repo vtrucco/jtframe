@@ -133,20 +133,16 @@ end else begin
     if( !data_sel || data_rdy ) begin
         sdram_req <= |active;
         data_sel  <= {SW{1'b0}};
-        case( 1'b1 )
-            active[0]: begin
-                sdram_addr <= slot0_addr_req;
-                data_sel[0] <= 1'b1;
-            end
-            active[1]: begin
-                sdram_addr <= slot1_addr_req;
-                data_sel[1] <= 1'b1;
-            end
-            active[2]: begin
-                sdram_addr <= slot2_addr_req;
-                data_sel[2] <= 1'b1;
-            end
-        endcase
+        if( active[0] ) begin
+            sdram_addr <= slot0_addr_req;
+            data_sel[0] <= 1'b1;
+        end else if ( active[1] ) begin
+            sdram_addr <= slot1_addr_req;
+            data_sel[1] <= 1'b1;
+        end else if( active[2] ) begin
+            sdram_addr <= slot2_addr_req;
+            data_sel[2] <= 1'b1;
+        end
     end
 end
 

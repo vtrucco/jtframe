@@ -538,7 +538,7 @@ assign scan2x_de   = LVBL && LHBL;
     wire               hs_ana, vs_ana;
     wire               pxl_ana;
 
-    jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) (
+    jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) u_wirebw(
         .clk        ( clk_sys   ),
         .spl_in     ( pxl_cen   ),
         .r_in       ( pre2x_r   ),
