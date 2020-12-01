@@ -98,10 +98,10 @@ always @(posedge clk) begin
             prog_ba   <= bank;
         end
         data_out  <= ioctl_data;
-        prog_mask <= ioctl_addr[0] ? 2'b10 : 2'b01;
+        prog_mask <= eff_addr[0] ? 2'b10 : 2'b01;
     end
     else begin
-        if(!downloading || sdram_ack) prog_we  <= 0;
+        if(!downloading || sdram_ack) prog_we <= 0;
         if(!downloading) prom_we <= 0;
     end
 end
