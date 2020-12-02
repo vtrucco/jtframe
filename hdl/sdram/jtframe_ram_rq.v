@@ -20,6 +20,9 @@
 /////// read/write type
 /////// simple pass through
 /////// It requires addr_ok signal to toggle for each request
+/////// addr_ok is meant to be the CS signal coming from a CPU memory decoder
+/////// so it should go up and stay up until the data is served. It should go down
+/////// after that.
 
 module jtframe_ram_rq #(parameter AW=18, DW=8 )(
     input               rst,
@@ -35,7 +38,7 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
     output reg          req_rnw,
     output reg          data_ok,    // strobe that signals that data is ready
     output reg [21:0]   sdram_addr,
-    input [DW-1:0]      wrdata,
+    input      [DW-1:0] wrdata,
     output reg [DW-1:0] dout        // sends SDRAM data back to requester
 );
 
@@ -55,6 +58,11 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
             if( cs_negedge ) data_ok <= 0;
             if( we ) begin
                 req <= 0;
+                if( din_ok ) begin
+                    req_rnw <= 1;
+                    data_ok <= 1;
+                    dout    <= din[DW-1:0];
+                end
             end else if( cs_posedge ) begin
                 req        <= 1;
                 req_rnw    <= ~wrin;
@@ -62,12 +70,6 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
                 sdram_addr <= size_ext + offset;
             end
 
-            if( din_ok ) begin
-                req     <= 0;
-                req_rnw <= 1;
-                data_ok <= 1;
-                dout    <= din[DW-1:0];
-            end
         end
     end
 

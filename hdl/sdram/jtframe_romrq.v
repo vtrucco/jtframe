@@ -16,6 +16,11 @@
     Version: 1.0
     Date: 28-2-2019 */
 
+// The best use case is with addr_ok going down and up for each addr change
+// but it works too with addr_ok permanently high as long as addr input is
+// not changed until the data_ok signal is produced. If the requester cannot
+// guarantee that, it should toggle addr_ok for each request
+
 module jtframe_romrq #(parameter AW=18, DW=8 )(
     input               rst,
     input               clk,
