@@ -62,7 +62,6 @@ localparam SW=2;
 wire [SW-1:0] req, slot_ok;
 reg  [SW-1:0] data_sel, slot_we;
 wire          req_rnw; // slot 0
-reg           wait_cycle;
 wire [SW-1:0] active = ~data_sel & req;
 
 wire [SDRAMW-1:0] slot0_addr_req,
@@ -119,14 +118,12 @@ end else begin
     if( sdram_ack ) begin
         sdram_rd   <= 0;
         sdram_wr   <= 0;
-        wait_cycle <= 0;
     end
 
     // accept a new request
     slot_we <= data_sel;
-    if( !data_sel || (data_rdy&&!wait_cycle) ) begin
+    if( !data_sel || data_rdy ) begin
         sdram_rd     <= |active;
-        wait_cycle   <= |active;
         data_sel     <= {SW{1'd0}};
         sdram_wrmask <= 2'b11;
         if( active[0] ) begin
