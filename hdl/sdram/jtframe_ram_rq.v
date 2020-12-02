@@ -47,25 +47,25 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
 
     always @(posedge clk, posedge rst) begin
         if( rst ) begin
-            last_cs <= 1'b0;
-            req     <= 1'b0;
-            data_ok <= 1'b0;
+            last_cs <= 0;
+            req     <= 0;
+            data_ok <= 0;
         end else begin
             last_cs <= addr_ok;
-            if( cs_negedge ) data_ok <= 1'b0;
+            if( cs_negedge ) data_ok <= 0;
             if( we ) begin
                 req <= 0;
             end else if( cs_posedge ) begin
-                req        <= 1'b1;
+                req        <= 1;
                 req_rnw    <= ~wrin;
-                data_ok    <= 1'b0;
+                data_ok    <= 0;
                 sdram_addr <= size_ext + offset;
             end
 
             if( din_ok ) begin
-                req     <= 1'b0;
-                req_rnw <= 1'b1;
-                data_ok <= 1'b1;
+                req     <= 0;
+                req_rnw <= 1;
+                data_ok <= 1;
                 dout    <= din[DW-1:0];
             end
         end

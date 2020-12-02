@@ -60,9 +60,9 @@ module jtframe_ram_2slots #(parameter
 localparam SW=2;
 
 wire [SW-1:0] req, slot_ok;
-reg  [SW-1:0] data_sel, slot_we;
+reg  [SW-1:0] slot_sel;
 wire          req_rnw; // slot 0
-wire [SW-1:0] active = ~data_sel & req;
+wire [SW-1:0] active = ~slot_sel & req;
 
 wire [SDRAMW-1:0] slot0_addr_req,
                   slot1_addr_req;
@@ -88,7 +88,7 @@ jtframe_ram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .dout      ( slot0_dout             ),
     .req       ( req[0]                 ),
     .data_ok   ( slot_ok[0]             ),
-    .we        ( slot_we[0]             )
+    .we        ( slot_sel[0]            )
 );
 
 jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
@@ -104,7 +104,7 @@ jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
     .dout      ( slot1_dout             ),
     .req       ( req[1]                 ),
     .data_ok   ( slot_ok[1]             ),
-    .we        ( slot_we[1]             )
+    .we        ( slot_sel[1]            )
 );
 
 always @(posedge clk)
@@ -112,8 +112,7 @@ if( rst ) begin
     sdram_addr <= {SDRAMW{1'd0}};
     sdram_rd   <= 0;
     sdram_wr   <= 0;
-    data_sel   <= {SW{1'd0}};
-    slot_we    <= {SW{1'd0}};
+    slot_sel   <= {SW{1'd0}};
 end else begin
     if( sdram_ack ) begin
         sdram_rd   <= 0;
@@ -121,10 +120,9 @@ end else begin
     end
 
     // accept a new request
-    slot_we <= data_sel;
-    if( !data_sel || data_rdy ) begin
+    if( !slot_sel || data_rdy ) begin
         sdram_rd     <= |active;
-        data_sel     <= {SW{1'd0}};
+        slot_sel     <= {SW{1'd0}};
         sdram_wrmask <= 2'b11;
         if( active[0] ) begin
             sdram_addr  <= slot0_addr_req;
@@ -132,12 +130,12 @@ end else begin
             sdram_wrmask<= slot0_wrmask;
             sdram_rd    <= req_rnw;
             sdram_wr    <= ~req_rnw;
-            data_sel[0] <= 1;
+            slot_sel[0] <= 1;
         end else if( active[1]) begin
             sdram_addr  <= slot1_addr_req;
             sdram_rd    <= 1;
             sdram_wr    <= 0;
-            data_sel[1] <= 1;
+            slot_sel[1] <= 1;
         end
     end
 end
