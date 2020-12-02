@@ -61,7 +61,7 @@ module jtframe_rom_3slots #(parameter
 localparam SW=3;
 
 wire [SW-1:0] req, ok;
-reg  [SW-1:0] data_sel;
+reg  [SW-1:0] slot_sel;
 wire [SDRAMW-1:0] slot0_addr_req, slot1_addr_req, slot2_addr_req;
 
 assign slot0_ok = ok[0];
@@ -85,7 +85,7 @@ jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .dout      ( slot0_dout             ),
     .req       ( req[0]                 ),
     .data_ok   ( ok[0]                  ),
-    .we        ( data_sel[0]            )
+    .we        ( slot_sel[0]            )
 );
 
 jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
@@ -101,7 +101,7 @@ jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
     .dout      ( slot1_dout             ),
     .req       ( req[1]                 ),
     .data_ok   ( ok[1]                  ),
-    .we        ( data_sel[1]            )
+    .we        ( slot_sel[1]            )
 );
 
 jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW)) u_slot2(
@@ -117,31 +117,31 @@ jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW)) u_slot2(
     .dout      ( slot2_dout             ),
     .req       ( req[2]                 ),
     .data_ok   ( ok[2]                  ),
-    .we        ( data_sel[2]            )
+    .we        ( slot_sel[2]            )
 );
 
-wire [SW-1:0] active = ~data_sel & req;
+wire [SW-1:0] active = ~slot_sel & req;
 
 always @(posedge clk, posedge rst)
 if( rst ) begin
     sdram_addr <= {SDRAMW{1'b0}};
     sdram_req  <= 0;
-    data_sel   <= {SW{1'b0}};
+    slot_sel   <= {SW{1'b0}};
 end else begin
     if( sdram_ack ) sdram_req <= 0;
     // accept a new request
-    if( !data_sel || data_rdy ) begin
+    if( !slot_sel || data_rdy ) begin
         sdram_req <= |active;
-        data_sel  <= {SW{1'b0}};
+        slot_sel  <= {SW{1'b0}};
         if( active[0] ) begin
             sdram_addr <= slot0_addr_req;
-            data_sel[0] <= 1;
+            slot_sel[0] <= 1;
         end else if ( active[1] ) begin
             sdram_addr <= slot1_addr_req;
-            data_sel[1] <= 1;
+            slot_sel[1] <= 1;
         end else if( active[2] ) begin
             sdram_addr <= slot2_addr_req;
-            data_sel[2] <= 1;
+            slot_sel[2] <= 1;
         end
     end
 end

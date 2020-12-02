@@ -57,7 +57,7 @@ reg  [ 3:0] ready_cnt;
 reg  [ 3:0] rd_state_last;
 wire [ 1:0] req, ok;
 
-reg  [ 1:0] data_sel;
+reg  [ 1:0] slot_sel;
 wire [21:0] slot0_addr_req,
             slot1_addr_req;
 
@@ -80,7 +80,7 @@ jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .dout      ( slot0_dout             ),
     .req       ( req[0]                 ),
     .data_ok   ( ok[0]                  ),
-    .we        ( data_sel[0]            )
+    .we        ( slot_sel[0]            )
 );
 
 jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
@@ -96,32 +96,29 @@ jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
     .dout      ( slot1_dout             ),
     .req       ( req[1]                 ),
     .data_ok   ( ok[1]                  ),
-    .we        ( data_sel[1]            )
+    .we        ( slot_sel[1]            )
 );
 
-wire [1:0] active = ~data_sel & req;
+wire [1:0] active = ~slot_sel & req;
 
 always @(posedge clk, posedge rst)
 if( rst ) begin
     sdram_addr <= 22'd0;
-    sdram_req  <=  1'b0;
-    data_sel   <=  2'd0;
+    sdram_req  <= 0;
+    slot_sel   <= 2'd0;
 end else begin
-    if( sdram_ack ) sdram_req <= 1'b0;
+    if( sdram_ack ) sdram_req <= 0;
     // accept a new request
-    if( data_sel==2'd0 || data_rdy ) begin
+    if( !slot_sel || data_rdy ) begin
         sdram_req <= |active;
-        data_sel  <= 2'd0;
-        case( 1'b1 )
-            active[0]: begin
-                sdram_addr <= slot0_addr_req;
-                data_sel[0] <= 1'b1;
-            end
-            active[1]: begin
-                sdram_addr <= slot1_addr_req;
-                data_sel[1] <= 1'b1;
-            end
-        endcase
+        slot_sel  <= 2'd0;
+        if( active[0] ) begin
+            sdram_addr <= slot0_addr_req;
+            slot_sel[0] <= 1;
+        end else if( active[1] ) begin
+            sdram_addr <= slot1_addr_req;
+            slot_sel[1] <= 1;
+        end
     end
 end
 
