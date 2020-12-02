@@ -250,6 +250,7 @@ always @(posedge clk, posedge rst) begin
             cmd              <= wrtng ? CMD_WRITE : CMD_READ;
             sdram_a[12:11]   <= wrtng ? wrmask : 2'b00; // DQM signals for reading
             sdram_a[10]      <= 1;     // precharge
+            if( COW==9 ) sdram_a[9] <= 0;
             sdram_a[COW-1:0] <= col_fifo[0];
             sdram_ba         <= ba_fifo[0];
             ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[0];

@@ -33,7 +33,7 @@ assign rfsh_en = 1;
 
 localparam PERIOD=`PERIOD;
 
-ba_requester #(1) u_ba0(
+ba_requester #(0, 1,"sdram_bank0.hex") u_ba0(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba0_addr      ),
@@ -46,7 +46,7 @@ ba_requester #(1) u_ba0(
     .sdram_dq   ( dout          )
 );
 
-ba_requester #(0) u_ba1(
+ba_requester #(1, 0,"sdram_bank1.hex") u_ba1(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba1_addr      ),
@@ -56,7 +56,7 @@ ba_requester #(0) u_ba1(
     .sdram_dq   ( dout          )
 );
 
-ba_requester #(0) u_ba2(
+ba_requester #(2, 0,"sdram_bank2.hex") u_ba2(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba2_addr      ),
@@ -67,7 +67,7 @@ ba_requester #(0) u_ba2(
 );
 
 
-ba_requester #(0) u_ba3(
+ba_requester #(3, 0,"sdram_bank3.hex") u_ba3(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba3_addr      ),
@@ -156,13 +156,16 @@ end
 initial begin
     rst=1;
     #100 rst=0;
-    #500_000 $finish;
+    #5_000_000 $display("PASSED");
+    $finish;
 end
 
+`ifdef DUMP
 initial begin
     $dumpfile("test.lxt");
     $dumpvars;
 end
+`endif
 
 endmodule
 
@@ -180,12 +183,21 @@ module  ba_requester(
     input      [31:0]   sdram_dq
 );
 
-parameter RW=0, IDLE=50;
+parameter BANK=0, RW=0, MEMFILE="sdram_bank1.hex",
+          IDLE=50; // Use 100 or more to keep the bank idle
 
 reg [31:0] data_read;
+reg [15:0] mem_data[0:4*1024*1024-1];
 reg        waiting, init_done;
+reg        rd_cycle;
+
+wire [31:0] expected = { mem_data[ba_addr+1], mem_data[ba_addr] };
+wire [15:0] expected_low = mem_data[ba_addr];
+wire [15:0] wr_masked = { ba_dout_m[1] ? expected_low[15:8] : ba_dout[15:8],
+                          ba_dout_m[0] ? expected_low[ 7:0] : ba_dout[ 7:0] };
 
 initial begin
+    $readmemh( MEMFILE, mem_data );
     init_done = 0;
     #104_500 init_done = 1;
 end
@@ -196,29 +208,40 @@ always @(posedge clk, posedge rst) begin
         ba_rd    <= 0;
         ba_wr    <= 0;
         waiting  <= 0;
+        rd_cycle <= 0;
     end else if(init_done) begin
         if( !waiting ) begin
             if( $urandom%100 > IDLE ) begin
-                ba_addr[19:0] <= $urandom;
+                ba_addr[21:1] <= $urandom; // bit 0 not used for bursts of length 2
                 if( $urandom%100>95 && RW) begin
                     ba_rd      <= 0;
                     ba_wr      <= 1;
                     ba_dout    <= $urandom;
                     ba_dout_m  <= $urandom;
                 end else begin
-                    ba_rd <= 1;
-                    ba_wr <= 0;
+                    ba_rd    <= 1;
+                    ba_wr    <= 0;
+                    rd_cycle <= 1;
                 end
                 waiting  <= 1;
             end
         end else begin
             if( ba_ack ) begin
+                if( ba_wr ) begin
+                    mem_data[ ba_addr ] <= wr_masked;
+                end
                 ba_rd <= 0;
                 ba_wr <= 0;
             end
             if( ba_rdy ) begin
-                waiting <= 0;
+                rd_cycle  <= 0;
+                waiting   <= 0;
                 data_read <= sdram_dq;
+                if( sdram_dq != expected && rd_cycle) begin
+                    $display("Data read error at address %X (bank %1d). %X read, expected %X\n",
+                        ba_addr, BANK, sdram_dq, expected );
+                    $finish;
+                end
             end
         end
     end
