@@ -125,23 +125,23 @@ wire [SW-1:0] active = ~data_sel & req;
 always @(posedge clk, posedge rst)
 if( rst ) begin
     sdram_addr <= {SDRAMW{1'b0}};
-    sdram_req  <=  1'b0;
+    sdram_req  <= 0;
     data_sel   <= {SW{1'b0}};
 end else begin
-    if( sdram_ack ) sdram_req <= 1'b0;
+    if( sdram_ack ) sdram_req <= 0;
     // accept a new request
     if( !data_sel || data_rdy ) begin
         sdram_req <= |active;
         data_sel  <= {SW{1'b0}};
         if( active[0] ) begin
             sdram_addr <= slot0_addr_req;
-            data_sel[0] <= 1'b1;
+            data_sel[0] <= 1;
         end else if ( active[1] ) begin
             sdram_addr <= slot1_addr_req;
-            data_sel[1] <= 1'b1;
+            data_sel[1] <= 1;
         end else if( active[2] ) begin
             sdram_addr <= slot2_addr_req;
-            data_sel[2] <= 1'b1;
+            data_sel[2] <= 1;
         end
     end
 end
