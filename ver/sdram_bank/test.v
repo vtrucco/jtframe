@@ -153,10 +153,16 @@ initial begin
     forever #(PERIOD/2) clk=~clk;
 end
 
+`ifdef SIM_TIME
+localparam SIM_TIME = `SIM_TIME;
+`else
+localparam SIM_TIME = 5_000_000;
+`endif
+
 initial begin
     rst=1;
     #100 rst=0;
-    #5_000_000 $display("PASSED");
+    #SIM_TIME $display("PASSED");
     $finish;
 end
 
@@ -186,10 +192,13 @@ module  ba_requester(
 parameter BANK=0, RW=0, MEMFILE="sdram_bank1.hex",
           IDLE=50; // Use 100 or more to keep the bank idle
 
+localparam STALL_LIMIT = 100;
+
 reg [31:0] data_read;
 reg [15:0] mem_data[0:4*1024*1024-1];
 reg        waiting, init_done;
 reg        rd_cycle;
+integer    stall;
 
 wire [31:0] expected = { mem_data[ba_addr+1], mem_data[ba_addr] };
 wire [15:0] expected_low = mem_data[ba_addr];
@@ -209,6 +218,7 @@ always @(posedge clk, posedge rst) begin
         ba_wr    <= 0;
         waiting  <= 0;
         rd_cycle <= 0;
+        stall    <= 0;
     end else if(init_done) begin
         if( !waiting ) begin
             if( $urandom%100 > IDLE ) begin
@@ -224,8 +234,14 @@ always @(posedge clk, posedge rst) begin
                     rd_cycle <= 1;
                 end
                 waiting  <= 1;
+                stall    <= 0;
             end
         end else begin
+            stall <= stall + 1;
+            if( stall== STALL_LIMIT) begin
+                $display("Bank %1d stall at time %t\n", BANK);
+                $finish;
+            end
             if( ba_ack ) begin
                 if( ba_wr ) begin
                     mem_data[ ba_addr ] <= wr_masked;
@@ -238,7 +254,7 @@ always @(posedge clk, posedge rst) begin
                 waiting   <= 0;
                 data_read <= sdram_dq;
                 if( sdram_dq != expected && rd_cycle) begin
-                    $display("Data read error at address %X (bank %1d). %X read, expected %X\n",
+                    $display("Data read error at time %t at address %X (bank %1d). %X read, expected %X\n",
                         ba_addr, BANK, sdram_dq, expected );
                     $finish;
                 end
