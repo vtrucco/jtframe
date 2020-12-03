@@ -57,8 +57,8 @@ module jtframe_sdram_bank_core #(parameter AW=22)(
     // of the SDRAM, as done in the MiSTer 128MB module
     inout       [15:0]  sdram_dq,       // SDRAM Data bus 16 Bits
     output reg  [12:0]  sdram_a,        // SDRAM Address bus 13 Bits
-    output              sdram_dqml,     // SDRAM Low-byte Data Mask
-    output              sdram_dqmh,     // SDRAM High-byte Data Mask
+    output reg          sdram_dqml,     // SDRAM Low-byte Data Mask
+    output reg          sdram_dqmh,     // SDRAM High-byte Data Mask
     output reg  [ 1:0]  sdram_ba,       // SDRAM Bank Address
     output              sdram_nwe,      // SDRAM Write Enable
     output              sdram_ncas,     // SDRAM Column Address Strobe
@@ -104,7 +104,7 @@ reg [BQL*2-1:0] ba_queue;
 // SDRAM pins
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign sdram_cke = 1;
-assign { sdram_dqmh, sdram_dqml } = sdram_a[12:11]; // This is a limitation in MiSTer's 128MB module
+// assign { sdram_dqmh, sdram_dqml } = sdram_a[12:11]; // This is a limitation in MiSTer's 128MB module
 assign sdram_dq = dq_pad;
 
 assign dout = { dq_ff, dq_ff0 };
@@ -239,6 +239,7 @@ always @(posedge clk, posedge rst) begin
         if( read ) begin
             cmd              <= wrtng ? CMD_WRITE : CMD_READ;
             sdram_a[12:11]   <= wrtng ? wrmask : 2'b00; // DQM signals for reading
+            { sdram_dqmh, sdram_dqml } <= wrtng ? wrmask : 2'b00;
             sdram_a[10]      <= 1;     // precharge
             if( COW==9 ) sdram_a[9] <= 0;
             sdram_a[COW-1:0] <= col_fifo[0];
