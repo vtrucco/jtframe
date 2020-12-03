@@ -209,9 +209,6 @@ always @(posedge clk, posedge rst) begin
         ba2_st <= next( ba2_st, 2'd2 );
         ba3_st <= next( ba3_st, 2'd3 );
         ba_queue[ (BQL-1)*2-1: 0 ] <= ba_queue[ BQL*2-1: 2 ];
-        // output strobes
-        rdy    <= all_st[DQHI_BIT] && !rfshing;
-        ba_rdy <= ba_queue[1:0];
         // Default transitions
         cmd    <= CMD_NOP;
 
@@ -256,7 +253,11 @@ always @(posedge clk, posedge rst) begin
             dq_ff0 <= dq_ff;
             dq_ff  <= sdram_dq;
             dq_pad <= 16'hzzzz; // restores it in case there had been a write
+            // output strobes
+            rdy    <= 1;
+            ba_rdy <= ba_queue[1:0];
         end
+        else rdy <= 0;
     end
 end
 
