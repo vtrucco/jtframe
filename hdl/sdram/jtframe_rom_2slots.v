@@ -27,7 +27,8 @@ module jtframe_rom_2slots #(parameter
     SLOT0_AW = 8, SLOT1_AW = 8,
 
     parameter [21:0] SLOT0_OFFSET = 22'h0,
-    parameter [21:0] SLOT1_OFFSET = 22'h0
+    parameter [21:0] SLOT1_OFFSET = 22'h0,
+    parameter REF_FILE="sdram_bank3.hex"
 )(
     input               rst,
     input               clk,
@@ -121,5 +122,30 @@ end else begin
         end
     end
 end
+
+`ifdef JTFRAME_SDRAM_CHECK
+
+reg [15:0] mem[0:4*1024*1024];
+
+initial begin
+    $readmemh( REF_FILE, mem );
+end
+
+always @( posedge clk ) begin
+    if( data_rdy ) begin
+        if( !slot_sel ) begin
+            $display("ERROR: SDRAM data received but it had not been requested at time %t - %m\n", $time);
+            $finish;
+        end else if( { mem[sdram_addr+1], mem[sdram_addr] } != data_read ) begin
+            $display("ERROR: Wrong data read at time %t - %m\n", $time);
+            $display("       at address %X\n", sdram_addr );
+            $display("       expecting %X_%X - Read %X_%X\n",
+                    mem[sdram_addr+1], mem[sdram_addr], data_read[31:16], data_read[15:0]);
+            $finish;
+        end
+    end
+end
+
+`endif
 
 endmodule

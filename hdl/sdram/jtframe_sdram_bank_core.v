@@ -191,13 +191,6 @@ always @(posedge clk, posedge rst) begin
                 3'd3: begin
                     init_cmd <= CMD_LOAD_MODE;
                     sdram_a  <= 13'b00_1_00_010_0_001; // CAS Latency = 2, burst = 2
-                    `ifdef SIMULATION
-                    `ifndef LOADROM
-                        // Start directly with burst mode on simulation
-                        // if the ROM load process is not being simulated
-                        sdram_a <= 12'b00_1_00_010_0_001; // CAS Latency = 2
-                    `endif
-                    `endif
                     wait_cnt <= 14'd3;
                 end
                 3'd4: begin
@@ -256,7 +249,7 @@ always @(posedge clk, posedge rst) begin
             ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[0];
         end
         if( get_low ) begin
-            if( wr ) sdram_a[12:11] <= 2'b11; // disable writting for next cycle
+            if( wrtng ) sdram_a[12:11] <= 2'b11; // disable writting for next cycle
             dq_ff  <= sdram_dq;
         end
         if( get_high ) begin

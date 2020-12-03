@@ -131,7 +131,6 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
                 $fwrite(f,"%h\n",Bank0[dumpcnt]);
             $fclose(f);
-            `ifdef JTFRAME_SDRAM_BANKS
             // Bank 1
             f=$fopen("sdram_bank1.hex","w");
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
@@ -146,7 +145,6 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             f=$fopen("sdram_bank3.hex","w");
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
                 $fwrite(f,"%h\n",Bank3[dumpcnt]);
-            `endif
             $fclose(f);
             $display("INFO: SDRAM memory content dumped to sdram_bank?.hex at %t",$time);
         end

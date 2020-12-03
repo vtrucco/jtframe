@@ -23,7 +23,8 @@ module jtframe_ram_2slots #(parameter
     SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8,
     parameter [SDRAMW-1:0] SLOT0_OFFSET = 0,
-    parameter [SDRAMW-1:0] SLOT1_OFFSET = 0
+    parameter [SDRAMW-1:0] SLOT1_OFFSET = 0,
+    parameter REF_FILE="sdram_bank3.hex"
 )(
     input               rst,
     input               clk,
@@ -139,5 +140,48 @@ end else begin
         end
     end
 end
+
+`ifdef JTFRAME_SDRAM_CHECK
+
+reg [15:0] mem[0:4*1024*1024];
+
+initial begin
+    $readmemh( REF_FILE, mem );
+end
+
+reg [15:0] expected;
+reg [31:0] expected32;
+reg        was_a_wr;
+
+always @(sdram_addr) begin
+    expected   = mem[sdram_addr];
+    expected32 = { mem[sdram_addr+1], mem[sdram_addr] };
+end
+
+always @( posedge clk ) begin
+    if( sdram_ack ) begin
+        if( sdram_wr ) begin
+            mem[ sdram_addr ] <= {
+                slot0_wrmask[1] ? expected[15:8] : slot0_din[15:8],
+                slot0_wrmask[0] ? expected[ 7:0] : slot0_din[ 7:0] };
+        end
+        was_a_wr <= sdram_wr;
+    end
+    if( data_rdy ) begin
+        if( !slot_sel ) begin
+            $display("ERROR: SDRAM data received but it had not been requested at time %t - %m\n", $time);
+            $finish;
+        end else if( { mem[sdram_addr+1], mem[sdram_addr] } != data_read
+                && !was_a_wr ) begin
+            $display("ERROR: Wrong data read at time %t - %m\n", $time);
+            $display("       at address %X\n", sdram_addr );
+            $display("       expecting %X_%X - Read %X_%X\n",
+                    mem[sdram_addr+1], mem[sdram_addr], data_read[31:16], data_read[15:0]);
+            $finish;
+        end
+    end
+end
+
+`endif
 
 endmodule
