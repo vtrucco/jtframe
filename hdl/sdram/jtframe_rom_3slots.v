@@ -147,7 +147,7 @@ end else begin
     end
 end
 
-`ifdef SIMULATION
+`ifdef JTFRAME_SDRAM_CHECK
 
 reg [15:0] mem[0:4*1024*1024];
 
@@ -160,9 +160,10 @@ always @( posedge clk ) begin
         if( !slot_sel ) begin
             $display("ERROR: SDRAM data received but it had not been requested at time %t - %m\n", $time);
             $finish;
-        end else if( mem[sdram_addr] != data_read[15:0] ) begin
+        end else if( { mem[sdram_addr+1], mem[sdram_addr] } != data_read ) begin
             $display("ERROR: Wrong data read at time %t - %m\n", $time);
-            $display("Expecting %X - Read %X",mem[sdram_addr], data_read[15:0]);
+            $display("Expecting %X_%X - Read %X_%X\n",
+                    mem[sdram_addr+1], mem[sdram_addr], data_read[31:16], data_read[15:0]);
             $finish;
         end
     end
