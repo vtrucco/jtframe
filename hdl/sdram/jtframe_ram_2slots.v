@@ -153,7 +153,7 @@ reg [15:0] expected;
 reg [31:0] expected32;
 reg        was_a_wr;
 
-always @(sdram_addr) begin
+always @(*) begin
     expected   = mem[sdram_addr];
     expected32 = { mem[sdram_addr+1], mem[sdram_addr] };
 end
@@ -171,12 +171,13 @@ always @( posedge clk ) begin
         if( !slot_sel ) begin
             $display("ERROR: SDRAM data received but it had not been requested at time %t - %m\n", $time);
             $finish;
-        end else if( { mem[sdram_addr+1], mem[sdram_addr] } != data_read
+        end else if(((slot_sel[0] && (expected   != data_read[15:0])) ||
+                     (slot_sel[1] && (expected32 != data_read      )) )
                 && !was_a_wr ) begin
-            $display("ERROR: Wrong data read at time %t - %m\n", $time);
-            $display("       at address %X\n", sdram_addr );
+            $display("ERROR: Wrong data read at time %t - %m", $time);
+            $display("       at address %X (slot %d)", sdram_addr, slot_sel-2'd1 );
             $display("       expecting %X_%X - Read %X_%X\n",
-                    mem[sdram_addr+1], mem[sdram_addr], data_read[31:16], data_read[15:0]);
+                    expected32[31:16], expected32[15:0], data_read[31:16], data_read[15:0]);
             $finish;
         end
     end
