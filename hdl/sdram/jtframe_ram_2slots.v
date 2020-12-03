@@ -174,7 +174,8 @@ always @( posedge clk ) begin
         end else if( { mem[sdram_addr+1], mem[sdram_addr] } != data_read
                 && !was_a_wr ) begin
             $display("ERROR: Wrong data read at time %t - %m\n", $time);
-            $display("Expecting %X_%X - Read %X_%X\n",
+            $display("       at address %X\n", sdram_addr );
+            $display("       expecting %X_%X - Read %X_%X\n",
                     mem[sdram_addr+1], mem[sdram_addr], data_read[31:16], data_read[15:0]);
             $finish;
         end
