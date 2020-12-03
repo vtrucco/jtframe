@@ -247,7 +247,6 @@ always @(posedge clk, posedge rst) begin
             ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[0];
         end
         if( get_low ) begin
-            if( wrtng ) sdram_a[12:11] <= 2'b11; // disable writting for next cycle
             dq_ff  <= sdram_dq;
         end
         if( get_high ) begin

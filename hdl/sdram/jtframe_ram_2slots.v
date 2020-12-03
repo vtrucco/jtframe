@@ -171,8 +171,8 @@ always @( posedge clk ) begin
         if( !slot_sel ) begin
             $display("ERROR: SDRAM data received but it had not been requested at time %t - %m\n", $time);
             $finish;
-        end else if(((slot_sel[0] && (expected   != data_read[15:0])) ||
-                     (slot_sel[1] && (expected32 != data_read      )) )
+        end else if(((slot_sel[0] && (expected   !== data_read[15:0])) ||
+                     (slot_sel[1] && (expected32 !== data_read      )) )
                 && !was_a_wr ) begin
             $display("ERROR: Wrong data read at time %t - %m", $time);
             $display("       at address %X (slot %d)", sdram_addr, slot_sel-2'd1 );

@@ -136,7 +136,7 @@ always @( posedge clk ) begin
         if( !slot_sel ) begin
             $display("ERROR: SDRAM data received but it had not been requested at time %t - %m\n", $time);
             $finish;
-        end else if( { mem[sdram_addr+1], mem[sdram_addr] } != data_read ) begin
+        end else if( { mem[sdram_addr+1], mem[sdram_addr] } !== data_read ) begin
             $display("ERROR: Wrong data read at time %t - %m", $time);
             $display("       at address %X", sdram_addr );
             $display("       expecting %X_%X - Read %X_%X\n",
