@@ -253,7 +253,7 @@ always @(posedge clk, posedge rst) begin
                 rd_cycle  <= 0;
                 waiting   <= 0;
                 data_read <= sdram_dq;
-                if( sdram_dq != expected && rd_cycle) begin
+                if( sdram_dq !== expected && rd_cycle) begin
                     $display("Data read error at time %t at address %X (bank %1d). %X read, expected %X\n",
                         ba_addr, BANK, sdram_dq, expected );
                     $finish;
