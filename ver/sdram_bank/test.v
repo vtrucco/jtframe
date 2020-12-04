@@ -239,7 +239,7 @@ always @(posedge clk, posedge rst) begin
         end else begin
             stall <= stall + 1;
             if( stall== STALL_LIMIT) begin
-                $display("Bank %1d stall at time %t\n", BANK);
+                $display("Bank %1d stall at time %t\n", BANK,$time );
                 $finish;
             end
             if( ba_ack ) begin
@@ -255,7 +255,7 @@ always @(posedge clk, posedge rst) begin
                 data_read <= sdram_dq;
                 if( sdram_dq !== expected && rd_cycle) begin
                     $display("Data read error at time %t at address %X (bank %1d). %X read, expected %X\n",
-                        ba_addr, BANK, sdram_dq, expected );
+                        $time, ba_addr, BANK, sdram_dq, expected );
                     $finish;
                 end
             end

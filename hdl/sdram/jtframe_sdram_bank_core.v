@@ -57,8 +57,8 @@ module jtframe_sdram_bank_core #(parameter AW=22)(
     // of the SDRAM, as done in the MiSTer 128MB module
     inout       [15:0]  sdram_dq,       // SDRAM Data bus 16 Bits
     output reg  [12:0]  sdram_a,        // SDRAM Address bus 13 Bits
-    output reg          sdram_dqml,     // SDRAM Low-byte Data Mask
-    output reg          sdram_dqmh,     // SDRAM High-byte Data Mask
+    output              sdram_dqml,     // SDRAM Low-byte Data Mask
+    output              sdram_dqmh,     // SDRAM High-byte Data Mask
     output reg  [ 1:0]  sdram_ba,       // SDRAM Bank Address
     output              sdram_nwe,      // SDRAM Write Enable
     output              sdram_ncas,     // SDRAM Column Address Strobe
@@ -89,6 +89,7 @@ reg [13:0] wait_cnt;
 reg [ 2:0] init_st;
 reg [ 3:0] init_cmd;
 reg        init;
+reg [ 1:0] dqm;
 
 reg       [7:0] ba0_st, ba1_st, ba2_st, ba3_st, all_st;
 reg             activate, read, get_low, get_high, post_act, hold_bus, wrtng;
@@ -101,11 +102,19 @@ reg [  COW-1:0] col_fifo[0:1];
 reg [      1:0] ba_fifo[0:1];
 reg [BQL*2-1:0] ba_queue;
 
+wire      [1:0] req_a12;
+
 // SDRAM pins
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign sdram_cke = 1;
-// assign { sdram_dqmh, sdram_dqml } = sdram_a[12:11]; // This is a limitation in MiSTer's 128MB module
 assign sdram_dq = dq_pad;
+
+`ifdef MISTER
+assign req_a12 = addr[AW-1:AW-2];
+assign { sdram_dqmh, sdram_dqml } = sdram_a[12:11]; // This is a limitation in MiSTer's 128MB module
+`else
+assign { sdram_dqmh, sdram_dqml } = dqm;
+`endif
 
 assign dout = { dq_ff, dq_ff0 };
 
@@ -128,7 +137,7 @@ endfunction
 always @(*) begin
     all_st   =  ba0_st | ba1_st | ba2_st | ba3_st;
     hold_bus =  all_st[5:4]==2'd0; // next cycle will be a bus access
-    activate = ( (!all_st[READ_BIT] && rd) || (all_st[7:1]==7'd0 && wr)) && !rfshing;
+    activate = ( (!all_st[READ_BIT] && rd) || (all_st[6:2]==7'd0 && wr)) && !rfshing;
     case( ba_rq )
         2'd0: if( !ba0_st[0] ) activate = 0;
         2'd1: if( !ba1_st[0] ) activate = 0;
@@ -136,6 +145,14 @@ always @(*) begin
         2'd3: if( !ba3_st[0] ) activate = 0;
     endcase
     read     = all_st[READ_BIT] && !rfshing;
+    `ifdef MISTER
+    // prevents overwritting A12/A11 with values incompatible with a 16-bit read
+    // on MiSTer
+    if( all_st[5:3] && req_a12 != 2'd00 ) begin
+        activate = 0;
+        read     = 0;
+    end
+    `endif
     refresh  = all_st[7:1]==7'd0 && rfsh_en && !rd && !wr && !rfshing;
     end_rfsh = rfshing && all_st[7];
     get_low  = all_st[DQLO_BIT] && !rfshing;
@@ -237,10 +254,13 @@ always @(posedge clk, posedge rst) begin
             post_act    <= 0;
         end
         if( read ) begin
-            cmd              <= wrtng ? CMD_WRITE : CMD_READ;
-            sdram_a[12:11]   <= wrtng ? wrmask : 2'b00; // DQM signals for reading
-            { sdram_dqmh, sdram_dqml } <= wrtng ? wrmask : 2'b00;
-            sdram_a[10]      <= 1;     // precharge
+            cmd            <= wrtng ? CMD_WRITE : CMD_READ;
+            dqm            <= wrtng ? wrmask : 2'b00;
+            `ifdef MISTER
+                // A12 and A11 used as mask in MiSTer 128MB module
+                sdram_a[12:11] <= wrtng ? wrmask : 2'b00;
+            `endif
+            sdram_a[10]    <= 1;     // precharge
             if( COW==9 ) sdram_a[9] <= 0;
             sdram_a[COW-1:0] <= col_fifo[0];
             sdram_ba         <= ba_fifo[0];
