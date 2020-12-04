@@ -63,10 +63,11 @@ set_global_assignment -name VERILOG_MACRO "MISTER=<None>"
 set_global_assignment -name VERILOG_MACRO "SCAN2X_TYPE=2"
 set_global_assignment -name VERILOG_MACRO "ARCADE_SYS=1"
 
-set_instance_assignment -name FAST_INPUT_REGISTER ON -to emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_sdram:u_sdram|dq_ff -entity sys_top
+set_instance_assignment -name FAST_INPUT_REGISTER ON -to emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_sdram_bank:u_sdram|jtframe_sdram_bank_core:u_core|dq_ff -entity sys_top
 #set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to *
 #set_instance_assignment -name FAST_INPUT_REGISTER ON -to *
 #set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to *
 set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
+set_global_assignment -name FORCE_SYNCH_CLEAR ON
 
 # Always leave a blank line at the end

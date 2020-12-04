@@ -116,7 +116,6 @@ localparam CONF_STR = {
 
 wire          rst, rst_n, clk_sys, clk_rom, clk6, clk24;
 wire [31:0]   status, joystick1, joystick2;
-wire          downloading, dwnld_busy;
 wire [24:0]   ioctl_addr;
 wire [ 7:0]   ioctl_data;
 wire          ioctl_wr;
@@ -125,7 +124,8 @@ wire [15:0]   joystick_analog_0, joystick_analog_1;
 
 wire rst_req   = status[0];
 
-wire sdram_req;
+// ROM download
+wire          downloading, dwnld_busy;
 
 wire [21:0]   prog_addr;
 wire [15:0]   prog_data;
@@ -143,7 +143,7 @@ wire [21:0] ba2_addr;
 wire        ba2_rd, ba2_rdy, ba2_ack;
 wire [21:0] ba3_addr;
 wire        ba3_rd, ba3_rdy, ba3_ack;
-wire        rfsh_en;
+wire        sdram_req, rfsh_en;
 wire [31:0] sdram_dout;
 
 `ifndef COLORW
@@ -311,7 +311,7 @@ u_frame(
     .ba3_rdy        ( ba3_rdy        ),
     .ba3_ack        ( ba3_ack        ),
 
-    // ROM
+    // ROM load
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_data     ( ioctl_data     ),
     .ioctl_wr       ( ioctl_wr       ),
@@ -322,7 +322,7 @@ u_frame(
     .prog_we        ( prog_we        ),
     .prog_mask      ( prog_mask      ),
     .prog_bank      ( prog_bank      ),
-    .prog_rdy       ( prog_rdy      ),
+    .prog_rdy       ( prog_rdy       ),
 
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),

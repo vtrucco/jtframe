@@ -20,8 +20,6 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
-`timescale 1ns/1ps
-
 module emu
 (
     //Master input clock
@@ -150,7 +148,7 @@ localparam CONF_STR = {
     `ifdef JTFRAME_OSD_TEST
     "OA,Test mode,Off,On;",
     `endif
-    `SEPARATOR    
+    `SEPARATOR
     `ifdef JTFRAME_MRA_DIP
     "DIP;",
     `endif
@@ -252,35 +250,33 @@ wire [ 3:0] game_coin, game_start;
 wire [ 3:0] gfx_en;
 wire [15:0] joystick_analog_0, joystick_analog_1;
 
-wire        downloading, game_rst, rst, rst_n, dwnld_busy;
+wire        game_rst, rst, rst_n;
 wire        rst_req   = RESET | status[0] | buttons[1];
 
 assign LED_DISK  = 2'b0;
 assign LED_POWER = 2'b0;
 
-// SDRAM
-wire         loop_rst;
-wire         sdram_req;
-wire [31:0]  data_read;
-wire [21:0]  sdram_addr;
-wire         data_rdy;
-wire         sdram_ack;
-wire         refresh_en;
+// ROM download
+wire        downloading, dwnld_busy;
 
-wire [ 1:0]   sdram_wrmask, sdram_bank;
-wire          sdram_rnw;
-wire [15:0]   data_write;
+wire [21:0] prog_addr;
+wire [15:0] prog_data;
+wire [ 1:0] prog_mask, prog_bank;
+wire        prog_we, prog_rd, prog_rdy;
 
-`ifndef JTFRAME_WRITEBACK
-assign sdram_wrmask = 2'b11;
-assign sdram_rnw    = 1'b1;
-assign data_write   = 16'h00;
-`endif
-
-wire         prog_we, prog_rd;
-wire [21:0]  prog_addr;
-wire [ 7:0]  prog_data;
-wire [ 1:0]  prog_mask, prog_bank;
+// ROM access from game
+wire [21:0] ba0_addr;
+wire        ba0_rd, ba0_wr, ba0_rdy, ba0_ack;
+wire [15:0] ba0_din;
+wire [ 1:0] ba0_din_m;
+wire [21:0] ba1_addr;
+wire        ba1_rd, ba1_rdy, ba1_ack;
+wire [21:0] ba2_addr;
+wire        ba2_rd, ba2_rdy, ba2_ack;
+wire [21:0] ba3_addr;
+wire        ba3_rd, ba3_rdy, ba3_ack;
+wire        sdram_req, rfsh_en;
+wire [31:0] sdram_dout;
 
 `ifndef COLORW
 `define COLORW 4
@@ -346,31 +342,52 @@ u_frame(
     .SDRAM_nCS      ( SDRAM_nCS      ),
     .SDRAM_BA       ( SDRAM_BA       ),
     .SDRAM_CKE      ( SDRAM_CKE      ),
+    // ROM access from game
+    // Bank 0: allows R/W
+    .ba0_addr       ( ba0_addr       ),
+    .ba0_rd         ( ba0_rd         ),
+    .ba0_wr         ( ba0_wr         ),
+    .ba0_din        ( ba0_din        ),
+    .ba0_din_m      ( ba0_din_m      ),  // write mask
+    .ba0_rdy        ( ba0_rdy        ),
+    .ba0_ack        ( ba0_ack        ),
+
+    // Bank 1: Read only
+    .ba1_addr       ( ba1_addr       ),
+    .ba1_rd         ( ba1_rd         ),
+    .ba1_rdy        ( ba1_rdy        ),
+    .ba1_ack        ( ba1_ack        ),
+
+    // Bank 2: Read only
+    .ba2_addr       ( ba2_addr       ),
+    .ba2_rd         ( ba2_rd         ),
+    .ba2_rdy        ( ba2_rdy        ),
+    .ba2_ack        ( ba2_ack        ),
+
+    // Bank 3: Read only
+    .ba3_addr       ( ba3_addr       ),
+    .ba3_rd         ( ba3_rd         ),
+    .ba3_rdy        ( ba3_rdy        ),
+    .ba3_ack        ( ba3_ack        ),
+
+    .rfsh_en        ( rfsh_en        ),
+    .sdram_dout     ( sdram_dout     ),
+
     // ROM load
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_data     ( ioctl_data     ),
     .ioctl_rom_wr   ( ioctl_rom_wr   ),
+
     .prog_addr      ( prog_addr      ),
     .prog_data      ( prog_data      ),
-    .prog_mask      ( prog_mask      ),
-    .prog_we        ( prog_we        ),
     .prog_rd        ( prog_rd        ),
+    .prog_we        ( prog_we        ),
+    .prog_mask      ( prog_mask      ),
     .prog_bank      ( prog_bank      ),
+    .prog_rdy       ( prog_rdy       ),
+
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),
-    // ROM access from game
-    .loop_rst       ( loop_rst       ),
-    .sdram_addr     ( sdram_addr     ),
-    .sdram_bank     ( sdram_bank     ),
-    .sdram_req      ( sdram_req      ),
-    .sdram_ack      ( sdram_ack      ),
-    .data_read      ( data_read      ),
-    .data_rdy       ( data_rdy       ),
-    .refresh_en     ( refresh_en     ),
-    // write support
-    .sdram_wrmask   ( sdram_wrmask   ),
-    .sdram_rnw      ( sdram_rnw      ),
-    .data_write     ( data_write     ),
 //////////// board
     .rst            ( rst            ),
     .rst_n          ( rst_n          ), // unused
@@ -486,30 +503,46 @@ assign sim_pxl_cen = pxl_cen;
     .ioctl_addr   ( ioctl_addr       ),
     .ioctl_data   ( ioctl_data       ),
     .ioctl_wr     ( ioctl_rom_wr     ),
-    .prog_addr    ( prog_addr        ),
-    .prog_data    ( prog_data        ),
-    .prog_mask    ( prog_mask        ),
-    .prog_we      ( prog_we          ),
-    .prog_rd      ( prog_rd          ),
-    `ifdef JTFRAME_SDRAM_BANKS
-    .prog_bank    ( prog_bank        ),
-    .sdram_bank   ( sdram_bank       ),
-    `endif
     // ROM load
     .downloading  ( downloading      ),
     .dwnld_busy   ( dwnld_busy       ),
-    .loop_rst     ( loop_rst         ),
-    .sdram_req    ( sdram_req        ),
-    .sdram_addr   ( sdram_addr       ),
-    .data_read    ( data_read        ),
-    .sdram_ack    ( sdram_ack        ),
-    .data_rdy     ( data_rdy         ),
-    .refresh_en   ( refresh_en       ),
-    `ifdef JTFRAME_WRITEBACK
-    .sdram_wrmask ( sdram_wrmask     ),
-    .sdram_rnw    ( sdram_rnw        ),
-    .data_write   ( data_write       ),
-    `endif
+    .data_read   ( sdram_dout     ),
+    .refresh_en  ( rfsh_en        ),
+    // Bank 0: allows R/W
+    .ba0_addr   ( ba0_addr      ),
+    .ba0_rd     ( ba0_rd        ),
+    .ba0_wr     ( ba0_wr        ),
+    .ba0_din    ( ba0_din       ),
+    .ba0_din_m  ( ba0_din_m     ),  // write mask
+    .ba0_rdy    ( ba0_rdy       ),
+    .ba0_ack    ( ba0_ack       ),
+
+    // Bank 1: Read only
+    .ba1_addr   ( ba1_addr      ),
+    .ba1_rd     ( ba1_rd        ),
+    .ba1_rdy    ( ba1_rdy       ),
+    .ba1_ack    ( ba1_ack       ),
+
+    // Bank 2: Read only
+    .ba2_addr   ( ba2_addr      ),
+    .ba2_rd     ( ba2_rd        ),
+    .ba2_rdy    ( ba2_rdy       ),
+    .ba2_ack    ( ba2_ack       ),
+
+    // Bank 3: Read only
+    .ba3_addr   ( ba3_addr      ),
+    .ba3_rd     ( ba3_rd        ),
+    .ba3_rdy    ( ba3_rdy       ),
+    .ba3_ack    ( ba3_ack       ),
+
+    // ROM-load interface
+    .prog_addr  ( prog_addr     ),
+    .prog_ba    ( prog_bank     ),
+    .prog_rd    ( prog_rd       ),
+    .prog_we    ( prog_we       ),
+    .prog_data  ( prog_data     ),
+    .prog_mask  ( prog_mask     ),
+    .prog_rdy   ( prog_rdy      ),
 
     // DIP switches
     .status       ( status           ),
@@ -535,11 +568,6 @@ assign sim_pxl_cen = pxl_cen;
 
 `ifndef STEREO_GAME
     assign AUDIO_R = AUDIO_L;
-`endif
-
-`ifndef JTFRAME_SDRAM_BANKS
-assign sdram_bank = 2'b0;
-assign prog_bank  = 2'b0;
 `endif
 
 `ifdef SIMULATION

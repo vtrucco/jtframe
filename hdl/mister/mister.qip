@@ -13,3 +13,14 @@ set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) .
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../ram/jtframe_dual_ram.v      ]
 # set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) joydb15.v                    ]
 #set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) sys/hps_io.v                  ]
+
+# Bank interleaving SDRAM controller
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_sdram_bank.v      ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_sdram_bank_core.v ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_sdram_bank_mux.v  ]
+
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_ram_2slots.v  ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_rom_2slots.v  ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_rom_3slots.v  ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_romrq.v       ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sdram/jtframe_ram_rq.v      ]

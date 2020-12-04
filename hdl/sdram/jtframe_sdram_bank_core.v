@@ -89,10 +89,10 @@ reg [13:0] wait_cnt;
 reg [ 2:0] init_st;
 reg [ 3:0] init_cmd;
 reg        init;
-reg [ 1:0] dqm;
 
 reg       [7:0] ba0_st, ba1_st, ba2_st, ba3_st, all_st;
-reg             activate, read, get_low, get_high, post_act, hold_bus, wrtng;
+reg             activate, read, get_low, get_high, post_act, wrtng;
+// reg             hold_bus;
 reg       [3:0] cmd;
 reg       [1:0] wrmask;
 reg      [15:0] dq_pad, dq_ff, dq_ff0;
@@ -113,6 +113,7 @@ assign sdram_dq = dq_pad;
 assign req_a12 = addr[AW-1:AW-2];
 assign { sdram_dqmh, sdram_dqml } = sdram_a[12:11]; // This is a limitation in MiSTer's 128MB module
 `else
+reg [1:0] dqm;
 assign { sdram_dqmh, sdram_dqml } = dqm;
 `endif
 
@@ -136,7 +137,7 @@ endfunction
 
 always @(*) begin
     all_st   =  ba0_st | ba1_st | ba2_st | ba3_st;
-    hold_bus =  all_st[5:4]==2'd0; // next cycle will be a bus access
+    //hold_bus =  all_st[5:4]==2'd0; // next cycle will be a bus access
     activate = ( (!all_st[READ_BIT] && rd) || (all_st[6:2]==7'd0 && wr)) && !rfshing;
     case( ba_rq )
         2'd0: if( !ba0_st[0] ) activate = 0;
@@ -220,7 +221,9 @@ always @(posedge clk, posedge rst) begin
             endcase
         end
     end else begin // Regular operation
-        if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
+        // `ifdef MISTER
+        // if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
+        // `endif
         ba0_st <= next( ba0_st, 2'd0 );
         ba1_st <= next( ba1_st, 2'd1 );
         ba2_st <= next( ba2_st, 2'd2 );
@@ -255,10 +258,11 @@ always @(posedge clk, posedge rst) begin
         end
         if( read ) begin
             cmd            <= wrtng ? CMD_WRITE : CMD_READ;
-            dqm            <= wrtng ? wrmask : 2'b00;
             `ifdef MISTER
                 // A12 and A11 used as mask in MiSTer 128MB module
                 sdram_a[12:11] <= wrtng ? wrmask : 2'b00;
+            `else
+                dqm            <= wrtng ? wrmask : 2'b00;
             `endif
             sdram_a[10]    <= 1;     // precharge
             if( COW==9 ) sdram_a[9] <= 0;
