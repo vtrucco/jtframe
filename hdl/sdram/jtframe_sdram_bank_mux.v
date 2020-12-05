@@ -75,21 +75,20 @@ module jtframe_sdram_bank_mux #(parameter AW=22) (
     output     [  31:0] dout
 );
 
-localparam RQW=AW+2+2, FFW=RQW*4;
+localparam RQW=AW+2+2, FFW=RQW*3;
 
 reg  [    3:0] queued, free;
 wire [RQW-1:0] fifo_out, fifo_top;
-wire [RQW-1:0] fifo0, fifo1, fifo2, fifo3;
+wire [RQW-1:0] fifo0, fifo1, fifo2;
 reg  [FFW-1:0] fifo;
 reg            push_ok, shift_ok, top_shift_ok;
 wire [ AW-1:0] reg_addr;
 wire           reg_rd, reg_wr;
 wire [    1:0] reg_ba;
 
-assign fifo3   = fifo[FFW-1:FFW-RQW];
-assign fifo2   = fifo[FFW-RQW-1:FFW-RQW*2];
-assign fifo1   = fifo[FFW-RQW*2-1:FFW-RQW*3];
-assign fifo0   = fifo[FFW-RQW*3-1:0];
+assign fifo2   = fifo[FFW-1:FFW-RQW];
+assign fifo1   = fifo[FFW-RQW-1:FFW-RQW*2];
+assign fifo0   = fifo[FFW-RQW*2-1:0];
 
 assign dout    = ctl_dout;
 assign prog_rdy= prog_en & ctl_ack;
