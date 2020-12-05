@@ -25,15 +25,44 @@ wire        sdram_nras;
 wire        sdram_ncs;
 wire        sdram_cke;
 
+reg  [63:0] data_cnt, ticks;
+
+`ifdef NOREFRESH
+assign rfsh_en = 0;
+`else
 assign rfsh_en = 1;
+`endif
 
 `ifndef PERIOD
 `define PERIOD 10.416
 `endif
 
+`ifndef WRITE_ENABLE
+`define WRITE_ENABLE 1
+`endif
+
+`ifndef WRITE_CHANCE
+`define WRITE_CHANCE 5
+`endif
+
+`ifndef IDLE
+`define IDLE 50
+`endif
+
 localparam PERIOD=`PERIOD;
 
-ba_requester #(0, 1,"sdram_bank0.hex") u_ba0(
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        data_cnt <= 64'd0;
+        ticks    <= 64'd0;
+    end else begin
+        ticks <= ticks+1'd1;
+        if( ba0_rdy || ba1_rdy || ba2_rdy || ba3_rdy )
+            data_cnt <= data_cnt+1'd1;
+    end
+end
+
+ba_requester #(0, `WRITE_ENABLE,"sdram_bank0.hex", `IDLE, `WRITE_CHANCE) u_ba0(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba0_addr      ),
@@ -46,7 +75,7 @@ ba_requester #(0, 1,"sdram_bank0.hex") u_ba0(
     .sdram_dq   ( dout          )
 );
 
-ba_requester #(1, 0,"sdram_bank1.hex") u_ba1(
+ba_requester #(1, 0,"sdram_bank1.hex", `IDLE) u_ba1(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba1_addr      ),
@@ -56,7 +85,7 @@ ba_requester #(1, 0,"sdram_bank1.hex") u_ba1(
     .sdram_dq   ( dout          )
 );
 
-ba_requester #(2, 0,"sdram_bank2.hex") u_ba2(
+ba_requester #(2, 0,"sdram_bank2.hex", `IDLE) u_ba2(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba2_addr      ),
@@ -67,7 +96,7 @@ ba_requester #(2, 0,"sdram_bank2.hex") u_ba2(
 );
 
 
-ba_requester #(3, 0,"sdram_bank3.hex") u_ba3(
+ba_requester #(3, 0,"sdram_bank3.hex", `IDLE) u_ba3(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba3_addr      ),
@@ -159,10 +188,19 @@ localparam SIM_TIME = `SIM_TIME;
 localparam SIM_TIME = 5_000_000;
 `endif
 
+real perf;
+
 initial begin
     rst=1;
     #100 rst=0;
-    #SIM_TIME $display("PASSED");
+    #SIM_TIME;
+    perf = data_cnt;
+    perf = 2*perf / ticks; // 2 read cycles per each data_cnt
+    $display("Performance %.1f%%", perf*100.0 );
+    perf = perf / `PERIOD;
+    perf = perf * 1e9/1024.0/1024.0;
+    $display("Data throughput %.0f MB/s", perf );
+    $display("PASSED");
     $finish;
 end
 
@@ -190,7 +228,7 @@ module  ba_requester(
 );
 
 parameter BANK=0, RW=0, MEMFILE="sdram_bank1.hex",
-          IDLE=50; // Use 100 or more to keep the bank idle
+          IDLE=50, WRCHANCE=5; // Use 100 or more to keep the bank idle
 
 localparam STALL_LIMIT = 100;
 
@@ -223,7 +261,7 @@ always @(posedge clk, posedge rst) begin
         if( !waiting ) begin
             if( $urandom%100 > IDLE ) begin
                 ba_addr[21:1] <= $urandom; // bit 0 not used for bursts of length 2
-                if( $urandom%100>95 && RW) begin
+                if( $urandom%100>(100-WRCHANCE) && RW) begin
                     ba_rd      <= 0;
                     ba_wr      <= 1;
                     ba_dout    <= $urandom;

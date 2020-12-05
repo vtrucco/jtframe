@@ -77,13 +77,19 @@ module jtframe_sdram_bank_mux #(parameter AW=22) (
 
 localparam RQW=AW+2+2, FFW=RQW*4;
 
-reg  [    3:0] queued;
+reg  [    3:0] queued, free;
 wire [RQW-1:0] fifo_out, fifo_top;
+wire [RQW-1:0] fifo0, fifo1, fifo2, fifo3;
 reg  [FFW-1:0] fifo;
-reg            push_ok, shift_ok;
+reg            push_ok, shift_ok, top_shift_ok;
 wire [ AW-1:0] reg_addr;
 wire           reg_rd, reg_wr;
 wire [    1:0] reg_ba;
+
+assign fifo3   = fifo[FFW-1:FFW-RQW];
+assign fifo2   = fifo[FFW-RQW-1:FFW-RQW*2];
+assign fifo1   = fifo[FFW-RQW*2-1:FFW-RQW*3];
+assign fifo0   = fifo[FFW-RQW*3-1:0];
 
 assign dout    = ctl_dout;
 assign prog_rdy= prog_en & ctl_ack;
@@ -116,10 +122,15 @@ always @(*) begin
     if( prog_en ) begin
         shift_ok = 0;
         push_ok  = 0;
+        top_shift_ok = 0;
     end else begin
-        shift_ok = fifo_out[3:2]==2'd0 || ctl_ack;
-        push_ok  = fifo_top[3:2]==2'd0 || shift_ok;
+        shift_ok     = fifo_out[3:2]==2'd0 || ctl_ack;
+        top_shift_ok = fifo1[3:2]   ==2'd0;
+        push_ok      = fifo_top[3:2]==2'd0 || shift_ok || top_shift_ok;
     end
+    free = ~queued;
+    //if( shift_ok )
+    //    free[ fifo_top[1:0] ] = 1;
 end
 
 always @(posedge clk, posedge rst) begin
@@ -131,19 +142,19 @@ always @(posedge clk, posedge rst) begin
             fifo   <= {FFW{1'd0}};
         end else begin
             if( push_ok ) begin
-                if( (ba0_rd || ba0_wr) && !queued[0] ) begin
+                if( (ba0_rd || ba0_wr) && free[0] ) begin
                     fifo[FFW-1:FFW-RQW] <= { ba0_addr, ba0_rd, ba0_wr, 2'd0 };
                     queued[0] <= 1;
                 end else
-                if( ba1_rd && !queued[1] ) begin
+                if( ba1_rd && free[1] ) begin
                     fifo[FFW-1:FFW-RQW] <= { ba1_addr, ba1_rd, 1'd0, 2'd1 };
                     queued[1] <= 1;
                 end else
-                if( ba2_rd && !queued[2] ) begin
+                if( ba2_rd && free[2] ) begin
                     fifo[FFW-1:FFW-RQW] <= { ba2_addr, ba2_rd, 1'd0, 2'd2 };
                     queued[2] <= 1;
                 end else
-                if( ba3_rd && !queued[3] ) begin
+                if( ba3_rd && free[3] ) begin
                     fifo[FFW-1:FFW-RQW] <= { ba3_addr, ba3_rd, 1'd0, 2'd3 };
                     queued[3] <= 1;
                 end else begin
@@ -152,6 +163,8 @@ always @(posedge clk, posedge rst) begin
             end
             if( shift_ok )
                 fifo[FFW-1-RQW:0] <= fifo[FFW-1:RQW];
+            else if( top_shift_ok )
+                fifo[FFW-1-RQW:RQW] <= fifo[FFW-1:RQW*2];
             if( ctl_rdy )
                 queued[ ctl_ba_rdy ] <= 0;
         end
