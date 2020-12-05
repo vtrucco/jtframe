@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 27-10-2017 */
 
-`timescale 1ns/1ps
-
 module jtframe_mist_base #(parameter
     CONF_STR        = "CORE",
     CONF_STR_LEN    = 4,
@@ -38,7 +36,7 @@ module jtframe_mist_base #(parameter
     input           LHBL,
     input           LVBL,
     input           hs,
-    input           vs, 
+    input           vs,
     input           pxl_cen,
     // Scan-doubler video
     input   [5:0]   scan2x_r,
@@ -93,6 +91,17 @@ assign downloading = ioctl_download;
 
 `ifndef SIMULATION
     `ifndef NOSOUND
+    wire cen_dac;
+    reg [3:0] cen_dac_sr;
+
+    assign cen_dac = cen_dac_sr[0];
+    always @(posedge clk_dac, posedge rst) begin
+        if( rst )
+            cen_dac_sr <= 4'b100;
+        else begin
+            cen_dac_sr <= { cen_dac_sr[2:0], cen_dac_sr[3] };
+        end
+    end
 
     function [19:0] snd_padded;
         input [15:0] snd;
@@ -107,7 +116,7 @@ assign downloading = ioctl_download;
     (
       .reset    ( rst                  ),
       .clk      ( clk_dac              ),
-      .clk_ena  ( 1'b1                 ),
+      .clk_ena  ( cen_dac              ),
       .pcm_in   ( snd_padded(snd_left) ),
       .dac_out  ( snd_pwm_left         )
     );
@@ -117,7 +126,7 @@ assign downloading = ioctl_download;
         (
           .reset    ( rst                  ),
           .clk      ( clk_dac              ),
-          .clk_ena  ( 1'b1                 ),
+          .clk_ena  ( cen_dac              ),
           .pcm_in   ( snd_padded(snd_right)),
           .dac_out  ( snd_pwm_right        )
         );
@@ -150,7 +159,7 @@ user_io #(.STRLEN(CONF_STR_LEN), .ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_use
     // Analog joysticks
     .joystick_analog_0  ( joystick_analog_0 ),
     .joystick_analog_1  ( joystick_analog_1 ),
-    
+
     .status         ( status    ),
     .ypbpr          ( ypbpr     ),
     .scandoubler_disable ( scan2x_enb ),
@@ -192,7 +201,7 @@ data_io #(.ROM_DIRECT_UPLOAD(1'b1)) u_datain (
     .SPI_SS4            ( SPI_SS4           ),
     .SPI_DI             ( SPI_DI            ),
     .SPI_DO             ( SPI_DO            ),
-    
+
     .clk_sys            ( clk_rom           ),
     .clkref_n           ( 1'b0              ), // this is not a clock.
     .ioctl_download     ( ioctl_download    ),

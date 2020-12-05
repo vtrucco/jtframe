@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 7-3-2019 */
 
-`timescale 1ns/1ps
-
 module jtframe_mister #(parameter
     BUTTONS                 = 2,
     GAME_INPUTS_ACTIVE_LOW  =1'b1,
