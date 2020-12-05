@@ -302,9 +302,10 @@ assign VIDEO_B  = ypbpr?Pb:osd_b_o;
 assign VIDEO_HS = (scan2x_enb | ypbpr) ? CSync_osd : HSync_osd;
 assign VIDEO_VS = (scan2x_enb | ypbpr) ? 1'b1 : VSync_osd;
 `else
-assign VIDEO_R  = game_r;// { game_r, game_r[3:2] };
-assign VIDEO_G  = game_g;// { game_g, game_g[3:2] };
-assign VIDEO_B  = game_b;// { game_b, game_b[3:2] };
+// for simulation only:
+assign VIDEO_R  = game_r;
+assign VIDEO_G  = game_g;
+assign VIDEO_B  = game_b;
 assign VIDEO_HS = hs;
 assign VIDEO_VS = vs;
 `endif

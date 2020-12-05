@@ -80,7 +80,7 @@ localparam CONF_STR = {
     // "OE,Separate Joysticks,Yes,No;",    // If no, then player 2 joystick
     //     // is assimilated to player 1 joystick
     // `endif
-    "O34,Scan lines, none, bright, dark, pure;",
+    "O34,Video Mode, pass thru, linear, analogue, dark;",
     `ifndef JTFRAME_OSD_NOSND
         `ifdef JT12
         "O67,FX volume, high, very high, very low, low;",
@@ -147,6 +147,7 @@ wire          prog_we, prog_rd;
 `ifndef COLORW
 `define COLORW 4
 `endif
+
 localparam COLORW=`COLORW;
 
 wire [COLORW-1:0] red;

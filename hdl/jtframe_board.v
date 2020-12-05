@@ -135,6 +135,7 @@ module jtframe_board #(parameter
 );
 
 wire  [ 2:0]  scanlines;
+wire          bw_en, blend_en;
 wire          en_mixing;
 wire          osd_pause;
 
@@ -387,6 +388,8 @@ jtframe_dip u_dip(
     .rot_control( rot_control   ),
     .en_mixing  ( en_mixing     ),
     .scanlines  ( scanlines     ),
+    .blend_en   ( blend_en      ),
+    .bw_en      ( bw_en         ),
     .enable_fm  ( enable_fm     ),
     .enable_psg ( enable_psg    ),
     .osd_pause  ( osd_pause     ),
@@ -506,14 +509,33 @@ assign scan2x_de   = LVBL && LHBL;
 `endif
 
 `ifdef JTFRAME_SCAN2X
-    // This scan doubler takes very little memory. Some games in MiST
-    // can only use this
-    wire [COLORW*3-1:0] rgbx2;
-    wire [COLORW*3-1:0] game_rgb = {pre2x_r, pre2x_g, pre2x_b };
+    localparam CLROUTW = COLORW < 5 ? COLORW+1 : COLORW;
+
+    wire [CLROUTW-1:0] r_ana, g_ana, b_ana;
+    wire               hs_ana, vs_ana;
+    wire               pxl_ana;
+
+    jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) (
+        .clk        ( clk_sys   ),
+        .spl_in     ( pxl_cen   ),
+        .r_in       ( pre2x_r   ),
+        .g_in       ( pre2x_g   ),
+        .b_in       ( pre2x_b   ),
+        .HS_in      ( hs        ),
+        .VS_in      ( vs        ),
+        .enable     ( bw_en     ),
+        // filtered video
+        .HS_out     ( hs_ana    ),
+        .VS_out     ( vs_ana    ),
+        .spl_out    (           ),
+        .r_out      ( r_ana     ),
+        .g_out      ( g_ana     ),
+        .b_out      ( b_ana     )
+    );
 
     function [7:0] extend8;
-        input [COLORW-1:0] a;
-        case( COLORW )
+        input [CLROUTW-1:0] a;
+        case( CLROUTW )
             3: extend8 = { a, a, a[2:1] };
             4: extend8 = { a, a         };
             5: extend8 = { a, a[4:2]    };
@@ -522,25 +544,37 @@ assign scan2x_de   = LVBL && LHBL;
             8: extend8 = a;
         endcase
     endfunction
+
+    // This scan doubler takes very little memory. Some games in MiST
+    // can only use this
+    wire [CLROUTW*3-1:0] rgbx2;
+    wire [CLROUTW*3-1:0] game_rgb = { r_ana, g_ana, b_ana };
+    wire scan2x_hsin = bw_en ? hs_ana : hs;
+
     // Note that VIDEO_WIDTH must include blanking for JTFRAME_SCAN2X
-    jtframe_scan2x #(.COLORW(COLORW), .HLEN(VIDEO_WIDTH)) u_scan2x(
+    jtframe_scan2x #(.COLORW(CLROUTW), .HLEN(VIDEO_WIDTH)) u_scan2x(
         .rst_n      ( rst_n          ),
         .clk        ( clk_sys        ),
         .pxl_cen    ( pxl_cen        ),
+        // settings
+        .sl_mode    ( scanlines[1:0] ),
+        .blend_en   ( blend_en       ),
+        // video inputs
         .pxl2_cen   ( pxl2_cen       ),
         .base_pxl   ( game_rgb       ),
+        .HS         ( scan2x_hsin    ),
+        // outputs
         .x2_pxl     ( rgbx2          ),
-        .HS         ( hs             ),
-        .x2_HS      ( scan2x_hs      ),
-        .sl_mode    ( scanlines[1:0] )
+        .x2_HS      ( scan2x_hs      )
     );
-    assign scan2x_vs    = vs;
-    assign scan2x_r     = extend8( rgbx2[COLORW*3-1:COLORW*2] );
-    assign scan2x_g     = extend8( rgbx2[COLORW*2-1:COLORW] );
-    assign scan2x_b     = extend8( rgbx2[COLORW-1:0] );
+    assign scan2x_vs    = bw_en ? vs_ana : vs;
+    assign scan2x_r     = extend8( rgbx2[CLROUTW*3-1:CLROUTW*2] );
+    assign scan2x_g     = extend8( rgbx2[CLROUTW*2-1:CLROUTW] );
+    assign scan2x_b     = extend8( rgbx2[CLROUTW-1:0] );
     assign scan2x_de    = ~(scan2x_vs | scan2x_hs);
     assign scan2x_cen   = pxl2_cen;
     assign scan2x_clk   = clk_sys;
+    // unused in MiST
     assign hdmi_clk     = 0;
     assign hdmi_cen     = 0;
     assign hdmi_r       = 8'd0;
@@ -550,10 +584,7 @@ assign scan2x_de   = LVBL && LHBL;
     assign hdmi_hs      = 0;
     assign hdmi_vs      = 0;
     assign hdmi_sl      = 2'b0;
-    `ifndef MISTER
-        // avoid warning messages
-        assign gamma_bus    = 22'd0; // Unused in MiST
-    `endif
+    assign gamma_bus    = 22'd0;
 `else
     localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
 
