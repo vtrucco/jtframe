@@ -227,7 +227,7 @@ function copy_templates {
         cat $JTFRAME/hdl/mister/sys/sys_top.sdc >> $PRJPATH/$TARGET/sys_top.sdc
         # Adds local SDC file if exists (only MiSTer)
         if [ -e $PRJPATH/mister/jt${PRJ}.sdc ]; then
-            cat $PRJPATH/mister/jt${PRJ}.sdc >> $PRJPATH/$TARGET/sys_top.sdc
+            cat <(echo -e "\n") $PRJPATH/mister/jt${PRJ}.sdc >> $PRJPATH/$TARGET/sys_top.sdc
         fi
     fi
 }
