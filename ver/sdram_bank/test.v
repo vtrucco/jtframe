@@ -13,6 +13,8 @@ wire        ba0_rd, ba1_rd, ba2_rd, ba3_rd, ba0_wr,
             ba0_ack, ba1_ack, ba2_ack, ba3_ack,
             rfsh_en;
 wire [15:0] ba0_din;
+wire        all_ack;
+reg         start;
 
 // sdram pins
 wire [15:0] sdram_dq;
@@ -27,6 +29,8 @@ wire        sdram_cke;
 
 reg  [63:0] data_cnt, ticks;
 
+assign all_ack = ba0_ack | ba1_ack | ba2_ack | ba3_ack;
+
 `ifdef NOREFRESH
 assign rfsh_en = 0;
 `else
@@ -34,7 +38,7 @@ assign rfsh_en = 1;
 `endif
 
 `ifndef PERIOD
-`define PERIOD 10.416
+`define PERIOD 7.5
 `endif
 
 `ifndef WRITE_ENABLE
@@ -55,8 +59,12 @@ always @(posedge clk, posedge rst) begin
     if( rst ) begin
         data_cnt <= 64'd0;
         ticks    <= 64'd0;
+        start    <= 0;
     end else begin
-        ticks <= ticks+1'd1;
+        if(start)
+            ticks <= ticks+1'd1;
+        if( all_ack )
+            start <= 1;
         if( ba0_rdy || ba1_rdy || ba2_rdy || ba3_rdy )
             data_cnt <= data_cnt+1'd1;
     end
@@ -194,12 +202,12 @@ initial begin
     rst=1;
     #100 rst=0;
     #SIM_TIME;
-    perf = data_cnt;
-    perf = 2*perf / ticks; // 2 read cycles per each data_cnt
-    $display("Performance %.1f%%", perf*100.0 );
+    perf = data_cnt*2; // 2 read cycles per each data_cnt
+    perf = perf / ticks;
+    $display("Performance %.1f%% (%0dx2 / %0d)", perf*100.0, data_cnt, ticks );
     perf = perf / `PERIOD;
-    perf = perf * 1e9/1024.0/1024.0;
-    $display("Data throughput %.0f MB/s", perf );
+    perf = perf *2.0* 1e9/1024.0/1024.0; // 2 bytes per read cycle
+    $display("Data throughput %.0f MB/s (at %.0f MHz)", perf, 1e3/`PERIOD );
     $display("PASSED");
     $finish;
 end

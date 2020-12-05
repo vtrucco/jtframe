@@ -30,7 +30,9 @@ while [ $# -gt 0 ]; do
 Usage:
     -nodump       disables waveform dumping
     -time val     simulation time in ms (5ms by default)
-    -period       defines clock period (default 10.416ns = 96MHz)
+    -period       defines clock period (default 7.5ns = 133MHz)
+                  10.416 for 96MHz
+                  7.5ns sets the maximum speed before breaking SDRAM timings
     -readonly     disables write requests
     -norefresh    disables refresh
     -write        chance of a write in the writing bank. Integer between 0 and 100
@@ -49,4 +51,4 @@ make || exit $?
 
 echo "$EXTRA"
 iverilog test.v ../../hdl/sdram/jtframe_sdram_bank*.v ../../hdl/ver/mt48lc16m16a2.v \
-    -o sim -DJTFRAME_SDRAM_BANKS -DSIMULATION -DPERIOD=7.5 $DUMP $EXTRA && sim -lxt
+    -o sim -DJTFRAME_SDRAM_BANKS -DSIMULATION $DUMP $EXTRA && sim -lxt
