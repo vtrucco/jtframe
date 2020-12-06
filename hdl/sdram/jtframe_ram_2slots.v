@@ -22,8 +22,6 @@ module jtframe_ram_2slots #(parameter
     SDRAMW = 22,
     SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8,
-    parameter [SDRAMW-1:0] SLOT0_OFFSET = 0,
-    parameter [SDRAMW-1:0] SLOT1_OFFSET = 0,
     parameter REF_FILE="sdram_bank3.hex"
 )(
     input               rst,
@@ -36,6 +34,9 @@ module jtframe_ram_2slots #(parameter
     output [SLOT0_DW-1:0] slot0_dout,
     output [SLOT1_DW-1:0] slot1_dout,
 
+    input    [SDRAMW-1:0] offset0,
+    input    [SDRAMW-1:0] offset1,
+
     input               slot0_cs,
     input               slot1_cs,
 
@@ -46,6 +47,9 @@ module jtframe_ram_2slots #(parameter
     input               slot0_wen,
     input  [SLOT0_DW-1:0] slot0_din,
     input  [1:0]        slot0_wrmask,
+
+    // Slot 1 cache can be cleared
+    input               slot1_clr,
 
     // SDRAM controller interface
     input               sdram_ack,
@@ -67,9 +71,6 @@ wire [SW-1:0] active = ~slot_sel & req;
 
 wire [SDRAMW-1:0] slot0_addr_req,
                   slot1_addr_req;
-
-wire [SDRAMW-1:0] offset0 = SLOT0_OFFSET,
-                  offset1 = SLOT1_OFFSET;
 
 assign slot0_ok = slot_ok[0];
 assign slot1_ok = slot_ok[1];
@@ -95,7 +96,7 @@ jtframe_ram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
 jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
-    .clr       ( 1'd0                   ),
+    .clr       ( slot1_clr              ),
     .offset    ( offset1                ),
     .addr      ( slot1_addr             ),
     .addr_ok   ( slot1_cs               ),
