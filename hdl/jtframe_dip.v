@@ -77,9 +77,9 @@ assign dip_flip    = ~status[1];
 `ifdef JTFRAME_OSD_TEST
     `ifdef SIMULATION
         `ifdef DIP_TEST
-            dip_test = 1'b0;
+        assign dip_test = 0;
         `else
-            dip_test = 1'b1;
+        assign dip_test = 1;
         `endif
     `else
         assign dip_test = ~status[10];
