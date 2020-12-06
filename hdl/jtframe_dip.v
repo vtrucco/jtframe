@@ -84,6 +84,8 @@ assign dip_flip    = ~status[1];
     `else
         assign dip_test = ~status[10];
     `endif
+`else
+assign dip_test = 1;
 `endif
 
 wire   widescreen  = status[11];    // only MiSTer
