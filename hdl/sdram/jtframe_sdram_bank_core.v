@@ -73,7 +73,7 @@ localparam ROW=13,
            READ_BIT = 2, DQLO_BIT=5, DQHI_BIT=6;
 
 localparam CMD_LOAD_MODE   = 4'b0000, // 0
-           CMD_REFRESH = 4'b0001, // 1
+           CMD_REFRESH     = 4'b0001, // 1
            CMD_PRECHARGE   = 4'b0010, // 2
            CMD_ACTIVE      = 4'b0011, // 3
            CMD_WRITE       = 4'b0100, // 4

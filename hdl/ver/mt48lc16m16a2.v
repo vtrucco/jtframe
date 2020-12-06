@@ -70,7 +70,15 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
     integer file, romfilecnt;
 
-    `ifndef LOADROM
+    `define SDRAM_MODEL_LOADHEX
+
+    `ifdef LOADROM
+    `ifndef FAKE_LOAD
+    `undef SDRAM_MODEL_LOADHEX
+    `endif
+    `endif
+
+    `ifdef SDRAM_MODEL_LOADHEX
     initial begin
         // file=$fopen(filename,"rb");
         // if( file != 0 ) begin

@@ -108,11 +108,17 @@ spitx_sub u_sub(
 integer state, next, slow;
 reg hold;
 
-localparam clkspeed=8; // MiST is probably 28MHz or clkspeed=17.857
+localparam CLKSPEED=8; // MiST is probably 28MHz or CLKSPEED=17.857
+
+`ifdef FAKE_LOAD
+localparam FAKE=1;
+`else
+localparam FAKE=0;
+`endif
 
 initial begin
     clk = 0;
-    forever #(clkspeed) clk = ~clk;
+    forever #(CLKSPEED) clk = ~clk;
 end
 
 // Define LOAD_RANDOM_DLY to delay the start of the load process
@@ -133,7 +139,7 @@ if( rst ) begin
     state <= 0;
 `else
     state <= 15;
-`endif   
+`endif
     SPI_SS2  <= 1'b1;
     SPI_SS3  <= 1'b1;
     spi_done <= 1'b0;
@@ -171,7 +177,13 @@ else begin
             hold <= 1'b1;
         end
         // send DATA signal
-        5: SPI_SS2 <= 1'b1;
+        5: begin
+            if (!FAKE )
+                SPI_SS2 <= 1'b1;
+            else
+                state <= 10;    // turn off signal
+        end
+
         6: begin
             SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX_DAT;
@@ -240,17 +252,17 @@ else begin
             send   <= 1'b1;
             hold   <= 1'b1;
             tx_cnt <= tx_cnt+1;
-        end    
+        end
         19: if( data_sent ) begin
             if( tx_cnt!=2047 ) state <= 18;
             hold <= 1'b0;
         end
-`ifndef SIMULATE_OSD        
+`ifndef SIMULATE_OSD
         20: begin // OSD over
             hold    <= 1'b1;
             SPI_SS3 <= 1'b1;
         end
-`else 
+`else
         20: SPI_SS3 <= 1'b1;    // send new command
         21: SPI_SS3 <= 1'b0;
         22: begin
