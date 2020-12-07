@@ -61,7 +61,7 @@ module jtframe_sdram_bank_mux #(parameter AW=22) (
     output     [AW-1:0] ctl_addr,
     output              ctl_rd,
     output              ctl_wr,
-    output              ctl_rfsh_en,   // ok to refresh
+    output         reg  ctl_rfsh_en,   // ok to refresh
     output     [   1:0] ctl_ba_rq,
     input               ctl_ack,
     input               ctl_rdy,
@@ -109,13 +109,24 @@ assign fifo_top = fifo[FFW-1:FFW-RQW];
 assign { reg_addr, reg_rd, reg_wr, reg_ba } = fifo_out;
 
 // Multiplexer to select programming or regular inputs
-assign ctl_rfsh_en = prog_en | rfsh_en;
 assign ctl_addr    = prog_en ? prog_addr : reg_addr;
 assign ctl_rd      = prog_en ? prog_rd   : reg_rd;
 assign ctl_wr      = prog_en ? prog_wr   : reg_wr;
 assign ctl_ba_rq   = prog_en ? prog_ba   : reg_ba;
 assign ctl_din     = prog_en ? prog_din  : ba0_din;
 assign ctl_din_m   = prog_en ? prog_din_m: ba0_din_m;
+
+// Produce one refresh cycle after each programming write
+always @(posedge clk, posedge rst ) begin
+    if( rst )
+        ctl_rfsh_en <= 0;
+    else begin
+        if( prog_en )
+            ctl_rfsh_en <= ctl_rdy;
+        else
+            ctl_rfsh_en <= rfsh_en;
+    end
+end
 
 always @(*) begin
     if( prog_en ) begin
