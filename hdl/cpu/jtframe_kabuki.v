@@ -18,29 +18,33 @@
 
 */
 
-// Instantiate with LATCH=1 to latch the output data
-// by default the module behaves purely combinational
-
 module jtframe_kabuki(
-    input             rst_n,
-    input             clk,
+    input             clk,  // This clock must match the SDRAM's
     input             m1_n,
     input             rd_n,
     input             mreq_n,
     input      [15:0] addr,
     input      [ 7:0] din,
     // Decode keys
-    input      [31:0] swap_key1,
-    input      [31:0] swap_key2,
-    input      [15:0] addr_key,
-    input      [ 7:0] xor_key,
+    input      [ 7:0] prog_data,
+    input             prog_we,
     output reg [ 7:0] dout
 );
 
-parameter LATCH=0;
+reg  [15:0] addr_hit;
+reg  [87:0] kabuki_keys;
 
-reg [15:0] addr_hit;
-reg [ 7:0] dec;
+wire [31:0] swap_key1, swap_key2;
+wire [15:0] addr_key;
+wire [ 7:0] xor_key;
+
+assign { swap_key1, swap_key2, addr_key, xor_key } = kabuki_keys;
+
+always @(posedge clk) begin
+    if( prog_we ) begin
+        kabuki_keys <= { kabuki_keys[79:0], prog_data };
+    end
+end
 
 function [7:0] bitswap1(
         input [ 7:0] din,
@@ -70,33 +74,20 @@ always @(*) begin
     addr_hit = m1_n ?
         ( (addr ^ 16'h1fc0) + addr_key + 16'd1 ) : // data
         (addr + addr_key); // OP
-    dec = din;
+    dout = din;
     if( !mreq_n && !rd_n ) begin
-        dec = bitswap1( dec, swap_key1[15:0], addr_hit[7:0] );
-        dec = { dec[6:0], dec[7] };
+        dout  = bitswap1( dout, swap_key1[15:0], addr_hit[7:0] );
+        dout  = { dout[6:0], dout[7] };
 
-        dec = bitswap2( dec, swap_key1[31:16], addr_hit[7:0] );
-        dec = dec ^ xor_key;
-        dec = { dec[6:0], dec[7] };
+        dout  = bitswap2( dout, swap_key1[31:16], addr_hit[7:0] );
+        dout  = dout ^ xor_key;
+        dout  = { dout[6:0], dout[7] };
 
-        dec = bitswap2( dec, swap_key2[15:0], addr_hit[15:8] );
-        dec = { dec[6:0], dec[7] };
+        dout  = bitswap2( dout, swap_key2[15:0], addr_hit[15:8] );
+        dout  = { dout[6:0], dout[7] };
 
-        dec = bitswap1( dec, swap_key2[31:16], addr_hit[15:8] );
+        dout  = bitswap1( dout, swap_key2[31:16], addr_hit[15:8] );
     end
 end
-
-generate
-    if( LATCH ) begin : latch_output
-        always @(posedge clk, negedge rst_n )
-            if( !rst_n )
-                dout <= 8'd0;
-            else
-                dout <= dec;
-    end else begin : pass_thru
-        always @(dec)
-            dout = dec;
-    end
-endgenerate
 
 endmodule
