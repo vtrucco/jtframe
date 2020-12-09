@@ -70,10 +70,13 @@ function [7:0] bitswap2(
     };
 endfunction
 
-always @(*) begin
-    addr_hit = m1_n ?
+always @(posedge clk) begin
+    addr_hit <= m1_n ?
         ( (addr ^ 16'h1fc0) + addr_key + 16'd1 ) : // data
         (addr + addr_key); // OP
+end
+
+always @(*) begin
     dout = din;
     if( !mreq_n && !rd_n ) begin
         dout  = bitswap1( dout, swap_key1[15:0], addr_hit[7:0] );
