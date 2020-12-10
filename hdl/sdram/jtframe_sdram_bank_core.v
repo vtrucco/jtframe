@@ -92,7 +92,7 @@ reg        init;
 
 reg       [7:0] ba0_st, ba1_st, ba2_st, ba3_st, all_st;
 reg             activate, read, get_low, get_high, post_act, wrtng;
-// reg             hold_bus;
+reg             hold_bus;
 reg       [3:0] cmd;
 reg       [1:0] wrmask;
 reg      [15:0] dq_pad, dq_ff, dq_ff0;
@@ -137,7 +137,7 @@ endfunction
 
 always @(*) begin
     all_st   =  ba0_st | ba1_st | ba2_st | ba3_st;
-    //hold_bus =  all_st[5:4]==2'd0; // next cycle will be a bus access
+    hold_bus =  all_st[6:4]==2'd0; // next cycle will be a bus access
     activate = ( (!all_st[READ_BIT] && rd) || (all_st[6:2]==7'd0 && wr)) && !rfshing;
     case( ba_rq )
         2'd0: if( !ba0_st[0] ) activate = 0;
@@ -222,7 +222,7 @@ always @(posedge clk, posedge rst) begin
         end
     end else begin // Regular operation
         // `ifdef MISTER
-        // if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
+        if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
         // `endif
         ba0_st <= next( ba0_st, 2'd0 );
         ba1_st <= next( ba1_st, 2'd1 );
@@ -276,7 +276,6 @@ always @(posedge clk, posedge rst) begin
         if( get_high ) begin
             dq_ff0 <= dq_ff;
             dq_ff  <= sdram_dq;
-            dq_pad <= 16'hzzzz; // restores it in case there had been a write
             // output strobes
             rdy    <= 1;
             ba_rdy <= ba_queue[1:0];

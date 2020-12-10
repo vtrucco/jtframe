@@ -83,3 +83,8 @@ set_output_delay -clock SDRAM_CLK -max 1.5 \
 set_output_delay -clock  SDRAM_CLK -min -0.8 \
     [get_ports {SDRAM_A[*] SDRAM_BA[*] SDRAM_CKE SDRAM_DQMH SDRAM_DQML \
                 SDRAM_DQ[*] SDRAM_nCAS SDRAM_nCS SDRAM_nRAS SDRAM_nWE}]
+
+## Blender signals that use a clock enable with duty cycle != 100%
+set_multicycle_path -setup -end -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|arcade_video:u_arcade_video|video_mixer:video_mixer|scandoubler:sd|Hq2x:Hq2x|Blend:blender|df_rule[*]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|arcade_video:u_arcade_video|video_mixer:video_mixer|scandoubler:sd|Hq2x:Hq2x|Blend:blender|i20[*]}] 2
+
+set_multicycle_path -setup -end -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|arcade_video:u_arcade_video|video_mixer:video_mixer|scandoubler:sd|Hq2x:Hq2x|Blend:blender|f[*]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|arcade_video:u_arcade_video|video_mixer:video_mixer|scandoubler:sd|Hq2x:Hq2x|Blend:blender|i20[*]}] 2

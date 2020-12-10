@@ -26,25 +26,25 @@ module jtframe_sdram_bank_mux #(parameter AW=22) (
     input               ba0_wr,
     input      [  15:0] ba0_din,
     input      [   1:0] ba0_din_m,  // write mask
-    output              ba0_rdy,
+    output reg          ba0_rdy,
     output              ba0_ack,
 
     // Bank 1: Read only
     input      [AW-1:0] ba1_addr,
     input               ba1_rd,
-    output              ba1_rdy,
+    output reg          ba1_rdy,
     output              ba1_ack,
 
     // Bank 2: Read only
     input      [AW-1:0] ba2_addr,
     input               ba2_rd,
-    output              ba2_rdy,
+    output reg          ba2_rdy,
     output              ba2_ack,
 
     // Bank 3: Read only
     input      [AW-1:0] ba3_addr,
     input               ba3_rd,
-    output              ba3_rdy,
+    output reg          ba3_rdy,
     output              ba3_ack,
 
     // ROM downloading
@@ -72,7 +72,7 @@ module jtframe_sdram_bank_mux #(parameter AW=22) (
 
     // Common signals
     input               rfsh_en,   // ok to refresh
-    output     [  31:0] dout
+    output reg [  31:0] dout
 );
 
 localparam RQW=AW+2+2, FFW=RQW*3;
@@ -90,13 +90,7 @@ assign fifo2   = fifo[FFW-1:FFW-RQW];
 assign fifo1   = fifo[FFW-RQW-1:FFW-RQW*2];
 assign fifo0   = fifo[FFW-RQW*2-1:0];
 
-assign dout    = ctl_dout;
 assign prog_rdy= prog_en & ctl_ack;
-
-assign ba0_rdy = ctl_rdy && ctl_ba_rdy==2'd0;
-assign ba1_rdy = ctl_rdy && ctl_ba_rdy==2'd1;
-assign ba2_rdy = ctl_rdy && ctl_ba_rdy==2'd2;
-assign ba3_rdy = ctl_rdy && ctl_ba_rdy==2'd3;
 
 assign ba0_ack = ctl_ack && fifo_out[1:0]==2'd0;
 assign ba1_ack = ctl_ack && fifo_out[1:0]==2'd1;
@@ -115,6 +109,32 @@ assign ctl_wr      = prog_en ? prog_wr   : reg_wr;
 assign ctl_ba_rq   = prog_en ? prog_ba   : reg_ba;
 assign ctl_din     = prog_en ? prog_din  : ba0_din;
 assign ctl_din_m   = prog_en ? prog_din_m: ba0_din_m;
+
+`ifdef JTFRAME_SDRAM_REPACK
+always @(posedge clk, posedge rst ) begin
+    if( rst )begin
+        ba0_rdy <= 0;
+        ba1_rdy <= 0;
+        ba2_rdy <= 0;
+        ba3_rdy <= 0;
+        dout    <= 32'd0;
+    end else begin
+        ba0_rdy <= ctl_rdy && ctl_ba_rdy==2'd0;
+        ba1_rdy <= ctl_rdy && ctl_ba_rdy==2'd1;
+        ba2_rdy <= ctl_rdy && ctl_ba_rdy==2'd2;
+        ba3_rdy <= ctl_rdy && ctl_ba_rdy==2'd3;
+        dout    <= ctl_dout;
+    end
+end
+`else
+always @(*) begin
+    ba0_rdy = ctl_rdy && ctl_ba_rdy==2'd0;
+    ba1_rdy = ctl_rdy && ctl_ba_rdy==2'd1;
+    ba2_rdy = ctl_rdy && ctl_ba_rdy==2'd2;
+    ba3_rdy = ctl_rdy && ctl_ba_rdy==2'd3;
+    dout    = ctl_dout;
+end
+`endif
 
 // Produce one refresh cycle after each programming write
 always @(posedge clk, posedge rst ) begin

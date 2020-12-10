@@ -21,7 +21,13 @@
 // not changed until the data_ok signal is produced. If the requester cannot
 // guarantee that, it should toggle addr_ok for each request
 
-module jtframe_romrq #(parameter AW=18, DW=8 )(
+module jtframe_romrq #(parameter
+    AW=18,
+    DW=8,
+    REPACK=0    // do not let data from SDRAM pass thru without repacking (latching) it
+                // 0 = data is let pass thru
+                // 1 = data gets repacked (adds one clock of latency)
+)(
     input               rst,
     input               clk,
     input               clr, // clears the cache
@@ -45,10 +51,12 @@ reg [31:0]   cached_data0;
 reg [31:0]   cached_data1;
 reg [1:0]    subaddr;
 reg [1:0]    good;
-reg hit0, hit1;
+reg          hit0, hit1;
+wire         passthru;
 
 wire  [21:0] size_ext = { {22-AW{1'b0}}, addr_req };
 assign sdram_addr = (DW==8?(size_ext>>1):size_ext ) + offset;
+assign passthru   = din_ok && we && !REPACK[0];
 
 always @(*) begin
     case(DW)
@@ -74,7 +82,7 @@ always @(posedge clk, posedge rst)
         cached_addr1 <= 'd0;
     end else begin
         if( clr ) good <= 2'b00;
-        data_ok <= addr_ok && ( hit0 || hit1 || (din_ok&&we));
+        data_ok <= addr_ok && ( hit0 || hit1 || passthru );
         if( we && din_ok ) begin
             cached_data1 <= cached_data0;
             cached_addr1 <= cached_addr0;
@@ -92,7 +100,7 @@ end
 // data_mux selects one of two cache registers
 // but if we are getting fresh data, it selects directly the new data
 // this saves one clock cycle at the expense of more LUTs
-wire [31:0] data_mux = (we&&din_ok) ? din :
+wire [31:0] data_mux = passthru ? din :
     (hit0 ? cached_data0 : cached_data1);
 
 generate

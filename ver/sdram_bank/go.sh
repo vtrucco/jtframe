@@ -18,6 +18,8 @@ while [ $# -gt 0 ]; do
             EXTRA="$EXTRA -DWRITE_ENABLE=0";;
         -norefresh)
             EXTRA="$EXTRA -DNOREFRESH";;
+        -repack)
+            EXTRA="$EXTRA -DJTFRAME_SDRAM_REPACK";;
         -write)
             shift
             EXTRA="$EXTRA -DWRITE_CHANCE=$1";;
@@ -34,6 +36,7 @@ Usage:
                   10.416 for 96MHz
                   7.5ns sets the maximum speed before breaking SDRAM timings
     -readonly     disables write requests
+    -repack       repacks output data, adding one stage of latching (defines JTFRAME_SDRAM_REPACK)
     -norefresh    disables refresh
     -write        chance of a write in the writing bank. Integer between 0 and 100
     -idle         defines % of time idle for each bank requester. Use an integer between 0 and 100.
@@ -49,6 +52,6 @@ done
 
 make || exit $?
 
-echo "$EXTRA"
+echo Extra arguments: "$EXTRA"
 iverilog test.v ../../hdl/sdram/jtframe_sdram_bank*.v ../../hdl/ver/mt48lc16m16a2.v \
     -o sim -DJTFRAME_SDRAM_BANKS -DSIMULATION $DUMP $EXTRA && sim -lxt

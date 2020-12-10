@@ -26,6 +26,9 @@ module jtframe_rom_2slots #(parameter
     SLOT0_DW = 8, SLOT1_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8,
 
+    SLOT0_REPACK = 0,
+    SLOT1_REPACK = 0,
+
     parameter [21:0] SLOT0_OFFSET = 22'h0,
     parameter [21:0] SLOT1_OFFSET = 22'h0,
     parameter REF_FILE="sdram_bank3.hex"
@@ -68,7 +71,7 @@ assign slot1_ok = ok[1];
 wire [21:0] offset0 = SLOT0_OFFSET,
             offset1 = SLOT1_OFFSET;
 
-jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
+jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
@@ -84,7 +87,7 @@ jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
+jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
