@@ -25,6 +25,7 @@ module jtframe_kabuki(
     input             mreq_n,
     input      [15:0] addr,
     input      [ 7:0] din,
+    input             en,
     // Decode keys
     input      [ 7:0] prog_data,
     input             prog_we,
@@ -33,6 +34,7 @@ module jtframe_kabuki(
 
 reg  [15:0] addr_hit;
 reg  [87:0] kabuki_keys;
+reg         en_cpy;
 
 wire [31:0] swap_key1, swap_key2;
 wire [15:0] addr_key;
@@ -44,6 +46,7 @@ always @(posedge clk) begin
     if( prog_we ) begin
         kabuki_keys <= { kabuki_keys[79:0], prog_data };
     end
+    en_cpy <= en;
 end
 
 function [7:0] bitswap1(
@@ -78,7 +81,7 @@ end
 
 always @(*) begin
     dout = din;
-    if( !mreq_n && !rd_n ) begin
+    if( !mreq_n && !rd_n && en_cpy ) begin
         dout  = bitswap1( dout, swap_key1[15:0], addr_hit[7:0] );
         dout  = { dout[6:0], dout[7] };
 
