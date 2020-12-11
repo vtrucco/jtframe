@@ -1,26 +1,26 @@
 //
 // scandoubler.v
-// 
-// Copyright (c) 2015 Till Harbaum <till@harbaum.org> 
+//
+// Copyright (c) 2015 Till Harbaum <till@harbaum.org>
 // Copyright (c) 2017-2019 Sorgelig
-// 
-// This source file is free software: you can redistribute it and/or modify 
-// it under the terms of the GNU General Public License as published 
-// by the Free Software Foundation, either version 3 of the License, or 
-// (at your option) any later version. 
-// 
+//
+// This source file is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
 // This source file is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of 
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License 
-// along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // TODO: Delay vsync one line
 
 module scandoubler #(
-        parameter LENGTH=256, 
+        parameter LENGTH=256,
         parameter HALF_DEPTH=1,
         // Do not modify DWIDTH:
         parameter DWIDTH = HALF_DEPTH ? 3 : 7
@@ -112,6 +112,7 @@ reg [3:0] vbo;
 reg [3:0] vso;
 reg [8:0] hbo;
 
+/*
 Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 (
 	.clk         ( clk_vid             ),
@@ -119,7 +120,7 @@ Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 	.ce_in       ( ce_x4i              ),
 	.inputpixel  ( {b_d,g_d,r_d}       ),
 	.mono        ( mono                ),
-    .disable_hq2x( ~hq2x               ),
+    //.disable_hq2x( ~hq2x             ),
 	.reset_frame ( vb_in               ),
 	.reset_line  ( req_line_reset      ),
 
@@ -128,6 +129,9 @@ Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 	.hblank      ( hbo[0]&hbo[8]       ),
 	.outpixel    ( {b_out,g_out,r_out} )
 );
+*/
+
+assign {b_out,g_out,r_out} = {b_d,g_d,r_d};
 
 reg  [7:0] pix_out_cnt = 0;
 wire [7:0] pc_out = pix_out_cnt + 1'b1;

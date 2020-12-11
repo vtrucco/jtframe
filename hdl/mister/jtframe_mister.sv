@@ -225,7 +225,7 @@ end
     `ifdef JTFRAME_CLK96
         `define JTFRAME_MR_FASTIO 1
     `else
-        `define JTFRAME_MR_FASTIO 0
+      `define JTFRAME_MR_FASTIO 0
     `endif
 `endif
 

@@ -6,7 +6,7 @@ EXTRA=
 while [ $# -gt 0 ]; do
     case $1 in
         -nodump) DUMP=;;
-        -mister) EXTRA="$EXTRA -DMISTER";;
+        -mister) EXTRA="$EXTRA -DMISTER -DJTFRAME_SDRAM_ADQM";;
         -mist) ;;
         -time)
             shift
@@ -26,6 +26,8 @@ while [ $# -gt 0 ]; do
         -idle)
             shift
             EXTRA="$EXTRA -DIDLE=$1";;
+        -perf)
+            EXTRA="$EXTRA -DWRITE_ENABLE=0 -DIDLE=0 -DNOREFRESH";;
         -h|-help) cat << EOF
     Tests that correct values are written and read. It also tests that there are no stall conditions.
     All is done in a random test.
@@ -40,6 +42,7 @@ Usage:
     -norefresh    disables refresh
     -write        chance of a write in the writing bank. Integer between 0 and 100
     -idle         defines % of time idle for each bank requester. Use an integer between 0 and 100.
+    -perf         Measures read performance: disables writes and refresh. Sets idle time to 0%.
     -mister       enables MiSTer simulation, with special constraint on DQM signals
     -mist         enables free use of DQM signals (default)
 EOF

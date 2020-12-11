@@ -15,8 +15,8 @@
 // ie ce_in cannot a permanent 1'b1
 
 module Hq2x #(
-    parameter LENGTH=128, 
-    parameter HALF_DEPTH=0, 
+    parameter LENGTH=128,
+    parameter HALF_DEPTH=0,
     parameter DWIDTH = HALF_DEPTH ? 11 : 23  // do not define DWIDTH
 ) (
 	input             clk,
@@ -126,7 +126,7 @@ hq2x_in #(.LENGTH(LENGTH), .DWIDTH(DWIDTH)) hq2x_in
 );
 
 reg     [AWIDTH+1:0] read_x;
-reg     [AWIDTH+1:0] wrout_addr; 
+reg     [AWIDTH+1:0] wrout_addr;
 reg                  wrout_en;
 reg  [DWIDTH1*4-1:0] wrdata, wrdata_pre;
 wire [DWIDTH1*4-1:0] outpixel_x4;
@@ -166,7 +166,7 @@ always @(posedge clk) begin
 	reg old_reset_line;
 	reg old_reset_frame;
 	reg [3:0] wrdata_finished;
-	reg [AWIDTH+1:0] waddr; 
+	reg [AWIDTH+1:0] waddr;
 
 	wrout_en <= 0;
 	wrin_en  <= 0;
@@ -230,7 +230,7 @@ always @(posedge clk) begin
 				prevbuf <= 0;
 			end
 		end
-		
+
 		old_reset_line  <= reset_line;
 	end
 end
@@ -348,7 +348,7 @@ module Blend
 	reg [23:0] i10,i20,i30;
 	reg  [6:0] op0;
 	always @(posedge clk) if (clk_en) begin
-		i10 <= e;
+		i10 <= e;/*
 		case({!is_diff, bl_rule})
 		1,11,12,13,17: {op0, i20, i30} <= {BLEND1, a, 24'd0};
 		      2,14,18: {op0, i20, i30} <= {BLEND1, d, 24'd0};
@@ -361,8 +361,9 @@ module Blend
 			        28: {op0, i20, i30} <= {BLEND4, d, b};
 			        30: {op0, i20, i30} <= {BLEND3, b, d};
 			        31: {op0, i20, i30} <= {BLEND3, d, b};
-		      default: {op0, i20, i30} <= {BLEND1, e, 24'd0}; 
-		endcase
+		      default: {op0, i20, i30} <= {BLEND1, e, 24'd0};
+		endcase*/
+		{op0, i20, i30} <= {BLEND1, e, 24'd0};
 	end
 
 	reg [23:0] i1,i2,i3;
