@@ -42,24 +42,24 @@ always @(posedge clk, posedge rst) begin
         `ifdef MAX_THROUGHPUT
         if(ack || !rd_req) begin
             rd_req <= 1;
-            addr_req[19:0] <= $urandom;
+            addr_req[19:0] <= $random;
             ba_req   <= ba_req + 2'd1;
             waiting  <= 1;
         end
         `else
         if( !waiting ) begin
-            if( $urandom%100 > 50 ) begin
-                addr_req[19:0] <= $urandom;
-                if( $urandom%100>95 ) begin
+            if( $random%100 > 50 ) begin
+                addr_req[19:0] <= $random;
+                if( $random%100>95 ) begin
                     rd_req <= 0;
                     wr_req <= 1;
-                    din    <= $urandom;
-                    din_m  <= $urandom;
+                    din    <= $random;
+                    din_m  <= $random;
                 end else begin
                     rd_req <= 1;
                     wr_req <= 0;
                 end
-                ba_req   <= $urandom;
+                ba_req   <= $random;
                 waiting  <= 1;
             end
         end else if( ack ) begin

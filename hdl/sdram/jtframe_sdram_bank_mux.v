@@ -142,7 +142,7 @@ always @(posedge clk, posedge rst ) begin
         ctl_rfsh_en <= 0;
     else begin
         if( prog_en )
-            ctl_rfsh_en <= ctl_rdy;
+            ctl_rfsh_en <= 1;
         else
             ctl_rfsh_en <= rfsh_en;
     end
@@ -159,8 +159,6 @@ always @(*) begin
         push_ok      = fifo_top[3:2]==2'd0 || shift_ok || top_shift_ok;
     end
     free = ~queued;
-    //if( shift_ok )
-    //    free[ fifo_top[1:0] ] = 1;
 end
 
 always @(posedge clk, posedge rst) begin

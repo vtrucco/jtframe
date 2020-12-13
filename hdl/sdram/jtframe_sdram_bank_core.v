@@ -158,7 +158,7 @@ always @(*) begin
     `else
     hold_bus = 0;
     `endif
-    activate = ( (!all_st[READ_BIT] && rd) || (all_st[6:2]==7'd0 && wr)) && !rfshing;
+    activate = ( (!all_st[READ_BIT] && rd ) || (!all_st[6:2] && wr)) && !rfshing;
     case( ba_rq )
         2'd0: if( !ba0_st[0] ) activate = 0;
         2'd1: if( !ba1_st[0] ) activate = 0;
@@ -239,7 +239,8 @@ always @(posedge clk, posedge rst) begin
             endcase
         end
     end else begin // Regular operation
-        if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
+        //if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
+        if(!wrtng) dq_pad <= 16'hzzzz;
         ba0_st <= next( ba0_st, 2'd0 );
         ba1_st <= next( ba1_st, 2'd1 );
         ba2_st <= next( ba2_st, 2'd2 );
@@ -251,7 +252,7 @@ always @(posedge clk, posedge rst) begin
         if( refresh ) begin
             cmd         <= CMD_REFRESH;
             sdram_a[10] <= 1;
-            rfshing  <= 1;
+            rfshing     <= 1;
         end else if( end_rfsh ) begin
             rfshing  <= 0;
         end
@@ -271,16 +272,15 @@ always @(posedge clk, posedge rst) begin
             ba_fifo[0]  <= ba_fifo[1];
             ack         <= 0;
             post_act    <= 0;
+        end
+        if( read ) begin
             if( ADQM )
                 // A12 and A11 used as mask in MiSTer 128MB module
                 sdram_a[12:11] <= wrtng ? wrmask : 2'b00;
             else
                 dqm            <= wrtng ? wrmask : 2'b00;
-        end
-        if( read ) begin
-            cmd            <= wrtng ? CMD_WRITE : CMD_READ;
-            sdram_a[10]    <= 1;     // precharge
-            if( COW==9 ) sdram_a[9] <= 0;
+            cmd              <= wrtng ? CMD_WRITE : CMD_READ;
+            sdram_a[10]      <= 1;     // precharge
             sdram_a[COW-1:0] <= col_fifo[0];
             sdram_ba         <= ba_fifo[0];
             ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[0];

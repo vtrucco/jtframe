@@ -83,35 +83,47 @@ ba_requester #(0, `WRITE_ENABLE,"sdram_bank0.hex", `IDLE, `WRITE_CHANCE) u_ba0(
     .sdram_dq   ( dout          )
 );
 
-ba_requester #(1, 0,"sdram_bank1.hex", `IDLE) u_ba1(
+ba_requester #(1, 0,"sdram_bank1.hex", 200/*`IDLE*/) u_ba1(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba1_addr      ),
     .ba_rd      ( ba1_rd        ),
     .ba_rdy     ( ba1_rdy       ),
     .ba_ack     ( ba1_ack       ),
-    .sdram_dq   ( dout          )
+    .sdram_dq   ( dout          ),
+    // unused ports
+    .ba_wr      (               ),
+    .ba_dout    (               ),
+    .ba_dout_m  (               )
 );
 
-ba_requester #(2, 0,"sdram_bank2.hex", `IDLE) u_ba2(
+ba_requester #(2, 0,"sdram_bank2.hex", 200/*`IDLE*/) u_ba2(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba2_addr      ),
     .ba_rd      ( ba2_rd        ),
     .ba_rdy     ( ba2_rdy       ),
     .ba_ack     ( ba2_ack       ),
-    .sdram_dq   ( dout          )
+    .sdram_dq   ( dout          ),
+    // unused ports
+    .ba_wr      (               ),
+    .ba_dout    (               ),
+    .ba_dout_m  (               )
 );
 
 
-ba_requester #(3, 0,"sdram_bank3.hex", `IDLE) u_ba3(
+ba_requester #(3, 0,"sdram_bank3.hex", 200/*`IDLE*/) u_ba3(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba3_addr      ),
     .ba_rd      ( ba3_rd        ),
     .ba_rdy     ( ba3_rdy       ),
     .ba_ack     ( ba3_ack       ),
-    .sdram_dq   ( dout          )
+    .sdram_dq   ( dout          ),
+    // unused ports
+    .ba_wr      (               ),
+    .ba_dout    (               ),
+    .ba_dout_m  (               )
 );
 
 jtframe_sdram_bank #(.AW(22)) uut(
@@ -169,8 +181,17 @@ jtframe_sdram_bank #(.AW(22)) uut(
     .rfsh_en    ( rfsh_en       )
 );
 
+reg clk_sdram;
+
+always @(posedge clk, negedge clk) begin
+    if( clk )
+        clk_sdram <= #(`SDRAM_SHIFT) 1'b0;
+    else
+        clk_sdram <= #(`SDRAM_SHIFT) 1'b1;
+end
+
 mt48lc16m16a2 sdram(
-    .Clk        ( clk       ),
+    .Clk        ( clk_sdram ),
     .Cke        ( sdram_cke ),
     .Dq         ( sdram_dq  ),
     .Addr       ( sdram_a   ),
@@ -238,7 +259,7 @@ module  ba_requester(
 parameter BANK=0, RW=0, MEMFILE="sdram_bank1.hex",
           IDLE=50, WRCHANCE=5; // Use 100 or more to keep the bank idle
 
-localparam STALL_LIMIT = 100;
+localparam STALL_LIMIT = (5000*`PERIOD)/7;
 
 reg [31:0] data_read;
 reg [15:0] mem_data[0:4*1024*1024-1];
@@ -267,13 +288,13 @@ always @(posedge clk, posedge rst) begin
         stall    <= 0;
     end else if(init_done) begin
         if( !waiting ) begin
-            if( $urandom%100 > IDLE ) begin
-                ba_addr[21:1] <= $urandom; // bit 0 not used for bursts of length 2
-                if( $urandom%100>(100-WRCHANCE) && RW) begin
+            if( $random%100 > IDLE ) begin
+                ba_addr[21:1] <= $random; // bit 0 not used for bursts of length 2
+                if( $random%100>(100-WRCHANCE) && RW) begin
                     ba_rd      <= 0;
                     ba_wr      <= 1;
-                    ba_dout    <= $urandom;
-                    ba_dout_m  <= $urandom;
+                    ba_dout    <= $random;
+                    ba_dout_m  <= $random;
                 end else begin
                     ba_rd    <= 1;
                     ba_wr    <= 0;
@@ -302,7 +323,7 @@ always @(posedge clk, posedge rst) begin
                 if( sdram_dq !== expected && rd_cycle) begin
                     $display("Data read error at time %t at address %X (bank %1d). %X read, expected %X\n",
                         $time, ba_addr, BANK, sdram_dq, expected );
-                    $finish;
+                    #(2*`PERIOD) $finish;
                 end
             end
         end

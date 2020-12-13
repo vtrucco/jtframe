@@ -224,12 +224,37 @@ pll pll(
 `ifndef JTFRAME_CLK96
 assign clk_sys   = clk48;
 assign clk_rom   = clk48;
-assign SDRAM_CLK = clk48sh;
+//assign SDRAM_CLK = clk48sh;
 `else
 assign clk_sys   = clk96; // clk48 can be used but video mixer may fail for some modes
 assign clk_rom   = clk96;
-assign SDRAM_CLK = clk96sh;
+//assign SDRAM_CLK = clk96sh;
 `endif
+
+altddio_out
+#(
+    .extend_oe_disable("OFF"),
+    .intended_device_family("Cyclone V"),
+    .invert_output("OFF"),
+    .lpm_hint("UNUSED"),
+    .lpm_type("altddio_out"),
+    .oe_reg("UNREGISTERED"),
+    .power_up_high("OFF"),
+    .width(1)
+)
+sdramclk_ddr
+(
+    .datain_h(1'b0),
+    .datain_l(1'b1),
+    .outclock(clk_rom),
+    .dataout(SDRAM_CLK),
+    .aclr(1'b0),
+    .aset(1'b0),
+    .oe(1'b1),
+    .outclocken(1'b1),
+    .sclr(1'b0),
+    .sset(1'b0)
+);
 
 ///////////////////////////////////////////////////
 
