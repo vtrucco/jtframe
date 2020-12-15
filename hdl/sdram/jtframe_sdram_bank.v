@@ -16,7 +16,11 @@
     Version: 1.0
     Date: 30-11-2020 */
 
-module jtframe_sdram_bank #(parameter AW=22)(
+module jtframe_sdram_bank #(
+    parameter AW=22,
+              HF=1      // 1 for HF operation (idle cycles), 0 for LF operation
+                        // HF operation starts at 66.6MHz (1/15ns)
+)(
     input               rst,
     input               clk,
 
@@ -91,7 +95,7 @@ wire [  15:0] ctl_din;
 wire [   1:0] ctl_din_m;  // write mask
 wire [  31:0] ctl_dout;
 
-jtframe_sdram_bank_mux #(.AW(AW)) u_mux(
+jtframe_sdram_bank_mux #(.AW(AW),.HF(HF)) u_mux(
     .rst        ( rst           ),
     .clk        ( clk           ),
 
@@ -150,7 +154,7 @@ jtframe_sdram_bank_mux #(.AW(AW)) u_mux(
     .dout       ( dout          )
 );
 
-jtframe_sdram_bank_core #(.AW(AW)) u_core(
+jtframe_sdram_bank_core #(.AW(AW),.HF(HF)) u_core(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .addr       ( ctl_addr      ),

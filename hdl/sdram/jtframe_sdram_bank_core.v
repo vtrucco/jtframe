@@ -33,7 +33,11 @@
 // 22      |  4 MBx2 = 8MB     |   32 MB
 // 23      |  8 MBx2 =16MB     |   64 MB
 
-module jtframe_sdram_bank_core #(parameter AW=22)(
+module jtframe_sdram_bank_core #(
+    parameter AW=22,
+              HF=1      // 1 for HF operation (idle cycles), 0 for LF operation
+                        // HF operation starts at 66.6MHz (1/15ns)
+)(
     input               rst,
     input               clk,
     // requests
@@ -69,18 +73,23 @@ module jtframe_sdram_bank_core #(parameter AW=22)(
 
 localparam ROW=13,
            COW= AW==22 ? 9 : 10, // 9 for 32MB SDRAM, 10 for 64MB
-           BQL=4,
-           READ_BIT = 2, DQLO_BIT=5, DQHI_BIT=6;
+           STW = HF ? 8 : 7,     // state word width
+           BQL = 4,                // bank queue length
+           READ_ST = HF ? 2 : 1,
+           DQLO_ST = HF ? 5 : 4,
+           DQHI_ST = HF ? 6 : 5,
+           FIFO_SEL= HF ? 0 : 1;
 
-localparam CMD_LOAD_MODE   = 4'b0000, // 0
-           CMD_REFRESH     = 4'b0001, // 1
-           CMD_PRECHARGE   = 4'b0010, // 2
-           CMD_ACTIVE      = 4'b0011, // 3
-           CMD_WRITE       = 4'b0100, // 4
-           CMD_READ        = 4'b0101, // 5
-           CMD_STOP        = 4'b0110, // 6 Burst terminate
-           CMD_NOP         = 4'b0111, // 7
-           CMD_INHIBIT     = 4'b1000; // 8
+//                             /CS /RAS /CAS /WE
+localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
+           CMD_REFRESH     = 4'b0___0____0____1, // 1
+           CMD_PRECHARGE   = 4'b0___0____1____0, // 2
+           CMD_ACTIVE      = 4'b0___0____1____1, // 3
+           CMD_WRITE       = 4'b0___1____0____0, // 4
+           CMD_READ        = 4'b0___1____0____1, // 5
+           CMD_STOP        = 4'b0___1____1____0, // 6 Burst terminate
+           CMD_NOP         = 4'b0___1____1____1, // 7
+           CMD_INHIBIT     = 4'b1___0____0____0; // 8
 
 localparam [13:0] INIT_WAIT = 14'd10_000;
 
@@ -100,7 +109,7 @@ reg [ 2:0] init_st;
 reg [ 3:0] init_cmd;
 reg        init;
 
-reg       [7:0] ba0_st, ba1_st, ba2_st, ba3_st, all_st;
+reg   [STW-1:0] ba0_st, ba1_st, ba2_st, ba3_st, all_st;
 reg             activate, read, get_low, get_high, post_act, wrtng;
 reg             hold_bus;
 reg       [3:0] cmd;
@@ -132,23 +141,33 @@ assign dout = { dq_ff, dq_ff0 };
 `ifdef JTFRAME_SDRAM_ADQM_SAFE
 assign dqmbusy = all_st[5:3]!=3'd0;
 `else
-assign dqmbusy = all_st[3];
+assign dqmbusy = all_st[HF ? 3 : 2];
 `endif
 
 `ifdef SIMULATION
 wire [9:0] col_fifo0 = col_fifo[0];
 wire [9:0] col_fifo1 = col_fifo[1];
-`endif
+wire [1:0] ba_fifo0  = ba_fifo[0];
+wire [1:0] ba_fifo1  = ba_fifo[1];
 
-function [7:0] next;
-    input [7:0] cur;
+`endif
+reg  [STW-1:0] next_ba0;
+reg  [STW-1:0] next_ba1;
+reg  [STW-1:0] next_ba2;
+reg  [STW-1:0] next_ba3;
+
+function [STW-1:0] next;
+    input [STW-1:0] cur;
     input [1:0] ba;
     // state shifts automatically after READ command has been issued
     // state shifts from 0 bit on ACTIVE cmd
     // state shifts from 2 bit on READ cmd
-    next = ((activate && ba_rq==ba) || (read && ba_fifo[0]==ba) || (!cur[0] && !cur[2]) ) || rfshing ?
-           { cur[6:0], cur[7] } :  // advance
-           cur; // wait
+    next =    ((activate && ba_rq==ba)
+           || (read && ba_fifo[HF?0:1]==ba)
+           || (!cur[0] && !cur[READ_ST]) )
+           || rfshing ?
+                        { cur[STW-2:0], cur[STW-1] } :  // advance
+                        cur; // wait
 endfunction
 
 always @(*) begin
@@ -158,24 +177,29 @@ always @(*) begin
     `else
     hold_bus = 0;
     `endif
-    activate = ( (!all_st[READ_BIT] && rd ) || (!all_st[6:2] && wr)) && !rfshing;
+    activate = ( (!all_st[READ_ST] && rd ) || (!all_st[STW-2:(HF?2:1)] && wr)) && !rfshing;
     case( ba_rq )
         2'd0: if( !ba0_st[0] ) activate = 0;
         2'd1: if( !ba1_st[0] ) activate = 0;
         2'd2: if( !ba2_st[0] ) activate = 0;
         2'd3: if( !ba3_st[0] ) activate = 0;
     endcase
-    read     = all_st[READ_BIT] && !rfshing;
+    read     = all_st[READ_ST] && !all_st[READ_ST+1] && !rfshing;
     // prevents overwritting A12/A11 with values incompatible with a 16-bit read
     // on MiSTer
     if( dqmbusy && req_a12 != 2'd00 && ADQM ) begin
         activate = 0;
         read     = 0;
     end
-    refresh  = all_st[7:1]==7'd0 && rfsh_en && !rd && !wr && !rfshing;
-    end_rfsh = rfshing && all_st[7];
-    get_low  = all_st[DQLO_BIT] && !rfshing;
-    get_high = all_st[DQHI_BIT] && !rfshing;
+    refresh  = !all_st[STW-1:1] && rfsh_en && !rd && !wr && !rfshing;
+    end_rfsh = rfshing && all_st[STW-1];
+    get_low  = all_st[DQLO_ST] && !rfshing;
+    get_high = all_st[DQHI_ST] && !rfshing;
+    ack      = (HF ? post_act : activate) && !init;
+    next_ba0 = next( ba0_st, 2'd0 );
+    next_ba1 = next( ba1_st, 2'd1 );
+    next_ba2 = next( ba2_st, 2'd2 );
+    next_ba3 = next( ba3_st, 2'd3 );
 end
 
 always @(posedge clk, posedge rst) begin
@@ -186,6 +210,7 @@ always @(posedge clk, posedge rst) begin
         ba3_st   <= 8'd1;
         rfshing  <= 0;
         wrtng    <= 0;
+        post_act <= 0;
         // initialization loop
         init     <= 1;
         wait_cnt <= INIT_WAIT; // wait for 100us
@@ -197,7 +222,6 @@ always @(posedge clk, posedge rst) begin
         sdram_a  <= 13'd0;
         sdram_ba <= 2'd0;
         // output signals
-        ack      <= 0;
         rdy      <= 0;
         ba_rdy   <= 0;
         ba_queue <= {BQL*2{1'b0}};
@@ -241,10 +265,10 @@ always @(posedge clk, posedge rst) begin
     end else begin // Regular operation
         //if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
         if(!wrtng) dq_pad <= 16'hzzzz;
-        ba0_st <= next( ba0_st, 2'd0 );
-        ba1_st <= next( ba1_st, 2'd1 );
-        ba2_st <= next( ba2_st, 2'd2 );
-        ba3_st <= next( ba3_st, 2'd3 );
+        ba0_st <= next_ba0;
+        ba1_st <= next_ba1;
+        ba2_st <= next_ba2;
+        ba3_st <= next_ba3;
         ba_queue[ (BQL-1)*2-1: 0 ] <= ba_queue[ BQL*2-1: 2 ];
         // Default transitions
         cmd    <= CMD_NOP;
@@ -262,16 +286,15 @@ always @(posedge clk, posedge rst) begin
             ba_fifo[1]    <= ba_rq;
             wrtng         <= wr;
             wrmask        <= din_m;
-            ack           <= 1;
             post_act      <= 1;
             { sdram_a, col_fifo[1] } <= addr;
             if( wr ) dq_pad <= din;
+        end else begin
+            post_act    <= 0;
         end
         if( post_act ) begin
             col_fifo[0] <= col_fifo[1];
             ba_fifo[0]  <= ba_fifo[1];
-            ack         <= 0;
-            post_act    <= 0;
         end
         if( read ) begin
             if( ADQM )
@@ -281,9 +304,9 @@ always @(posedge clk, posedge rst) begin
                 dqm            <= wrtng ? wrmask : 2'b00;
             cmd              <= wrtng ? CMD_WRITE : CMD_READ;
             sdram_a[10]      <= 1;     // precharge
-            sdram_a[COW-1:0] <= col_fifo[0];
-            sdram_ba         <= ba_fifo[0];
-            ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[0];
+            sdram_a[COW-1:0] <= col_fifo[FIFO_SEL];
+            sdram_ba <= ba_fifo[FIFO_SEL];
+            ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[FIFO_SEL];
         end
         if( get_low ) begin
             dq_ff  <= sdram_dq;

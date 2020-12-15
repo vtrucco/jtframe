@@ -16,7 +16,11 @@
     Version: 1.0
     Date: 30-11-2020 */
 
-module jtframe_sdram_bank_mux #(parameter AW=22) (
+module jtframe_sdram_bank_mux #(
+    parameter AW=22,
+              HF=1      // 1 for HF operation (idle cycles), 0 for LF operation
+                        // HF operation starts at 66.6MHz (1/15ns)
+) (
     input               rst,
     input               clk,
 
@@ -77,38 +81,57 @@ module jtframe_sdram_bank_mux #(parameter AW=22) (
 
 localparam RQW=AW+2+2, FFW=RQW*3;
 
-reg  [    3:0] queued, free;
-wire [RQW-1:0] fifo_out, fifo_top;
-wire [RQW-1:0] fifo0, fifo1, fifo2;
-reg  [FFW-1:0] fifo;
-reg            push_ok, shift_ok, top_shift_ok;
-wire [ AW-1:0] reg_addr;
-wire           reg_rd, reg_wr;
-wire [    1:0] reg_ba;
+// Adds an extra cycle of latency. Use if needed to meet timing constraints
+`ifdef JTFRAME_SDRAM_MUXLATCH
+localparam MUXLATCH = 1;
+`else
+localparam MUXLATCH = HF;
+`endif
 
-assign fifo2   = fifo[FFW-1:FFW-RQW];
-assign fifo1   = fifo[FFW-RQW-1:FFW-RQW*2];
-assign fifo0   = fifo[FFW-RQW*2-1:0];
+reg  [RQW-1:0] mux_data;
+reg  [ AW-1:0] fifo_addr;
+reg  [    2:0] ba_sel;
+reg            fifo_rd, fifo_wr;
+reg  [    1:0] fifo_ba;
+wire           ba0_rq;
+reg  [    3:0] queue;
+reg  [    7:0] lfsr;
 
+assign ba0_rq  = ba0_rd | ba0_wr;
 assign prog_rdy= prog_en & ctl_ack;
 
-assign ba0_ack = ctl_ack && fifo_out[1:0]==2'd0;
-assign ba1_ack = ctl_ack && fifo_out[1:0]==2'd1;
-assign ba2_ack = ctl_ack && fifo_out[1:0]==2'd2;
-assign ba3_ack = ctl_ack && fifo_out[1:0]==2'd3;
+assign ba0_ack = ctl_ack && ctl_ba_rq==2'd0;
+assign ba1_ack = ctl_ack && ctl_ba_rq==2'd1;
+assign ba2_ack = ctl_ack && ctl_ba_rq==2'd2;
+assign ba3_ack = ctl_ack && ctl_ba_rq==2'd3;
 
-// FIFO
-assign fifo_out = fifo[RQW-1:0];
-assign fifo_top = fifo[FFW-1:FFW-RQW];
-assign { reg_addr, reg_rd, reg_wr, reg_ba } = fifo_out;
 
 // Multiplexer to select programming or regular inputs
-assign ctl_addr    = prog_en ? prog_addr : reg_addr;
-assign ctl_rd      = prog_en ? prog_rd   : reg_rd;
-assign ctl_wr      = prog_en ? prog_wr   : reg_wr;
-assign ctl_ba_rq   = prog_en ? prog_ba   : reg_ba;
+assign ctl_addr    = prog_en ? prog_addr : fifo_addr;
+assign ctl_rd      = prog_en ? prog_rd   : fifo_rd;
+assign ctl_wr      = prog_en ? prog_wr   : fifo_wr;
+assign ctl_ba_rq   = prog_en ? prog_ba   : fifo_ba;
 assign ctl_din     = prog_en ? prog_din  : ba0_din;
 assign ctl_din_m   = prog_en ? prog_din_m: ba0_din_m;
+
+generate
+    if( MUXLATCH ) begin
+        reg post_ack;
+
+        always @(posedge clk, posedge rst) begin
+            if( rst ) begin
+                { fifo_addr, fifo_rd, fifo_wr, fifo_ba } <= {RQW{1'b0}};
+                post_ack <= 0;
+            end else begin
+                post_ack <= ctl_ack;
+                if( post_ack || (!fifo_rd && !fifo_wr) )
+                    { fifo_addr, fifo_rd, fifo_wr, fifo_ba } <= mux_data;
+            end
+        end
+    end else begin
+        always @(mux_data) { fifo_addr, fifo_rd, fifo_wr, fifo_ba } = mux_data;
+    end
+endgenerate
 
 `ifdef JTFRAME_SDRAM_REPACK
 always @(posedge clk, posedge rst ) begin
@@ -149,52 +172,56 @@ always @(posedge clk, posedge rst ) begin
 end
 
 always @(*) begin
-    if( prog_en ) begin
-        shift_ok = 0;
-        push_ok  = 0;
-        top_shift_ok = 0;
+    // mux selector
+    if( lfsr[7] ) begin
+        if( ba0_rq && !queue[0] )
+            ba_sel = 3'd0;
+        else if( ba1_rd && !queue[1] )
+            ba_sel = 3'd1;
+        else if( ba2_rd && !queue[2] )
+            ba_sel = 3'd2;
+        else if( ba3_rd && !queue[3] )
+            ba_sel = 3'd3;
+        else
+            ba_sel = 3'd4;
     end else begin
-        shift_ok     = fifo_out[3:2]==2'd0 || ctl_ack;
-        top_shift_ok = fifo1[3:2]   ==2'd0;
-        push_ok      = fifo_top[3:2]==2'd0 || shift_ok || top_shift_ok;
+        if( ba3_rd && !queue[3] )
+            ba_sel = 3'd3;
+        else if( ba2_rd && !queue[2] )
+            ba_sel = 3'd2;
+        else if( ba1_rd && !queue[1] )
+            ba_sel = 3'd1;
+        else if( ba0_rq && !queue[0] )
+            ba_sel = 3'd0;
+        else
+            ba_sel = 3'd4;
     end
-    free = ~queued;
+    // mux output
+    mux_data[1:0] = ba_sel;
+    case( ba_sel )
+        3'd0: mux_data[RQW-1:2] = { ba0_addr, ba0_rd, ba0_wr };
+        3'd1: mux_data[RQW-1:2] = { ba1_addr, 2'b10 };
+        3'd2: mux_data[RQW-1:2] = { ba2_addr, 2'b10 };
+        3'd3: mux_data[RQW-1:2] = { ba3_addr, 2'b10 };
+        default: mux_data[RQW-1:2] = {RQW-2{1'd0}};
+    endcase
 end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        queued <= 4'd0;
-        fifo   <= {FFW{1'd0}};
+        queue <= 4'd0;
+        lfsr  <= ~8'd0;
     end else begin
         if( prog_en ) begin
-            fifo   <= {FFW{1'd0}};
+            queue <= 4'd0;
         end else begin
-            if( push_ok ) begin
-                if( (ba0_rd || ba0_wr) && free[0] ) begin
-                    fifo[FFW-1:FFW-RQW] <= { ba0_addr, ba0_rd, ba0_wr, 2'd0 };
-                    queued[0] <= 1;
-                end else
-                if( ba1_rd && free[1] ) begin
-                    fifo[FFW-1:FFW-RQW] <= { ba1_addr, ba1_rd, 1'd0, 2'd1 };
-                    queued[1] <= 1;
-                end else
-                if( ba2_rd && free[2] ) begin
-                    fifo[FFW-1:FFW-RQW] <= { ba2_addr, ba2_rd, 1'd0, 2'd2 };
-                    queued[2] <= 1;
-                end else
-                if( ba3_rd && free[3] ) begin
-                    fifo[FFW-1:FFW-RQW] <= { ba3_addr, ba3_rd, 1'd0, 2'd3 };
-                    queued[3] <= 1;
-                end else begin
-                    fifo[FFW-1:FFW-RQW] <= {RQW{1'd0}};
-                end
+            if( ctl_ack ) begin
+                queue[ ctl_ba_rq ] <= 1;
+                lfsr <= { lfsr[6:0], ^{lfsr[7],lfsr[5:3]} };
             end
-            if( shift_ok )
-                fifo[FFW-1-RQW:0] <= fifo[FFW-1:RQW];
-            else if( top_shift_ok )
-                fifo[FFW-1-RQW:RQW] <= fifo[FFW-1:RQW*2];
-            if( ctl_rdy )
-                queued[ ctl_ba_rdy ] <= 0;
+            if( ctl_rdy ) begin
+                queue[ ctl_ba_rdy] <= 0;
+            end
         end
     end
 end
