@@ -137,12 +137,34 @@ module jtframe_z80_romwait (
     input         rom_ok
 );
 
-parameter USEWAITN=1;
+parameter USEWAITN=1, RECOVER=1;
 
-wire   wait_n, cpu_waitn;
+wire       wait_n, cpu_waitn;
+reg  [3:0] miss_cnt;
+reg        rec;
 
-assign cpu_cen   = USEWAITN ? cen : cen&wait_n;
+assign cpu_cen   = USEWAITN ? cen : (cen&wait_n | rec);
 assign cpu_waitn = USEWAITN ? wait_n : 1'b1;
+
+always @(*) begin
+    rec = 0;
+    if( RECOVER ) begin
+        if( miss_cnt && !cen && mreq_n && iorq_n )
+            rec = 1;
+    end
+end
+
+always @(posedge clk, negedge rst_n) begin
+    if( !rst_n ) begin
+        miss_cnt <= 4'd0;
+    end else begin
+        if( cen && !cpu_cen ) begin
+            if( ~&miss_cnt ) miss_cnt <= miss_cnt+4'd1;
+        end else if( rec ) begin
+            if( miss_cnt ) miss_cnt <= miss_cnt - 4'd1;
+        end
+    end
+end
 
 jtframe_rom_wait u_wait(
     .rst_n    ( rst_n     ),
@@ -155,7 +177,7 @@ jtframe_rom_wait u_wait(
     .rom_ok   ( rom_ok    )
 );
 
-jtframe_z80 u_cpu(
+jtframe_z80 u_memcpu(
     .rst_n    ( rst_n     ),
     .clk      ( clk       ),
     .cen      ( cpu_cen   ),
