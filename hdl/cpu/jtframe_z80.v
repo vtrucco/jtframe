@@ -42,6 +42,7 @@ module jtframe_sysz80(
     input         rst_n,
     input         clk,
     input         cen,
+    input         start,
     output        cpu_cen,
     input         int_n,
     input         nmi_n,
@@ -89,6 +90,7 @@ end
     jtframe_z80_romwait u_z80wait(
         .rst_n      ( rst_n     ),
         .clk        ( clk       ),
+        .start      ( start     ),
         .cen        ( cen       ),
         .cpu_cen    ( cpu_cen   ),
         .int_n      ( int_n     ),
@@ -117,6 +119,7 @@ module jtframe_z80_romwait (
     input         rst_n,
     input         clk,
     input         cen,
+    input         start,
     output        cpu_cen,
     input         int_n,
     input         nmi_n,
@@ -137,29 +140,28 @@ module jtframe_z80_romwait (
     input         rom_ok
 );
 
-parameter USEWAITN=1;
-
-wire   wait_n, cpu_waitn;
-
-assign cpu_cen   = USEWAITN ? cen : cen&wait_n;
-assign cpu_waitn = USEWAITN ? wait_n : 1'b1;
-
-jtframe_rom_wait u_wait(
-    .rst_n    ( rst_n     ),
-    .clk      ( clk       ),
-    .cen_in   ( cen       ),
-    .cen_out  (           ),
-    .gate     ( wait_n    ),
-      // manage access to ROM data from SDRAM
-    .rom_cs   ( rom_cs    ),
-    .rom_ok   ( rom_ok    )
+jtframe_z80wait #(1) u_wait(
+    .rst_n      ( rst_n     ),
+    .clk        ( clk       ),
+    .start      ( start     ),
+    .cen_in     ( cen       ),
+    .cen_out    ( cpu_cen   ),
+    .gate       (           ),
+    .iorq_n     ( iorq_n    ),
+    .mreq_n     ( mreq_n    ),
+    .busak_n    ( busak_n   ),
+    // manage access to shared memory
+    .dev_busy   ( 1'b0      ),
+    // manage access to ROM data from SDRAM
+    .rom_cs     ( rom_cs    ),
+    .rom_ok     ( rom_ok    )
 );
 
-jtframe_z80 u_cpu(
+jtframe_z80 u_memcpu(
     .rst_n    ( rst_n     ),
     .clk      ( clk       ),
     .cen      ( cpu_cen   ),
-    .wait_n   ( cpu_waitn ),
+    .wait_n   ( 1'b1      ),
     .int_n    ( int_n     ),
     .nmi_n    ( nmi_n     ),
     .busrq_n  ( busrq_n   ),

@@ -20,6 +20,7 @@ module jtframe_rom_wait(
     input       rst_n,
     input       clk,
     input       cen_in,
+    input       rec_en,
     output      cen_out,
     output      gate,
     // manage access to ROM data from SDRAM
@@ -32,6 +33,9 @@ module jtframe_rom_wait(
         .cen_in     ( cen_in    ),
         .cen_out    ( cen_out   ),
         .gate       ( gate      ),
+        .iorq_n     ( rec_en    ),
+        .mreq_n     ( 1'b1      ),
+        .busak_n    ( 1'b1      ),
         // manage access to shared memory
         .dev_busy   ( 1'b0      ),
         // manage access to ROM data from SDRAM
@@ -112,9 +116,14 @@ endmodule
 module jtframe_z80wait #(parameter devcnt=2)(
     input       rst_n,
     input       clk,
+    input       start,
     input       cen_in,
     output reg  cen_out,
     output      gate,
+    // Recover cycles
+    input       mreq_n,
+    input       iorq_n,
+    input       busak_n,
     // manage access to shared memory
     input  [devcnt-1:0] dev_busy,
     // manage access to ROM data from SDRAM
@@ -127,15 +136,40 @@ module jtframe_z80wait #(parameter devcnt=2)(
 reg last_rom_cs;
 wire rom_cs_posedge = !last_rom_cs && rom_cs;
 
-reg       locked;
-wire rom_bad;
+reg        locked, rec;
+wire       rom_bad, rec_en;
+reg  [3:0] miss_cnt;
+
 // wire bus_ok = (rom_ok||!rom_cs) && !dev_busy;
 
-assign gate    = !(rom_bad || dev_busy || locked );
+assign gate    = !(rom_bad || dev_busy || locked ) && start;
 assign rom_bad = (rom_cs && !rom_ok) || rom_cs_posedge;
+assign rec_en  = &{mreq_n, iorq_n, busak_n};
 
-always @(posedge clk)
-    cen_out <= cen_in & gate;
+always @(*) begin
+    rec = 0;
+    if( miss_cnt && !cen_in && rec_en )
+        rec = 1;
+end
+
+always @(posedge clk, negedge rst_n) begin
+    if( !rst_n ) begin
+        miss_cnt <= 4'd0;
+    end else begin
+        if( !start ) begin
+            miss_cnt <= 4'd0;
+        end else begin
+            if( cen_in && !gate ) begin
+                if( ~&miss_cnt ) miss_cnt <= miss_cnt+4'd1;
+            end else if( rec ) begin
+                if( miss_cnt ) miss_cnt <= miss_cnt - 4'd1;
+            end
+        end
+    end
+end
+
+always @(*)
+    cen_out = (cen_in & gate) | rec;
 
 always @(posedge clk or negedge rst_n) begin
     if( !rst_n ) begin
