@@ -123,6 +123,8 @@ end
 `ifdef SIMULATION
 initial begin
     cencnt = 11'd0;
+    next   = 11'd0;
+    next2  = 11'd0;
 end
 `endif
 endmodule
