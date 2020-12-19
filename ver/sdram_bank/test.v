@@ -3,7 +3,7 @@
 module test;
 
 parameter BANK1=1, BANK2=1, BANK3=1,
-          IDLE=50;
+          IDLE=50, SHIFTED=0;
 
 `ifndef PERIOD
 `define PERIOD 7.5
@@ -156,7 +156,7 @@ ba_requester #(3, 0,"sdram_bank3.hex", IDLE3 ) u_ba3(
     .lat_ave    ( lat3_ave      )
 );
 
-jtframe_sdram_bank #(.AW(22),.HF(HF)) uut(
+jtframe_sdram_bank #(.AW(22),.HF(HF),.SHIFTED(SHIFTED)) uut(
     .rst        ( rst           ),
     .clk        ( clk           ),
     // Bank 0: allows R/W
@@ -215,11 +215,10 @@ reg clk_sdram;
 
 initial begin
     clk=0;
-    forever #(PERIOD/2) clk=~clk;
-end
-
-always@(clk) begin
-    #(`SDRAM_SHIFT) clk_sdram = clk;
+    forever begin
+        #(PERIOD/2) clk=~clk;
+        #(`SDRAM_SHIFT) clk_sdram = clk;
+    end
 end
 
 mt48lc16m16a2 sdram(
@@ -248,6 +247,7 @@ localparam SIM_TIME = 5_000_000;
 real perf;
 
 initial begin
+    $display("Simulation begins HF=%d",HF);
     rst=1;
     #100 rst=0;
     #SIM_TIME;

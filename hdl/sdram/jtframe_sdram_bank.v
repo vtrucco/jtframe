@@ -18,8 +18,9 @@
 
 module jtframe_sdram_bank #(
     parameter AW=22,
-              HF=1      // 1 for HF operation (idle cycles), 0 for LF operation
+              HF=1,     // 1 for HF operation (idle cycles), 0 for LF operation
                         // HF operation starts at 66.6MHz (1/15ns)
+              SHIFTED=0
 )(
     input               rst,
     input               clk,
@@ -154,7 +155,7 @@ jtframe_sdram_bank_mux #(.AW(AW),.HF(HF)) u_mux(
     .dout       ( dout          )
 );
 
-jtframe_sdram_bank_core #(.AW(AW),.HF(HF)) u_core(
+jtframe_sdram_bank_core #(.AW(AW),.HF(HF),.SHIFTED(SHIFTED)) u_core(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .addr       ( ctl_addr      ),

@@ -35,8 +35,9 @@
 
 module jtframe_sdram_bank_core #(
     parameter AW=22,
-              HF=1      // 1 for HF operation (idle cycles), 0 for LF operation
+              HF=1,     // 1 for HF operation (idle cycles), 0 for LF operation
                         // HF operation starts at 66.6MHz (1/15ns)
+              SHIFTED=0
 )(
     input               rst,
     input               clk,
@@ -76,8 +77,8 @@ localparam ROW=13,
            STW = HF ? 8 : 7,     // state word width
            BQL = 4,                // bank queue length
            READ_ST = HF ? 2 : 1,
-           DQLO_ST = HF ? 5 : 4,
-           DQHI_ST = HF ? 6 : 5,
+           DQLO_ST = (HF ? 5 : 4)- (SHIFTED ? 1:0),
+           DQHI_ST = (HF ? 6 : 5)- (SHIFTED ? 1:0),
            FIFO_SEL= HF ? 0 : 1;
 
 //                             /CS /RAS /CAS /WE
@@ -320,7 +321,7 @@ always @(posedge clk, posedge rst) begin
             dq_ff  <= sdram_dq;
             // output strobes
             rdy    <= 1;
-            ba_rdy <= ba_queue[1:0];
+            ba_rdy <= SHIFTED ? ba_queue[3:2] : ba_queue[1:0];
         end
         else rdy <= 0;
     end

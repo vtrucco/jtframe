@@ -53,7 +53,10 @@ while [ $# -gt 0 ]; do
             ;;
         -shift)
             shift
-            SDRAM_SHIFT=$1;;
+            SDRAM_SHIFT=$1
+            if [ "$1" != 0 ]; then
+                EXTRA="$EXTRA ${PARAM}test.SHIFTED=1"
+            fi;;
         -nohold)
             EXTRA="$EXTRA ${MACRO}JTFRAME_NOHOLDBUS";;
         -perf)
@@ -67,6 +70,7 @@ Usage:
     -period       defines clock period (default 7.5ns = 133MHz)
                   10.416 for 96MHz
                   7.5ns sets the maximum speed before breaking SDRAM timings
+    -shift        delay for SDRAM clock in ns
     -readonly     disables write requests
     -repack       repacks output data, adding one stage of latching (defines JTFRAME_SDRAM_REPACK)
     -safe         blocks a wider window in MiSTer mode
