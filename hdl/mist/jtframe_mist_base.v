@@ -60,7 +60,7 @@ module jtframe_mist_base #(parameter
     input           SPI_SS4,
     input           CONF_DATA0,
     // control
-    output [31:0]   status,
+    output [63:0]   status,
     output [31:0]   joystick1,
     output [31:0]   joystick2,
     output [31:0]   joystick3,
@@ -90,6 +90,17 @@ assign downloading = ioctl_download;
 
 `ifndef SIMULATION
     `ifndef NOSOUND
+    wire cen_dac;
+    reg [3:0] cen_dac_sr;
+
+    assign cen_dac = cen_dac_sr[0];
+    always @(posedge clk_dac, posedge rst) begin
+        if( rst )
+            cen_dac_sr <= 4'b100;
+        else begin
+            cen_dac_sr <= { cen_dac_sr[2:0], cen_dac_sr[3] };
+        end
+    end
 
     function [19:0] snd_padded;
         input [15:0] snd;
@@ -104,7 +115,7 @@ assign downloading = ioctl_download;
     (
       .reset    ( rst                  ),
       .clk      ( clk_dac              ),
-      .clk_ena  ( 1'b1                 ),
+      .clk_ena  ( cen_dac              ),
       .pcm_in   ( snd_padded(snd_left) ),
       .dac_out  ( snd_pwm_left         )
     );
@@ -114,7 +125,7 @@ assign downloading = ioctl_download;
         (
           .reset    ( rst                  ),
           .clk      ( clk_dac              ),
-          .clk_ena  ( 1'b1                 ),
+          .clk_ena  ( cen_dac              ),
           .pcm_in   ( snd_padded(snd_right)),
           .dac_out  ( snd_pwm_right        )
         );
@@ -171,7 +182,7 @@ assign joystick1 = 32'd0;
 assign joystick2 = 32'd0;
 assign joystick3 = 32'd0;
 assign joystick4 = 32'd0;
-assign status    = 32'd0;
+assign status    = 63'd0;
 assign ps2_kbd_data = 1'b0;
 assign ps2_kbd_clk  = 1'b0;
 `ifndef SCANDOUBLER_DISABLE

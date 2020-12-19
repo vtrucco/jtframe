@@ -29,6 +29,8 @@ module jtframe_6801mcu #(
     input              clk,
     input              rst,
     input              cen,
+    input              start,
+    output             wait_cen,
     output             wrn,
     output             vma,
     output      [15:0] addr,
@@ -61,8 +63,7 @@ reg  [ 7:0] port_map[0:31];
 reg  [ 7:0] din;
 wire [ 7:0] ram_dout,
             p1_datadir, p2_datadir, p3_datadir, p4_datadir;
-reg         port_cs, ram_cs;
-wire        wait_cen;
+reg         port_cs, ram_cs, bus_free;
 
 assign rom_addr  = addr[ROMW-1:0];
 assign intram_we = ram_cs & ~wrn;
@@ -80,6 +81,7 @@ always @(*) begin
     rom_cs    = vma && (&addr[15:ROMW]); // ROM is always at the top
     ram_cs    = vma && addr>=16'h40 && addr<16'h140;
     port_cs   = vma && addr<=MAXPORT;
+    bus_free  = !rom_cs && !ram_cs && !port_cs;
 end
 
 integer aux;
@@ -128,6 +130,8 @@ jtframe_gatecen #(.ROMW(ROMW)) u_gatecen(
     .clk        ( clk       ),
     .rst        ( rst       ),
     .cen        ( cen       ),
+    .start      ( start     ),
+    .rec_en     ( bus_free  ),
     .rom_addr   ( rom_addr  ),
     .rom_cs     ( rom_cs    ),
     .rom_ok     ( rom_ok    ),
