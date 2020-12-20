@@ -92,7 +92,7 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_NOP         = 4'b0___1____1____1, // 7
            CMD_INHIBIT     = 4'b1___0____0____0; // 8
 
-localparam [13:0] INIT_WAIT = 14'd10_000;
+localparam [13:0] INIT_WAIT = HF ? 14'd10_000 : 14'd5_000; // 100us for 96MHz/48MHz
 
 `ifdef MISTER
 `define JTFRAME_SDRAM_ADQM
