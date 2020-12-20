@@ -411,7 +411,11 @@ jtframe_dip u_dip(
     .dip_fxlevel( dip_fxlevel   )
 );
 
-jtframe_sdram_bank #(.AW(SDRAMW)) u_sdram(
+jtframe_sdram_bank #(.AW(SDRAMW)
+    `ifndef JTFRAME_CLK96
+    ,.HF(0), .SHIFTED(1)
+    `endif
+) u_sdram(
     .rst        ( rst           ),
     .clk        ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
 
