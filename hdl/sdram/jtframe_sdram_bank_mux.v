@@ -16,6 +16,11 @@
     Version: 1.0
     Date: 30-11-2020 */
 
+
+`ifndef JTFRAME_SDRAM_BWAIT
+`define JTFRAME_SDRAM_BWAIT 0
+`endif
+
 module jtframe_sdram_bank_mux #(
     parameter AW=22,
               HF=1      // 1 for HF operation (idle cycles), 0 for LF operation
@@ -79,7 +84,9 @@ module jtframe_sdram_bank_mux #(
     output reg [  31:0] dout
 );
 
-localparam RQW=AW+2+2, FFW=RQW*3;
+localparam       RQW=AW+2+2, FFW=RQW*3;
+localparam [4:0] BWAIT    = `JTFRAME_SDRAM_BWAIT;
+localparam       BWAIT_EN = BWAIT != 5'd0;
 
 // Adds an extra cycle of latency. Use if needed to meet timing constraints
 `ifdef JTFRAME_SDRAM_MUXLATCH
@@ -96,6 +103,7 @@ reg  [    1:0] fifo_ba;
 wire           ba0_rq;
 reg  [    3:0] queue;
 reg  [    7:0] lfsr;
+reg  [    4:0] bwait;
 
 assign ba0_rq  = ba0_rd | ba0_wr;
 assign prog_rdy= prog_en & ctl_ack;
@@ -122,10 +130,13 @@ generate
             if( rst ) begin
                 { fifo_addr, fifo_rd, fifo_wr, fifo_ba } <= {RQW{1'b0}};
                 post_ack <= 0;
+                bwait    <= 5'd0;
             end else begin
                 post_ack <= ctl_ack;
                 if( post_ack || (!fifo_rd && !fifo_wr) )
                     { fifo_addr, fifo_rd, fifo_wr, fifo_ba } <= mux_data;
+                if( (ctl_rdy || bwait!=5'd0) && BWAIT_EN )
+                    bwait <= bwait<BWAIT ? bwait + 5'd1 : 5'd0;
             end
         end
     end else begin
@@ -205,6 +216,7 @@ always @(*) begin
         3'd3: mux_data[RQW-1:2] = { ba3_addr, 2'b10 };
         default: mux_data[RQW-1:2] = {RQW-2{1'd0}};
     endcase
+    if( BWAIT_EN && bwait!=5'd0 ) mux_data = {RQW-2{1'd0}};
 end
 
 always @(posedge clk, posedge rst) begin

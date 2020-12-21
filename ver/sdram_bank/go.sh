@@ -51,6 +51,9 @@ while [ $# -gt 0 ]; do
             EXTRA="$EXTRA ${PARAM}test.BANK3=0";;
         -4banks)
             ;;
+        -bwait)
+            shift
+            EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_BWAIT=$1";;
         -shift)
             shift
             SDRAM_SHIFT=$1
@@ -84,6 +87,7 @@ Usage:
     -1banks       Only bank 0 is active
     -2banks       Only banks 0 and 1 are active
     -3banks       Only banks 0, 1 and 2 are active
+    -bwait        Clock cycles to wait in between new requests
 
     -mister       enables MiSTer simulation, with special constraint on DQM signals
     -mist         enables free use of DQM signals (default)
