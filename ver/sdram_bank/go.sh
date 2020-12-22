@@ -39,8 +39,6 @@ while [ $# -gt 0 ]; do
         -write)
             shift
             EXTRA="$EXTRA ${MACRO}WRITE_CHANCE=$1";;
-        -safe)
-            EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_ADQM_SAFE";;
         -idle)
             shift
             EXTRA="$EXTRA ${PARAM}test.IDLE=$1";;
@@ -61,8 +59,6 @@ while [ $# -gt 0 ]; do
             if [ "$1" != 0 ]; then
                 EXTRA="$EXTRA ${PARAM}test.SHIFTED=1"
             fi;;
-        -nohold)
-            EXTRA="$EXTRA ${MACRO}JTFRAME_NOHOLDBUS";;
         -perf)
             EXTRA="$EXTRA ${MACRO}WRITE_ENABLE=0 ${PARAM}test.IDLE=0 ${MACRO}NOREFRESH";;
         -h|-help) cat << EOF
@@ -78,8 +74,6 @@ Usage:
     -shift        delay for SDRAM clock in ns
     -readonly     disables write requests
     -repack       repacks output data, adding one stage of latching (defines JTFRAME_SDRAM_REPACK)
-    -safe         blocks a wider window in MiSTer mode
-    -nohold       Leaves DQ bus floating during idle cycles
     -norefresh    disables refresh
     -write        chance of a write in the writing bank. Integer between 0 and 100
     -idle         defines % of time idle for each bank requester. Use an integer between 0 and 100.
@@ -104,7 +98,7 @@ done
 make || exit $?
 
 echo Extra arguments: "$EXTRA"
-$SIM test.v ../../hdl/sdram/jtframe_sdram_bank*.v ../../hdl/ver/mt48lc16m16a2.v \
+$SIM test.v ../../hdl/sdram/jtframe_sdram{_bank*,_stats}.v ../../hdl/ver/mt48lc16m16a2.v \
     -o sim ${MACRO}JTFRAME_SDRAM_test.BANKS ${MACRO}SIMULATION $DUMP $EXTRA \
     ${MACRO}SDRAM_SHIFT=$SDRAM_SHIFT \
 && sim $EXTRA2
