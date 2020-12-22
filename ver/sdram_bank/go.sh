@@ -20,6 +20,7 @@ DUMP=${MACRO}DUMP
 
 while [ $# -gt 0 ]; do
     case $1 in
+        -dump) DUMP=${MACRO}DUMP;;
         -nodump) DUMP=;;
         -mister) EXTRA="$EXTRA ${MACRO}MISTER ${MACRO}JTFRAME_SDRAM_ADQM";;
         -mist) ;;
@@ -68,6 +69,7 @@ while [ $# -gt 0 ]; do
     Tests that correct values are written and read. It also tests that there are no stall conditions.
     All is done in a random test.
 Usage:
+    -dump         enables waveform dumping (default)
     -nodump       disables waveform dumping
     -time val     simulation time in ms (5ms by default)
     -period       defines clock period (default 7.5ns = 133MHz)
