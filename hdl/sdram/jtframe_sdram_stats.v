@@ -48,8 +48,9 @@ wire [3:0] cmd;
 
 reg [12:0] last_row0, last_row1, last_row2, last_row3;
 
-integer access0, access1, access2, access3,
-        same_row0, same_row1, same_row2, same_row3;
+integer count0, count1, count2, count3,
+        samerow0, samerow1, samerow2, samerow3,
+        longest0, longest1, longest2, longest3;
 
 assign cmd = {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe };
 
@@ -58,7 +59,10 @@ jtframe_sdram_stats_bank #(0) u_bank0(
     .clk        ( clk       ),
     .sdram_a    ( sdram_a   ),
     .sdram_ba   ( sdram_ba  ),
-    .cmd        ( cmd       )
+    .cmd        ( cmd       ),
+    .count      ( count0    ),
+    .longest    ( longest0  ),
+    .samerow    ( samerow0  )
 );
 
 jtframe_sdram_stats_bank #(1) u_bank1(
@@ -66,7 +70,10 @@ jtframe_sdram_stats_bank #(1) u_bank1(
     .clk        ( clk       ),
     .sdram_a    ( sdram_a   ),
     .sdram_ba   ( sdram_ba  ),
-    .cmd        ( cmd       )
+    .cmd        ( cmd       ),
+    .count      ( count1    ),
+    .longest    ( longest1  ),
+    .samerow    ( samerow1  )
 );
 
 jtframe_sdram_stats_bank #(2) u_bank2(
@@ -74,7 +81,10 @@ jtframe_sdram_stats_bank #(2) u_bank2(
     .clk        ( clk       ),
     .sdram_a    ( sdram_a   ),
     .sdram_ba   ( sdram_ba  ),
-    .cmd        ( cmd       )
+    .cmd        ( cmd       ),
+    .count      ( count2    ),
+    .longest    ( longest2  ),
+    .samerow    ( samerow2  )
 );
 
 jtframe_sdram_stats_bank #(3) u_bank3(
@@ -82,8 +92,28 @@ jtframe_sdram_stats_bank #(3) u_bank3(
     .clk        ( clk       ),
     .sdram_a    ( sdram_a   ),
     .sdram_ba   ( sdram_ba  ),
-    .cmd        ( cmd       )
+    .cmd        ( cmd       ),
+    .count      ( count3    ),
+    .longest    ( longest3  ),
+    .samerow    ( samerow3  )
 );
+
+integer last_cnt, new_cnt;
+
+initial begin
+    last_cnt = 0;
+    forever begin
+        #16_666_667;
+        new_cnt = count0 + count1 + count2 + count3;
+        $display("Data %5d kiB/s => BA STATS: %2d%% (%5d) - %2d%% (%5d) - %2d%% (%5d) - %2d%% (%5d)",
+            (new_cnt-last_cnt)*4*60/1024,
+            (samerow0*100)/count0, longest0,
+            (samerow1*100)/count1, longest1,
+            (samerow2*100)/count2, longest2,
+            (samerow3*100)/count3, longest3 );
+        last_cnt = new_cnt;
+    end
+end
 
 endmodule
 
@@ -118,9 +148,9 @@ always @(posedge clk or posedge rst) begin
                 samerow <= samerow + 1;
             end else begin
                 cur <= 1;
-                if( cur > longest ) longest <= cur;
                 row <= sdram_a;
             end
+            if( cur > longest ) longest <= cur;
             count <= count+1;
         end
     end
