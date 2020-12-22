@@ -121,5 +121,71 @@ generate
     end else always @(*) dout = data_mux;
 endgenerate
 
+`ifdef JTFRAME_SDRAM_STATS
+jtframe_romrq_stats u_stats(
+    .clk    ( clk       ),
+    .rst    ( rst       ),
+    .req    ( req       ),
+    .we     ( we        ),
+    .din_ok ( din_ok    ),
+    .data_ok( data_ok   )
+);
+`endif
 
 endmodule // jtframe_romrq
+
+module jtframe_romrq_stats(
+    input clk,
+    input rst,
+    input req,
+    input we,
+    input din_ok,
+    input data_ok
+);
+
+// latency data
+integer cur, longest, shortest, total, acc_cnt;
+reg cnt_en, last_req, first;
+
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        cur      <= 0;
+        longest  <= 0;
+        shortest <= 10000;
+        cnt_en   <= 0;
+        last_req <= 0;
+        acc_cnt  <= 0;
+        total    <= 0;
+        first    <= 1;
+    end else begin
+        last_req <= req;
+        if(req && !last_req) begin
+            cur <= 1;
+            cnt_en <= 1;
+            acc_cnt <= acc_cnt+1;
+        end
+        if( cnt_en ) begin
+            cur <= cur+1;
+            if( (we && din_ok) || data_ok ) begin
+                if( !first ) begin
+                    if(cur>longest) longest <= cur;
+                    if(cur<shortest) shortest <= cur;
+                    total <= total + cur;
+                end
+                first  <= 0;
+                cnt_en <= 0;
+            end
+        end
+    end
+end
+
+initial begin
+    forever begin
+        #16_666_667;
+        if( !first )
+            $display("Latency %m %2d - %2d - %2d",
+                shortest, total/acc_cnt, longest );
+    end
+end
+
+endmodule
