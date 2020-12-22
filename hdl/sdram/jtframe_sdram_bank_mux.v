@@ -17,6 +17,13 @@
     Date: 30-11-2020 */
 
 
+// Macros used
+// JTFRAME_SDRAM_BWAIT      0-15    adds extra wait cycles in between requests
+// JTFRAME_SDRAM_MUXLATCH           enables an extra latch stage to the SDRAM core
+//                                  If HF parameter is set, the extra stage is always added
+//                                  as it doesn't impact latency in that case.
+// JTFRAME_SDRAM_REPACK             enables an extra latch stage to the game core
+
 `ifndef JTFRAME_SDRAM_BWAIT
 `define JTFRAME_SDRAM_BWAIT 0
 `endif
@@ -135,7 +142,7 @@ generate
                 post_ack <= ctl_ack;
                 if( post_ack || (!fifo_rd && !fifo_wr) )
                     { fifo_addr, fifo_rd, fifo_wr, fifo_ba } <= mux_data;
-                if( (ctl_rdy || bwait!=5'd0) && BWAIT_EN )
+                if( (ctl_rdy || ctl_ack || bwait!=5'd0) && BWAIT_EN )
                     bwait <= bwait<BWAIT ? bwait + 5'd1 : 5'd0;
             end
         end
@@ -183,7 +190,39 @@ always @(posedge clk, posedge rst ) begin
 end
 
 always @(*) begin
+    ba_sel[2] = 1;
+    case( lfsr[7:6] )
+        2'd0: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
+        2'd1: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
+        2'd2: if( ba2_rd && !queue[2] ) ba_sel=3'd2;
+        2'd3: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+    endcase // lfsr[7:6]
+    if( ba_sel[2] ) begin
+        case( lfsr[7:6] )
+            2'd1: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
+            2'd2: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
+            2'd3: if( ba2_rd && !queue[2] ) ba_sel=3'd2;
+            2'd0: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+        endcase // lfsr[7:6]
+    end
+    if( ba_sel[2] ) begin
+        case( lfsr[7:6] )
+            2'd2: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
+            2'd3: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
+            2'd0: if( ba2_rd && !queue[2] ) ba_sel=3'd2;
+            2'd1: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+        endcase // lfsr[7:6]
+    end
+    if( ba_sel[2] ) begin
+        case( lfsr[7:6] )
+            2'd3: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
+            2'd0: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
+            2'd1: if( ba2_rd && !queue[2] ) ba_sel=3'd2;
+            2'd2: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+        endcase
+    end
     // mux selector
+    /*
     if( lfsr[7] ) begin
         if( ba0_rq && !queue[0] )
             ba_sel = 3'd0;
@@ -206,7 +245,7 @@ always @(*) begin
             ba_sel = 3'd0;
         else
             ba_sel = 3'd4;
-    end
+    end*/
     // mux output
     mux_data[1:0] = ba_sel;
     case( ba_sel )
