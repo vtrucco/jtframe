@@ -257,6 +257,46 @@ The current contents of the SDRAM can be dumped at the beginning of each frame (
 
 To simulate the SDRAM load operation use **-load** on sim.sh. The normal download speed 1/270ns=3.7MHz. This is faster than the real systems but speeds up simulation. It is possible to slow it down by adding dead clock cycles to each transfer. The macro **JTFRAME_SIM_LOAD_EXTRA** can be defined with the required number of extra cycles.
 
+## SDRAM Catalogue
+
+ID  | Part No          | Units | Size
+----|------------------|-------|-----
+  1 | AS4C32M16SB-6T1N |    2  | 128
+  2 | W9825G6KH-6      |    1  |  32
+  3 | AS4C16M16SA-6TCN |    1  |  32
+  4 | AS4C32M16SA-7TCN |    2  | 128
+  5 | W9825G6KH-6      |    1  |  32
+  6 | AS4C32M8SA -7TCN |    2  |  64
+  7 | AS4C32M8SA -7TCN |    4  | 128
+8,9 | AS4C32M16SB-6T1N |    2  | 128
+
+All time values in ns, capacitance in pF
+
+Part No           | Op. Current (mA) | Ci     | Ci/o | tRRD  | tRP    | tAC CL=2 | tOH | tHZ
+------------------|------------------|--------|------|-------|--------|----------|-----|-----
+AS4C16M16SA -6/-7 |  60/55 (1 bank)  | 2-4    |  4-6 | 12/14 | 18/21  | 6/6      | 2.5 | 5/5.4
+AS4C32M16SA -6/-7 | 120/110(1 bank)  |3.5-5.5 |  4-6 | 12/14 | 18/21  | 6/6      | 2.5 | 5/5.4
+AS4C32M8SA  -6/-7 |  60/55 (1 bank)  | 2-4    |  4-6 | 12/14 | 18/21  | 6/6      | 2.5 | 5/5.4
+W9825G6KH-6       |   60             | <3.8   | <6.5 |  15   |  15    | 6        |  3  | 6
+
+VDD ripple (V)
+
+ID  |  Higemaru  |  SF2       | The Punisher
+----|------------|------------|--------------
+
+
+
+ 1942 core v201125
+ SF2 on JTCPS1 core v201213
+ The Punisher on JTCPS15 core v201219
+
+## SDRAM Header
+
+Pin view with SDRAM on top, ethernet cable on the bottom right
+
+DQ1 DQ3 DQ5 DQ7 DQ14 NC  DQ13 DQ11 DQ9 DQ12  A9 A7 A5 WE VDD CAS CS1 BA1 BA0 A2
+DQ0 DQ2 DQ4 DQ6 DQ15 GND DQ12 DQ10 DQ3 CLK2 A11 A8 A6 A4 GND RAS BA0 A10 A1  A3
+
 # Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
 
