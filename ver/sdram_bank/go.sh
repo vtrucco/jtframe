@@ -20,6 +20,7 @@ DUMP=${MACRO}DUMP
 
 while [ $# -gt 0 ]; do
     case $1 in
+        -dump) DUMP=${MACRO}DUMP;;
         -nodump) DUMP=;;
         -mister) EXTRA="$EXTRA ${MACRO}MISTER ${MACRO}JTFRAME_SDRAM_ADQM";;
         -mist) ;;
@@ -38,8 +39,6 @@ while [ $# -gt 0 ]; do
         -write)
             shift
             EXTRA="$EXTRA ${MACRO}WRITE_CHANCE=$1";;
-        -safe)
-            EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_ADQM_SAFE";;
         -idle)
             shift
             EXTRA="$EXTRA ${PARAM}test.IDLE=$1";;
@@ -51,20 +50,22 @@ while [ $# -gt 0 ]; do
             EXTRA="$EXTRA ${PARAM}test.BANK3=0";;
         -4banks)
             ;;
+        -bwait)
+            shift
+            EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_BWAIT=$1";;
         -shift)
             shift
             SDRAM_SHIFT=$1
             if [ "$1" != 0 ]; then
                 EXTRA="$EXTRA ${PARAM}test.SHIFTED=1"
             fi;;
-        -nohold)
-            EXTRA="$EXTRA ${MACRO}JTFRAME_NOHOLDBUS";;
         -perf)
             EXTRA="$EXTRA ${MACRO}WRITE_ENABLE=0 ${PARAM}test.IDLE=0 ${MACRO}NOREFRESH";;
         -h|-help) cat << EOF
     Tests that correct values are written and read. It also tests that there are no stall conditions.
     All is done in a random test.
 Usage:
+    -dump         enables waveform dumping (default)
     -nodump       disables waveform dumping
     -time val     simulation time in ms (5ms by default)
     -period       defines clock period (default 7.5ns = 133MHz)
@@ -73,8 +74,6 @@ Usage:
     -shift        delay for SDRAM clock in ns
     -readonly     disables write requests
     -repack       repacks output data, adding one stage of latching (defines JTFRAME_SDRAM_REPACK)
-    -safe         blocks a wider window in MiSTer mode
-    -nohold       Leaves DQ bus floating during idle cycles
     -norefresh    disables refresh
     -write        chance of a write in the writing bank. Integer between 0 and 100
     -idle         defines % of time idle for each bank requester. Use an integer between 0 and 100.
@@ -84,6 +83,7 @@ Usage:
     -1banks       Only bank 0 is active
     -2banks       Only banks 0 and 1 are active
     -3banks       Only banks 0, 1 and 2 are active
+    -bwait        Clock cycles to wait in between new requests
 
     -mister       enables MiSTer simulation, with special constraint on DQM signals
     -mist         enables free use of DQM signals (default)
@@ -98,7 +98,7 @@ done
 make || exit $?
 
 echo Extra arguments: "$EXTRA"
-$SIM test.v ../../hdl/sdram/jtframe_sdram_bank*.v ../../hdl/ver/mt48lc16m16a2.v \
+$SIM test.v ../../hdl/sdram/jtframe_sdram{_bank*,_stats}.v ../../hdl/ver/mt48lc16m16a2.v \
     -o sim ${MACRO}JTFRAME_SDRAM_test.BANKS ${MACRO}SIMULATION $DUMP $EXTRA \
     ${MACRO}SDRAM_SHIFT=$SDRAM_SHIFT \
 && sim $EXTRA2

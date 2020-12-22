@@ -316,6 +316,14 @@ initial begin
     #104_500 init_done = 1;
 end
 
+initial begin
+    #200_000;
+    if( first && IDLE<100 ) begin
+        $display("Bank %d stall without any access",BANK);
+        $finish;
+    end
+end
+
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         ba_addr  <= 22'd0;

@@ -263,6 +263,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
     parameter tOH  =   3.0;
     parameter tMRD =   2.0;     // 2 Clk Cycles
     parameter tRAS =  37.0;
+    parameter tRASmax =  120_000;
     parameter tRC  =  60.0;
     parameter tRCD =  15.0;
     parameter tRFC =  66.0;
@@ -633,7 +634,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk0 = $time;
 
                 // Activate to Precharge
-                if ($time - RAS_chk0 < tRAS) begin
+                if (($time - RAS_chk0 < tRAS) || ($time - RAS_chk0 > tRASmax )) begin
                     $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
                     #100 $finish;
                 end
@@ -652,7 +653,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk1 = $time;
 
                 // Activate to Precharge
-                if ($time - RAS_chk1 < tRAS) begin
+                if (($time - RAS_chk1 < tRAS) || ($time - RAS_chk1 > tRASmax )) begin
                     $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
                     #100 $finish;
                 end
@@ -671,7 +672,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk2 = $time;
 
                 // Activate to Precharge
-                if ($time - RAS_chk2 < tRAS) begin
+                if (($time - RAS_chk2 < tRAS) || ($time - RAS_chk2 > tRASmax )) begin
                     $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
                     #100 $finish;
                 end
@@ -690,7 +691,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk3 = $time;
 
                 // Activate to Precharge
-                if ($time - RAS_chk3 < tRAS) begin
+                if (($time - RAS_chk3 < tRAS) || ($time - RAS_chk3 > tRASmax )) begin
                     $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
                     #100 $finish;
                 end

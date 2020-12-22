@@ -1,9 +1,9 @@
-///////////////////////////////////////////// 
+/////////////////////////////////////////////
 //  This module includes the SDRAM model
 //  when used to simulate the core at the game level (instead of MiST(er) level)
 //  this module also adds the SDRAM controller
-// 
-// 
+//
+//
 
 `timescale 1ns/1ps
 
@@ -11,7 +11,7 @@ module test_harness(
     output  reg      rst = 1'b0,
     output  reg      clk27,
     input            pxl_cen,
-    input            pxl_clk, 
+    input            pxl_clk,
     input            pxl_vb,
     input            pxl_hb,
     input   [21:0]   sdram_addr,
@@ -79,7 +79,7 @@ video_dump u_dump(
 initial frame_cnt=0;
 always @(posedge pxl_vb ) begin
     frame_cnt<=frame_cnt+1;
-    $display("New frame %d", frame_cnt);
+    $display("Frame %4d", frame_cnt);
 end
 
 `ifdef MAXFRAME

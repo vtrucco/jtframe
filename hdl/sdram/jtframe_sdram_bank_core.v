@@ -33,6 +33,10 @@
 // 22      |  4 MBx2 = 8MB     |   32 MB
 // 23      |  8 MBx2 =16MB     |   64 MB
 
+// Macros
+// JTFRAME_SDRAM_ADQM       enables A12=DQMH, A11=DQML mode. This slows down the
+//                          memory but is required for some MiSTer memory modules
+
 module jtframe_sdram_bank_core #(
     parameter AW=22,
               HF=1,     // 1 for HF operation (idle cycles), 0 for LF operation
@@ -135,15 +139,7 @@ assign req_a12 = addr[AW-1:AW-2];
 assign { sdram_dqmh, sdram_dqml } =  ADQM ? sdram_a[12:11] : dqm; // This is a limitation in MiSTer's 128MB module
 
 assign dout = { dq_ff, dq_ff0 };
-
-// Theoretically, if the SDRAM connection is good, it is enough
-// to just skip all_st[3], but this seems to fail more with the
-// actual SDRAM
-`ifdef JTFRAME_SDRAM_ADQM_SAFE
-assign dqmbusy = all_st[5:3]!=3'd0;
-`else
 assign dqmbusy = all_st[HF ? 3 : 2];
-`endif
 
 `ifdef SIMULATION
 wire [9:0] col_fifo0 = col_fifo[0];
@@ -173,11 +169,6 @@ endfunction
 
 always @(*) begin
     all_st   =  ba0_st | ba1_st | ba2_st | ba3_st;
-    `ifndef JTFRAME_NOHOLDBUS
-    hold_bus =  all_st[6:4]==2'd0; // next cycle will be a bus access
-    `else
-    hold_bus = 0;
-    `endif
     activate = ( (!all_st[READ_ST] && rd ) || (!all_st[STW-2:(HF?2:1)] && wr)) && !rfshing;
     case( ba_rq )
         2'd0: if( !ba0_st[0] ) activate = 0;
@@ -264,7 +255,6 @@ always @(posedge clk, posedge rst) begin
             endcase
         end
     end else begin // Regular operation
-        //if(!wrtng) dq_pad <= hold_bus ? 16'd0 : 16'hzzzz;
         if(!wrtng) dq_pad <= 16'hzzzz;
         ba0_st <= next_ba0;
         ba1_st <= next_ba1;
