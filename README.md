@@ -320,6 +320,8 @@ Module | DQ at RAS   |  DQ at CAS
 7      |  NG  | OK   | NG   |  OK
 8      |  NG  | OK   | OK   |  OK
 9      |  NG  | OK   | OK   |  OK
+-------|------|------|------|------
+Fails  |   6  |  0   |  3   |   0
 
 Faster slew rates mean more current going through the connector, thus more ripple at both the signal pin and VDD. So both problems become better. This doesn't mean they are completely solved. VDD ripple is still out of spec with the current capacitor set used. And slowing down further the bus should also help.
 
