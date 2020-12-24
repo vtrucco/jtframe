@@ -264,7 +264,7 @@ ID  | Part No          | Units | Size
   1 | AS4C32M16SB-6T1N |    2  | 128
   2 | W9825G6KH-6      |    1  |  32
   3 | AS4C16M16SA-6TCN |    1  |  32
-  4 | AS4C32M16SA-7TCN |    2  | 128
+  4 | AS4C32M16SB-7TCN |    2  | 128
   5 | W9825G6KH-6      |    1  |  32
   6 | AS4C32M8SA -7TCN |    2  |  64
   7 | AS4C32M8SA -7TCN |    4  | 128
