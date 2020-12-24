@@ -290,12 +290,12 @@ ID  |  Higemaru  |  SF2       | The Punisher
  SF2 on JTCPS1 core v201213
  The Punisher on JTCPS15 core v201219
 
-## SDRAM Header
+## SDRAM Header (MiSTer)
 
 Pin view with SDRAM on top, ethernet cable on the bottom right
 
 DQ1 DQ3 DQ5 DQ7 DQ14 NC  DQ13 DQ11 DQ9 DQ12  A9 A7 A5 WE VDD CAS CS1 BA1 BA0 A2
-DQ0 DQ2 DQ4 DQ6 DQ15 GND DQ12 DQ10 DQ3 CLK2 A11 A8 A6 A4 GND RAS BA0 A10 A1  A3
+DQ0 DQ2 DQ4 DQ6 DQ15 GND DQ12 DQ10 DQ3 CLK  A11 A8 A6 A4 GND RAS BA0 A10 A1  A3
 
 # Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
