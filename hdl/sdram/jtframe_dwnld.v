@@ -36,9 +36,11 @@ module jtframe_dwnld(
     output reg [21:0]    prog_addr,
     output     [15:0]    prog_data,
     output reg [ 1:0]    prog_mask, // active low
-    output               prog_rd,
     output reg           prog_we,
+    `ifdef JTFRAME_SDRAM_BANKS
+    output               prog_rd,
     output reg [ 1:0]    prog_ba,
+    `endif
 
     output reg           prom_we,
     input                sdram_ack
@@ -58,7 +60,10 @@ wire        is_prom;
 
 assign is_prom   = PROM_EN && ioctl_addr>=PROM_START;
 assign prog_data = {2{data_out}};
+
+`ifdef JTFRAME_SDRAM_BANKS
 assign prog_rd   = 0;
+`endif
 
 `ifdef LOADROM
 `undef JTFRAME_DWNLD_PROM_ONLY
@@ -95,7 +100,9 @@ always @(posedge clk) begin
             prog_addr <= eff_addr[22:1];
             prom_we   <= 0;
             prog_we   <= 1;
+            `ifdef JTFRAME_SDRAM_BANKS
             prog_ba   <= bank;
+            `endif
         end
         data_out  <= ioctl_data;
         prog_mask <= eff_addr[0] ? 2'b10 : 2'b01;

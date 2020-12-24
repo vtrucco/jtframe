@@ -196,10 +196,10 @@ end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        ba0_st   <= 8'd1;
-        ba1_st   <= 8'd1;
-        ba2_st   <= 8'd1;
-        ba3_st   <= 8'd1;
+        ba0_st   <= { {STW-1{1'b0}}, 1'd1 };
+        ba1_st   <= { {STW-1{1'b0}}, 1'd1 };
+        ba2_st   <= { {STW-1{1'b0}}, 1'd1 };
+        ba3_st   <= { {STW-1{1'b0}}, 1'd1 };
         rfshing  <= 0;
         wrtng    <= 0;
         post_act <= 0;

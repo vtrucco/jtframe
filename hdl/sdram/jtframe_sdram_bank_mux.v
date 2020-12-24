@@ -190,6 +190,7 @@ always @(posedge clk, posedge rst ) begin
 end
 
 always @(*) begin
+    // mux selector
     ba_sel[2] = 1;
     case( lfsr[7:6] )
         2'd0: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
@@ -221,33 +222,8 @@ always @(*) begin
             2'd2: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
         endcase
     end
-    // mux selector
-    /*
-    if( lfsr[7] ) begin
-        if( ba0_rq && !queue[0] )
-            ba_sel = 3'd0;
-        else if( ba1_rd && !queue[1] )
-            ba_sel = 3'd1;
-        else if( ba2_rd && !queue[2] )
-            ba_sel = 3'd2;
-        else if( ba3_rd && !queue[3] )
-            ba_sel = 3'd3;
-        else
-            ba_sel = 3'd4;
-    end else begin
-        if( ba3_rd && !queue[3] )
-            ba_sel = 3'd3;
-        else if( ba2_rd && !queue[2] )
-            ba_sel = 3'd2;
-        else if( ba1_rd && !queue[1] )
-            ba_sel = 3'd1;
-        else if( ba0_rq && !queue[0] )
-            ba_sel = 3'd0;
-        else
-            ba_sel = 3'd4;
-    end*/
     // mux output
-    mux_data[1:0] = ba_sel;
+    mux_data[1:0] = ba_sel[1:0];
     case( ba_sel )
         3'd0: mux_data[RQW-1:2] = { ba0_addr, ba0_rd, ba0_wr };
         3'd1: mux_data[RQW-1:2] = { ba1_addr, 2'b10 };
