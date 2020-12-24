@@ -279,23 +279,49 @@ AS4C32M16SA -6/-7 | 120/110(1 bank)  |3.5-5.5 |  4-6 | 12/14 | 18/21  | 6/6     
 AS4C32M8SA  -6/-7 |  60/55 (1 bank)  | 2-4    |  4-6 | 12/14 | 18/21  | 6/6      | 2.5 | 5/5.4
 W9825G6KH-6       |   60             | <3.8   | <6.5 |  15   |  15    | 6        |  3  | 6
 
-VDD ripple (V)
-
-ID  |  Higemaru  |  SF2       | The Punisher
-----|------------|------------|--------------
-
-
-
- 1942 core v201125
- SF2 on JTCPS1 core v201213
- The Punisher on JTCPS15 core v201219
-
 ## SDRAM Header (MiSTer)
 
 Pin view with SDRAM on top, ethernet cable on the bottom right
 
 DQ1 DQ3 DQ5 DQ7 DQ14 NC  DQ13 DQ11 DQ9 DQ12  A9 A7 A5 WE VDD CAS CS1 BA1 BA0 A2
 DQ0 DQ2 DQ4 DQ6 DQ15 GND DQ12 DQ10 DQ3 CLK  A11 A8 A6 A4 GND RAS BA0 A10 A1  A3
+
+## SDRAM Electrical Problems (MiSTer)
+
+On MiSTer SDRAM modules as of December 2020 have a severe VDD ripple. VDD can go above 4V and reach 2.4V. 32MB modules are slightly better.
+
+MiSTer SDRAM modules also suffer of intersymbol interference. Although it is not clear which lines couple more closely -no layout parasitics for any board are available- setting the DQ bus from the FPGA for a write at the time of RAS showed worse results than setting it at CAS time for Contra core using the sdram_bank controller (based on 7e93cc5 commit).
+
+Measurements of A3 line and VDD (SDRAM module #4 with 10uF electrolytic added):
+
+Slew Rate  |  Max V(A3)  | Min V(A3)  | tr/tf (ns)
+-----------|-------------|------------|-----------
+Fast (2)   | 3.92        | -0.92      |  3
+Slow (0)   | 3.76        | -0.60      |  4
+
+VDD ripple also improves with slower slew rates (module #8):
+
+Slew Rate  | Max VDD  | Min VDD
+-----------|----------|---------
+Fast (2)   |   4.12   |  2.58
+Slow (0)   |   3.98   |  2.74
+
+
+Using the slowest slew rate fixes Contra load on all tested modules, regardless of when DQ is set at write time:
+
+Module | DQ at RAS   |  DQ at CAS
+-------|-------------|-------------
+       | fast | slow | fast | slow
+-------|------|------|------|------
+1      |  NG  | OK   | OK   |  OK
+2      |  NG  | OK   | NG   |  OK
+3      |  OK  | OK   | NG   |  OK
+4      |  NG  | OK   | OK   |  OK
+7      |  NG  | OK   | NG   |  OK
+8      |  NG  | OK   | OK   |  OK
+9      |  NG  | OK   | OK   |  OK
+
+Faster slew rates mean more current going through the connector, thus more ripple at both the signal pin and VDD. So both problems become better. This doesn't mean they are completely solved. VDD ripple is still out of spec with the current capacitor set used. And slowing down further the bus should also help.
 
 # Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.

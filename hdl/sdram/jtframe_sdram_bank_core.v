@@ -279,7 +279,6 @@ always @(posedge clk, posedge rst) begin
             wrmask        <= din_m;
             post_act      <= 1;
             { sdram_a, col_fifo[1] } <= addr;
-            if( wr ) dq_pad <= din;
         end else begin
             post_act    <= 0;
         end
@@ -298,7 +297,12 @@ always @(posedge clk, posedge rst) begin
                 dqm            <= wrtng ? wrmask : 2'b00;
         end
         if( read ) begin
-            cmd              <= wrtng ? CMD_WRITE : CMD_READ;
+            if( wrtng ) begin
+                dq_pad <= din;
+                cmd    <= CMD_WRITE;
+            end else begin
+                cmd    <= CMD_READ;
+            end
             sdram_a[COW-1:0] <= col_fifo[FIFO_SEL];
             sdram_ba <= ba_fifo[FIFO_SEL];
             ba_queue[BQL*2-1:(BQL-1)*2] <= ba_fifo[FIFO_SEL];
