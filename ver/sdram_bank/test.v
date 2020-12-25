@@ -3,7 +3,7 @@
 module test;
 
 parameter BANK1=1, BANK2=1, BANK3=1,
-          IDLE=50, SHIFTED=0;
+          IDLE=50, SHIFTED=0, MAXA=21;
 
 `ifndef PERIOD
 `define PERIOD 7.5
@@ -80,7 +80,7 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
-ba_requester #(0, `WRITE_ENABLE,"sdram_bank0.hex", IDLE, `WRITE_CHANCE) u_ba0(
+ba_requester #(0, `WRITE_ENABLE,"sdram_bank0.hex", IDLE, `WRITE_CHANCE, MAXA) u_ba0(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba0_addr      ),
@@ -98,7 +98,7 @@ ba_requester #(0, `WRITE_ENABLE,"sdram_bank0.hex", IDLE, `WRITE_CHANCE) u_ba0(
     .lat_ave    ( lat0_ave      )
 );
 
-ba_requester #(1, 0,"sdram_bank1.hex", IDLE1 ) u_ba1(
+ba_requester #(1, 0,"sdram_bank1.hex", IDLE1, 0, MAXA ) u_ba1(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba1_addr      ),
@@ -117,7 +117,7 @@ ba_requester #(1, 0,"sdram_bank1.hex", IDLE1 ) u_ba1(
     .lat_ave    ( lat1_ave      )
 );
 
-ba_requester #(2, 0,"sdram_bank2.hex", IDLE2 ) u_ba2(
+ba_requester #(2, 0,"sdram_bank2.hex", IDLE2, 0, MAXA ) u_ba2(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba2_addr      ),
@@ -137,7 +137,7 @@ ba_requester #(2, 0,"sdram_bank2.hex", IDLE2 ) u_ba2(
 );
 
 
-ba_requester #(3, 0,"sdram_bank3.hex", IDLE3 ) u_ba3(
+ba_requester #(3, 0,"sdram_bank3.hex", IDLE3, 0, MAXA ) u_ba3(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba3_addr      ),
@@ -295,7 +295,7 @@ module  ba_requester(
 );
 
 parameter BANK=0, RW=0, MEMFILE="sdram_bank1.hex",
-          IDLE=50, WRCHANCE=5; // Use 100 or more to keep the bank idle
+          IDLE=50, WRCHANCE=5, MAXA=21; // Use 100 or more to keep the bank idle
 
 localparam STALL_LIMIT = (5000*`PERIOD)/7;
 
@@ -353,7 +353,7 @@ always @(posedge clk, posedge rst) begin
         end
         if( !waiting || ba_rdy ) begin
             if( IDLE==0 || $random%100 >= IDLE ) begin
-                ba_addr[21:1] <= $random; // bit 0 not used for bursts of length 2
+                ba_addr[MAXA:1] <= $random; // bit 0 not used for bursts of length 2
                 if( $random%100>(100-WRCHANCE) && RW) begin
                     ba_rd      <= 0;
                     ba_wr      <= 1;

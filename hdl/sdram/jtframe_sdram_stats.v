@@ -48,9 +48,9 @@ wire [3:0] cmd;
 
 reg [12:0] last_row0, last_row1, last_row2, last_row3;
 
-integer count0, count1, count2, count3,
-        samerow0, samerow1, samerow2, samerow3,
-        longest0, longest1, longest2, longest3;
+wire [31:0] count0, count1, count2, count3,
+            samerow0, samerow1, samerow2, samerow3,
+            longest0, longest1, longest2, longest3;
 
 assign cmd = {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe };
 

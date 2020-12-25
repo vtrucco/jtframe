@@ -286,17 +286,13 @@ always @(posedge clk, posedge rst) begin
             col_fifo[0] <= col_fifo[1];
             ba_fifo[0]  <= ba_fifo[1];
         end
-        // if HF, sets signals in advance to prevent interference
-        // else, signals are set at READ stage
-        if( (post_act && HF ) || read ) begin
+        if( read ) begin
             sdram_a[10] <= 1;     // precharge
             if( ADQM )
                 // A12 and A11 used as mask in MiSTer 128MB module
                 sdram_a[12:11] <= wrtng ? wrmask : 2'b00;
             else
                 dqm            <= wrtng ? wrmask : 2'b00;
-        end
-        if( read ) begin
             if( wrtng ) begin
                 dq_pad <= din;
                 cmd    <= CMD_WRITE;

@@ -50,6 +50,9 @@ while [ $# -gt 0 ]; do
             EXTRA="$EXTRA ${PARAM}test.BANK3=0";;
         -4banks)
             ;;
+        -maxa)
+            shift
+            EXTRA="$EXTRA ${PARAM}test.MAXA=$1";;
         -bwait)
             shift
             EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_BWAIT=$1";;
@@ -78,6 +81,7 @@ Usage:
     -write        chance of a write in the writing bank. Integer between 0 and 100
     -idle         defines % of time idle for each bank requester. Use an integer between 0 and 100.
     -perf         Measures read performance: disables writes and refresh. Sets idle time to 0%.
+    -maxa         Max bit assigned in the address bus. Default is 21, for full A bus access
 
     Bank options:
     -1banks       Only bank 0 is active
