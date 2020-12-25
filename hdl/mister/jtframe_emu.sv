@@ -225,6 +225,7 @@ pll pll(
     assign clk_sys   = clk48;
     assign clk_rom   = clk48;
     assign SDRAM_CLK = clk48sh;
+    //assign SDRAM_CLK = clk48;
 `else
     assign clk_sys   = clk96; // clk48 can be used but video mixer may fail for some modes
     assign clk_rom   = clk96;

@@ -147,6 +147,7 @@ generate
             end
         end
     end else begin
+        initial bwait = 5'd0;
         always @(mux_data) { fifo_addr, fifo_rd, fifo_wr, fifo_ba } = mux_data;
     end
 endgenerate
@@ -191,7 +192,7 @@ end
 
 always @(*) begin
     // mux selector
-    ba_sel[2] = 1;
+    ba_sel = 3'b100;
     case( lfsr[7:6] )
         2'd0: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
         2'd1: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
