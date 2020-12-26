@@ -325,6 +325,22 @@ Fails  |   6  |  0   |  3   |   0
 
 Faster slew rates mean more current going through the connector, thus more ripple at both the signal pin and VDD. So both problems become better. This doesn't mean they are completely solved. VDD ripple is still out of spec with the current capacitor set used. And slowing down further the bus should also help.
 
+## SDRAM Clock Shift
+
+I made a clock shift sweep using JTCONTRA commit 5633ee41. These are the results of valid values:
+
+Module | Min  |  Max  | Remarks
+-------|------|-------|---------
+1      | 3.5  | 8.25  |
+2      | 2.5  | 8.5   | 32MB
+3      | 2.5  | 8.75  | 32MB
+4      | 3.0  | 8.0   | 10uF added
+7      | 4.0  | 8.25  | min improved to 3.5ns by adding 33uF
+8      | 3.5  | 8.0   |
+9      | 3.25 | 8.25  |
+
+The wider the difference is between max and min, the cleaner signals are.
+
 # Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
 

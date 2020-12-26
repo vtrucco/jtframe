@@ -11,7 +11,7 @@
 
 	`ifndef JTFRAME_CLK96
 		// 48 MHz clock
-		`define SDRAM_SHIFT "5000 ps"
+		`define SDRAM_SHIFT "5520 ps"
 	`else
 		// 96 MHz clock
 		//`define SDRAM_SHIFT "-3515 ps"
