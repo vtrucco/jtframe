@@ -44,7 +44,6 @@ module jtframe_gatecen #(parameter ROMW=12 )(
     input             rec_en,   // recovery enable
                                 // indicates when it is safe to recover a
                                 // lost cycle
-    input             start,
     input  [ROMW-1:0] rom_addr,
     input             rom_cs,
     input             rom_ok,
@@ -53,7 +52,7 @@ module jtframe_gatecen #(parameter ROMW=12 )(
 
 reg  [     1:0] last_cs;
 reg  [ROMW-1:0] last_addr;
-reg             waitn, rec;
+reg             waitn, rec, start;
 reg  [     2:0] miss_cnt;
 wire            new_addr = last_addr != rom_addr;
 
@@ -91,7 +90,10 @@ always @(posedge clk) begin
         last_cs   <= { last_cs[0] & ~new_addr, rom_cs };
         last_addr <= rom_addr;
         if( rom_cs && (!last_cs[0] || new_addr) ) waitn <= 0;
-        else if( rom_ok && last_cs[1] ) waitn <= start;
+        else if( rom_ok && last_cs[1] ) begin
+          waitn <= 1;
+          start <= 1;
+        end
     end
 end
 
