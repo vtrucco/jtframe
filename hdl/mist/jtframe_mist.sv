@@ -264,7 +264,7 @@ jtframe_board #(
     .game_start     ( game_start      ),
     .game_service   ( game_service    ),
     // DIP and OSD settings
-    .status         ( status          ),
+    .status         ( status[31:0]    ),
     .enable_fm      ( enable_fm       ),
     .enable_psg     ( enable_psg      ),
     .dip_test       ( dip_test        ),

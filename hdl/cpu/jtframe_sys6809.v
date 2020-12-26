@@ -72,7 +72,6 @@ module jtframe_6809wait(
         .cen_in     ( cen       ),
         .cen_out    (           ),
         .gate       ( gate      ),
-        .start      ( 1'b1      ),
         // manage access to shared memory
         .dev_busy   ( dev_busy  ),
         // Z80 bus. All set to zero to prevent cycle recovery

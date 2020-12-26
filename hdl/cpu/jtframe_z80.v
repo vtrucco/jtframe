@@ -42,7 +42,6 @@ module jtframe_sysz80(
     input         rst_n,
     input         clk,
     input         cen,
-    input         start,
     output        cpu_cen,
     input         int_n,
     input         nmi_n,
@@ -90,7 +89,6 @@ end
     jtframe_z80_romwait u_z80wait(
         .rst_n      ( rst_n     ),
         .clk        ( clk       ),
-        .start      ( start     ),
         .cen        ( cen       ),
         .cpu_cen    ( cpu_cen   ),
         .int_n      ( int_n     ),
@@ -119,7 +117,6 @@ module jtframe_z80_romwait (
     input         rst_n,
     input         clk,
     input         cen,
-    input         start,
     output        cpu_cen,
     input         int_n,
     input         nmi_n,
@@ -143,7 +140,6 @@ module jtframe_z80_romwait (
 jtframe_z80wait #(1) u_wait(
     .rst_n      ( rst_n     ),
     .clk        ( clk       ),
-    .start      ( start     ),
     .cen_in     ( cen       ),
     .cen_out    ( cpu_cen   ),
     .gate       (           ),

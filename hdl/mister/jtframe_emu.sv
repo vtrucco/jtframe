@@ -327,7 +327,6 @@ assign AUDIO_S = `SIGNED_SND;
 `define BUTTONS 2
 `endif
 
-
 `ifndef JTFRAME_SDRAM_BANKS
 assign prog_data = {2{prog_data8}};
 `endif

@@ -179,8 +179,6 @@ wire refresh_en;
 // PLL's
 wire clk_vga_in, clk_vga, pll_locked;
 
-`ifdef JTFRAME_CLK96
-wire clk48;
 
 `ifndef STEREO_GAME
 assign snd_right = snd_left;
@@ -190,27 +188,30 @@ assign snd_right = snd_left;
 assign prog_data = {2{prog_data8}};
 `endif
 
-jtframe_pll96 u_pll_game (
-    .inclk0 ( CLOCK_27[0] ),
-    .c0     ( clk48       ), // 48 MHz
-    .c1     ( clk_rom     ), // 96 MHz
-    .c2     ( SDRAM_CLK   ), // 96 MHz shifted
-    .c3     ( clk24       ),
-    .c4     ( clk6        ),
-    .locked ( pll_locked  )
-);
-assign clk_sys   = clk_rom; // it is possible to use clk48 instead but
-    // video mixer doesn't work well in HQ mode
+`ifdef JTFRAME_CLK96
+    wire clk48;
+
+    jtframe_pll96 u_pll_game (
+        .inclk0 ( CLOCK_27[0] ),
+        .c0     ( clk48       ), // 48 MHz
+        .c1     ( clk_rom     ), // 96 MHz
+        .c2     ( SDRAM_CLK   ), // 96 MHz shifted
+        .c3     ( clk24       ),
+        .c4     ( clk6        ),
+        .locked ( pll_locked  )
+    );
+    assign clk_sys   = clk_rom; // it is possible to use clk48 instead but
+        // video mixer doesn't work well in HQ mode
 `else
-jtframe_pll0 u_pll_game (
-    .inclk0 ( CLOCK_27[0] ),
-    .c1     ( clk_rom     ), // 48 MHz
-    .c2     ( SDRAM_CLK   ),
-    .c3     ( clk24       ),
-    .c4     ( clk6        ),
-    .locked ( pll_locked  )
-);
-assign clk_sys   = clk_rom;
+    jtframe_pll0 u_pll_game (
+        .inclk0 ( CLOCK_27[0] ),
+        .c1     ( clk_rom     ), // 48 MHz
+        .c2     ( SDRAM_CLK   ),
+        .c3     ( clk24       ),
+        .c4     ( clk6        ),
+        .locked ( pll_locked  )
+    );
+    assign clk_sys   = clk_rom;
 `endif
 
 jtframe_pll1 u_pll_vga (
@@ -504,6 +505,7 @@ u_game(
     .ba3_rd     ( ba3_rd        ),
     .ba3_rdy    ( ba3_rdy       ),
     .ba3_ack    ( ba3_ack       ),
+
     `else
     .loop_rst   ( 1'b0          ),
     .sdram_req  ( ba0_rd        ),
@@ -526,7 +528,7 @@ u_game(
     .prog_mask  ( prog_mask     ),
 
     // DIP switches
-    .status      ( status         ),
+    .status      ( status[31:0]   ),
     .dip_pause   ( dip_pause      ),
     .dip_flip    ( dip_flip       ),
     .dip_test    ( dip_test       ),
