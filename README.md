@@ -279,6 +279,10 @@ AS4C32M16SA -6/-7 | 120/110(1 bank)  |3.5-5.5 |  4-6 | 12/14 | 18/21  | 6/6     
 AS4C32M8SA  -6/-7 |  60/55 (1 bank)  | 2-4    |  4-6 | 12/14 | 18/21  | 6/6      | 2.5 | 5/5.4
 W9825G6KH-6       |   60             | <3.8   | <6.5 |  15   |  15    | 6        |  3  | 6
 
+## Maximum Current (MiST)
+
+MiST uses a single SDRAM module, with about 4pF per pin. In order to charge it up to 3.3V in 4ns we need 3.3mA. Current per pin is limited to 4mA in order to prevent noise.
+
 ## SDRAM Header (MiSTer)
 
 Pin view with SDRAM on top, ethernet cable on the bottom right
