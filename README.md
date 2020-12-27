@@ -261,14 +261,14 @@ To simulate the SDRAM load operation use **-load** on sim.sh. The normal downloa
 
 ID  | Part No          | Units | Size
 ----|------------------|-------|-----
-  1 | AS4C32M16SB-6T1N |    2  | 128
+  1 | AS4C32M16SB-6TIN |    2  | 128
   2 | W9825G6KH-6      |    1  |  32
   3 | AS4C16M16SA-6TCN |    1  |  32
   4 | AS4C32M16SB-7TCN |    2  | 128
   5 | W9825G6KH-6      |    1  |  32
   6 | AS4C32M8SA -7TCN |    2  |  64
   7 | AS4C32M8SA -7TCN |    4  | 128
-8,9 | AS4C32M16SB-6T1N |    2  | 128
+8,9 | AS4C32M16SB-6TIN |    2  | 128
 
 All time values in ns, capacitance in pF
 
@@ -342,6 +342,7 @@ Module | Min  |  Max  | Remarks
 7      | 4.0  | 8.25  | min improved to 3.5ns by adding 33uF
 8      | 3.5  | 8.0   |
 9      | 3.25 | 8.25  |
+AV sys | 3.0  | 8.25  | Same results with fan on/off
 
 The wider the difference is between max and min, the cleaner signals are.
 
