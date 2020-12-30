@@ -115,10 +115,10 @@ reg  [    4:0] bwait;
 assign ba0_rq  = ba0_rd | ba0_wr;
 assign prog_rdy= prog_en & ctl_ack;
 
-assign ba0_ack = ctl_ack && ctl_ba_rq==2'd0;
-assign ba1_ack = ctl_ack && ctl_ba_rq==2'd1;
-assign ba2_ack = ctl_ack && ctl_ba_rq==2'd2;
-assign ba3_ack = ctl_ack && ctl_ba_rq==2'd3;
+assign ba0_ack = ctl_ack && ctl_ba_rq==2'd0 && !prog_en;
+assign ba1_ack = ctl_ack && ctl_ba_rq==2'd1 && !prog_en;
+assign ba2_ack = ctl_ack && ctl_ba_rq==2'd2 && !prog_en;
+assign ba3_ack = ctl_ack && ctl_ba_rq==2'd3 && !prog_en;
 
 
 // Multiplexer to select programming or regular inputs
@@ -161,10 +161,17 @@ always @(posedge clk, posedge rst ) begin
         ba3_rdy <= 0;
         dout    <= 32'd0;
     end else begin
-        ba0_rdy <= ctl_rdy && ctl_ba_rdy==2'd0;
-        ba1_rdy <= ctl_rdy && ctl_ba_rdy==2'd1;
-        ba2_rdy <= ctl_rdy && ctl_ba_rdy==2'd2;
-        ba3_rdy <= ctl_rdy && ctl_ba_rdy==2'd3;
+        if( prog_en || !ctl_rdy ) begin
+            ba0_rdy <= 0;
+            ba1_rdy <= 0;
+            ba2_rdy <= 0;
+            ba3_rdy <= 0;
+        end else begin
+            ba0_rdy <= ctl_ba_rdy==2'd0;
+            ba1_rdy <= ctl_ba_rdy==2'd1;
+            ba2_rdy <= ctl_ba_rdy==2'd2;
+            ba3_rdy <= ctl_ba_rdy==2'd3;
+        end
         dout    <= ctl_dout;
     end
 end

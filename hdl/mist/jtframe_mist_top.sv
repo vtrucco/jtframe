@@ -122,7 +122,7 @@ wire [63:0]   status;
 wire [31:0]   joystick1, joystick2;
 wire [24:0]   ioctl_addr;
 wire [ 7:0]   ioctl_data;
-wire [ 7:0]   ioctl_data_out;
+wire [ 7:0]   ioctl_data2sd;
 wire          ioctl_wr;
 wire          ioctl_ram;
 
@@ -188,36 +188,25 @@ assign snd_right = snd_left;
 assign prog_data = {2{prog_data8}};
 `endif
 
-`ifdef JTFRAME_CLK96
-    wire clk48;
+// clk_rom is always 48MHz
+// clk96, clk24 and clk6 inputs to the core can be enabled via macros
 
-    jtframe_pll96 u_pll_game (
-        .inclk0 ( CLOCK_27[0] ),
-        .c0     ( clk48       ), // 48 MHz
-        .c1     ( clk_rom     ), // 96 MHz
-        .c2     ( SDRAM_CLK   ), // 96 MHz shifted
-        .c3     ( clk24       ),
-        .c4     ( clk6        ),
-        .locked ( pll_locked  )
-    );
-    assign clk_sys   = clk_rom; // it is possible to use clk48 instead but
+jtframe_pll0 u_pll_game (
+    .inclk0 ( CLOCK_27[0] ),
+    .c0     ( clk96       ),
+    .c1     ( clk_rom     ), // 48 MHz
+    .c2     ( SDRAM_CLK   ),
+    .c3     ( clk24       ),
+    .c4     ( clk6        ),
+    .locked ( pll_locked  )
+);
+
+`ifdef JTFRAME_CLK96
+    assign clk_sys   = clk96; // it is possible to use clk48 instead but
         // video mixer doesn't work well in HQ mode
 `else
-    jtframe_pll0 u_pll_game (
-        .inclk0 ( CLOCK_27[0] ),
-        .c1     ( clk_rom     ), // 48 MHz
-        .c2     ( SDRAM_CLK   ),
-        .c3     ( clk24       ),
-        .c4     ( clk6        ),
-        .locked ( pll_locked  )
-    );
     assign clk_sys   = clk_rom;
 `endif
-
-jtframe_pll1 u_pll_vga (
-    .inclk0 ( clk_sys    ),
-    .c0     ( clk_vga    ) // 25
-);
 
 wire [7:0] dipsw_a, dipsw_b;
 wire [1:0] dip_fxlevel;
@@ -257,7 +246,6 @@ jtframe_mist #(
 u_frame(
     .clk_sys        ( clk_sys        ),
     .clk_rom        ( clk_rom        ),
-    .clk_vga        ( clk_vga        ),
     .pll_locked     ( pll_locked     ),
     .status         ( status         ),
     // Base video
@@ -327,7 +315,7 @@ u_frame(
     // ROM load
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_data     ( ioctl_data     ),
-    .ioctl_data_out ( ioctl_data_out ),
+    .ioctl_data2sd  ( ioctl_data2sd  ),
     .ioctl_wr       ( ioctl_wr       ),
     .ioctl_ram      ( ioctl_ram      ),
 
@@ -336,7 +324,7 @@ u_frame(
     .prog_rd        ( prog_rd        ),
     .prog_we        ( prog_we        ),
     .prog_mask      ( prog_mask      ),
-    .prog_bank      ( prog_ba        ),
+    .prog_ba        ( prog_ba        ),
     .prog_rdy       ( prog_rdy       ),
 
     .downloading    ( downloading    ),
@@ -430,7 +418,7 @@ u_game(
     .rst         ( game_rst       ),
     .clk         ( clk_rom        ),
     `ifdef JTFRAME_CLK96
-    .clk48       ( clk48          ),
+    .clk96       ( clk96          ),
     `endif
     `ifdef JTFRAME_CLK24
     .clk24       ( clk24          ),
@@ -470,7 +458,7 @@ u_game(
     .ioctl_wr    ( ioctl_wr       ),
 `ifdef CORE_NVRAM_SIZE
     .ioctl_ram   ( ioctl_ram      ),
-    .ioctl_data_out(ioctl_data_out),
+    .ioctl_data2sd(ioctl_data2sd  ),
 `endif
     // ROM load
     .downloading ( downloading    ),

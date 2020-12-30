@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo SDRAM_SHIFT macro is currently disabled in MiSTer pll_0002.v file
+echo enabled it and fixed the SHIFTS variable in this script. Before running
+echo the script again.
+exit 1
+
 MIN=-11000
 MAX=11000
 CORE=

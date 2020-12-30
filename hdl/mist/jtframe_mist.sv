@@ -27,7 +27,6 @@ module jtframe_mist #(parameter
 )(
     input           clk_sys,
     input           clk_rom,
-    input           clk_vga,
     input           pll_locked,
     // interface with microcontroller
     output  [63:0]  status,
@@ -51,7 +50,7 @@ module jtframe_mist #(parameter
     input        [21:0] prog_addr,
     input        [15:0] prog_data,
     input        [ 1:0] prog_mask,
-    input        [ 1:0] prog_bank,
+    input        [ 1:0] prog_ba,
     input               prog_we,
     input               prog_rd,
     output              prog_rdy,
@@ -101,7 +100,7 @@ module jtframe_mist #(parameter
     output   [24:0] ioctl_addr,
     output   [ 7:0] ioctl_data,
     output          ioctl_wr,
-    input    [ 7:0] ioctl_data_out,
+    input    [ 7:0] ioctl_data2sd,
     output          ioctl_ram,
     input           dwnld_busy,
     output          downloading,
@@ -224,7 +223,7 @@ jtframe_mist_base #(
     // ROM load from SPI
     .ioctl_addr     ( ioctl_addr    ),
     .ioctl_data     ( ioctl_data    ),
-    .ioctl_data_out ( ioctl_data_out),
+    .ioctl_data2sd  ( ioctl_data2sd ),
     .ioctl_wr       ( ioctl_wr      ),
     .ioctl_ram      ( ioctl_ram     ),
     .downloading    ( downloading   )
@@ -246,7 +245,6 @@ jtframe_board #(
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
-    .clk_vga        ( clk_vga         ),
 
     .core_mod       ( core_mod        ),
     // joystick
@@ -304,7 +302,7 @@ jtframe_board #(
 
     // ROM-load interface
     .prog_addr  ( prog_addr     ),
-    .prog_bank  ( prog_bank     ),
+    .prog_ba    ( prog_ba       ),
     .prog_rd    ( prog_rd       ),
     .prog_we    ( prog_we       ),
     .prog_data  ( prog_data     ),

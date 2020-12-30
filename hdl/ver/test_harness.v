@@ -206,7 +206,6 @@ mt48lc16m16a2 #(.filename(GAME_ROMNAME)) mist_sdram (
 );
 `endif
 
-//`ifdef LOADROM
 spitx #(.filename(GAME_ROMNAME), .TX_LEN(TX_LEN) )
     u_spitx(
     .rst        ( rst        ),
@@ -232,17 +231,12 @@ data_io datain (
     .clk_sys        (SDRAM_CLK    ),
     .ioctl_addr     ( ioctl_addr  ),
     .ioctl_dout     ( ioctl_data  ),
+    .ioctl_din      (             ),
     .ioctl_wr       ( ioctl_wr    ),
     // unused
+    .ioctl_upload   (             ),
     .ioctl_fileext  (             ),
     .ioctl_filesize (             )
 );
-// `else
-// assign downloading = 0;
-// assign romload_addr = 0;
-// assign romload_data = 0;
-// assign spi_done = 1'b1;
-// assign SPI_SS2  = 1'b0;
-// `endif
 
-endmodule // jt_1942_a_test
+endmodule

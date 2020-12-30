@@ -25,16 +25,15 @@ module jtframe_board #(parameter
     VIDEO_WIDTH             = 384,
     VIDEO_HEIGHT            = 224
 )(
-    output  reg       rst=1'b0,      // use as synchrnous reset
-    output  reg       rst_n=1'b1,    // use as asynchronous reset
-    output  reg       game_rst=1'b0,
-    output  reg       game_rst_n=1'b1,
+    output            rst,
+    output            rst_n,
+    output            game_rst,
+    output            game_rst_n,
     // reset forcing signals:
     input             rst_req,
 
     input             clk_sys,
     input             clk_rom,
-    input             clk_vga,
 
     input  [ 6:0]     core_mod,
     // ROM access from game
@@ -64,7 +63,7 @@ module jtframe_board #(parameter
     input  [SDRAMW-1:0] prog_addr,
     input        [15:0] prog_data,
     input        [ 1:0] prog_mask,
-    input        [ 1:0] prog_bank,
+    input        [ 1:0] prog_ba,
     input               prog_we,
     input               prog_rd,
     output              prog_rdy,
@@ -153,8 +152,7 @@ wire          osd_pause;
 
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
 wire key_reset, key_pause, rot_control;
-reg [7:0] rst_cnt=8'd0;
-reg       game_pause;
+reg       game_pause, soft_rst;
 wire      scandoubler = ~scan2x_enb;
 
 `ifdef JTFRAME_MISTER_VIDEO_DW
@@ -163,64 +161,25 @@ localparam arcade_fx_dw = `JTFRAME_MISTER_VIDEO_DW;
 localparam arcade_fx_dw = COLORW*3;
 `endif
 
-always @(posedge clk_sys)
-    if( rst_cnt != ~8'b0 ) begin
-        rst <= 1'b1;
-        rst_cnt <= rst_cnt + 8'd1;
-    end else rst <= 1'b0;
-
-// rst_n is meant to be used as an asynchronous reset
-// for the clk_sys domain
-reg pre_rst_n;
-always @(posedge clk_sys)
-    if( rst | downloading ) begin
-        pre_rst_n <= 1'b0;
-        rst_n <= 1'b0;
-    end else begin
-        pre_rst_n <= 1'b1;
-        rst_n <= pre_rst_n;
-    end
-
-reg soft_rst;
-reg [7:0] game_rst_cnt=8'd0;
-
-`ifdef JTFRAME_FLIP_RESET
-reg last_dip_flip, rst_flip;
-always @(negedge clk_rom) begin
-    last_dip_flip <= dip_flip;
-    rst_flip      <= last_dip_flip!=dip_flip;
-end
-`else
-wire rst_flip = 0;
-`endif
-
-always @(negedge clk_rom) begin
-    if( downloading | rst | rst_req
-        | rst_flip | soft_rst ) begin
-        game_rst_cnt <= 8'd0;
-        game_rst     <= 1'b1;
-    end
-    else if( game_rst_cnt != ~8'b0 ) begin
-        game_rst <= 1'b1;
-        game_rst_cnt <= game_rst_cnt + 8'd1;
-    end else game_rst <= 1'b0;
-end
-
-// convert game_rst to game_rst_n
-reg pre_game_rst_n;
-always @(posedge clk_rom)
-    if( game_rst ) begin
-        pre_game_rst_n <= 1'b0;
-        game_rst_n <= 1'b0;
-    end else begin
-        pre_game_rst_n <= 1'b1;
-        game_rst_n <= pre_game_rst_n;
-    end
-
 wire [9:0] key_joy1, key_joy2, key_joy3;
 wire [3:0] key_start, key_coin;
 wire [3:0] key_gfx;
 wire       key_service;
+
+jtframe_reset u_reset(
+    .clk_sys    ( clk_sys       ),
+    .clk_rom    ( clk_rom       ),
+
+    .downloading( downloading   ),
+    .dip_flip   ( dip_flip      ),
+    .soft_rst   ( soft_rst      ),
+    .rst_req    ( rst_req       ),
+
+    .rst        ( rst           ),
+    .rst_n      ( rst_n         ),
+    .game_rst   ( game_rst      ),
+    .game_rst_n ( game_rst_n    )
+);
 
 `ifndef SIMULATION
 jtframe_keyboard u_keyboard(
@@ -411,6 +370,9 @@ jtframe_dip u_dip(
     .dip_fxlevel( dip_fxlevel   )
 );
 
+// support for 48MHz
+// Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
+// clock is shift or not.
 jtframe_sdram_bank #(.AW(SDRAMW),.HF(0),.SHIFTED(1)) u_sdram(
     .rst        ( rst           ),
     .clk        ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
@@ -445,7 +407,7 @@ jtframe_sdram_bank #(.AW(SDRAMW),.HF(0),.SHIFTED(1)) u_sdram(
     // ROM-load interface
     .prog_en    ( downloading   ),
     .prog_addr  ( prog_addr     ),
-    .prog_ba    ( prog_bank     ),
+    .prog_ba    ( prog_ba       ),
     .prog_rd    ( prog_rd       ),
     .prog_wr    ( prog_we       ),
     .prog_din   ( prog_data     ),

@@ -132,8 +132,42 @@ jtframe_romrq_stats u_stats(
 );
 `endif
 
+`ifdef SIMULATION
+reg [AW-1:0] last_addr;
+reg          waiting, last_req;
+
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        waiting <= 0;
+        last_req <= 0;
+    end else begin
+        last_req <= req;
+        if( req && !last_req ) begin
+            if( waiting ) begin
+                $display("ERROR: %m address changed");
+                $finish;
+            end
+            last_addr <= addr;
+            waiting <= 1;
+        end
+        if( din_ok ) waiting <= 0;
+        if( waiting && !addr_ok ) begin
+            $display("ERROR: %m data request interrupted");
+            $finish;
+        end
+        if( addr != last_addr && addr_ok) begin
+            if( waiting ) begin
+                $display("ERROR: %m address changed");
+                $finish;
+            end else waiting <= !hit0 && !hit1;
+        end
+    end
+end
+`endif
+
 endmodule // jtframe_romrq
 
+////////////////////////////////////////////////////////////////
 module jtframe_romrq_stats(
     input clk,
     input rst,

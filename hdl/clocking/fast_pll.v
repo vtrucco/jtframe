@@ -20,7 +20,7 @@ initial begin
     c0  = 1'b0;
     c1  = 1'b0;
     c3n = 1'b0;
-    forever c1 = #(base_clk/2.0) ~c1; 
+    forever c1 = #(base_clk/2.0) ~c1;
 end
 
 always @(posedge c1) begin
@@ -57,6 +57,7 @@ endmodule // jtgng_pll0
 // 48 MHz PLL
 module jtframe_pll0(
     input    inclk0,
+    output   reg c0,     // 96
     output   reg c1,     // 48
     output       c2,     // 48 (shifted by -2.5ns)
     output   reg c3,     // 24
@@ -65,6 +66,7 @@ module jtframe_pll0(
 );
 
 assign locked = 1'b1;
+reg nc;
 
 `ifdef BASE_CLK
 real base_clk = `BASE_CLK;
@@ -75,29 +77,21 @@ initial $display("INFO: base clock set to %f ns",base_clk);
 //  84 MHz -> 11.905ns
 //  72 MHz -> 13.889ns X fails
 //  48 MHz -> 20.833ns
-real base_clk = 20.833;
+real base_clk = 10.417;
 `endif
 
 initial begin
+    c0 = 1'b0;
     c1 = 1'b0;
     c3 = 1'b0;
-    forever c1 = #(base_clk/2.0) ~c1; 
+    c4 = 1'b0;
+    nc = 1'b0;
+    forever c0 = #(base_clk/2.0) ~c0;
 end
 
-always @(posedge c1) c3 <= ~c3;
-
-integer cnt6;
-
-initial begin
-    cnt6=0;
-    c4=0;
+always @(posedge c0) begin
+    {c4,nc,c3,c1} <= {c4,nc,c3,c1} + 1'b1;
 end
-
-always @(posedge c1) begin
-    cnt6 = cnt6==5 ? 0 : cnt6+1;
-    if( cnt6==5 ) c4 <= ~c4;
-end
-
 
 `ifdef SDRAM_DELAY
 real sdram_delay = `SDRAM_DELAY;

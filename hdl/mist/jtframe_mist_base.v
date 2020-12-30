@@ -78,7 +78,7 @@ module jtframe_mist_base #(parameter
     // ROM load from SPI
     output [24:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
-    input  [ 7:0]   ioctl_data_out,
+    input  [ 7:0]   ioctl_data2sd,
     output          ioctl_wr,
     output          ioctl_ram,
     output          downloading
@@ -209,10 +209,11 @@ data_io #(.ROM_DIRECT_UPLOAD(1'b1)) u_datain (
     .ioctl_download     ( ioctl_download    ),
     .ioctl_addr         ( ioctl_addr        ),
     .ioctl_dout         ( ioctl_data        ),
-    .ioctl_din          ( ioctl_data_out    ),
+    .ioctl_din          ( ioctl_data2sd     ),
     .ioctl_wr           ( ioctl_wr          ),
     .ioctl_index        ( ioctl_index       ),
     // Unused:
+    .ioctl_upload       (                   ),
     .ioctl_fileext      (                   ),
     .ioctl_filesize     (                   )
 );

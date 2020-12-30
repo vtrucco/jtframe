@@ -26,7 +26,6 @@ module jtframe_mister #(parameter
 )(
     input           clk_sys,
     input           clk_rom,
-    input           clk_vga,
     input           pll_locked,
     // interface with microcontroller
     output [31:0]   status,
@@ -65,7 +64,7 @@ module jtframe_mister #(parameter
     input        [21:0] prog_addr,
     input        [15:0] prog_data,
     input        [ 1:0] prog_mask,
-    input        [ 1:0] prog_bank,
+    input        [ 1:0] prog_ba,
     input               prog_we,
     input               prog_rd,
     output              prog_rdy,
@@ -339,7 +338,6 @@ jtframe_board #(
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
-    .clk_vga        ( clk_vga         ),
 
     .core_mod       ( core_mod        ),
     // joystick
@@ -420,7 +418,7 @@ jtframe_board #(
 
     // ROM-load interface
     .prog_addr  ( prog_addr     ),
-    .prog_bank  ( prog_bank     ),
+    .prog_ba    ( prog_ba       ),
     .prog_rd    ( prog_rd       ),
     .prog_we    ( prog_we       ),
     .prog_data  ( prog_data     ),

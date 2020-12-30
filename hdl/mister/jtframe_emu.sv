@@ -181,7 +181,7 @@ wire [3:0] hoffset, voffset;
 
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys, clk_rom, clk96, clk96sh, clk48, clk48sh, clk24, clk6;
+wire clk_sys, clk_rom, clk96, clk48, clk48sh, clk24, clk6;
 wire pxl2_cen, pxl_cen;
 wire pll_locked;
 reg  pll_rst = 1'b0;
@@ -216,11 +216,20 @@ pll pll(
     .outclk_1   ( clk48sh    ),
     .outclk_2   ( clk24      ),
     .outclk_3   ( clk6       ),
-    .outclk_4   ( clk96      ),
-    .outclk_5   ( clk96sh    )
+    .outclk_4   ( clk96      )
 );
 
+`ifdef JTFRAME_CLK96
+assign clk_sys   = clk96;
+`else
+assign clk_sys   = clk48;
+`endif
 
+assign clk_rom   = clk48;
+assign SDRAM_CLK = clk48sh;
+
+
+/*
 `ifndef JTFRAME_CLK96
     assign clk_sys   = clk48;
     assign clk_rom   = clk48;
@@ -256,6 +265,7 @@ pll pll(
         .sset(1'b0)
     );
 `endif
+*/
 ///////////////////////////////////////////////////
 
 wire [31:0] status;
@@ -289,7 +299,7 @@ wire [15:0] prog_data;
 `ifndef JTFRAME_SDRAM_BANKS
 wire [ 7:0]   prog_data8;
 `endif
-wire [ 1:0] prog_mask, prog_bank;
+wire [ 1:0] prog_mask, prog_ba;
 wire        prog_we, prog_rd, prog_rdy;
 
 // ROM access from game
@@ -345,7 +355,6 @@ jtframe_mister #(
 u_frame(
     .clk_sys        ( clk_sys        ),
     .clk_rom        ( clk_rom        ),
-    .clk_vga        ( clk_sys        ),
     .pll_locked     ( pll_locked     ),
     // interface with microcontroller
     .status         ( status         ),
@@ -414,7 +423,7 @@ u_frame(
     .prog_rd        ( prog_rd        ),
     .prog_we        ( prog_we        ),
     .prog_mask      ( prog_mask      ),
-    .prog_bank      ( prog_bank      ),
+    .prog_ba        ( prog_ba        ),
     .prog_rdy       ( prog_rdy       ),
 
     .downloading    ( downloading    ),
@@ -493,7 +502,7 @@ assign sim_pxl_cen = pxl_cen;
     // By default clk is 48MHz, but JTFRAME_CLK96 overrides it to 96MHz
     .clk          ( clk_rom          ),
     `ifdef JTFRAME_CLK96
-    .clk48        ( clk48            ),
+    .clk96        ( clk96            ),
     `endif
     `ifdef JTFRAME_CLK24
     .clk24        ( clk24            ),
