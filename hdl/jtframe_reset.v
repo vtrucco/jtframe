@@ -25,8 +25,10 @@ module jtframe_reset(
     input       soft_rst,
     input       rst_req,
 
+    // clk_sys:
     output  reg rst,
     output  reg rst_n,
+    // clk_rom:
     output  reg game_rst,
     output  reg game_rst_n
 );
@@ -36,6 +38,7 @@ localparam MAIN_RSTW = 4,
 
 reg [MAIN_RSTW-1:0] rst_cnt={MAIN_RSTW{1'b1}};
 reg [GAME_RSTW-1:0] game_rst_cnt;
+reg [MAIN_RSTW-1:0] rst_rom; // rst in clk_rom domain
 reg                 last_dwn, dwn_done;
 
 
@@ -65,7 +68,7 @@ end
 
 `ifdef JTFRAME_FLIP_RESET
     reg last_dip_flip, rst_flip;
-    always @(negedge clk_rom) begin
+    always @(posedge clk_sys) begin
         last_dip_flip <= dip_flip;
         rst_flip      <= last_dip_flip!=dip_flip;
     end
@@ -73,9 +76,20 @@ end
     wire rst_flip = 0;
 `endif
 
+always @(posedge clk_sys, posedge rst ) begin
+    if( rst ) begin
+        rst_rom <= {MAIN_RSTW{1'b1}};
+    end else begin
+        if( !dwn_done | rst | rst_req
+        | rst_flip | soft_rst )
+            rst_rom <= {MAIN_RSTW{1'b1}};
+        else
+            rst_rom <= rst_rom >> 1;
+    end
+end
+
 always @(negedge clk_rom) begin
-    if( !dwn_done | rst | rst_req
-        | rst_flip | soft_rst ) begin
+    if( rst_rom[0] ) begin
         game_rst_cnt   <= {GAME_RSTW{1'b1}};
         game_rst_n     <= 0;
         game_rst       <= 1;
