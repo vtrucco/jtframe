@@ -88,3 +88,9 @@ set_output_delay -clock  SDRAM_CLK -min -0.8 \
 set_multicycle_path -setup -end -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|arcade_video:u_arcade_video|video_mixer:video_mixer|scandoubler:sd|Hq2x:Hq2x|Blend:blender|df_rule[*]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|arcade_video:u_arcade_video|video_mixer:video_mixer|scandoubler:sd|Hq2x:Hq2x|Blend:blender|i20[*]}] 2
 
 set_multicycle_path -setup -end -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|arcade_video:u_arcade_video|video_mixer:video_mixer|scandoubler:sd|Hq2x:Hq2x|Blend:blender|f[*]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|arcade_video:u_arcade_video|video_mixer:video_mixer|scandoubler:sd|Hq2x:Hq2x|Blend:blender|i20[*]}] 2
+
+## Reset signals that are multi-cycle
+set_multicycle_path -setup -end -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom[0]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|game_rst_cnt[*]}] 2
+set_multicycle_path -setup -end -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom[0]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|game_rst}] 2
+set_multicycle_path -hold -end -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom[0]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|game_rst_cnt[*]}] 2
+set_multicycle_path -hold -end -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom[0]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|game_rst}] 2
