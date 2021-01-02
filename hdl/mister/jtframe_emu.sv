@@ -226,20 +226,11 @@ assign clk_sys   = clk48;
 `endif
 
 assign clk_rom   = clk48;
-assign SDRAM_CLK = clk48sh;
 
 
-/*
-`ifndef JTFRAME_CLK96
-    assign clk_sys   = clk48;
-    assign clk_rom   = clk48;
+`ifndef JTFRAME_180SHIFT
     assign SDRAM_CLK = clk48sh;
-    //assign SDRAM_CLK = clk48;
 `else
-    assign clk_sys   = clk96; // clk48 can be used but video mixer may fail for some modes
-    assign clk_rom   = clk96;
-    //assign SDRAM_CLK = clk96sh;
-
     altddio_out
     #(
         .extend_oe_disable("OFF"),
@@ -265,7 +256,7 @@ assign SDRAM_CLK = clk48sh;
         .sset(1'b0)
     );
 `endif
-*/
+
 ///////////////////////////////////////////////////
 
 wire [31:0] status;
