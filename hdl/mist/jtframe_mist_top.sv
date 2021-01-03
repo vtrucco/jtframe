@@ -35,7 +35,7 @@ module mist_top(
     output          SDRAM_nRAS,     // SDRAM Row Address Strobe
     output          SDRAM_nCS,      // SDRAM Chip Select
     output [1:0]    SDRAM_BA,       // SDRAM Bank Address
-    output          SDRAM_CLK,      // SDRAM Clock
+    inout           SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
    // SPI interface to arm io controller
     inout           SPI_DO,
