@@ -19,12 +19,7 @@
 
 // TODO: Delay vsync one line
 
-module scandoubler #(
-        parameter LENGTH=256,
-        parameter HALF_DEPTH=1,
-        // Do not modify DWIDTH:
-        parameter DWIDTH = HALF_DEPTH ? 3 : 7
-)
+module scandoubler #(parameter LENGTH, parameter HALF_DEPTH)
 (
 	// system interface
 	input             clk_vid,
@@ -54,6 +49,8 @@ module scandoubler #(
 	output [DWIDTH:0] b_out
 );
 
+localparam DWIDTH = HALF_DEPTH ? 3 : 7;
+
 reg  [7:0] pix_len = 0;
 wire [7:0] pl = pix_len + 1'b1;
 
@@ -62,7 +59,7 @@ wire [7:0] pc_in = pix_in_cnt + 1'b1;
 reg  [7:0] pixsz, pixsz2, pixsz4 = 0;
 
 reg ce_x4i, ce_x1i;
-always @(posedge clk_vid) begin : block1
+always @(posedge clk_vid) begin
 	reg old_ce, valid, hs;
 
 	if(~&pix_len) pix_len <= pl;
@@ -106,37 +103,32 @@ always @(posedge clk_vid) begin
 	end
 end
 
-reg ce_x4o, ce_x2o;
-reg [1:0] sd_line;
-reg [3:0] vbo;
-reg [3:0] vso;
-reg [8:0] hbo;
-
-/*
 Hq2x #(.LENGTH(LENGTH), .HALF_DEPTH(HALF_DEPTH)) Hq2x
 (
-	.clk         ( clk_vid             ),
+	.clk(clk_vid),
 
-	.ce_in       ( ce_x4i              ),
-	.inputpixel  ( {b_d,g_d,r_d}       ),
-	.mono        ( mono                ),
-    //.disable_hq2x( ~hq2x             ),
-	.reset_frame ( vb_in               ),
-	.reset_line  ( req_line_reset      ),
+	.ce_in(ce_x4i),
+	.inputpixel({b_d,g_d,r_d}),
+	.mono(mono),
+	`ifdef JTFRAME_NOHQ2X
+	.disable_hq2x(1'b1),
+	`else
+	.disable_hq2x(~hq2x),
+	`endif
+	.reset_frame(vb_in),
+	.reset_line(req_line_reset),
 
-	.ce_out      ( ce_x4o              ),
-	.read_y      ( sd_line             ),
-	.hblank      ( hbo[0]&hbo[8]       ),
-	.outpixel    ( {b_out,g_out,r_out} )
+	.ce_out(ce_x4o),
+	.read_y(sd_line),
+	.hblank(hbo[0]&hbo[8]),
+	.outpixel({b_out,g_out,r_out})
 );
-*/
-
-assign {b_out,g_out,r_out} = {b_d,g_d,r_d};
 
 reg  [7:0] pix_out_cnt = 0;
 wire [7:0] pc_out = pix_out_cnt + 1'b1;
 
-always @(posedge clk_vid) begin : block2
+reg ce_x4o, ce_x2o;
+always @(posedge clk_vid) begin
 	reg hs;
 
 	if(~&pix_out_cnt) pix_out_cnt <= pc_out;
@@ -156,7 +148,11 @@ always @(posedge clk_vid) begin : block2
 	end
 end
 
-always @(posedge clk_vid) begin : block0
+reg [1:0] sd_line;
+reg [3:0] vbo;
+reg [3:0] vso;
+reg [8:0] hbo;
+always @(posedge clk_vid) begin
 
 	reg [31:0] hcnt;
 	reg [30:0] sd_hcnt;

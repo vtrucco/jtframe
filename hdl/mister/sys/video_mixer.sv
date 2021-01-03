@@ -25,9 +25,7 @@ module video_mixer
 #(
 	parameter LINE_LENGTH  = 768,
 	parameter HALF_DEPTH   = 0,
-	parameter GAMMA        = 0,
-    // do not modify these ones
-    parameter DWIDTH = HALF_DEPTH ? 3 : 7
+	parameter GAMMA        = 0
 )
 (
 	// video clock
@@ -71,20 +69,19 @@ module video_mixer
 	output reg       VGA_DE
 );
 
+localparam DWIDTH = HALF_DEPTH ? 3 : 7;
 localparam DWIDTH_SD = GAMMA ? 7 : DWIDTH;
 localparam HALF_DEPTH_SD = GAMMA ? 0 : HALF_DEPTH;
-localparam RGB_WIDTH = GAMMA && HALF_DEPTH ? 8 : DWIDTH+1;
-wire [RGB_WIDTH-1:0] R_in, G_in, B_in;
 
 generate
 	if(GAMMA && HALF_DEPTH) begin
-		assign R_in  = mono ? {G,R} : {R,R};
-		assign G_in  = mono ? {G,R} : {G,G};
-		assign B_in  = mono ? {G,R} : {B,B};
+		wire [7:0] R_in  = mono ? {G,R} : {R,R};
+		wire [7:0] G_in  = mono ? {G,R} : {G,G};
+		wire [7:0] B_in  = mono ? {G,R} : {B,B};
 	end else begin
-		assign R_in  = R;
-		assign G_in  = G;
-		assign B_in  = B;
+		wire [DWIDTH:0] R_in  = R;
+		wire [DWIDTH:0] G_in  = G;
+		wire [DWIDTH:0] B_in  = B;
 	end
 endgenerate
 
@@ -92,7 +89,6 @@ endgenerate
 wire hs_g, vs_g;
 wire hb_g, vb_g;
 wire [DWIDTH_SD:0] R_gamma, G_gamma, B_gamma;
-wire [7:0] r,g,b;
 
 generate
 	if(GAMMA) begin
@@ -159,13 +155,13 @@ wire [DWIDTH_SD:0] bt  = (scandoubler ? B_sd : B_gamma);
 
 generate
 	if(!GAMMA && HALF_DEPTH) begin
-		assign r  = mono ? {gt,rt} : {rt,rt};
-		assign g  = mono ? {gt,rt} : {gt,gt};
-		assign b  = mono ? {gt,rt} : {bt,bt};
+		wire [7:0] r  = mono ? {gt,rt} : {rt,rt};
+		wire [7:0] g  = mono ? {gt,rt} : {gt,gt};
+		wire [7:0] b  = mono ? {gt,rt} : {bt,bt};
 	end else begin
-		assign r  = rt;
-		assign g  = gt;
-		assign b  = bt;
+		wire [7:0] r  = rt;
+		wire [7:0] g  = gt;
+		wire [7:0] b  = bt;
 	end
 endgenerate
 
@@ -189,41 +185,54 @@ end
 wire hde = scandoubler ? ~hb_sd : ~hb_g;
 wire vde = scandoubler ? ~vb_sd : ~vb_g;
 
-always @(posedge clk_vid) if(ce_pix_out) begin
+reg [7:0] v_r,v_g,v_b;
+reg       v_vs,v_hs,v_de;
+always @(posedge clk_vid) begin
 	reg old_hde;
 
-	case(scanlines & {scanline, scanline})
-		1: begin // reduce 25% = 1/2 + 1/4
-			VGA_R <= {1'b0, r[7:1]} + {2'b00, r[7:2]};
-			VGA_G <= {1'b0, g[7:1]} + {2'b00, g[7:2]};
-			VGA_B <= {1'b0, b[7:1]} + {2'b00, b[7:2]};
-		end
+	if(ce_pix_out) begin
+		case(scanlines & {scanline, scanline})
+			1: begin // reduce 25% = 1/2 + 1/4
+				v_r <= {1'b0, r[7:1]} + {2'b00, r[7:2]};
+				v_g <= {1'b0, g[7:1]} + {2'b00, g[7:2]};
+				v_b <= {1'b0, b[7:1]} + {2'b00, b[7:2]};
+			end
 
-		2: begin // reduce 50% = 1/2
-			VGA_R <= {1'b0, r[7:1]};
-			VGA_G <= {1'b0, g[7:1]};
-			VGA_B <= {1'b0, b[7:1]};
-		end
+			2: begin // reduce 50% = 1/2
+				v_r <= {1'b0, r[7:1]};
+				v_g <= {1'b0, g[7:1]};
+				v_b <= {1'b0, b[7:1]};
+			end
 
-		3: begin // reduce 75% = 1/4
-			VGA_R <= {2'b00, r[7:2]};
-			VGA_G <= {2'b00, g[7:2]};
-			VGA_B <= {2'b00, b[7:2]};
-		end
+			3: begin // reduce 75% = 1/4
+				v_r <= {2'b00, r[7:2]};
+				v_g <= {2'b00, g[7:2]};
+				v_b <= {2'b00, b[7:2]};
+			end
 
-		default: begin
-			VGA_R <= r;
-			VGA_G <= g;
-			VGA_B <= b;
-		end
-	endcase
+			default: begin
+				v_r <= r;
+				v_g <= g;
+				v_b <= b;
+			end
+		endcase
 
-	VGA_VS <= vs;
-	VGA_HS <= hs;
+		v_vs <= vs;
+		v_hs <= hs;
 
-	old_hde <= hde;
-	if(~old_hde && hde) VGA_DE <= vde;
-	if(old_hde && ~hde) VGA_DE <= 0;
+		old_hde <= hde;
+		if(~old_hde && hde) v_de <= vde;
+		if(old_hde && ~hde) v_de <= 0;
+	end
+end
+
+always @(posedge clk_vid) if(ce_pix_out) begin
+	VGA_R  <= v_r;
+	VGA_G  <= v_g;
+	VGA_B  <= v_b;
+	VGA_HS <= v_hs;
+	VGA_VS <= v_vs;
+	VGA_DE <= v_de;
 end
 
 endmodule

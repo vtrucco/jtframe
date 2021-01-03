@@ -303,6 +303,7 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .ioctl_wr        ( dwnld_wr       ),
     .ioctl_addr      ( dwnld_addr     ),
     .ioctl_dout      ( dwnld_data     ),
+    //.ioctl_din       ( ioctl_data2sd  ),
     .ioctl_index     ( ioctl_index    ),
 
     .joystick_0      ( joystick1      ),
