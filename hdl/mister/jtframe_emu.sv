@@ -33,11 +33,11 @@ module emu
     inout  [45:0] HPS_BUS,
 
     //Base video clock. Usually equals to CLK_SYS.
-    output        VGA_CLK,
+    output        CLK_VIDEO,
 
-    //Multiple resolutions are supported using different VGA_CE rates.
+    //Multiple resolutions are supported using different CE_PIXEL rates.
     //Must be based on CLK_VIDEO
-    output        VGA_CE,
+    output        CE_PIXEL,
 
     output  [7:0] VGA_R,
     output  [7:0] VGA_G,
@@ -46,25 +46,12 @@ module emu
     output        VGA_VS,
     output        VGA_DE,    // = ~(VBlank | HBlank)
     output        VGA_F1,
-
-    //Base video clock. Usually equals to CLK_SYS.
-    output        HDMI_CLK,
-
-    //Multiple resolutions are supported using different HDMI_CE rates.
-    //Must be based on CLK_VIDEO
-    output        HDMI_CE,
-
-    output  [7:0] HDMI_R,
-    output  [7:0] HDMI_G,
-    output  [7:0] HDMI_B,
-    output        HDMI_HS,
-    output        HDMI_VS,
-    output        HDMI_DE,   // = ~(VBlank | HBlank)
-    output  [1:0] HDMI_SL,   // scanlines fx
+    output  [1:0] VGA_SL,
+    output        VGA_SCALER,
 
     //Video aspect ratio for HDMI. Most retro systems have ratio 4:3.
-    output  [7:0] HDMI_ARX,
-    output  [7:0] HDMI_ARY,
+    output [11:0] VIDEO_ARX,
+    output [11:0] VIDEO_ARY,
 
     output        LED_USER,  // 1 - ON, 0 - OFF.
 
@@ -74,8 +61,14 @@ module emu
     output  [1:0] LED_POWER,
     output  [1:0] LED_DISK,
 
-    output [15:0] AUDIO_L,
-    output [15:0] AUDIO_R,
+    // I/O board button press simulation (active high)
+    // b[1]: user button
+    // b[0]: osd button
+    // output  [1:0] BUTTONS,
+
+    input         CLK_AUDIO,
+    output reg [15:0] AUDIO_L,
+    output reg [15:0] AUDIO_R,
     output        AUDIO_S,   // 1 - signed audio samples, 0 - unsigned
 
     //SDRAM interface with lower latency
@@ -175,7 +168,11 @@ assign VGA_F1=1'b0;
 wire   field;
 assign VGA_F1=field;
 `endif
-assign USER_OUT = '1;
+
+assign VGA_SL     = 2'd0;
+assign VGA_SCALER = 0;
+assign USER_OUT   = '1;
+// assign BUTTONS    = 2'd0; // MiSTer board button emulation from core
 
 wire [3:0] hoffset, voffset;
 
@@ -311,8 +308,12 @@ wire [31:0] sdram_dout;
 `define COLORW 4
 `endif
 
+`ifndef BUTTONS
+`define BUTTONS 2
+`endif
+
 localparam COLORW=`COLORW;
-localparam BUTTONS=`BUTTONS;
+localparam GAME_BUTTONS=`BUTTONS;
 
 wire [COLORW-1:0] game_r, game_g, game_b;
 wire              LHBL, LVBL;
@@ -324,9 +325,6 @@ assign AUDIO_S = 1'b1; // Assume signed by default
 assign AUDIO_S = `SIGNED_SND;
 `endif
 
-`ifndef BUTTONS
-`define BUTTONS 2
-`endif
 
 `ifndef JTFRAME_SDRAM_BANKS
 assign prog_data = {2{prog_data8}};
@@ -334,7 +332,7 @@ assign prog_data = {2{prog_data8}};
 
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
-    .BUTTONS       ( BUTTONS        ),
+    .BUTTONS       ( GAME_BUTTONS        ),
     .COLORW        ( COLORW         )
     `ifdef VIDEO_WIDTH
     ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
@@ -448,25 +446,16 @@ u_frame(
     // screen
     .rotate         (                ),
     // HDMI
-    .hdmi_r         ( HDMI_R         ),
-    .hdmi_g         ( HDMI_G         ),
-    .hdmi_b         ( HDMI_B         ),
-    .hdmi_hs        ( HDMI_HS        ),
-    .hdmi_vs        ( HDMI_VS        ),
-    .hdmi_clk       ( HDMI_CLK       ),
-    .hdmi_cen       ( HDMI_CE        ),
-    .hdmi_de        ( HDMI_DE        ),
-    .hdmi_sl        ( HDMI_SL        ),
-    .hdmi_arx       ( HDMI_ARX       ),
-    .hdmi_ary       ( HDMI_ARY       ),
+    .hdmi_arx       ( VIDEO_ARX      ),
+    .hdmi_ary       ( VIDEO_ARY      ),
     // scan doubler output to VGA pins
     .scan2x_r       ( VGA_R          ),
     .scan2x_g       ( VGA_G          ),
     .scan2x_b       ( VGA_B          ),
     .scan2x_hs      ( VGA_HS         ),
     .scan2x_vs      ( VGA_VS         ),
-    .scan2x_clk     ( VGA_CLK        ),
-    .scan2x_cen     ( VGA_CE         ),
+    .scan2x_clk     ( CLK_VIDEO      ),
+    .scan2x_cen     ( CE_PIXEL       ),
     .scan2x_de      ( VGA_DE         ),
     // Debug
     .gfx_en         ( gfx_en         )
@@ -485,6 +474,16 @@ assign sim_pxl_cen = pxl_cen;
 assign sim_pxl_clk = clk_sys;
 assign sim_pxl_cen = pxl_cen;
 `endif
+
+wire [15:0] snd_left, snd_right;
+reg  [15:0] snd_lsync, snd_rsync;
+
+always @(posedge CLK_AUDIO) begin
+    snd_lsync <= snd_left;
+    snd_rsync <= snd_right;
+    AUDIO_L   <= snd_lsync;
+    AUDIO_R   <= snd_rsync;
+end
 
 `GAMETOP u_game
 (
@@ -517,11 +516,11 @@ assign sim_pxl_cen = pxl_cen;
 
     .start_button ( game_start       ),
     .coin_input   ( game_coin        ),
-    .joystick1    ( game_joy1[BUTTONS+3:0]   ),
-    .joystick2    ( game_joy2[BUTTONS+3:0]   ),
+    .joystick1    ( game_joy1[GAME_BUTTONS+3:0]   ),
+    .joystick2    ( game_joy2[GAME_BUTTONS+3:0]   ),
     `ifdef JTFRAME_4PLAYERS
-    .joystick3    ( game_joy3[BUTTONS+3:0]   ),
-    .joystick4    ( game_joy4[BUTTONS+3:0]   ),
+    .joystick3    ( game_joy3[GAME_BUTTONS+3:0]   ),
+    .joystick4    ( game_joy4[GAME_BUTTONS+3:0]   ),
     `endif
     `ifdef JTFRAME_ANALOG
     .joystick_analog_0( joystick_analog_0   ),
@@ -600,10 +599,10 @@ assign sim_pxl_cen = pxl_cen;
     `endif
 
     `ifdef STEREO_GAME
-    .snd_left     ( AUDIO_L          ),
-    .snd_right    ( AUDIO_R          ),
+    .snd_left     ( snd_left         ),
+    .snd_right    ( snd_right        ),
     `else
-    .snd          ( AUDIO_L          ),
+    .snd          ( snd_left         ),
     `endif
     .gfx_en       ( gfx_en           ),
 
@@ -612,7 +611,7 @@ assign sim_pxl_cen = pxl_cen;
 );
 
 `ifndef STEREO_GAME
-    assign AUDIO_R = AUDIO_L;
+    assign snd_right = snd_left;
 `endif
 
 `ifndef JTFRAME_SDRAM_BANKS

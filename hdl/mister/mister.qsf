@@ -72,8 +72,8 @@ set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_
 set_global_assignment -name QIP_FILE ${PRJPATH}/hdl/jt${CORENAME}.qip
 
 set_global_assignment -name VERILOG_MACRO "MISTER=<None>"
-set_global_assignment -name VERILOG_MACRO "SCAN2X_TYPE=2"
 set_global_assignment -name VERILOG_MACRO "ARCADE_SYS=1"
+set_global_assignment -name VERILOG_MACRO "USE_SDRAM=1"
 
 set_instance_assignment -name FAST_INPUT_REGISTER ON -to emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_sdram_bank:u_sdram|jtframe_sdram_bank_core:u_core|dq_ff -entity sys_top
 #set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to *

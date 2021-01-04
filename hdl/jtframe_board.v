@@ -96,8 +96,8 @@ module jtframe_board #(parameter
     output reg        game_service,
     // DIP and OSD settings
     input     [31:0]  status,
-    output    [ 7:0]  hdmi_arx,
-    output    [ 7:0]  hdmi_ary,
+    output    [11:0]  hdmi_arx,
+    output    [11:0]  hdmi_ary,
     output    [ 1:0]  rotate,
 
     output            enable_fm,
@@ -122,15 +122,6 @@ module jtframe_board #(parameter
     // HDMI outputs (only for MiSTer)
     inout     [21:0]  gamma_bus,
     input             direct_video,
-    output            hdmi_clk,
-    output            hdmi_cen,
-    output    [ 7:0]  hdmi_r,
-    output    [ 7:0]  hdmi_g,
-    output    [ 7:0]  hdmi_b,
-    output            hdmi_hs,
-    output            hdmi_vs,
-    output            hdmi_de,   // = ~(VBlank | HBlank)
-    output    [ 1:0]  hdmi_sl,   // scanlines fx
     // scan doubler
     input             scan2x_enb,
     output    [7:0]   scan2x_r,
@@ -566,15 +557,6 @@ assign scan2x_de   = LVBL && LHBL;
     assign scan2x_cen   = pxl2_cen;
     assign scan2x_clk   = clk_sys;
     // unused in MiST
-    assign hdmi_clk     = 0;
-    assign hdmi_cen     = 0;
-    assign hdmi_r       = 8'd0;
-    assign hdmi_g       = 8'd0;
-    assign hdmi_b       = 8'd0;
-    assign hdmi_de      = 0;
-    assign hdmi_hs      = 0;
-    assign hdmi_vs      = 0;
-    assign hdmi_sl      = 2'b0;
     assign gamma_bus    = 22'd0;
 `else
     localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
@@ -621,15 +603,15 @@ assign scan2x_de   = LVBL && LHBL;
         .VGA_VS     (  scan2x_vs    ),
         .VGA_DE     (  scan2x_de    ),
 
-        .HDMI_CLK   (  hdmi_clk     ),
-        .HDMI_CE    (  hdmi_cen     ),
-        .HDMI_R     (  hdmi_r       ),
-        .HDMI_G     (  hdmi_g       ),
-        .HDMI_B     (  hdmi_b       ),
-        .HDMI_HS    (  hdmi_hs      ),
-        .HDMI_VS    (  hdmi_vs      ),
-        .HDMI_DE    (  hdmi_de      ),
-        .HDMI_SL    (  hdmi_sl      ),
+        .HDMI_CLK   (               ),
+        .HDMI_CE    (               ),
+        .HDMI_R     (               ),
+        .HDMI_G     (               ),
+        .HDMI_B     (               ),
+        .HDMI_HS    (               ),
+        .HDMI_VS    (               ),
+        .HDMI_DE    (               ),
+        .HDMI_SL    (               ),
         .gamma_bus  ( gamma_bus     ),
 
 

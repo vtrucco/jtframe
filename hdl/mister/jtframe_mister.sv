@@ -109,8 +109,8 @@ module jtframe_mister #(parameter
     output  [ 3:0]  game_start,
     output          game_service,
     // DIP and OSD settings
-    output  [ 7:0]  hdmi_arx,
-    output  [ 7:0]  hdmi_ary,
+    output  [11:0]  hdmi_arx,
+    output  [11:0]  hdmi_ary,
     output  [ 1:0]  rotate,
 
     output          enable_fm,
@@ -126,16 +126,6 @@ module jtframe_mister #(parameter
     output reg        scan2x_clk,
     output reg        scan2x_cen,
     output reg        scan2x_de,
-    // HDMI outputs
-    output            hdmi_cen,
-    output    [ 7:0]  hdmi_r,
-    output    [ 7:0]  hdmi_g,
-    output    [ 7:0]  hdmi_b,
-    output            hdmi_hs,
-    output            hdmi_vs,
-    output            hdmi_clk,
-    output            hdmi_de,   // = ~(VBlank | HBlank)
-    output    [ 1:0]  hdmi_sl,   // scanlines fx
     // non standard:
     output            dip_pause,
     inout             dip_flip,
@@ -366,15 +356,6 @@ jtframe_board #(
     // screen
     .gamma_bus      ( gamma_bus       ),
     .direct_video   ( direct_video    ),
-    .hdmi_r         ( hdmi_r          ),
-    .hdmi_g         ( hdmi_g          ),
-    .hdmi_b         ( hdmi_b          ),
-    .hdmi_hs        ( hdmi_hs         ),
-    .hdmi_vs        ( hdmi_vs         ),
-    .hdmi_clk       ( hdmi_clk        ),
-    .hdmi_cen       ( hdmi_cen        ),
-    .hdmi_de        ( hdmi_de         ),
-    .hdmi_sl        ( hdmi_sl         ),
     .hdmi_arx       ( hdmi_arx        ),
     .hdmi_ary       ( hdmi_ary        ),
     .rotate         ( rotate          ),
