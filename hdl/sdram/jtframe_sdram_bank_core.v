@@ -225,6 +225,7 @@ always @(posedge clk, posedge rst) begin
             init_cmd <= CMD_NOP;
             cmd      <= init_cmd;
         end else begin
+            sdram_a  <= 13'd0;
             if(!init_st[2]) init_st <= init_st+3'd1;
             case(init_st)
                 3'd0: begin
@@ -291,8 +292,10 @@ always @(posedge clk, posedge rst) begin
             if( ADQM )
                 // A12 and A11 used as mask in MiSTer 128MB module
                 sdram_a[12:11] <= wrtng ? wrmask : 2'b00;
-            else
+            else begin
                 dqm            <= wrtng ? wrmask : 2'b00;
+                sdram_a[12:11] <= 2'd0;
+            end
             if( wrtng ) begin
                 dq_pad <= din;
                 cmd    <= CMD_WRITE;
