@@ -350,15 +350,6 @@ jtframe_board #(
     .direct_video   ( 1'b0            ),
     .hdmi_arx       (                 ),
     .hdmi_ary       (                 ),
-    .hdmi_clk       (                 ),
-    .hdmi_cen       (                 ),
-    .hdmi_r         (                 ),
-    .hdmi_g         (                 ),
-    .hdmi_b         (                 ),
-    .hdmi_hs        (                 ),
-    .hdmi_vs        (                 ),
-    .hdmi_de        (                 ),
-    .hdmi_sl        (                 ),
     .scan2x_cen     (                 ),
     .scan2x_de      (                 )
 );

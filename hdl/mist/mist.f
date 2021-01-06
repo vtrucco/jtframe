@@ -3,6 +3,7 @@ jtframe_mist_base.v
 ../jtframe_board.v
 ../jtframe_reset.v
 ../jtframe_dip.v
+../ram/jtframe_dual_ram.v
 ../sound/hybrid_pwm_sd.v
 -sv user_io.v
 data_io.v

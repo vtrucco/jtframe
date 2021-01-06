@@ -53,17 +53,23 @@ always @(negedge clk_sys) begin
     end
 end
 
-always @(posedge clk_sys, posedge rst) begin
-    if( rst ) begin
-        dwn_done <= 0;
-        last_dwn <= 0;
-    end else begin
-        last_dwn <= downloading;
-        if( downloading )
-            dwn_done <= 0;
-        else if( last_dwn ) dwn_done <= 1;
+`ifdef JTFRAME_NOROM
+    initial begin
+        dwn_done <= 1;
     end
-end
+`else
+    always @(posedge clk_sys, posedge rst) begin
+        if( rst ) begin
+            dwn_done <= 0;
+            last_dwn <= 0;
+        end else begin
+            last_dwn <= downloading;
+            if( downloading )
+                dwn_done <= 0;
+            else if( last_dwn ) dwn_done <= 1;
+        end
+    end
+`endif
 
 
 `ifdef JTFRAME_FLIP_RESET
