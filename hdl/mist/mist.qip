@@ -34,3 +34,6 @@ set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) m
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtframe_scan2x.v  ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtframe_wirebw.v  ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../ram/jtframe_dual_ram.v  ]
+
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) ../jtframe_sh.v                  ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) ../ram/jtframe_dual_ram.v        ]
