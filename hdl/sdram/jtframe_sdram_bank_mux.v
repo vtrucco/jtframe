@@ -179,10 +179,10 @@ always @(posedge clk, posedge rst ) begin
 end
 `else
 always @(*) begin
-    ba0_rdy = ctl_rdy && ctl_ba_rdy==2'd0;
-    ba1_rdy = ctl_rdy && ctl_ba_rdy==2'd1;
-    ba2_rdy = ctl_rdy && ctl_ba_rdy==2'd2;
-    ba3_rdy = ctl_rdy && ctl_ba_rdy==2'd3;
+    ba0_rdy = !prog_en && ctl_rdy && ctl_ba_rdy==2'd0;
+    ba1_rdy = !prog_en && ctl_rdy && ctl_ba_rdy==2'd1;
+    ba2_rdy = !prog_en && ctl_rdy && ctl_ba_rdy==2'd2;
+    ba3_rdy = !prog_en && ctl_rdy && ctl_ba_rdy==2'd3;
     dout    = ctl_dout;
 end
 `endif
@@ -192,9 +192,11 @@ always @(posedge clk, posedge rst ) begin
     if( rst )
         ctl_rfsh_en <= 0;
     else begin
+        `ifndef JTFRAME_SDRAM_NO_DWNRFSH
         if( prog_en )
             ctl_rfsh_en <= 1;
         else
+        `endif
             ctl_rfsh_en <= rfsh_en;
     end
 end
