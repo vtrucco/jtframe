@@ -288,7 +288,7 @@ wire [15:0] prog_data;
 wire [ 7:0]   prog_data8;
 `endif
 wire [ 1:0] prog_mask, prog_ba;
-wire        prog_we, prog_rd, prog_rdy;
+wire        prog_we, prog_rd, prog_rdy, prog_ack;
 
 // ROM access from game
 wire [21:0] ba0_addr;
@@ -414,6 +414,7 @@ u_frame(
     .prog_mask      ( prog_mask      ),
     .prog_ba        ( prog_ba        ),
     .prog_rdy       ( prog_rdy       ),
+    .prog_ack       ( prog_ack       ),
 
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),
@@ -572,13 +573,14 @@ end
     .sdram_req  ( ba0_rd        ),
     .sdram_addr ( ba0_addr      ),
     .data_rdy   ( ba0_rdy       ),
-    .sdram_ack  ( ba0_ack | prog_rdy ),
+    .sdram_ack  ( ba0_ack | prog_ack ),
     `endif
 
     // ROM-load interface
     `ifdef JTFRAME_SDRAM_BANKS
     .prog_ba    ( prog_ba       ),
     .prog_rdy   ( prog_rdy      ),
+    .prog_ack   ( prog_ack      ),
     .prog_data  ( prog_data     ),
     `else
     .prog_data  ( prog_data8    ),

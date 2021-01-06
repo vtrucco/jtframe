@@ -67,6 +67,7 @@ module jtframe_board #(parameter
     input               prog_we,
     input               prog_rd,
     output              prog_rdy,
+    output              prog_ack,
     input               downloading,
     // SDRAM interface
     inout  [15:0]     SDRAM_DQ,       // SDRAM Data bus 16 Bits
@@ -410,6 +411,7 @@ jtframe_sdram_bank #(.AW(SDRAMW),.HF(0),
     .prog_din   ( prog_data     ),
     .prog_din_m ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
+    .prog_ack   ( prog_ack      ),
     // SDRAM interface
     .sdram_dq   ( SDRAM_DQ      ),
     .sdram_a    ( SDRAM_A       ),

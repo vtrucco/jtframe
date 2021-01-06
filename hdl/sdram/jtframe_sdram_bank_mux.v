@@ -72,6 +72,7 @@ module jtframe_sdram_bank_mux #(
     input      [  15:0] prog_din,
     input      [   1:0] prog_din_m,  // write mask
     output              prog_rdy,
+    output              prog_ack,
 
     // Signals to SDRAM controller
     output     [AW-1:0] ctl_addr,
@@ -113,7 +114,8 @@ reg  [    7:0] lfsr;
 reg  [    4:0] bwait;
 
 assign ba0_rq  = ba0_rd | ba0_wr;
-assign prog_rdy= prog_en & ctl_ack;
+assign prog_rdy= prog_en & ctl_rdy;
+assign prog_ack= prog_en & ctl_ack;
 
 assign ba0_ack = ctl_ack && ctl_ba_rq==2'd0 && !prog_en;
 assign ba1_ack = ctl_ack && ctl_ba_rq==2'd1 && !prog_en;

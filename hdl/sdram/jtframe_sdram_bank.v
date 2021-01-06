@@ -61,6 +61,7 @@ module jtframe_sdram_bank #(
     input      [  15:0] prog_din,
     input      [   1:0] prog_din_m,  // write mask
     output              prog_rdy,
+    output              prog_ack,
 
     // SDRAM interface
     // SDRAM_A[12:11] and SDRAM_DQML/H are controlled in a way
@@ -136,6 +137,7 @@ jtframe_sdram_bank_mux #(.AW(AW),.HF(HF)) u_mux(
     .prog_din   ( prog_din      ),
     .prog_din_m ( prog_din_m    ),  // write mask
     .prog_rdy   ( prog_rdy      ),
+    .prog_ack   ( prog_ack      ),
 
     // Signals to SDRAM controller
     .ctl_addr   ( ctl_addr      ),

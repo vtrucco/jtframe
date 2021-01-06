@@ -54,6 +54,7 @@ module jtframe_mist #(parameter
     input               prog_we,
     input               prog_rd,
     output              prog_rdy,
+    output              prog_ack,
     // ROM access from game
     input        [21:0] ba0_addr,
     input               ba0_rd,
@@ -308,6 +309,7 @@ jtframe_board #(
     .prog_data  ( prog_data     ),
     .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
+    .prog_ack   ( prog_ack      ),
     // SDRAM interface
     .SDRAM_DQ   ( SDRAM_DQ      ),
     .SDRAM_A    ( SDRAM_A       ),
