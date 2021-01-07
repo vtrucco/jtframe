@@ -257,7 +257,7 @@ assign clk_rom   = clk48;
 ///////////////////////////////////////////////////
 
 wire [31:0] status;
-wire [ 1:0] buttons;
+wire [ 1:0] buttons, game_led;
 
 wire [ 1:0] dip_fxlevel;
 wire        enable_fm, enable_psg;
@@ -319,12 +319,17 @@ wire [COLORW-1:0] game_r, game_g, game_b;
 wire              LHBL, LVBL;
 wire              hs, vs, sample;
 
+`ifdef JTFRAME_GAME_LED
+assign game_led[1] = 1'b1;
+`else
+assign game_led = 2'b0;
+`endif
+
 `ifndef SIGNED_SND
 assign AUDIO_S = 1'b1; // Assume signed by default
 `else
 assign AUDIO_S = `SIGNED_SND;
 `endif
-
 
 `ifndef JTFRAME_SDRAM_BANKS
 assign prog_data = {2{prog_data8}};
@@ -349,6 +354,8 @@ u_frame(
     .status         ( status         ),
     .HPS_BUS        ( HPS_BUS        ),
     .buttons        ( buttons        ),
+    // LED
+    .game_led       ( game_led       ),
     // Base video
     .game_r         ( game_r         ),
     .game_g         ( game_g         ),
@@ -513,6 +520,10 @@ end
     .VS           ( vs               ),
 `ifdef JTFRAME_INTERLACED
     .field        ( field            ),
+`endif
+    // LED
+`ifdef JTFRAME_GAME_LED
+    .game_led    ( game_led[0]    ),
 `endif
 
     .start_button ( game_start       ),

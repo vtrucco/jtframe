@@ -36,6 +36,10 @@ module jtframe_board #(parameter
     input             clk_rom,
 
     input  [ 6:0]     core_mod,
+    // LED
+    input               osd_shown,
+    input        [ 1:0] game_led,
+    output              led,
     // ROM access from game
     input  [SDRAMW-1:0] ba0_addr,
     input               ba0_rd,
@@ -171,6 +175,16 @@ jtframe_reset u_reset(
     .rst_n      ( rst_n         ),
     .game_rst   ( game_rst      ),
     .game_rst_n ( game_rst_n    )
+);
+
+jtframe_led u_led(
+    .rst        ( rst           ),
+    .clk        ( clk           ),
+    .downloading( downloading   ),
+    .osd_shown  ( osd_shown     ),
+    .gfx_en     ( gfx_en        ),
+    .game_led   ( game_led      ),
+    .led        ( led           )
 );
 
 `ifndef SIMULATION

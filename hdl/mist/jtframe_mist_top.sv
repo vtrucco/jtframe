@@ -209,7 +209,7 @@ jtframe_pll0 u_pll_game (
 `endif
 
 wire [7:0] dipsw_a, dipsw_b;
-wire [1:0] dip_fxlevel;
+wire [1:0] dip_fxlevel, game_led;
 wire       enable_fm, enable_psg;
 wire       dip_pause, dip_flip, dip_test;
 wire       pxl_cen, pxl2_cen;
@@ -227,6 +227,12 @@ assign sim_hb = ~LHBL;
 
 `ifndef BUTTONS
 `define BUTTONS 2
+`endif
+
+`ifdef JTFRAME_GAME_LED
+assign game_led[1] = 1'b1;
+`else
+assign game_led = 2'b0;
 `endif
 
 localparam BUTTONS=`BUTTONS;
@@ -264,6 +270,8 @@ u_frame(
     .VGA_B          ( VGA_B          ),
     .VGA_HS         ( VGA_HS         ),
     .VGA_VS         ( VGA_VS         ),
+    // LED
+    .game_led       ( game_led       ),
     // SDRAM interface
     .SDRAM_DQ       ( SDRAM_DQ       ),
     .SDRAM_A        ( SDRAM_A        ),
@@ -427,6 +435,7 @@ u_game(
     `ifdef JTFRAME_CLK6
     .clk6        ( clk6           ),
     `endif
+    // Video
     .pxl2_cen    ( pxl2_cen       ),
     .pxl_cen     ( pxl_cen        ),
     .red         ( red            ),
@@ -436,6 +445,10 @@ u_game(
     .LVBL_dly    ( LVBL           ),
     .HS          ( hs             ),
     .VS          ( vs             ),
+    // LED
+    `ifdef JTFRAME_GAME_LED
+    .game_led    ( game_led[0]    ),
+    `endif
 
     .start_button( game_start[STARTW-1:0]      ),
     .coin_input  ( game_coin[STARTW-1:0]       ),

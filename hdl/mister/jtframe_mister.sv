@@ -31,6 +31,8 @@ module jtframe_mister #(parameter
     output [31:0]   status,
     inout  [45:0]   HPS_BUS,
     output [ 1:0]   buttons,
+    // LED
+    input        [1:0] game_led,
     // Base video
     input [COLORW-1:0] game_r,
     input [COLORW-1:0] game_g,
@@ -146,8 +148,6 @@ wire        ioctl_download;
 wire [ 3:0] hoffset, voffset;
 
 assign { voffset, hoffset } = status[31:24];
-
-assign LED  = downloading | dwnld_busy;
 
 wire [15:0]   joystick1, joystick2, joystick3, joystick4;
 wire          ps2_kbd_clk, ps2_kbd_data;
@@ -360,6 +360,10 @@ jtframe_board #(
     .hdmi_arx       ( hdmi_arx        ),
     .hdmi_ary       ( hdmi_ary        ),
     .rotate         ( rotate          ),
+    // LED
+    .osd_shown      ( 1'b0            ),
+    .game_led       ( game_led        ),
+    .led            ( LED             ),
     // Scan doubler output
     .scan2x_r       ( scan2x_r        ),
     .scan2x_g       ( scan2x_g        ),

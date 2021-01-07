@@ -40,6 +40,8 @@ module jtframe_mist #(parameter
     input              vs,
     input              pxl_cen,
     input              pxl2_cen,
+    // LED
+    input        [1:0] game_led,
     // MiST VGA pins
     output       [5:0] VGA_R,
     output       [5:0] VGA_G,
@@ -154,11 +156,7 @@ wire          scan2x_hs, scan2x_vs, scan2x_clk;
 wire          scan2x_enb;
 wire [6:0]    core_mod;
 
-///////////////// LED is on while
-// downloading, PLL lock lost, OSD is shown or in reset state
-assign LED = ~( downloading | dwnld_busy | ~pll_locked | osd_shown | rst | (|(~gfx_en)));
 wire  [ 1:0]  rotate;
-
 
 jtframe_mist_base #(
     .CONF_STR    (CONF_STR          ),
@@ -272,7 +270,10 @@ jtframe_board #(
     .dip_fxlevel    ( dip_fxlevel     ),
     // screen
     .rotate         ( rotate          ),
-
+    // LED
+    .osd_shown      ( osd_shown       ),
+    .game_led       ( game_led        ),
+    .led            ( LED             ),
     // SDRAM interface
     // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
