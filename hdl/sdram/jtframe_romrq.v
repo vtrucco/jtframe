@@ -66,8 +66,8 @@ always @(*) begin
     endcase
     // It is important to leave === for simulations, instead of ==
     // It shouldn't have any implication for synthesis
-    hit0 = addr_req === cached_addr0 && good[0];
-    hit1 = addr_req === cached_addr1 && good[1];
+    hit0 = addr_req === cached_addr0 && good[0] && !clr;
+    hit1 = addr_req === cached_addr1 && good[1] && !clr;
     req = clr || ( !(hit0 || hit1) && addr_ok && !we);
 end
 
