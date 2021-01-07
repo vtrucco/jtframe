@@ -1,6 +1,7 @@
 jtframe_mist.sv
 jtframe_mist_base.v
 ../jtframe_board.v
+../jtframe_led.v
 ../jtframe_reset.v
 ../jtframe_dip.v
 ../ram/jtframe_dual_ram.v
