@@ -139,9 +139,12 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
-# 4mA will give 3.3ns tr/tf, enough for 48/64MHz operation
+# 4mA will give 6.75ns tr/tf, enough for 48MHz operation
+# 8mA will give 3.37ns tr/tf, enough for 96MHz operation
+# Worst Cin is for DQ pins, max 6pF
+# Assuming 3pF at the FPGA pins, that makes 9pF
 # keep this number low to prevent injecting noise (signal bouncing, voltage ripple...)
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_*
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to SDRAM_*
 
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_location_assignment PLL_1 -to "jtgng_pll0:u_pll_game|altpll:altpll_component"
@@ -154,7 +157,6 @@ set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 set_global_assignment -name FORCE_SYNCH_CLEAR ON
 
 set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/pll48/jtframe_pll0.qip
-set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/pll48/jtframe_pll1.qip
 set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/pll48/jtframe_pll96.qip
 set_global_assignment -name SYSTEMVERILOG_FILE ${MODULES}/jtframe/hdl/mist/jtframe_mist_top.sv
 set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/mist.qip

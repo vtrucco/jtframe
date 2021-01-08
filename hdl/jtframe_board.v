@@ -379,7 +379,12 @@ jtframe_dip u_dip(
 // support for 48MHz
 // Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
 // clock is shifted or not.
-jtframe_sdram_bank #(.AW(SDRAMW),.HF(0),
+jtframe_sdram_bank #(.AW(SDRAMW),
+`ifdef JTFRAME_SDRAM96
+    .HF(1),
+`else
+    .HF(0),
+`endif
 `ifdef JTFRAME_180SHIFT
     .SHIFTED(0)
 `else

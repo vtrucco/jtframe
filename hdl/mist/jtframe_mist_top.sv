@@ -117,7 +117,7 @@ localparam CONF_STR = {
 
 `undef SEPARATOR`endif
 
-wire          rst, rst_n, clk_sys, clk_rom, clk6, clk24;
+wire          rst, rst_n, clk_sys, clk_rom, clk6, clk24, clk48, clk96;
 wire [63:0]   status;
 wire [31:0]   joystick1, joystick2;
 wire [24:0]   ioctl_addr;
@@ -190,23 +190,37 @@ assign prog_data = {2{prog_data8}};
 
 // clk_rom is always 48MHz
 // clk96, clk24 and clk6 inputs to the core can be enabled via macros
-
-jtframe_pll0 u_pll_game (
-    .inclk0 ( CLOCK_27[0] ),
-    .c0     ( clk96       ),
-    .c1     ( clk_rom     ), // 48 MHz
-    .c2     ( SDRAM_CLK   ),
-    .c3     ( clk24       ),
-    .c4     ( clk6        ),
-    .locked ( pll_locked  )
-);
-
-`ifdef JTFRAME_CLK96
-    assign clk_sys   = clk96; // it is possible to use clk48 instead but
-        // video mixer doesn't work well in HQ mode
+`ifdef JTFRAME_SDRAM96
+    jtframe_pll96 u_pll_game (
+        .inclk0 ( CLOCK_27[0] ),
+        .c0     ( clk48       ), // 48 MHz
+        .c1     ( clk96       ), // 96 MHz
+        .c2     ( SDRAM_CLK   ), // 96 MHz shifted
+        .c3     ( clk24       ),
+        .c4     ( clk6        ),
+        .locked ( pll_locked  )
+    );
+    assign clk_rom = clk96;
+    assign clk_sys = clk96;
 `else
-    assign clk_sys   = clk_rom;
+    jtframe_pll0 u_pll_game (
+        .inclk0 ( CLOCK_27[0] ),
+        .c0     ( clk96       ),
+        .c1     ( clk48       ), // 48 MHz
+        .c2     ( SDRAM_CLK   ),
+        .c3     ( clk24       ),
+        .c4     ( clk6        ),
+        .locked ( pll_locked  )
+    );
+    assign clk_rom = clk48;
+    `ifdef JTFRAME_CLK96
+        assign clk_sys   = clk96; // it is possible to use clk48 instead but
+            // video mixer doesn't work well in HQ mode
+    `else
+        assign clk_sys   = clk_rom;
+    `endif
 `endif
+
 
 wire [7:0] dipsw_a, dipsw_b;
 wire [1:0] dip_fxlevel, game_led;
@@ -425,9 +439,13 @@ localparam DIPBASE=16;
 `GAMETOP
 u_game(
     .rst         ( game_rst       ),
+    // The main clock is always the same one as the SDRAM
     .clk         ( clk_rom        ),
     `ifdef JTFRAME_CLK96
     .clk96       ( clk96          ),
+    `endif
+    `ifdef JTFRAME_CLK48
+    .clk48       ( clk48          ),
     `endif
     `ifdef JTFRAME_CLK24
     .clk24       ( clk24          ),
