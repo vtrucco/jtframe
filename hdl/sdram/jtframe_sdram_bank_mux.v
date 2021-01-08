@@ -107,10 +107,9 @@ reg  [RQW-1:0] mux_data;
 reg  [ AW-1:0] fifo_addr;
 reg  [    2:0] ba_sel;
 reg            fifo_rd, fifo_wr;
-reg  [    1:0] fifo_ba;
+reg  [    1:0] fifo_ba, ba_last;
 wire           ba0_rq;
 reg  [    3:0] queue;
-reg  [    7:0] lfsr;
 reg  [    4:0] bwait;
 
 assign ba0_rq  = ba0_rd | ba0_wr;
@@ -204,36 +203,32 @@ end
 always @(*) begin
     // mux selector
     ba_sel = 3'b100;
-    case( lfsr[7:6] )
-        2'd0: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
-        2'd1: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
-        2'd2: if( ba2_rd && !queue[2] ) ba_sel=3'd2;
-        2'd3: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+    case( ba_last )
+        2'd3: begin
+            if( ba0_rq && !queue[0] ) ba_sel=3'd0;
+            else if( ba1_rd && !queue[1] ) ba_sel=3'd1;
+            else if( ba2_rd && !queue[2] ) ba_sel=3'd2;
+            else if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+        end
+        2'd2: begin
+            if( ba1_rd && !queue[1] ) ba_sel=3'd1;
+            else if( ba2_rd && !queue[2] ) ba_sel=3'd2;
+            else if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+            else if( ba0_rq && !queue[0] ) ba_sel=3'd0;
+        end
+        2'd1: begin
+            if( ba2_rd && !queue[2] ) ba_sel=3'd2;
+            else if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+            else if( ba0_rq && !queue[0] ) ba_sel=3'd0;
+            else if( ba1_rd && !queue[1] ) ba_sel=3'd1;
+        end
+        2'd0: begin
+            if( ba3_rd && !queue[3] ) ba_sel=3'd3;
+            else if( ba0_rq && !queue[0] ) ba_sel=3'd0;
+            else if( ba1_rd && !queue[1] ) ba_sel=3'd1;
+            else if( ba2_rd && !queue[2] ) ba_sel=3'd2;
+        end
     endcase // lfsr[7:6]
-    if( ba_sel[2] ) begin
-        case( lfsr[7:6] )
-            2'd1: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
-            2'd2: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
-            2'd3: if( ba2_rd && !queue[2] ) ba_sel=3'd2;
-            2'd0: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
-        endcase // lfsr[7:6]
-    end
-    if( ba_sel[2] ) begin
-        case( lfsr[7:6] )
-            2'd2: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
-            2'd3: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
-            2'd0: if( ba2_rd && !queue[2] ) ba_sel=3'd2;
-            2'd1: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
-        endcase // lfsr[7:6]
-    end
-    if( ba_sel[2] ) begin
-        case( lfsr[7:6] )
-            2'd3: if( ba0_rq && !queue[0] ) ba_sel=3'd0;
-            2'd0: if( ba1_rd && !queue[1] ) ba_sel=3'd1;
-            2'd1: if( ba2_rd && !queue[2] ) ba_sel=3'd2;
-            2'd2: if( ba3_rd && !queue[3] ) ba_sel=3'd3;
-        endcase
-    end
     // mux output
     mux_data[1:0] = ba_sel[1:0];
     case( ba_sel )
@@ -248,15 +243,15 @@ end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        queue <= 4'd0;
-        lfsr  <= ~8'd0;
+        queue   <= 4'd0;
+        ba_last <= 2'd0;
     end else begin
         if( prog_en ) begin
             queue <= 4'd0;
         end else begin
             if( ctl_ack ) begin
+                ba_last <= fifo_ba;
                 queue[ ctl_ba_rq ] <= 1;
-                lfsr <= { lfsr[6:0], ^{lfsr[7],lfsr[5:3]} };
             end
             if( ctl_rdy ) begin
                 queue[ ctl_ba_rdy] <= 0;
