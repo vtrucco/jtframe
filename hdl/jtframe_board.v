@@ -471,7 +471,11 @@ wire              pre2x_LHBL, pre2x_LVBL;
         .HB         ( LHBL          ),
         .VB         ( LVBL          ),
         .rgb_in     ( { game_r, game_g, game_b } ),
-        .enable     ( ~dip_pause    ),
+        `ifdef JTFRAME_CREDITS_AON
+            .enable ( 1'b1          ),
+        `else
+            .enable ( ~dip_pause    ),
+        `endif
         .toggle     ( toggle        ),
         // output image
         .HB_out     ( pre2x_LHBL      ),
