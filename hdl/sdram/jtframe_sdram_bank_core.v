@@ -78,7 +78,8 @@ module jtframe_sdram_bank_core #(
 
 localparam ROW=13,
            COW= AW==22 ? 9 : 10, // 9 for 32MB SDRAM, 10 for 64MB
-           STW = (HF ? 7 : 6) - (SHIFTED ? 1:0),     // state word width
+           STW = (HF ? 7 : 6) - (SHIFTED ? 1:0), // state word width
+                // for clock > 105 MHz, STW needs an extra bit or a tRFC violation occurs
            BQL = 4,                // bank queue length
            READ_ST = HF ? 2 : 1,
            DQLO_ST = (HF ? 5 : 4)- (SHIFTED ? 1:0),

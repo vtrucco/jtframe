@@ -6,7 +6,7 @@ parameter BANK1=1, BANK2=1, BANK3=1,
           IDLE=50, SHIFTED=0, MAXA=21;
 
 `ifndef PERIOD
-`define PERIOD 7.5
+`define PERIOD 10
 `endif
 
 `ifndef WRITE_ENABLE

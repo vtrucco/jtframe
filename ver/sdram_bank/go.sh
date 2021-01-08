@@ -71,7 +71,7 @@ Usage:
     -dump         enables waveform dumping (default)
     -nodump       disables waveform dumping
     -time val     simulation time in ms (5ms by default)
-    -period       defines clock period (default 7.5ns = 133MHz)
+    -period       defines clock period (default 10ns = 100MHz)
                   10.416 for 96MHz
                   7.5ns sets the maximum speed before breaking SDRAM timings
     -shift        delay for SDRAM clock in ns
