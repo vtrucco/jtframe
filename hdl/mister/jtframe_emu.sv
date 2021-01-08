@@ -217,18 +217,18 @@ pll pll(
     .outclk_5   ( clk96sh    )
 );
 
-`ifdef JTFRAME_CLK96
-assign clk_sys   = clk96;
-`else
-assign clk_sys   = clk48;
-`endif
 
 `ifdef JTFRAME_SDRAM96
-assign clk_rom   = clk96;
+    assign clk_rom = clk96;
+    assign clk_sys = clk96;
 `else
-assign clk_rom   = clk48;
+    assign clk_rom = clk48;
+    `ifdef JTFRAME_CLK96
+    assign clk_sys = clk96;
+    `else
+    assign clk_sys = clk48;
+    `endif
 `endif
-
 
 `ifndef JTFRAME_180SHIFT
     `ifdef JTFRAME_SDRAM96
