@@ -68,7 +68,7 @@ always @(*) begin
     // It shouldn't have any implication for synthesis
     hit0 = addr_req === cached_addr0 && good[0] && !clr;
     hit1 = addr_req === cached_addr1 && good[1] && !clr;
-    req = clr || ( !(hit0 || hit1) && addr_ok && !we);
+    req = (clr || ( !(hit0 || hit1) && !we)) && addr_ok;
 end
 
 // reg [1:0] ok_sr;
@@ -144,7 +144,7 @@ always @(posedge clk, posedge rst) begin
         last_req <= req;
         if( req && !last_req ) begin
             if( waiting ) begin
-                $display("ERROR: %m address changed");
+                $display("ERROR: %m new request without finishing the previous");
                 $finish;
             end
             last_addr <= addr;
