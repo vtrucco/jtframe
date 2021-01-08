@@ -320,4 +320,10 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
+`ifdef SIMULATION
+initial begin
+    $display("INFO: SDRAM bank core parameters: HF=%0d SHIFTED=%0d\n",HF, SHIFTED);
+end
+`endif
+
 endmodule

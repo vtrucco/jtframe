@@ -382,13 +382,14 @@ jtframe_dip u_dip(
 jtframe_sdram_bank #(.AW(SDRAMW),
 `ifdef JTFRAME_SDRAM96
     .HF(1),
-`else
-    .HF(0),
-`endif
-`ifdef JTFRAME_180SHIFT
     .SHIFTED(0)
 `else
-    .SHIFTED(1)
+    .HF(0),
+    `ifdef JTFRAME_180SHIFT
+        .SHIFTED(0)
+    `else
+        .SHIFTED(1)
+    `endif
 `endif
 ) u_sdram(
     .rst        ( rst           ),
