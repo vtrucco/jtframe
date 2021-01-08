@@ -1,4 +1,24 @@
-`timescale 1ns/10ps
+`ifndef SDRAM_SHIFT
+// 5ns works with both 32 and 128 MB modules
+// valid values for 48 MHz
+// 0 260 520 729 1041 1250 1475 1736 1996 2256 2500 2734 2994 3255 3515 3750 3993
+// 4253 4513 4774 5000 5208 5520 5729 5989 6250 6510 6770 6979 7291 7500 7725 7986
+// 8246 8506 8750 8984 9244 9505 9765 10000 10243 10329
+
+// valid values for 96 MHz
+// 0 -520 -1041 -1475 -1996 -2517 -2994 -3515 -3993 -4253 -4513 -4774 -5034
+// -5208 (-180 deg)
+
+	`ifndef JTFRAME_SDRAM96
+		// 48 MHz clock
+		`define SDRAM_SHIFT "5520 ps"
+	`else
+		// 96 MHz clock
+		//`define SDRAM_SHIFT "-3515 ps"
+		`define SDRAM_SHIFT "-5034"
+	`endif
+`endif
+
 module  pll_0002(
 
 	// interface 'refclk'
@@ -22,6 +42,9 @@ module  pll_0002(
 	// interface 'outclk4'
 	output wire outclk_4,
 
+	// interface 'outclk5'
+	output wire outclk_5,
+
 	// interface 'locked'
 	output wire locked
 );
@@ -30,12 +53,12 @@ module  pll_0002(
 		.fractional_vco_multiplier("false"),
 		.reference_clock_frequency("50.0 MHz"),
 		.operation_mode("direct"),
-		.number_of_clocks(5),
+		.number_of_clocks(6),
 		.output_clock_frequency0("48.000000 MHz"),
 		.phase_shift0("0 ps"),
 		.duty_cycle0(50),
 		.output_clock_frequency1("48.000000 MHz"),
-		.phase_shift1("5468 ps"),
+		.phase_shift1(`SDRAM_SHIFT),
 		.duty_cycle1(50),
 		.output_clock_frequency2("24.000000 MHz"),
 		.phase_shift2("0 ps"),
@@ -46,8 +69,8 @@ module  pll_0002(
 		.output_clock_frequency4("96.000000 MHz"),
 		.phase_shift4("0 ps"),
 		.duty_cycle4(50),
-		.output_clock_frequency5("0 MHz"),
-		.phase_shift5("0 ps"),
+		.output_clock_frequency5("96.000000 MHz"),
+		.phase_shift5(`SDRAM_SHIFT),
 		.duty_cycle5(50),
 		.output_clock_frequency6("0 MHz"),
 		.phase_shift6("0 ps"),
@@ -89,7 +112,7 @@ module  pll_0002(
 		.pll_subtype("General")
 	) altera_pll_i (
 		.rst	(rst),
-		.outclk	({outclk_4, outclk_3, outclk_2, outclk_1, outclk_0}),
+		.outclk	({outclk_5, outclk_4, outclk_3, outclk_2, outclk_1, outclk_0}),
 		.locked	(locked),
 		.fboutclk	( ),
 		.fbclk	(1'b0),

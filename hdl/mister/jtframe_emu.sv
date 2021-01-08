@@ -178,7 +178,7 @@ wire [3:0] hoffset, voffset;
 
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys, clk_rom, clk96, clk48, clk48sh, clk24, clk6;
+wire clk_sys, clk_rom, clk96, clk96sh, clk48, clk48sh, clk24, clk6;
 wire pxl2_cen, pxl_cen;
 wire pll_locked;
 reg  pll_rst = 1'b0;
@@ -213,7 +213,8 @@ pll pll(
     .outclk_1   ( clk48sh    ),
     .outclk_2   ( clk24      ),
     .outclk_3   ( clk6       ),
-    .outclk_4   ( clk96      )
+    .outclk_4   ( clk96      ),
+    .outclk_5   ( clk96sh    )
 );
 
 `ifdef JTFRAME_CLK96
@@ -222,11 +223,19 @@ assign clk_sys   = clk96;
 assign clk_sys   = clk48;
 `endif
 
+`ifdef JTFRAME_SDRAM96
+assign clk_rom   = clk96;
+`else
 assign clk_rom   = clk48;
+`endif
 
 
 `ifndef JTFRAME_180SHIFT
-    assign SDRAM_CLK = clk48sh;
+    `ifdef JTFRAME_SDRAM96
+    assign SDRAM_CLK   = clk96sh;
+    `else
+    assign SDRAM_CLK   = clk48sh;
+    `endif
 `else
     altddio_out
     #(
@@ -501,6 +510,9 @@ end
     .clk          ( clk_rom          ),
     `ifdef JTFRAME_CLK96
     .clk96        ( clk96            ),
+    `endif
+    `ifdef JTFRAME_CLK48
+    .clk48        ( clk48            ),
     `endif
     `ifdef JTFRAME_CLK24
     .clk24        ( clk24            ),

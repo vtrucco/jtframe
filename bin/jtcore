@@ -219,7 +219,7 @@ function copy_templates {
     fi
     # Copy SDC file and SDRAM constraints
     if [ $TARGET = mister ]; then
-        if grep JTFRAME_CLK96 $PRJPATH/$TARGET/jt${PRJ}.qsf; then
+        if grep JTFRAME_SDRAM96 $PRJPATH/$TARGET/jt${PRJ}.qsf; then
             cp $JTFRAME/hdl/mister/sys/sdram_clk96.sdc $PRJPATH/$TARGET/sys_top.sdc
         else
             cp $JTFRAME/hdl/mister/sys/sdram_clk48.sdc $PRJPATH/$TARGET/sys_top.sdc
