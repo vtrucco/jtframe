@@ -149,7 +149,6 @@ wire          osd_pause;
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
 wire key_reset, key_pause, rot_control;
 reg       game_pause, soft_rst;
-wire      scandoubler = ~scan2x_enb;
 
 wire [9:0] key_joy1, key_joy2, key_joy3;
 wire [3:0] key_start, key_coin;
@@ -632,7 +631,7 @@ assign scan2x_de   = LVBL && LHBL;
 
 
         .fx                ( scanlines   ),
-        .forced_scandoubler( scandoubler ),
+        .forced_scandoubler( ~scan2x_enb ),
         .rotate_ccw        ( 1'b0        ),
         `ifdef MISTER
         .no_rotate         ( ~rotate[0]  ) // the no_rotate name
