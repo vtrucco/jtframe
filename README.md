@@ -28,6 +28,8 @@ These are the compilation steps:
 6. Now go to the `core-folder` and run `source setprj.sh`
 7. Now you can compile the core using the `jtcore` script.
 
+The complete list of possible verilog macros is in [here](doc/macros.md).
+
 ## jtcore
 
 jtcore is the script used to compile the cores. It does a lot of stuff and it does it very well. Taking as an example the [CPS0 games](https://github.com/jotego/jt_gng), these are some commands:
@@ -95,6 +97,9 @@ Value | Meaning                 | Colour
 6'h35 | Very early core         | Red
 
 # SDRAM Controller
+
+##JTFRAME_SDRAM
+
 **jtframe_sdram** is a generic SDRAM controller that runs upto 48MHz because it is designed for CL=2. It mainly serves for reading ROMs from the SDRAM but it has some support for writting (apart from the initial ROM download process).
 
 This module may result in timing errors in MiSTer because sometimes the compiler does not assign the input flip flops from SDRAM_DQ at the pads. In order to avoid this, you can define the macro **JTFRAME_SDRAM_REPACK**. This will add one extra stage of data latching, which seems to allow the fitter to use the pad flip flops. This does delay data availability by one clock cycle. Some cores in MiSTer do synthesize with pad FF without the need of this option. Use it if you find setup timing violation about the SDRAM_DQ pins.
@@ -109,6 +114,31 @@ By default only the first bank of the SDRAM is used, allowing for 8MB of data or
 These signals should be used in combination with the rest of prog_ and sdram_ signals in order to control the SDRAM.
 
 The data bus is held down all the time and only released when the SDRAM is expected to use it. This behaviour can be reverted using **JTFRAME_NOHOLDBUS**. When this macro is defined, the bus will only be held while writting data and released the rest of the time. For 48MHz operation, holding the bus works better. For 96MHz it doesn't seem to matter.
+
+In simulation data from the SDRAM can be double checked in the jtframe_rom/ram_xslots modules if **JTFRAME_SDRAM_CHECK** is defined. The simulation will stop if the read data does not meet the expected values.
+
+##JTFRAME_SDRAM_BANK
+
+**jtframe_sdram_bank**  is a high-performance SDRAM controller that achieves high data throughput by using bank interleaving.
+
+HF parameter should be set high if the clock frequency is above 64MHz
+
+Performance results (MiST)
+
+Frequency  |  Efficiency  |  Data throughput  | Latency (min)  | Latency (ave) | Latency (max)
+-----------|--------------|-------------------|----------------|---------------|---------------
+<64MHz     |  100%        | f*2     =128MB/s  |    7 (109ns)   |    9 (140ns)  |    29 (453ns)
+96MHz      |  66.7%       | f*2*.667=128MB/s  |    9 ( 73ns)   |   11 (114ns)  |    30 (312ns)
+
+Performance results (MiSTer - A lines shorted to DQM)
+
+Frequency  |  Efficiency  |  Data throughput  | Latency (min)  | Latency (ave) | Latency (max)
+-----------|--------------|-------------------|----------------|---------------|---------------
+<64MHz     |   72%        | f*2*.72 = 92MB/s  |    7 (109ns)   |    9 (140ns)  |    32 (500ns)
+96MHz      |   53.3%      | f*2*.533=102MB/s  |    9 ( 73ns)   |   12 (125ns)  |    36 (375ns)
+
+Note that latency results are simulated with refresh and write cycles enabled.
+
 
 # Fast Load
 
@@ -163,7 +193,7 @@ bit     |  meaning                | Enabled with macro
 9       | FM                      | (JT51 || JT12) && !JTFRAME_OSD_NOSND
 10      | Test mode               | JTFRAME_OSD_TEST
 11      | Aspect Ratio            | MiSTer only
-12      | Credits/Pause           |
+12      | Credits/Pause           | JTFRAME_OSD_NOCREDITS (disables it)
 
 If **JTFRAME_FLIP_RESET** is defined a change in dip_flip will reset the game.
 
@@ -229,16 +259,109 @@ The current contents of the SDRAM can be dumped at the beginning of each frame (
 
 To simulate the SDRAM load operation use **-load** on sim.sh. The normal download speed 1/270ns=3.7MHz. This is faster than the real systems but speeds up simulation. It is possible to slow it down by adding dead clock cycles to each transfer. The macro **JTFRAME_SIM_LOAD_EXTRA** can be defined with the required number of extra cycles.
 
+## SDRAM Catalogue
+
+ID  | Part No          | Units | Size
+----|------------------|-------|-----
+  1 | AS4C32M16SB-6TIN |    2  | 128
+  2 | W9825G6KH-6      |    1  |  32
+  3 | AS4C16M16SA-6TCN |    1  |  32
+  4 | AS4C32M16SB-7TCN |    2  | 128
+  5 | W9825G6KH-6      |    1  |  32
+  6 | AS4C32M8SA -7TCN |    2  |  64
+  7 | AS4C32M8SA -7TCN |    4  | 128
+8,9 | AS4C32M16SB-6TIN |    2  | 128
+
+All time values in ns, capacitance in pF
+
+Part No           | Op. Current (mA) | Ci     | Ci/o | tRRD  | tRP    | tAC CL=2 | tOH | tHZ
+------------------|------------------|--------|------|-------|--------|----------|-----|-----
+AS4C16M16SA -6/-7 |  60/55 (1 bank)  | 2-4    |  4-6 | 12/14 | 18/21  | 6/6      | 2.5 | 5/5.4
+AS4C32M16SA -6/-7 | 120/110(1 bank)  |3.5-5.5 |  4-6 | 12/14 | 18/21  | 6/6      | 2.5 | 5/5.4
+AS4C32M8SA  -6/-7 |  60/55 (1 bank)  | 2-4    |  4-6 | 12/14 | 18/21  | 6/6      | 2.5 | 5/5.4
+W9825G6KH-6       |   60             | <3.8   | <6.5 |  15   |  15    | 6        |  3  | 6
+
+## Maximum Current (MiST)
+
+MiST uses a single SDRAM module, with about 4pF per pin. In order to charge it up to 3.3V in 4ns we need 3.3mA. Current per pin is limited to 4mA in order to prevent noise.
+
+## SDRAM Header (MiSTer)
+
+Pin view with SDRAM on top, ethernet cable on the bottom right
+
+DQ1 DQ3 DQ5 DQ7 DQ14 NC  DQ13 DQ11 DQ9 DQ12  A9 A7 A5 WE VDD CAS CS1 BA1 BA0 A2
+DQ0 DQ2 DQ4 DQ6 DQ15 GND DQ12 DQ10 DQ3 CLK  A11 A8 A6 A4 GND RAS BA0 A10 A1  A3
+
+## SDRAM Electrical Problems (MiSTer)
+
+On MiSTer SDRAM modules as of December 2020 have a severe VDD ripple. VDD can go above 4V and reach 2.4V. 32MB modules are slightly better.
+
+MiSTer SDRAM modules also suffer of intersymbol interference. Although it is not clear which lines couple more closely -no layout parasitics for any board are available- setting the DQ bus from the FPGA for a write at the time of RAS showed worse results than setting it at CAS time for Contra core using the sdram_bank controller (based on 7e93cc5 commit).
+
+Measurements of A3 line and VDD (SDRAM module #4 with 10uF electrolytic added):
+
+Slew Rate  |  Max V(A3)  | Min V(A3)  | tr/tf (ns)
+-----------|-------------|------------|-----------
+Fast (2)   | 3.92        | -0.92      |  3
+Slow (0)   | 3.76        | -0.60      |  4
+
+VDD ripple also improves with slower slew rates (module #8):
+
+Slew Rate  | Max VDD  | Min VDD
+-----------|----------|---------
+Fast (2)   |   4.12   |  2.58
+Slow (0)   |   3.98   |  2.74
+
+
+Using the slowest slew rate fixes Contra load on all tested modules, regardless of when DQ is set at write time:
+
+Module | DQ at RAS   |  DQ at CAS
+-------|-------------|-------------
+       | fast | slow | fast | slow
+-------|------|------|------|------
+1      |  NG  | OK   | OK   |  OK
+2      |  NG  | OK   | NG   |  OK
+3      |  OK  | OK   | NG   |  OK
+4      |  NG  | OK   | OK   |  OK
+7      |  NG  | OK   | NG   |  OK
+8      |  NG  | OK   | OK   |  OK
+9      |  NG  | OK   | OK   |  OK
+-------|------|------|------|------
+Fails  |   6  |  0   |  3   |   0
+
+Faster slew rates mean more current going through the connector, thus more ripple at both the signal pin and VDD. So both problems become better. This doesn't mean they are completely solved. VDD ripple is still out of spec with the current capacitor set used. And slowing down further the bus should also help.
+
+## SDRAM Clock Shift
+
+I made a clock shift sweep using JTCONTRA commit 5633ee41. These are the results of valid values:
+
+Module | Min  |  Max  | Remarks
+-------|------|-------|---------
+1      | 3.5  | 8.25  |
+2      | 2.5  | 8.5   | 32MB
+3      | 2.5  | 8.75  | 32MB
+4      | 3.0  | 8.0   | 10uF added
+7      | 4.0  | 8.25  | min improved to 3.5ns by adding 33uF
+8      | 3.5  | 8.0   |
+9      | 3.25 | 8.25  |
+AV sys | 3.0  | 8.25  | Same results with fan on/off
+
+The wider the difference is between max and min, the cleaner signals are.
+
+Most cores in the official MiSTer repository seem to use a strategy of a full 180º clock shift. This has the advantage of providing an accurate value of the clock at the pin as it can be generated using an IO primitive. However, it means that the last word of the burst is read with the bus at high impedance, so it has a higher potential for failures. It helps when timing cannot be met as it simplifies internal routing. Enable it with **JTFRAME_180SHIFT**
+
 # Game clocks
 Games are expected to operate on a 48MHz clock using clock enable signals. There is an optional 6MHz that can be enabled with the macro **JTFRAME_CLK6**. This clock goes in the game module through a _clk6_ port which is only connected to when that macro is defined. _jtbtiger_ is an example of game using this feature.
 
-optional clock input | Macro Needed
----------------------|--------------
-clk6                 | JTFRAME_CLK6
-clk24                | JTFRAME_CLK24
-clk48                | JTFRAME_CLK96
+ clock input | Macro Needed
+-------------|--------------
+clk          | 48MHz unless JTFRAME_SDRAM96 is defined, then 96MHz
+clk96        | JTFRAME_CLK96
+clk48        | JTFRAME_CLK48
+clk24        | JTFRAME_CLK24
+clk6         | JTFRAME_CLK6
 
-Note that although clk6 and clk24 are obtained without affecting the main clock input, if **JTFRAME_CLK96** is defined, the main clock input moves up from 48MHz to 96MHz. The 48MHz clock can the be obtained from clk48. This implies that the SDRAM will be clocked at 96MHz instead of 48MHz. The constraints in the SDC files have to match this clock variation.
+Note that although clk6 and clk24 are obtained without affecting the main clock input, if **JTFRAME_SDRAM96** is defined, the main clock input moves up from 48MHz to 96MHz. The 48MHz clock can the be obtained from clk48 if **JTFRAME_CLK48** is defined too. This implies that the SDRAM will be clocked at 96MHz instead of 48MHz. The constraints in the SDC files have to match this clock variation.
 
 If STA was to be run on these pins, the SDRAM clock would have to be assigned the correct PLL output in the SDC file but this is hard to do because the TCL language subset used by Quartus seems to lack control flow statements. So we are required to do another text edit hack on the fly, which is not nice. Apart from changing the PLL output, when using 96MHz clock the input data should have a multicycle path constraint as it takes an extra clock cycle for the data to be ready. If you just change the PLL clock then you'll find plenty of timing problems unless you define the multicycle path constraint.
 

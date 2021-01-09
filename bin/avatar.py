@@ -26,7 +26,7 @@ jtroot_path=os.environ['JTROOT']+"/"
 # One object is 16x16 pixels
 
 # output arrays
-maxobj=128
+maxobj=256
 bufzy=bytearray(int(maxobj*16*16/4))
 bufxw=bytearray(int(maxobj*16*16/4))
 for x in range(len(bufzy)):
@@ -171,7 +171,8 @@ file = open( avatar_filename )
 line = file.readline()
 
 while line:
-    convert_file(line)
+    if line[0] != '#':
+        convert_file(line)
     line = file.readline()
 file.close()
 

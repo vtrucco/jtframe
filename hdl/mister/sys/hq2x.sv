@@ -2,7 +2,6 @@
 //
 // Copyright (c) 2012-2013 Ludvig Strigeus
 // Copyright (c) 2017,2018 Sorgelig
-// Copyright (c) 2019      Jose Tejada
 //
 // This program is GPL Licensed. See COPYING for the full license.
 //
@@ -11,14 +10,8 @@
 
 // altera message_off 10030
 
-// It is assumed that there is more than one clock cycle per pixel clock enable
-// ie ce_in cannot a permanent 1'b1
-
-module Hq2x #(
-    parameter LENGTH=128, 
-    parameter HALF_DEPTH=0, 
-    parameter DWIDTH = HALF_DEPTH ? 11 : 23  // do not define DWIDTH
-) (
+module Hq2x #(parameter LENGTH, parameter HALF_DEPTH)
+(
 	input             clk,
 
 	input             ce_in,
@@ -31,11 +24,12 @@ module Hq2x #(
 	input             ce_out,
 	input       [1:0] read_y,
 	input             hblank,
-	output reg [DWIDTH:0] outpixel
+	output [DWIDTH:0] outpixel
 );
 
 
 localparam AWIDTH = $clog2(LENGTH)-1;
+localparam DWIDTH = HALF_DEPTH ? 11 : 23;
 localparam DWIDTH1 = DWIDTH+1;
 
 (* romstyle = "MLAB" *) reg [5:0] hqTable[256];
@@ -60,8 +54,7 @@ initial begin
 	};
 end
 
-reg [5:0] hqrule;
-
+wire [5:0] hqrule = hqTable[nextpatt];
 
 reg [23:0] Prev0, Prev1, Prev2, Curr0, Curr1, Curr2, Next0, Next1, Next2;
 reg [23:0] A, B, D, F, G, H;
@@ -73,16 +66,13 @@ reg  prevbuf = 0;
 wire iobuf = !curbuf;
 
 wire diff0, diff1;
-DiffCheck diffcheck0( clk, Curr1, (cyc == 0) ? Prev0 : (cyc == 1) ? Curr0 : (cyc == 2) ? Prev2 : Next1, diff0);
-DiffCheck diffcheck1( clk, Curr1, (cyc == 0) ? Prev1 : (cyc == 1) ? Next0 : (cyc == 2) ? Curr2 : Next2, diff1);
+DiffCheck diffcheck0(Curr1, (cyc == 0) ? Prev0 : (cyc == 1) ? Curr0 : (cyc == 2) ? Prev2 : Next1, diff0);
+DiffCheck diffcheck1(Curr1, (cyc == 0) ? Prev1 : (cyc == 1) ? Next0 : (cyc == 2) ? Curr2 : Next2, diff1);
 
 wire [7:0] new_pattern = {diff1, diff0, pattern[7:2]};
 
 wire [23:0] X = (cyc == 0) ? A : (cyc == 1) ? Prev1 : (cyc == 2) ? Next1 : G;
 wire [23:0] blend_result_pre;
-
-always @(posedge clk) hqrule <= hqTable[nextpatt];
-
 Blend blender(clk, ce_in, disable_hq2x ? 6'd0 : hqrule, Curr0, X, B, D, F, H, blend_result_pre);
 
 wire [DWIDTH:0] Curr20tmp;
@@ -93,7 +83,6 @@ wire     [23:0] Curr21 = HALF_DEPTH ? h2rgb(Curr21tmp) : Curr21tmp;
 reg  [AWIDTH:0] wrin_addr2;
 reg  [DWIDTH:0] wrpix;
 reg             wrin_en;
-reg  [AWIDTH:0] offs;
 
 function [23:0] h2rgb;
 	input [11:0] v;
@@ -132,36 +121,31 @@ reg  [DWIDTH1*4-1:0] wrdata, wrdata_pre;
 wire [DWIDTH1*4-1:0] outpixel_x4;
 reg  [DWIDTH1*2-1:0] outpixel_x2;
 
-//assign outpixel = read_x[0] ? outpixel_x2[DWIDTH1*2-1:DWIDTH1] : outpixel_x2[DWIDTH:0];
+assign outpixel = read_x[0] ? outpixel_x2[DWIDTH1*2-1:DWIDTH1] : outpixel_x2[DWIDTH:0];
 
 hq2x_buf #(.NUMWORDS(LENGTH*2), .AWIDTH(AWIDTH+1), .DWIDTH(DWIDTH1*4-1)) hq2x_out
 (
-	.clock    ( clk                           ),
+	.clock(clk),
 
-	.rdaddress( {read_x[AWIDTH+1:1],read_y[1]}),
-	.q        ( outpixel_x4                   ),
+	.rdaddress({read_x[AWIDTH+1:1],read_y[1]}),
+	.q(outpixel_x4),
 
-	.data     ( wrdata                        ),
-	.wraddress( wrout_addr                    ),
-	.wren     ( wrout_en                      )
+	.data(wrdata),
+	.wraddress(wrout_addr),
+	.wren(wrout_en)
 );
-
 
 always @(posedge clk) begin
 	if(ce_out) begin
 		if(read_x[0]) outpixel_x2 <= read_y[0] ? outpixel_x4[DWIDTH1*4-1:DWIDTH1*2] : outpixel_x4[DWIDTH1*2-1:0];
 		if(~hblank & ~&read_x) read_x <= read_x + 1'd1;
-		if(hblank) begin
-			read_x <= 0;
-        	outpixel <= {DWIDTH1{1'b0}};
-		end else begin
-        	outpixel <= read_x[0] ? outpixel_x2[DWIDTH1*2-1:DWIDTH1] : outpixel_x2[DWIDTH:0];
-		end
+		if(hblank) read_x <= 0;
 	end
 end
 
 wire [DWIDTH:0] blend_result = HALF_DEPTH ? rgb2h(blend_result_pre) : blend_result_pre[DWIDTH:0];
 
+reg [AWIDTH:0] offs;
 always @(posedge clk) begin
 	reg old_reset_line;
 	reg old_reset_frame;
@@ -239,7 +223,7 @@ endmodule
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-module hq2x_in #(parameter LENGTH=128, parameter DWIDTH=12, parameter  AWIDTH = $clog2(LENGTH)-1)
+module hq2x_in #(parameter LENGTH, parameter DWIDTH)
 (
 	input            clk,
 
@@ -253,6 +237,7 @@ module hq2x_in #(parameter LENGTH=128, parameter DWIDTH=12, parameter  AWIDTH = 
 	input            wren
 );
 
+localparam AWIDTH = $clog2(LENGTH)-1;
 wire  [DWIDTH:0] out[2];
 assign q0 = out[rdbuf0];
 assign q1 = out[rdbuf1];
@@ -262,7 +247,7 @@ hq2x_buf #(.NUMWORDS(LENGTH), .AWIDTH(AWIDTH), .DWIDTH(DWIDTH)) buf1(clk,data,rd
 
 endmodule
 
-module hq2x_buf #(parameter NUMWORDS=1, parameter AWIDTH=1, parameter DWIDTH=1)
+module hq2x_buf #(parameter NUMWORDS, parameter AWIDTH, parameter DWIDTH)
 (
 	input                 clock,
 	input      [DWIDTH:0] data,
@@ -283,11 +268,11 @@ endmodule
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-module DiffCheck (
-	input		 clk,
+module DiffCheck
+(
 	input [23:0] rgb1,
 	input [23:0] rgb2,
-	output reg   result
+	output       result
 );
 
 	wire [7:0] r = rgb1[7:1]   - rgb2[7:1];
@@ -306,25 +291,22 @@ module DiffCheck (
 
 	// if v is inside (-24, 24)
 	wire v_inside = (v < 10'h18 || v >= 10'h3e8);
-
-	always @(posedge clk) begin
-		result <= !(y_inside && u_inside && v_inside);
-	end
+	assign result = !(y_inside && u_inside && v_inside);
 
 endmodule
 
 module Blend
 (
-	input             clk,
-	input             clk_en,
-	input       [5:0] rule,
-	input      [23:0] E,
-	input      [23:0] A,
-	input      [23:0] B,
-	input      [23:0] D,
-	input      [23:0] F,
-	input      [23:0] H,
-	output reg [23:0] Result
+	input         clk,
+	input         clk_en,
+	input   [5:0] rule,
+	input  [23:0] E,
+	input  [23:0] A,
+	input  [23:0] B,
+	input  [23:0] D,
+	input  [23:0] F,
+	input  [23:0] H,
+	output [23:0] Result
 );
 
 	localparam BLEND1 = 7'b110_10_00; // (A * 12 + B * 4        ) >> 4
@@ -343,7 +325,7 @@ module Blend
 	end
 
 	wire is_diff;
-	DiffCheck diff_checker( clk, df_rule[1] ? b : h, df_rule[0] ? d : f, is_diff);
+	DiffCheck diff_checker(df_rule[1] ? b : h, df_rule[0] ? d : f, is_diff);
 
 	reg [23:0] i10,i20,i30;
 	reg  [6:0] op0;
@@ -382,15 +364,7 @@ module Blend
 	end
 	endfunction
 
-	reg [35:0] res;
-	reg [34:0] res_a, res_b, res_c;
-
-	always @(posedge clk) begin
-		res_a <= mul24x3(i1, op[6:4]);
-		res_b <= mul24x3(i2, {op[3:2], !op[3:2]});
-		res_c <= mul24x3(i3, {op[1:0], !op[3:2]});
-		res <= {res_a, 1'b0} + res_b + res_c;
-	end
+	wire [35:0] res = {mul24x3(i1, op[6:4]), 1'b0} + mul24x3(i2, {op[3:2], !op[3:2]}) + mul24x3(i3, {op[1:0], !op[3:2]});
 
 	always @(posedge clk) if (clk_en) Result <= {res[35:28],res[23:16],res[11:4]};
 

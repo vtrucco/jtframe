@@ -1,9 +1,9 @@
-///////////////////////////////////////////// 
+/////////////////////////////////////////////
 //  This module includes the SDRAM model
 //  when used to simulate the core at the game level (instead of MiST(er) level)
 //  this module also adds the SDRAM controller
-// 
-// 
+//
+//
 
 `timescale 1ns/1ps
 
@@ -11,7 +11,7 @@ module test_harness(
     output  reg      rst = 1'b0,
     output  reg      clk27,
     input            pxl_cen,
-    input            pxl_clk, 
+    input            pxl_clk,
     input            pxl_vb,
     input            pxl_hb,
     input   [21:0]   sdram_addr,
@@ -79,7 +79,7 @@ video_dump u_dump(
 initial frame_cnt=0;
 always @(posedge pxl_vb ) begin
     frame_cnt<=frame_cnt+1;
-    $display("New frame %d", frame_cnt);
+    $display("Frame %4d", frame_cnt);
 end
 
 `ifdef MAXFRAME
@@ -206,7 +206,6 @@ mt48lc16m16a2 #(.filename(GAME_ROMNAME)) mist_sdram (
 );
 `endif
 
-//`ifdef LOADROM
 spitx #(.filename(GAME_ROMNAME), .TX_LEN(TX_LEN) )
     u_spitx(
     .rst        ( rst        ),
@@ -232,17 +231,12 @@ data_io datain (
     .clk_sys        (SDRAM_CLK    ),
     .ioctl_addr     ( ioctl_addr  ),
     .ioctl_dout     ( ioctl_data  ),
+    .ioctl_din      (             ),
     .ioctl_wr       ( ioctl_wr    ),
     // unused
+    .ioctl_upload   (             ),
     .ioctl_fileext  (             ),
     .ioctl_filesize (             )
 );
-// `else
-// assign downloading = 0;
-// assign romload_addr = 0;
-// assign romload_data = 0;
-// assign spi_done = 1'b1;
-// assign SPI_SS2  = 1'b0;
-// `endif
 
-endmodule // jt_1942_a_test
+endmodule

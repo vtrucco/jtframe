@@ -65,13 +65,16 @@ struct ROMorder {
 class MRAmaker {
     void makeROM( class Node& root, Game* g );
     int parse_rom_offset( Node& root, ROMRegion* region );
+    void makeNVRAM( class Node& root );
 public:
+    int nvram_idx, nvram_size;
     string buttons, altfolder, outdir, dipbase, rbf;
     int mod_or;
     bool qsound;
     class Header *header;
     shift_list shifts;
-    MRAmaker() : qsound(false), header(NULL), outdir("."), mod_or(0), dipbase("16") { }
+    MRAmaker() : qsound(false), header(NULL), outdir("."), mod_or(0), dipbase("16"),
+        nvram_idx(-1), nvram_size(0) { }
     ~MRAmaker() {
         if(header) {
             delete header;
@@ -85,7 +88,6 @@ struct ConfigRegion {
     int word_length;
     bool reverse;
 };
-
 
 int main(int argc, char * argv[] ) {
     bool print=false;
@@ -346,6 +348,16 @@ try{
             maker.qsound=true;
             continue;
         }
+        // NVRAM
+        if( a=="-nvram" ) {
+            assert( ++k < argc );
+            maker.nvram_idx = 2; // enable NVRAM
+            maker.nvram_size = strtol( argv[k], NULL, 0 );
+            if( maker.nvram_size <0 || maker.nvram_size>1024 ) {
+                throw "ERROR: Unsupported NVRAM size\n";
+            }
+            continue;
+        }
         // Help
         if( a == "-help" || a =="-h" ) {
             cout << "mame2dip: converts MAME XML dump to MRA format\n"
@@ -391,6 +403,8 @@ try{
                     "    -header-offset-reverse     The two bytes for each data offset will be dumped in reverse order\n"
                     "\n Mod byte MRAmaker \n"
                     "    -4way                      Sets 4-way joystick input\n"
+                    "\n NVRAM support \n"
+                    "    -nvram size                Enables NVRAM support for the given size (up to 1024 bytes)"
                     "\n Common ROMs\n"
                     "    -qsound                    Adds chunk for loading q-sound internal ROM\n"
             ;
@@ -918,6 +932,7 @@ void MRAmaker::makeMRA( Game* g ) {
     makeROM( root, g );
     // if( qsound ) makeQSound( root );
     makeMOD( root, g, mod_or );
+    makeNVRAM( root );
     makeDIP( root, g, dipbase, shifts );
     makeJOY( root, g, buttons );
 
@@ -956,6 +971,14 @@ void MRAmaker::makeMRA( Game* g ) {
 "\n"
 "-->\n\n";
     root.dump(fout);
+}
+
+void MRAmaker::makeNVRAM( class Node& root ) {
+    Node &n = root.add("nvram");
+    char sz[32];
+    sprintf(sz,"%d",nvram_size);
+    n.add_attr("index","2");
+    n.add_attr("size",sz);
 }
 
 Node& Node::add( string n, string v ) {

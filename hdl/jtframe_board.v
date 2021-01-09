@@ -21,42 +21,58 @@ module jtframe_board #(parameter
     // coin and start buttons will be mapped.
     GAME_INPUTS_ACTIVE_LOW  = 1'b1,
     COLORW                  = 4,
+    SDRAMW                  = 22,
     VIDEO_WIDTH             = 384,
     VIDEO_HEIGHT            = 224
 )(
-    output  reg       rst=1'b0,      // use as synchrnous reset
-    output  reg       rst_n=1'b1,    // use as asynchronous reset
-    output  reg       game_rst=1'b0,
-    output  reg       game_rst_n=1'b1,
+    output            rst,
+    output            rst_n,
+    output            game_rst,
+    output            game_rst_n,
     // reset forcing signals:
     input             rst_req,
 
     input             clk_sys,
     input             clk_rom,
-    input             clk_vga,
 
     input  [ 6:0]     core_mod,
+    // LED
+    input               osd_shown,
+    input        [ 1:0] game_led,
+    output              led,
     // ROM access from game
-    input             sdram_req,
-    output            sdram_ack,
-    input             refresh_en,
-    input  [21:0]     sdram_addr,
-    input  [ 1:0]     sdram_bank,
-    output [31:0]     data_read,
-    output            data_rdy,
-    output            loop_rst,
-    // Write back to SDRAM
-    input  [ 1:0]     sdram_wrmask,
-    input             sdram_rnw,
-    input  [15:0]     data_write,
+    input  [SDRAMW-1:0] ba0_addr,
+    input               ba0_rd,
+    input               ba0_wr,
+    input        [15:0] ba0_din,
+    input        [ 1:0] ba0_din_m,  // write mask
+    output              ba0_rdy,
+    output              ba0_ack,
+    input  [SDRAMW-1:0] ba1_addr,
+    input               ba1_rd,
+    output              ba1_rdy,
+    output              ba1_ack,
+    input  [SDRAMW-1:0] ba2_addr,
+    input               ba2_rd,
+    output              ba2_rdy,
+    output              ba2_ack,
+    input  [SDRAMW-1:0] ba3_addr,
+    input               ba3_rd,
+    output              ba3_rdy,
+    output              ba3_ack,
+
+    input               rfsh_en,   // ok to refresh
+    output       [31:0] sdram_dout,
     // ROM programming
-    input  [21:0]     prog_addr,
-    input  [ 7:0]     prog_data,
-    input  [ 1:0]     prog_mask,
-    input  [ 1:0]     prog_bank,
-    input             prog_we,
-    input             prog_rd,
-    input             downloading,
+    input  [SDRAMW-1:0] prog_addr,
+    input        [15:0] prog_data,
+    input        [ 1:0] prog_mask,
+    input        [ 1:0] prog_ba,
+    input               prog_we,
+    input               prog_rd,
+    output              prog_rdy,
+    output              prog_ack,
+    input               downloading,
     // SDRAM interface
     inout  [15:0]     SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output [12:0]     SDRAM_A,        // SDRAM Address bus 13 Bits
@@ -85,8 +101,8 @@ module jtframe_board #(parameter
     output reg        game_service,
     // DIP and OSD settings
     input     [31:0]  status,
-    output    [ 7:0]  hdmi_arx,
-    output    [ 7:0]  hdmi_ary,
+    output    [11:0]  hdmi_arx,
+    output    [11:0]  hdmi_ary,
     output    [ 1:0]  rotate,
 
     output            enable_fm,
@@ -111,15 +127,6 @@ module jtframe_board #(parameter
     // HDMI outputs (only for MiSTer)
     inout     [21:0]  gamma_bus,
     input             direct_video,
-    output            hdmi_clk,
-    output            hdmi_cen,
-    output    [ 7:0]  hdmi_r,
-    output    [ 7:0]  hdmi_g,
-    output    [ 7:0]  hdmi_b,
-    output            hdmi_hs,
-    output            hdmi_vs,
-    output            hdmi_de,   // = ~(VBlank | HBlank)
-    output    [ 1:0]  hdmi_sl,   // scanlines fx
     // scan doubler
     input             scan2x_enb,
     output    [7:0]   scan2x_r,
@@ -141,74 +148,38 @@ wire          osd_pause;
 
 wire invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
 wire key_reset, key_pause, rot_control;
-reg [7:0] rst_cnt=8'd0;
-reg       game_pause;
+reg       game_pause, soft_rst;
 wire      scandoubler = ~scan2x_enb;
-
-`ifdef JTFRAME_MISTER_VIDEO_DW
-localparam arcade_fx_dw = `JTFRAME_MISTER_VIDEO_DW;
-`else
-localparam arcade_fx_dw = COLORW*3;
-`endif
-
-always @(posedge clk_sys)
-    if( rst_cnt != ~8'b0 ) begin
-        rst <= 1'b1;
-        rst_cnt <= rst_cnt + 8'd1;
-    end else rst <= 1'b0;
-
-// rst_n is meant to be used as an asynchronous reset
-// for the clk_sys domain
-reg pre_rst_n;
-always @(posedge clk_sys)
-    if( rst | downloading | loop_rst ) begin
-        pre_rst_n <= 1'b0;
-        rst_n <= 1'b0;
-    end else begin
-        pre_rst_n <= 1'b1;
-        rst_n <= pre_rst_n;
-    end
-
-reg soft_rst;
-reg [7:0] game_rst_cnt=8'd0;
-
-`ifdef JTFRAME_FLIP_RESET
-reg last_dip_flip, rst_flip;
-always @(negedge clk_rom) begin
-    last_dip_flip <= dip_flip;
-    rst_flip      <= last_dip_flip!=dip_flip;
-end
-`else
-wire rst_flip = 0;
-`endif
-
-always @(negedge clk_rom) begin
-    if( downloading | rst | rst_req
-        | rst_flip | soft_rst ) begin
-        game_rst_cnt <= 8'd0;
-        game_rst     <= 1'b1;
-    end
-    else if( game_rst_cnt != ~8'b0 ) begin
-        game_rst <= 1'b1;
-        game_rst_cnt <= game_rst_cnt + 8'd1;
-    end else game_rst <= 1'b0;
-end
-
-// convert game_rst to game_rst_n
-reg pre_game_rst_n;
-always @(posedge clk_rom)
-    if( game_rst ) begin
-        pre_game_rst_n <= 1'b0;
-        game_rst_n <= 1'b0;
-    end else begin
-        pre_game_rst_n <= 1'b1;
-        game_rst_n <= pre_game_rst_n;
-    end
 
 wire [9:0] key_joy1, key_joy2, key_joy3;
 wire [3:0] key_start, key_coin;
 wire [3:0] key_gfx;
 wire       key_service;
+
+jtframe_reset u_reset(
+    .clk_sys    ( clk_sys       ),
+    .clk_rom    ( clk_rom       ),
+
+    .downloading( downloading   ),
+    .dip_flip   ( dip_flip      ),
+    .soft_rst   ( soft_rst      ),
+    .rst_req    ( rst_req       ),
+
+    .rst        ( rst           ),
+    .rst_n      ( rst_n         ),
+    .game_rst   ( game_rst      ),
+    .game_rst_n ( game_rst_n    )
+);
+
+jtframe_led u_led(
+    .rst        ( rst           ),
+    .clk        ( clk_sys       ),
+    .downloading( downloading   ),
+    .osd_shown  ( osd_shown     ),
+    .gfx_en     ( gfx_en        ),
+    .game_led   ( game_led      ),
+    .led        ( led           )
+);
 
 `ifndef SIMULATION
 jtframe_keyboard u_keyboard(
@@ -399,50 +370,77 @@ jtframe_dip u_dip(
     .dip_fxlevel( dip_fxlevel   )
 );
 
-// This strange arrangement is what MiSTer 128MB board needs:
-wire [12:11] sdram_a;
-wire         sdram_dqml, sdram_dqmh;
+// support for 48MHz
+// Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
+// clock is shifted or not.
+jtframe_sdram_bank #(.AW(SDRAMW),
+`ifdef JTFRAME_SDRAM96
+    .HF(1),
+    .SHIFTED(0)
+`else
+    .HF(0),
+    `ifdef JTFRAME_180SHIFT
+        .SHIFTED(0)
+    `else
+        .SHIFTED(1)
+    `endif
+`endif
+) u_sdram(
+    .rst        ( rst           ),
+    .clk        ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
 
-assign       SDRAM_DQML = sdram_a[11] | sdram_dqml;
-assign       SDRAM_DQMH = sdram_a[12] | sdram_dqmh;
-assign       SDRAM_A[11] = SDRAM_DQML;
-assign       SDRAM_A[12] = SDRAM_DQMH;
+    // Bank 0: allows R/W
+    .ba0_addr   ( ba0_addr      ),
+    .ba0_rd     ( ba0_rd        ),
+    .ba0_wr     ( ba0_wr        ),
+    .ba0_din    ( ba0_din       ),
+    .ba0_din_m  ( ba0_din_m     ),  // write mask
+    .ba0_rdy    ( ba0_rdy       ),
+    .ba0_ack    ( ba0_ack       ),
 
-jtframe_sdram u_sdram(
-    .rst            ( rst           ),
-    .clk            ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
-    .loop_rst       ( loop_rst      ),
-    .read_req       ( sdram_req     ),
-    .data_read      ( data_read     ),
-    .data_rdy       ( data_rdy      ),
-    .refresh_en     ( refresh_en    ),
-    // Write back to SDRAM
-    .sdram_wrmask   ( sdram_wrmask  ),
-    .sdram_rnw      ( sdram_rnw     ),
-    .data_write     ( data_write    ),
+    // Bank 1: Read only
+    .ba1_addr   ( ba1_addr      ),
+    .ba1_rd     ( ba1_rd        ),
+    .ba1_rdy    ( ba1_rdy       ),
+    .ba1_ack    ( ba1_ack       ),
+
+    // Bank 2: Read only
+    .ba2_addr   ( ba2_addr      ),
+    .ba2_rd     ( ba2_rd        ),
+    .ba2_rdy    ( ba2_rdy       ),
+    .ba2_ack    ( ba2_ack       ),
+
+    // Bank 3: Read only
+    .ba3_addr   ( ba3_addr      ),
+    .ba3_rd     ( ba3_rd        ),
+    .ba3_rdy    ( ba3_rdy       ),
+    .ba3_ack    ( ba3_ack       ),
 
     // ROM-load interface
-    .downloading    ( downloading   ),
-    .prog_we        ( prog_we       ),
-    .prog_rd        ( prog_rd       ),
-    .prog_addr      ( prog_addr     ),
-    .prog_data      ( prog_data     ),
-    .prog_mask      ( prog_mask     ),
-    .prog_bank      ( prog_bank     ),
-    .sdram_addr     ( sdram_addr    ),
-    .sdram_bank     ( sdram_bank    ),
-    .sdram_ack      ( sdram_ack     ),
+    .prog_en    ( downloading   ),
+    .prog_addr  ( prog_addr     ),
+    .prog_ba    ( prog_ba       ),
+    .prog_rd    ( prog_rd       ),
+    .prog_wr    ( prog_we       ),
+    .prog_din   ( prog_data     ),
+    .prog_din_m ( prog_mask     ),
+    .prog_rdy   ( prog_rdy      ),
+    .prog_ack   ( prog_ack      ),
     // SDRAM interface
-    .SDRAM_DQ       ( SDRAM_DQ      ),
-    .SDRAM_A        ( { sdram_a, SDRAM_A[10:0] } ),
-    .SDRAM_DQML     ( sdram_dqml    ),
-    .SDRAM_DQMH     ( sdram_dqmh    ),
-    .SDRAM_nWE      ( SDRAM_nWE     ),
-    .SDRAM_nCAS     ( SDRAM_nCAS    ),
-    .SDRAM_nRAS     ( SDRAM_nRAS    ),
-    .SDRAM_nCS      ( SDRAM_nCS     ),
-    .SDRAM_BA       ( SDRAM_BA      ),
-    .SDRAM_CKE      ( SDRAM_CKE     )
+    .sdram_dq   ( SDRAM_DQ      ),
+    .sdram_a    ( SDRAM_A       ),
+    .sdram_dqml ( SDRAM_DQML    ),
+    .sdram_dqmh ( SDRAM_DQMH    ),
+    .sdram_nwe  ( SDRAM_nWE     ),
+    .sdram_ncas ( SDRAM_nCAS    ),
+    .sdram_nras ( SDRAM_nRAS    ),
+    .sdram_ncs  ( SDRAM_nCS     ),
+    .sdram_ba   ( SDRAM_BA      ),
+    .sdram_cke  ( SDRAM_CKE     ),
+
+    // Common signals
+    .dout       ( sdram_dout    ),
+    .rfsh_en    ( rfsh_en       )
 );
 
 wire [COLORW-1:0] pre2x_r, pre2x_g, pre2x_b;
@@ -467,7 +465,11 @@ wire              pre2x_LHBL, pre2x_LVBL;
         .HB         ( LHBL          ),
         .VB         ( LVBL          ),
         .rgb_in     ( { game_r, game_g, game_b } ),
-        .enable     ( ~dip_pause    ),
+        `ifdef JTFRAME_CREDITS_AON
+            .enable ( 1'b1          ),
+        `else
+            .enable ( ~dip_pause    ),
+        `endif
         .toggle     ( toggle        ),
         // output image
         .HB_out     ( pre2x_LHBL      ),
@@ -503,19 +505,15 @@ assign scan2x_clk  = clk_sys;
 assign scan2x_cen  = pxl_cen;
 assign scan2x_de   = LVBL && LHBL;
 `else
-// Always use JTFRAME_SCAN2X for MiST and SiDi
-`ifndef MISTER
-`define JTFRAME_SCAN2X
-`endif
 
-`ifdef JTFRAME_SCAN2X
+`ifndef MISTER
     localparam CLROUTW = COLORW < 5 ? COLORW+1 : COLORW;
 
     wire [CLROUTW-1:0] r_ana, g_ana, b_ana;
     wire               hs_ana, vs_ana;
     wire               pxl_ana;
 
-    jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) (
+    jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) u_wirebw(
         .clk        ( clk_sys   ),
         .spl_in     ( pxl_cen   ),
         .r_in       ( pre2x_r   ),
@@ -551,7 +549,7 @@ assign scan2x_de   = LVBL && LHBL;
     wire [CLROUTW*3-1:0] game_rgb = { r_ana, g_ana, b_ana };
     wire scan2x_hsin = bw_en ? hs_ana : hs;
 
-    // Note that VIDEO_WIDTH must include blanking for JTFRAME_SCAN2X
+    // Note that VIDEO_WIDTH must include blanking for jtframe_scan2x
     jtframe_scan2x #(.COLORW(CLROUTW), .HLEN(VIDEO_WIDTH)) u_scan2x(
         .rst_n      ( rst_n          ),
         .clk        ( clk_sys        ),
@@ -575,15 +573,6 @@ assign scan2x_de   = LVBL && LHBL;
     assign scan2x_cen   = pxl2_cen;
     assign scan2x_clk   = clk_sys;
     // unused in MiST
-    assign hdmi_clk     = 0;
-    assign hdmi_cen     = 0;
-    assign hdmi_r       = 8'd0;
-    assign hdmi_g       = 8'd0;
-    assign hdmi_b       = 8'd0;
-    assign hdmi_de      = 0;
-    assign hdmi_hs      = 0;
-    assign hdmi_vs      = 0;
-    assign hdmi_sl      = 2'b0;
     assign gamma_bus    = 22'd0;
 `else
     localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
@@ -630,15 +619,15 @@ assign scan2x_de   = LVBL && LHBL;
         .VGA_VS     (  scan2x_vs    ),
         .VGA_DE     (  scan2x_de    ),
 
-        .HDMI_CLK   (  hdmi_clk     ),
-        .HDMI_CE    (  hdmi_cen     ),
-        .HDMI_R     (  hdmi_r       ),
-        .HDMI_G     (  hdmi_g       ),
-        .HDMI_B     (  hdmi_b       ),
-        .HDMI_HS    (  hdmi_hs      ),
-        .HDMI_VS    (  hdmi_vs      ),
-        .HDMI_DE    (  hdmi_de      ),
-        .HDMI_SL    (  hdmi_sl      ),
+        .HDMI_CLK   (               ),
+        .HDMI_CE    (               ),
+        .HDMI_R     (               ),
+        .HDMI_G     (               ),
+        .HDMI_B     (               ),
+        .HDMI_HS    (               ),
+        .HDMI_VS    (               ),
+        .HDMI_DE    (               ),
+        .HDMI_SL    (               ),
         .gamma_bus  ( gamma_bus     ),
 
 

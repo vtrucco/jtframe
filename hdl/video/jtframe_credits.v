@@ -26,7 +26,7 @@ module jtframe_credits #(
     parameter [11:0] PAL2   = { 4'h3, 4'h3, 4'hf },  // Blue
     parameter [11:0] PAL3   = { 4'hf, 4'hf, 4'hf },  // White
     parameter        BLKPOL = 1'b1, // Blanking polarity
-    parameter        SPEED  = 3     // scroll speed
+    parameter        SPEED  = 2     // scroll speed
 ) (
     input               rst,
     input               clk,

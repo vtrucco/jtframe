@@ -16,8 +16,6 @@
     Version: 1.0
     Date: 6-12-2019 */
 
-`timescale 1ns/1ps
-
 // 9 slots for SDRAM read-only access
 // slot 0 --> maximum priority
 // slot 8 --> minimum priority
@@ -90,14 +88,16 @@ module jtframe_rom #(parameter
     output              slot7_ok,
     output              slot8_ok,
     // SDRAM controller interface
-    input               downloading,
-    input               loop_rst,
     input               sdram_ack,
     output  reg         sdram_req,
     output  reg         refresh_en,
     output  reg [21:0]  sdram_addr,
     input               data_rdy,
-    input       [31:0]  data_read
+    input       [31:0]  data_read,
+
+    // deprecated
+    input               downloading,
+    input               loop_rst
 );
 
 
@@ -283,8 +283,8 @@ jtframe_romrq #(.AW(SLOT8_AW),.DW(SLOT8_DW)) u_slot8(
 
 wire [8:0] active = ~data_sel & req;
 
-always @(posedge clk)
-if( loop_rst || downloading ) begin
+always @(posedge clk, posedge rst)
+if( rst ) begin
     sdram_addr <= 22'd0;
     ready_cnt  <=  4'd0;
     ready      <=  1'b0;

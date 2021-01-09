@@ -16,12 +16,13 @@
     Version: 1.0
     Date: 28-2-2019 */
 
-`timescale 1ns/1ps
-
 ////////////////////////////////////////////////////////////
 /////// read/write type
 /////// simple pass through
 /////// It requires addr_ok signal to toggle for each request
+/////// addr_ok is meant to be the CS signal coming from a CPU memory decoder
+/////// so it should go up and stay up until the data is served. It should go down
+/////// after that.
 
 module jtframe_ram_rq #(parameter AW=18, DW=8 )(
     input               rst,
@@ -31,13 +32,13 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
     input               addr_ok,    // signals that value in addr is valid
     input [31:0]        din,        // data read from SDRAM
     input               din_ok,
-    input               wrin,   
+    input               wrin,
     input               we,
     output reg          req,
     output reg          req_rnw,
     output reg          data_ok,    // strobe that signals that data is ready
     output reg [21:0]   sdram_addr,
-    input [DW-1:0]      wrdata,
+    input      [DW-1:0] wrdata,
     output reg [DW-1:0] dout        // sends SDRAM data back to requester
 );
 
@@ -49,24 +50,26 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
 
     always @(posedge clk, posedge rst) begin
         if( rst ) begin
-            last_cs <= 1'b0;
-            req     <= 1'b0;
-            data_ok <= 1'b0;
+            last_cs <= 0;
+            req     <= 0;
+            data_ok <= 0;
         end else begin
             last_cs <= addr_ok;
-            if( cs_posedge ) begin
-                req        <= 1'b1;
-                req_rnw    <= ~wrin; 
-                data_ok    <= 1'b0;
+            if( cs_negedge ) data_ok <= 0;
+            if( we ) begin
+                req <= 0;
+                if( din_ok ) begin
+                    req_rnw <= 1;
+                    data_ok <= 1;
+                    dout    <= din[DW-1:0];
+                end
+            end else if( cs_posedge ) begin
+                req        <= 1;
+                req_rnw    <= ~wrin;
+                data_ok    <= 0;
                 sdram_addr <= size_ext + offset;
             end
-            if( cs_negedge ) data_ok <= 1'b0;
-            if( din_ok && we ) begin
-                req     <= 1'b0;
-                req_rnw <= 1'b1;
-                data_ok <= 1'b1;
-                dout    <= din[DW-1:0];
-            end
+
         end
     end
 

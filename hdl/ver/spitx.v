@@ -83,10 +83,13 @@ initial begin
         $finish;
     end
     file_len=$fread( rom_buffer, file );
-    $display("INFO: Read %s for SPI transmission (%d bytes).",filename, file_len);
+    $display("INFO: Read %s for SPI transmission (%0d bytes).",filename, file_len);
     if( file_len == 0 ) begin
         $display("ERROR: ROM file is empty.");
         $finish;
+    end
+    if( TX_LEN < file_len ) begin
+        $display("INFO: Only the first %0d bytes of ROM will be downloaded",TX_LEN);
     end
     $fclose(file);
 end
@@ -108,11 +111,12 @@ spitx_sub u_sub(
 integer state, next, slow;
 reg hold;
 
-localparam clkspeed=8; // MiST is probably 28MHz or clkspeed=17.857
+localparam CLKSPEED=24; // MiST is probably 28MHz or CLKSPEED=17.857
+    // 8 is the fastest for 48MHz SDRAM access
 
 initial begin
     clk = 0;
-    forever #(clkspeed) clk = ~clk;
+    forever #(CLKSPEED) clk = ~clk;
 end
 
 // Define LOAD_RANDOM_DLY to delay the start of the load process
@@ -129,11 +133,7 @@ localparam WAIT=`JTFRAME_SIM_LOAD_EXTRA;
 always @(posedge clk or posedge rst)
 if( rst ) begin
     tx_cnt <= 8500+`LOAD_RANDOM_DLY;
-`ifdef LOADROM
     state <= 0;
-`else
-    state <= 15;
-`endif   
     SPI_SS2  <= 1'b1;
     SPI_SS3  <= 1'b1;
     spi_done <= 1'b0;
@@ -159,7 +159,7 @@ else begin
         end
         // send DOWNLOAD signal
         1: begin
-            $display("ROM loading starts (%d ns)",$time());
+            $display("ROM loading starts (%1d ns)",$time());
             SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX;
             send <= 1'b1;
@@ -171,7 +171,10 @@ else begin
             hold <= 1'b1;
         end
         // send DATA signal
-        5: SPI_SS2 <= 1'b1;
+        5: begin
+            SPI_SS2 <= 1'b1;
+        end
+
         6: begin
             SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX_DAT;
@@ -186,7 +189,7 @@ else begin
             tx_cnt <= tx_cnt + 1;
         end
         9: if( data_sent ) begin
-            if( tx_cnt==file_len ) begin
+            if( tx_cnt==file_len || tx_cnt== TX_LEN ) begin
                 state <= 10;
                 hold  <= 1'b0;
             end
@@ -210,7 +213,7 @@ else begin
         // finish DOWNLOAD signal
         10: SPI_SS2 <= 1'b1;
         11: begin
-            $display("ROM loading finished (%d bytes, %d ns)", file_len, $time);
+            $display("ROM loading finished (%1d bytes, %1d ns)", file_len, $time);
             SPI_SS2 <= 1'b0;
             data <= UIO_FILE_TX;
             send <= 1'b1;
@@ -240,17 +243,17 @@ else begin
             send   <= 1'b1;
             hold   <= 1'b1;
             tx_cnt <= tx_cnt+1;
-        end    
+        end
         19: if( data_sent ) begin
             if( tx_cnt!=2047 ) state <= 18;
             hold <= 1'b0;
         end
-`ifndef SIMULATE_OSD        
+`ifndef SIMULATE_OSD
         20: begin // OSD over
             hold    <= 1'b1;
             SPI_SS3 <= 1'b1;
         end
-`else 
+`else
         20: SPI_SS3 <= 1'b1;    // send new command
         21: SPI_SS3 <= 1'b0;
         22: begin

@@ -39,7 +39,7 @@
 
 `timescale 1ns / 1ps
 
-module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm, 
+module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
     downloading, VS, frame_cnt );
 
     parameter addr_bits =      13;
@@ -84,12 +84,10 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         // end else begin
         //     $display("ERROR: Cannot open file %s", filename);
         // end
-        $readmemh("sdram.hex",  Bank0 );
-        `ifdef JTFRAME_SDRAM_BANKS
+        $readmemh("sdram_bank0.hex",  Bank0 );
         $readmemh("sdram_bank1.hex",  Bank1 );
         $readmemh("sdram_bank2.hex",  Bank2 );
         $readmemh("sdram_bank3.hex",  Bank3 );
-        `endif
         `ifdef TESTROM
         file=$fopen("test.bin", "rb");
         romfilecnt=$fread( Bank0, file );
@@ -129,11 +127,10 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         // as verilog has a hard 32 limit on it
         always @(negedge downloading) begin : dump_contents
             integer dumpcnt,f;
-            f=$fopen("sdram.hex","w");
+            f=$fopen("sdram_bank0.hex","w");
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
                 $fwrite(f,"%h\n",Bank0[dumpcnt]);
             $fclose(f);
-            `ifdef JTFRAME_SDRAM_BANKS
             // Bank 1
             f=$fopen("sdram_bank1.hex","w");
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
@@ -148,9 +145,8 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             f=$fopen("sdram_bank3.hex","w");
             for( dumpcnt=0; dumpcnt<4096*1024; dumpcnt=dumpcnt+1)
                 $fwrite(f,"%h\n",Bank3[dumpcnt]);
-            `endif
             $fclose(f);
-            $display("INFO: SDRAM memory content dumped to sdram.hex at %t",$time);
+            $display("INFO: SDRAM memory content dumped to sdram_bank?.hex at %t",$time);
         end
         `endif
     `endif
@@ -235,7 +231,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
     `ifdef JTFRAME_SDRAM_DEBUG
     assign Debug=1;
-    `else 
+    `else
     assign Debug=0;
     `endif
 
@@ -259,6 +255,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
     parameter tOH  =   3.0;
     parameter tMRD =   2.0;     // 2 Clk Cycles
     parameter tRAS =  37.0;
+    parameter tRASmax =  120_000;
     parameter tRC  =  60.0;
     parameter tRCD =  15.0;
     parameter tRFC =  66.0;
@@ -374,12 +371,14 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             // Auto Refresh to Auto Refresh
             if ($time - RFC_chk < tRFC) begin
                 $display ("%m : at time %t ERROR: tRFC violation during Auto Refresh", $time);
+                #100 $finish;
             end
 
             // Precharge to Auto Refresh
             if (($time - RP_chk0 < tRP) || ($time - RP_chk1 < tRP) ||
                 ($time - RP_chk2 < tRP) || ($time - RP_chk3 < tRP)) begin
                 $display ("%m : at time %t ERROR: tRP violation during Auto Refresh", $time);
+            #100 $finish;
             end
 
             // Precharge to Refresh
@@ -391,6 +390,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             // Load Mode Register to Auto Refresh
             if (MRD_chk < tMRD) begin
                 $display ("%m : at time %t ERROR: tMRD violation during Auto Refresh", $time);
+                #100 $finish;
             end
 
             // Record Current tRFC time
@@ -451,16 +451,19 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             if (($time - RP_chk0 < tRP) || ($time - RP_chk1 < tRP) ||
                 ($time - RP_chk2 < tRP) || ($time - RP_chk3 < tRP)) begin
                 $display ("%m : at time %t ERROR: tRP violation during Load Mode Register", $time);
+                #100 $finish;
             end
 
             // Auto Refresh to Load Mode Register
             if ($time - RFC_chk < tRFC) begin
                 $display ("%m : at time %t ERROR: tRFC violation during Load Mode Register", $time);
+                #100 $finish;
             end
 
             // Load Mode Register to Load Mode Register
             if (MRD_chk < tMRD) begin
                 $display ("%m : at time %t ERROR: tMRD violation during Load Mode Register", $time);
+                #100 $finish;
             end
 
             // Reset MRD Counter
@@ -486,6 +489,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 // ACTIVE to ACTIVE command period
                 if ($time - RC_chk0 < tRC) begin
                     $display ("%m : at time %t ERROR: tRC violation during Activate bank 0", $time);
+                    #100 $finish;
                 end
 
                 // Precharge to Activate Bank 0
@@ -512,11 +516,13 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 // ACTIVE to ACTIVE command period
                 if ($time - RC_chk1 < tRC) begin
                     $display ("%m : at time %t ERROR: tRC violation during Activate bank 1", $time);
+                    #100 $finish;
                 end
 
                 // Precharge to Activate Bank 1
                 if ($time - RP_chk1 < tRP) begin
                     $display ("%m : at time %t ERROR: tRP violation during Activate bank 1", $time);
+                    #100 $finish;
                 end
 
                 // Record variables
@@ -537,11 +543,13 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 // ACTIVE to ACTIVE command period
                 if ($time - RC_chk2 < tRC) begin
                     $display ("%m : at time %t ERROR: tRC violation during Activate bank 2", $time);
+                    #100 $finish;
                 end
 
                 // Precharge to Activate Bank 2
                 if ($time - RP_chk2 < tRP) begin
                     $display ("%m : at time %t ERROR: tRP violation during Activate bank 2", $time);
+                    #100 $finish;
                 end
 
                 // Record variables
@@ -562,11 +570,13 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 // ACTIVE to ACTIVE command period
                 if ($time - RC_chk3 < tRC) begin
                     $display ("%m : at time %t ERROR: tRC violation during Activate bank 3", $time);
+                    #100 $finish;
                 end
 
                 // Precharge to Activate Bank 3
                 if ($time - RP_chk3 < tRP) begin
                     $display ("%m : at time %t ERROR: tRP violation during Activate bank 3", $time);
+                    #100 $finish;
                 end
 
                 // Record variables
@@ -581,6 +591,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             // Active Bank A to Active Bank B
             if ((Prev_bank != Ba) && ($time - RRD_chk < tRRD)) begin
                 $display ("%m : at time %t ERROR: tRRD violation during Activate bank = %d", $time, Ba);
+                #100 $finish;
             end
 
             // Auto Refresh to Activate
@@ -592,6 +603,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             // Load Mode Register to Active
             if (MRD_chk < tMRD ) begin
                 $display ("%m : at time %t ERROR: tMRD violation during Activate bank = %d", $time, Ba);
+                #100 $finish;
             end
 
             // Record variables for checking violation
@@ -604,6 +616,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             // Load Mode Register to Precharge
             if ($time - MRD_chk < tMRD) begin
                 $display ("%m : at time %t ERROR: tMRD violaiton during Precharge", $time);
+                #100 $finish;
             end
 
             // Precharge Bank 0
@@ -613,13 +626,15 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk0 = $time;
 
                 // Activate to Precharge
-                if ($time - RAS_chk0 < tRAS) begin
+                if (($time - RAS_chk0 < tRAS) || ($time - RAS_chk0 > tRASmax ) && RAS_chk0) begin
                     $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
+                    #100 $finish;
                 end
 
                 // tWR violation check for write
                 if ($time - WR_chkm[0] < tWRm) begin
                     $display ("%m : at time %t ERROR: tWR violation during Precharge", $time);
+                    #100 $finish;
                 end
             end
 
@@ -630,13 +645,15 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk1 = $time;
 
                 // Activate to Precharge
-                if ($time - RAS_chk1 < tRAS) begin
+                if (($time - RAS_chk1 < tRAS) || ($time - RAS_chk1 > tRASmax ) && RAS_chk1) begin
                     $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
+                    #100 $finish;
                 end
 
                 // tWR violation check for write
                 if ($time - WR_chkm[1] < tWRm) begin
                     $display ("%m : at time %t ERROR: tWR violation during Precharge", $time);
+                    #100 $finish;
                 end
             end
 
@@ -647,13 +664,15 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk2 = $time;
 
                 // Activate to Precharge
-                if ($time - RAS_chk2 < tRAS) begin
+                if (($time - RAS_chk2 < tRAS) || ($time - RAS_chk2 > tRASmax ) && RAS_chk2) begin
                     $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
+                    #100 $finish;
                 end
 
                 // tWR violation check for write
                 if ($time - WR_chkm[2] < tWRm) begin
                     $display ("%m : at time %t ERROR: tWR violation during Precharge", $time);
+                    #100 $finish;
                 end
             end
 
@@ -664,13 +683,15 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk3 = $time;
 
                 // Activate to Precharge
-                if ($time - RAS_chk3 < tRAS) begin
+                if (($time - RAS_chk3 < tRAS) || ($time - RAS_chk3 > tRASmax ) && RAS_chk3) begin
                     $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
+                    #100 $finish;
                 end
 
                 // tWR violation check for write
                 if ($time - WR_chkm[3] < tWRm) begin
                     $display ("%m : at time %t ERROR: tWR violation during Precharge", $time);
+                    #100 $finish;
                 end
             end
 
@@ -719,6 +740,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             if ((Ba == 2'b00 && Pc_b0 == 1'b1) || (Ba == 2'b01 && Pc_b1 == 1'b1) ||
                 (Ba == 2'b10 && Pc_b2 == 1'b1) || (Ba == 2'b11 && Pc_b3 == 1'b1)) begin
                 $display("%m : at time %t ERROR: Bank is not Activated for Read", $time);
+                #100 $finish;
             end
 
             // Activate to Read or Write
@@ -727,6 +749,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 (Ba == 2'b10) && ($time - RCD_chk2 < tRCD) ||
                 (Ba == 2'b11) && ($time - RCD_chk3 < tRCD)) begin
                 $display("%m : at time %t ERROR: tRCD violation during Read", $time);
+                #100 $finish;
             end
 
             // CAS Latency pipeline
@@ -771,6 +794,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
             if ((Ba == 2'b00 && Pc_b0 == 1'b1) || (Ba == 2'b01 && Pc_b1 == 1'b1) ||
                 (Ba == 2'b10 && Pc_b2 == 1'b1) || (Ba == 2'b11 && Pc_b3 == 1'b1)) begin
                 $display("%m : at time %t ERROR: Bank is not Activated for Write", $time);
+                #100 $finish;
             end
 
             // Activate to Read or Write
@@ -778,7 +802,8 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 (Ba == 2'b01) && ($time - RCD_chk1 < tRCD) ||
                 (Ba == 2'b10) && ($time - RCD_chk2 < tRCD) ||
                 (Ba == 2'b11) && ($time - RCD_chk3 < tRCD)) begin
-                $display("%m : at time %t ERROR: tRCD violation during Read", $time);
+                $display("%m : at time %t ERROR: tRCD violation during Read*", $time);
+                #100 $finish;
             end
 
             // Latch Write command, Bank, and Column

@@ -100,6 +100,15 @@ end
 
 reg alt=ALT0[0];
 
+`ifdef SIMULATION
+initial begin
+    cencnt = 11'd0;
+    next   = 11'd0;
+    next2  = 11'd0;
+    alt    = 0;
+end
+`endif
+
 always @(posedge clk) begin
     if( cencnt >= absmax ) begin
         // something went wrong: restart

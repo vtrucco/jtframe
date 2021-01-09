@@ -2,4 +2,6 @@
 sim
 *.lxt
 *.o
+*.hex
 history
+a.out

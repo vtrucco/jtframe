@@ -3,6 +3,7 @@ hps_io.v
 ../ver/altera_mf.v
 ../ver/video_dump.v
 ../jtframe_board.v
+../jtframe_reset.v
 ../jtframe_dip.v
 sys/arcade_video.v
 sys/video_mixer.sv

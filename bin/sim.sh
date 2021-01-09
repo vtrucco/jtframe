@@ -169,11 +169,12 @@ if [ -z "$GAME_ROM_PATH" ]; then
 fi
 
 EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_PATH=\"${GAME_ROM_PATH}\""
-if [ -e "$GAME_ROM_PATH" ]; then
-    if [ -z "$GAME_ROM_LEN" ]; then
-        GAME_ROM_LEN=$(stat --dereference -c%s $GAME_ROM_PATH)
-    fi
-    EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_LEN=${GAME_ROM_LEN}"
+if [ ! -e "$GAME_ROM_PATH" ]; then
+    echo "Error: cannot find ROM file $GAME_ROM_PATH"
+    echo "       rom.bin as the default ROM file. A different path"
+    echo "       can be set by EXPORTing an environment variable"
+    echo "       called GAME_ROM_PATH"
+    exit 1
 fi
 
 while [ $# -gt 0 ]; do
@@ -436,6 +437,18 @@ done
 
 if [ $FIRMONLY = FIRMONLY ]; then exit 0; fi
 
+if [ -z "$GAME_ROM_LEN" ]; then
+    if [ -z "$LOADROM" ]; then
+        # ROM length is limited to 256 if the load process is ommitted
+        GAME_ROM_LEN=256
+    else
+        # Full length
+        GAME_ROM_LEN=$(stat --dereference -c%s $GAME_ROM_PATH)
+    fi
+fi
+EXTRA="$EXTRA ${MACROPREFIX}GAME_ROM_LEN=${GAME_ROM_LEN}"
+
+
 # Use this function to create
 # HEX files with initial contents for some of the RAMs
 function clear_hex_file {
@@ -452,8 +465,7 @@ if [ "$EXTRA" != "" ]; then
 fi
 
 EXTRA="$EXTRA ${MACROPREFIX}MEM_CHECK_TIME=$MEM_CHECK_TIME ${MACROPREFIX}SYSTOP=jt${SYSNAME}_mist"
-# macros for MiST
-EXTRA="$EXTRA ${MACROPREFIX}GAMETOP=jt${SYSNAME}_game ${MACROPREFIX}MISTTOP=jt${SYSNAME}_mist"
+
 
 # Add the PLL (MiST only)
 if [[ $TOP = mist_test || $TOP = mister_test ]]; then
@@ -477,6 +489,7 @@ if [ -n "$DEFFILE" ]; then
     sed -i /JTFRAME_CREDITS/d core.def
 else
     COREDEF=
+    EXTRA="$EXTRA ${MACROPREFIX}GAMETOP=jt${SYSNAME}_game"
 fi
 
 case $SIMULATOR in

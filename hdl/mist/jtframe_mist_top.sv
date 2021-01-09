@@ -35,7 +35,7 @@ module mist_top(
     output          SDRAM_nRAS,     // SDRAM Row Address Strobe
     output          SDRAM_nCS,      // SDRAM Chip Select
     output [1:0]    SDRAM_BA,       // SDRAM Bank Address
-    output          SDRAM_CLK,      // SDRAM Clock
+    inout           SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
    // SPI interface to arm io controller
     inout           SPI_DO,
@@ -108,42 +108,52 @@ localparam CONF_STR = {
     `ifdef CORE_OSD
         `CORE_OSD
     `endif
+    `ifdef CORE_NVRAM_SIZE
+        "R",`CORE_NVRAM_SIZE,",Save NVRAM;",
+    `endif
     "T0,RST;",
     "V,patreon.com/topapate;"
 };
 
 `undef SEPARATOR`endif
 
-wire          rst, rst_n, clk_sys, clk_rom, clk6, clk24;
+wire          rst, rst_n, clk_sys, clk_rom, clk6, clk24, clk48, clk96;
 wire [63:0]   status;
 wire [31:0]   joystick1, joystick2;
-wire [21:0]   sdram_addr;
-wire [31:0]   data_read;
-wire          loop_rst;
-wire          downloading, dwnld_busy;
 wire [24:0]   ioctl_addr;
 wire [ 7:0]   ioctl_data;
+wire [ 7:0]   ioctl_data2sd;
 wire          ioctl_wr;
+wire          ioctl_ram;
 
-wire [ 1:0]   sdram_wrmask, sdram_bank;
-wire          sdram_rnw;
-wire [15:0]   data_write;
 wire [15:0]   joystick_analog_0, joystick_analog_1;
-
-`ifndef JTFRAME_WRITEBACK
-assign sdram_wrmask = 2'b11;
-assign sdram_rnw    = 1'b1;
-assign data_write   = 16'h00;
-`endif
 
 wire rst_req   = status[0];
 
-wire sdram_req;
+// ROM download
+wire          downloading, dwnld_busy;
 
 wire [21:0]   prog_addr;
-wire [ 7:0]   prog_data;
-wire [ 1:0]   prog_mask, prog_bank;
-wire          prog_we, prog_rd;
+wire [15:0]   prog_data;
+`ifndef JTFRAME_SDRAM_BANKS
+wire [ 7:0]   prog_data8;
+`endif
+wire [ 1:0]   prog_mask, prog_ba;
+wire          prog_we, prog_rd, prog_rdy, prog_ack;
+
+// ROM access from game
+wire [21:0] ba0_addr;
+wire        ba0_rd, ba0_wr, ba0_rdy, ba0_ack;
+wire [15:0] ba0_din;
+wire [ 1:0] ba0_din_m;
+wire [21:0] ba1_addr;
+wire        ba1_rd, ba1_rdy, ba1_ack;
+wire [21:0] ba2_addr;
+wire        ba2_rd, ba2_rdy, ba2_ack;
+wire [21:0] ba3_addr;
+wire        ba3_rd, ba3_rdy, ba3_ack;
+wire        sdram_req, rfsh_en;
+wire [31:0] sdram_dout;
 
 `ifndef COLORW
 `define COLORW 4
@@ -158,10 +168,6 @@ wire [COLORW-1:0] blue;
 wire LHBL, LVBL, hs, vs;
 wire [15:0] snd_left, snd_right;
 
-`ifndef STEREO_GAME
-assign snd_right = snd_left;
-`endif
-
 wire [9:0] game_joy1, game_joy2, game_joy3, game_joy4;
 wire [3:0] game_coin, game_start;
 wire game_rst;
@@ -170,43 +176,54 @@ wire [3:0] gfx_en;
 wire data_rdy, sdram_ack;
 wire refresh_en;
 
-
 // PLL's
 wire clk_vga_in, clk_vga, pll_locked;
 
-`ifdef JTFRAME_CLK96
-wire clk48;
 
-jtframe_pll96 u_pll_game (
-    .inclk0 ( CLOCK_27[0] ),
-    .c0     ( clk48       ), // 48 MHz
-    .c1     ( clk_rom     ), // 96 MHz
-    .c2     ( SDRAM_CLK   ), // 96 MHz shifted
-    .c3     ( clk24       ),
-    .c4     ( clk6        ),
-    .locked ( pll_locked  )
-);
-assign clk_sys   = clk_rom; // it is possible to use clk48 instead but
-    // video mixer doesn't work well in HQ mode
-`else
-jtframe_pll0 u_pll_game (
-    .inclk0 ( CLOCK_27[0] ),
-    .c1     ( clk_rom     ), // 48 MHz
-    .c2     ( SDRAM_CLK   ),
-    .c3     ( clk24       ),
-    .c4     ( clk6        ),
-    .locked ( pll_locked  )
-);
-assign clk_sys   = clk_rom;
+`ifndef STEREO_GAME
+assign snd_right = snd_left;
 `endif
 
-jtframe_pll1 u_pll_vga (
-    .inclk0 ( clk_sys    ),
-    .c0     ( clk_vga    ) // 25
-);
+`ifndef JTFRAME_SDRAM_BANKS
+assign prog_data = {2{prog_data8}};
+`endif
+
+// clk_rom is always 48MHz
+// clk96, clk24 and clk6 inputs to the core can be enabled via macros
+`ifdef JTFRAME_SDRAM96
+    jtframe_pll96 u_pll_game (
+        .inclk0 ( CLOCK_27[0] ),
+        .c0     ( clk48       ), // 48 MHz
+        .c1     ( clk96       ), // 96 MHz
+        .c2     ( SDRAM_CLK   ), // 96 MHz shifted
+        .c3     ( clk24       ),
+        .c4     ( clk6        ),
+        .locked ( pll_locked  )
+    );
+    assign clk_rom = clk96;
+    assign clk_sys = clk96;
+`else
+    jtframe_pll0 u_pll_game (
+        .inclk0 ( CLOCK_27[0] ),
+        .c0     ( clk96       ),
+        .c1     ( clk48       ), // 48 MHz
+        .c2     ( SDRAM_CLK   ),
+        .c3     ( clk24       ),
+        .c4     ( clk6        ),
+        .locked ( pll_locked  )
+    );
+    assign clk_rom = clk48;
+    `ifdef JTFRAME_CLK96
+        assign clk_sys   = clk96; // it is possible to use clk48 instead but
+            // video mixer doesn't work well in HQ mode
+    `else
+        assign clk_sys   = clk_rom;
+    `endif
+`endif
+
 
 wire [7:0] dipsw_a, dipsw_b;
-wire [1:0] dip_fxlevel;
+wire [1:0] dip_fxlevel, game_led;
 wire       enable_fm, enable_psg;
 wire       dip_pause, dip_flip, dip_test;
 wire       pxl_cen, pxl2_cen;
@@ -226,6 +243,12 @@ assign sim_hb = ~LHBL;
 `define BUTTONS 2
 `endif
 
+`ifdef JTFRAME_GAME_LED
+assign game_led[1] = 1'b1;
+`else
+assign game_led = 2'b0;
+`endif
+
 localparam BUTTONS=`BUTTONS;
 
 jtframe_mist #(
@@ -243,7 +266,6 @@ jtframe_mist #(
 u_frame(
     .clk_sys        ( clk_sys        ),
     .clk_rom        ( clk_rom        ),
-    .clk_vga        ( clk_vga        ),
     .pll_locked     ( pll_locked     ),
     .status         ( status         ),
     // Base video
@@ -262,8 +284,9 @@ u_frame(
     .VGA_B          ( VGA_B          ),
     .VGA_HS         ( VGA_HS         ),
     .VGA_VS         ( VGA_VS         ),
+    // LED
+    .game_led       ( game_led       ),
     // SDRAM interface
-    .SDRAM_CLK      ( SDRAM_CLK      ),
     .SDRAM_DQ       ( SDRAM_DQ       ),
     .SDRAM_A        ( SDRAM_A        ),
     .SDRAM_DQML     ( SDRAM_DQML     ),
@@ -282,31 +305,56 @@ u_frame(
     .SPI_SS3        ( SPI_SS3        ),
     .SPI_SS4        ( SPI_SS4        ),
     .CONF_DATA0     ( CONF_DATA0     ),
-    // ROM
+
+    // ROM access from game
+    // Bank 0: allows R/W
+    .ba0_addr       ( ba0_addr       ),
+    .ba0_rd         ( ba0_rd         ),
+    .ba0_wr         ( ba0_wr         ),
+    .ba0_din        ( ba0_din        ),
+    .ba0_din_m      ( ba0_din_m      ),  // write mask
+    .ba0_rdy        ( ba0_rdy        ),
+    .ba0_ack        ( ba0_ack        ),
+
+    // Bank 1: Read only
+    .ba1_addr       ( ba1_addr       ),
+    .ba1_rd         ( ba1_rd         ),
+    .ba1_rdy        ( ba1_rdy        ),
+    .ba1_ack        ( ba1_ack        ),
+
+    // Bank 2: Read only
+    .ba2_addr       ( ba2_addr       ),
+    .ba2_rd         ( ba2_rd         ),
+    .ba2_rdy        ( ba2_rdy        ),
+    .ba2_ack        ( ba2_ack        ),
+
+    // Bank 3: Read only
+    .ba3_addr       ( ba3_addr       ),
+    .ba3_rd         ( ba3_rd         ),
+    .ba3_rdy        ( ba3_rdy        ),
+    .ba3_ack        ( ba3_ack        ),
+
+    // ROM load
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_data     ( ioctl_data     ),
+    .ioctl_data2sd  ( ioctl_data2sd  ),
     .ioctl_wr       ( ioctl_wr       ),
+    .ioctl_ram      ( ioctl_ram      ),
+
     .prog_addr      ( prog_addr      ),
     .prog_data      ( prog_data      ),
-    .prog_mask      ( prog_mask      ),
-    .prog_we        ( prog_we        ),
     .prog_rd        ( prog_rd        ),
-    .prog_bank      ( prog_bank      ),
+    .prog_we        ( prog_we        ),
+    .prog_mask      ( prog_mask      ),
+    .prog_ba        ( prog_ba        ),
+    .prog_rdy       ( prog_rdy       ),
+    .prog_ack       ( prog_ack       ),
+
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),
-    // ROM access from game
-    .loop_rst       ( loop_rst       ),
-    .sdram_addr     ( sdram_addr     ),
-    .sdram_req      ( sdram_req      ),
-    .sdram_ack      ( sdram_ack      ),
-    .sdram_bank     ( sdram_bank     ),
-    .data_read      ( data_read      ),
-    .data_rdy       ( data_rdy       ),
-    .refresh_en     ( refresh_en     ),
-    // write support
-    .sdram_wrmask   ( sdram_wrmask   ),
-    .sdram_rnw      ( sdram_rnw      ),
-    .data_write     ( data_write     ),
+
+    .rfsh_en        ( rfsh_en        ),
+    .sdram_dout     ( sdram_dout     ),
 //////////// board
     .rst            ( rst            ),
     .rst_n          ( rst_n          ), // unused
@@ -344,7 +392,7 @@ u_frame(
 `ifdef SIMULATION
 `ifdef TESTINPUTS
     test_inputs u_test_inputs(
-        .loop_rst       ( loop_rst       ),
+        .loop_rst       ( downloading    ),
         .LVBL           ( LVBL           ),
         .game_joystick1 ( game_joy1[6:0] ),
         .button_1p      ( game_start[0]  ),
@@ -391,8 +439,12 @@ localparam DIPBASE=16;
 `GAMETOP
 u_game(
     .rst         ( game_rst       ),
+    // The main clock is always the same one as the SDRAM
     .clk         ( clk_rom        ),
     `ifdef JTFRAME_CLK96
+    .clk96       ( clk96          ),
+    `endif
+    `ifdef JTFRAME_CLK48
     .clk48       ( clk48          ),
     `endif
     `ifdef JTFRAME_CLK24
@@ -401,6 +453,7 @@ u_game(
     `ifdef JTFRAME_CLK6
     .clk6        ( clk6           ),
     `endif
+    // Video
     .pxl2_cen    ( pxl2_cen       ),
     .pxl_cen     ( pxl_cen        ),
     .red         ( red            ),
@@ -410,6 +463,10 @@ u_game(
     .LVBL_dly    ( LVBL           ),
     .HS          ( hs             ),
     .VS          ( vs             ),
+    // LED
+    `ifdef JTFRAME_GAME_LED
+    .game_led    ( game_led[0]    ),
+    `endif
 
     .start_button( game_start[STARTW-1:0]      ),
     .coin_input  ( game_coin[STARTW-1:0]       ),
@@ -431,33 +488,68 @@ u_game(
     .ioctl_addr  ( ioctl_addr     ),
     .ioctl_data  ( ioctl_data     ),
     .ioctl_wr    ( ioctl_wr       ),
-    .prog_addr   ( prog_addr      ),
-    .prog_data   ( prog_data      ),
-    .prog_mask   ( prog_mask      ),
-    .prog_we     ( prog_we        ),
-    .prog_rd     ( prog_rd        ),
-    `ifdef JTFRAME_SDRAM_BANKS
-    .prog_bank   ( prog_bank      ),
-    .sdram_bank  ( sdram_bank     ),
-    `endif
+`ifdef CORE_NVRAM_SIZE
+    .ioctl_ram   ( ioctl_ram      ),
+    .ioctl_data2sd(ioctl_data2sd  ),
+`endif
     // ROM load
     .downloading ( downloading    ),
     .dwnld_busy  ( dwnld_busy     ),
-    .loop_rst    ( loop_rst       ),
-    .sdram_req   ( sdram_req      ),
-    .sdram_addr  ( sdram_addr     ),
-    .data_read   ( data_read      ),
-    .sdram_ack   ( sdram_ack      ),
-    .data_rdy    ( data_rdy       ),
-    .refresh_en  ( refresh_en     ),
-    `ifdef JTFRAME_WRITEBACK
-    .sdram_wrmask( sdram_wrmask   ),
-    .sdram_rnw   ( sdram_rnw      ),
-    .data_write  ( data_write     ),
+    .data_read   ( sdram_dout     ),
+    .refresh_en  ( rfsh_en        ),
+
+    `ifdef JTFRAME_SDRAM_BANKS
+    // Bank 0: allows R/W
+    .ba0_addr   ( ba0_addr      ),
+    .ba0_rd     ( ba0_rd        ),
+    .ba0_wr     ( ba0_wr        ),
+    .ba0_din    ( ba0_din       ),
+    .ba0_din_m  ( ba0_din_m     ),  // write mask
+    .ba0_rdy    ( ba0_rdy       ),
+    .ba0_ack    ( ba0_ack       ),
+
+    // Bank 1: Read only
+    .ba1_addr   ( ba1_addr      ),
+    .ba1_rd     ( ba1_rd        ),
+    .ba1_rdy    ( ba1_rdy       ),
+    .ba1_ack    ( ba1_ack       ),
+
+    // Bank 2: Read only
+    .ba2_addr   ( ba2_addr      ),
+    .ba2_rd     ( ba2_rd        ),
+    .ba2_rdy    ( ba2_rdy       ),
+    .ba2_ack    ( ba2_ack       ),
+
+    // Bank 3: Read only
+    .ba3_addr   ( ba3_addr      ),
+    .ba3_rd     ( ba3_rd        ),
+    .ba3_rdy    ( ba3_rdy       ),
+    .ba3_ack    ( ba3_ack       ),
+
+    `else
+    .loop_rst   ( 1'b0          ),
+    .sdram_req  ( ba0_rd        ),
+    .sdram_addr ( ba0_addr      ),
+    .data_rdy   ( ba0_rdy       ),
+    .sdram_ack  ( ba0_ack | prog_ack ),
     `endif
 
+    // ROM-load interface
+    `ifdef JTFRAME_SDRAM_BANKS
+    .prog_ba    ( prog_ba       ),
+    .prog_rdy   ( prog_rdy      ),
+    .prog_ack   ( prog_ack      ),
+    .prog_data  ( prog_data     ),
+    `else
+    .prog_data  ( prog_data8    ),
+    `endif
+    .prog_addr  ( prog_addr     ),
+    .prog_rd    ( prog_rd       ),
+    .prog_we    ( prog_we       ),
+    .prog_mask  ( prog_mask     ),
+
     // DIP switches
-    .status      ( status         ),
+    .status      ( status[31:0]   ),
     .dip_pause   ( dip_pause      ),
     .dip_flip    ( dip_flip       ),
     .dip_test    ( dip_test       ),
@@ -479,8 +571,15 @@ u_game(
 );
 
 `ifndef JTFRAME_SDRAM_BANKS
-assign sdram_bank = 2'b0;
-assign prog_bank  = 2'b0;
+assign ba0_wr    = 1'b0;
+assign prog_ba   = 2'd0;
+// tie down unused bank signals
+assign ba1_addr = 22'd0;
+assign ba1_rd   = 0;
+assign ba2_addr = 22'd0;
+assign ba2_ack  = 0;
+assign ba3_addr = 22'd0;
+assign ba3_rd   = 0;
 `endif
 
 `ifdef SIMULATION

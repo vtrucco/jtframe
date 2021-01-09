@@ -38,7 +38,7 @@ parameter TX_LEN = 207;
 initial frame_cnt=0;
 always @(posedge VS ) begin
     frame_cnt<=frame_cnt+1;
-    $display("New frame %d", frame_cnt);
+    $display("Frame %4d", frame_cnt);
 end
 
 `ifdef MAXFRAME

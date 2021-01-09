@@ -27,7 +27,6 @@ module jtframe_mist #(parameter
 )(
     input           clk_sys,
     input           clk_rom,
-    input           clk_vga,
     input           pll_locked,
     // interface with microcontroller
     output  [63:0]  status,
@@ -35,43 +34,63 @@ module jtframe_mist #(parameter
     input [COLORW-1:0] game_r,
     input [COLORW-1:0] game_g,
     input [COLORW-1:0] game_b,
-    input           LHBL,
-    input           LVBL,
-    input           hs,
-    input           vs,
-    input           pxl_cen,
-    input           pxl2_cen,
+    input              LHBL,
+    input              LVBL,
+    input              hs,
+    input              vs,
+    input              pxl_cen,
+    input              pxl2_cen,
+    // LED
+    input        [1:0] game_led,
     // MiST VGA pins
-    output  [5:0]   VGA_R,
-    output  [5:0]   VGA_G,
-    output  [5:0]   VGA_B,
-    output          VGA_HS,
-    output          VGA_VS,
+    output       [5:0] VGA_R,
+    output       [5:0] VGA_G,
+    output       [5:0] VGA_B,
+    output             VGA_HS,
+    output             VGA_VS,
+    // ROM programming
+    input        [21:0] prog_addr,
+    input        [15:0] prog_data,
+    input        [ 1:0] prog_mask,
+    input        [ 1:0] prog_ba,
+    input               prog_we,
+    input               prog_rd,
+    output              prog_rdy,
+    output              prog_ack,
+    // ROM access from game
+    input        [21:0] ba0_addr,
+    input               ba0_rd,
+    input               ba0_wr,
+    input        [15:0] ba0_din,
+    input        [ 1:0] ba0_din_m,  // write mask
+    output              ba0_rdy,
+    output              ba0_ack,
+    input        [21:0] ba1_addr,
+    input               ba1_rd,
+    output              ba1_rdy,
+    output              ba1_ack,
+    input        [21:0] ba2_addr,
+    input               ba2_rd,
+    output              ba2_rdy,
+    output              ba2_ack,
+    input        [21:0] ba3_addr,
+    input               ba3_rd,
+    output              ba3_rdy,
+    output              ba3_ack,
+
+    input               rfsh_en,   // ok to refresh
+    output     [  31:0] sdram_dout,
     // SDRAM interface
-    inout  [15:0]   SDRAM_DQ,       // SDRAM Data bus 16 Bits
-    output [12:0]   SDRAM_A,        // SDRAM Address bus 13 Bits
+    inout    [15:0] SDRAM_DQ,       // SDRAM Data bus 16 Bits
+    output   [12:0] SDRAM_A,        // SDRAM Address bus 13 Bits
     output          SDRAM_DQML,     // SDRAM Low-byte Data Mask
     output          SDRAM_DQMH,     // SDRAM High-byte Data Mask
     output          SDRAM_nWE,      // SDRAM Write Enable
     output          SDRAM_nCAS,     // SDRAM Column Address Strobe
     output          SDRAM_nRAS,     // SDRAM Row Address Strobe
     output          SDRAM_nCS,      // SDRAM Chip Select
-    output [1:0]    SDRAM_BA,       // SDRAM Bank Address
-    input           SDRAM_CLK,      // SDRAM Clock
+    output    [1:0] SDRAM_BA,       // SDRAM Bank Address
     output          SDRAM_CKE,      // SDRAM Clock Enable
-    // ROM access from game
-    input           sdram_req,
-    output          sdram_ack,
-    input  [21:0]   sdram_addr,
-    input  [ 1:0]   sdram_bank,
-    output [31:0]   data_read,
-    output          data_rdy,
-    output          loop_rst,
-    input           refresh_en,
-    // Write back to SDRAM
-    input  [ 1:0]   sdram_wrmask,
-    input           sdram_rnw,
-    input  [15:0]   data_write,
     // SPI interface to arm io controller
     inout           SPI_DO,
     input           SPI_DI,
@@ -81,17 +100,14 @@ module jtframe_mist #(parameter
     input           SPI_SS4,
     input           CONF_DATA0,
     // ROM load from SPI
-    output [24:0]   ioctl_addr,
-    output [ 7:0]   ioctl_data,
+    output   [24:0] ioctl_addr,
+    output   [ 7:0] ioctl_data,
     output          ioctl_wr,
-    input  [21:0]   prog_addr,
-    input  [ 7:0]   prog_data,
-    input  [ 1:0]   prog_mask,
-    input  [ 1:0]   prog_bank,
-    input           prog_we,
-    input           prog_rd,
-    output          downloading,
+    input    [ 7:0] ioctl_data2sd,
+    output          ioctl_ram,
     input           dwnld_busy,
+    output          downloading,
+
 //////////// board
     output          rst,      // synchronous reset
     output          rst_n,    // asynchronous reset
@@ -128,6 +144,8 @@ module jtframe_mist #(parameter
     output   [3:0]  gfx_en
 );
 
+localparam SDRAMW=22;
+
 // control
 wire [31:0]   joystick1, joystick2, joystick3, joystick4;
 wire          ps2_kbd_clk, ps2_kbd_data;
@@ -138,11 +156,7 @@ wire          scan2x_hs, scan2x_vs, scan2x_clk;
 wire          scan2x_enb;
 wire [6:0]    core_mod;
 
-///////////////// LED is on while
-// downloading, PLL lock lost, OSD is shown or in reset state
-assign LED = ~( downloading | dwnld_busy | ~pll_locked | osd_shown | rst | (|(~gfx_en)));
 wire  [ 1:0]  rotate;
-
 
 jtframe_mist_base #(
     .CONF_STR    (CONF_STR          ),
@@ -153,7 +167,6 @@ jtframe_mist_base #(
     .rst            ( rst           ),
     .clk_sys        ( clk_sys       ),
     .clk_rom        ( clk_rom       ),
-    .SDRAM_CLK      ( SDRAM_CLK     ),
     .core_mod       ( core_mod      ),
     .osd_shown      ( osd_shown     ),
     // Base video
@@ -209,7 +222,9 @@ jtframe_mist_base #(
     // ROM load from SPI
     .ioctl_addr     ( ioctl_addr    ),
     .ioctl_data     ( ioctl_data    ),
+    .ioctl_data2sd  ( ioctl_data2sd ),
     .ioctl_wr       ( ioctl_wr      ),
+    .ioctl_ram      ( ioctl_ram     ),
     .downloading    ( downloading   )
 );
 
@@ -229,7 +244,6 @@ jtframe_board #(
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
-    .clk_vga        ( clk_vga         ),
 
     .core_mod       ( core_mod        ),
     // joystick
@@ -247,7 +261,7 @@ jtframe_board #(
     .game_start     ( game_start      ),
     .game_service   ( game_service    ),
     // DIP and OSD settings
-    .status         ( status          ),
+    .status         ( status[31:0]    ),
     .enable_fm      ( enable_fm       ),
     .enable_psg     ( enable_psg      ),
     .dip_test       ( dip_test        ),
@@ -256,36 +270,62 @@ jtframe_board #(
     .dip_fxlevel    ( dip_fxlevel     ),
     // screen
     .rotate         ( rotate          ),
+    // LED
+    .osd_shown      ( osd_shown       ),
+    .game_led       ( game_led        ),
+    .led            ( LED             ),
     // SDRAM interface
-    .SDRAM_DQ       ( SDRAM_DQ        ),
-    .SDRAM_A        ( SDRAM_A         ),
-    .SDRAM_DQML     ( SDRAM_DQML      ),
-    .SDRAM_DQMH     ( SDRAM_DQMH      ),
-    .SDRAM_nWE      ( SDRAM_nWE       ),
-    .SDRAM_nCAS     ( SDRAM_nCAS      ),
-    .SDRAM_nRAS     ( SDRAM_nRAS      ),
-    .SDRAM_nCS      ( SDRAM_nCS       ),
-    .SDRAM_BA       ( SDRAM_BA        ),
-    .SDRAM_CKE      ( SDRAM_CKE       ),
-    // SDRAM controller
-    .loop_rst       ( loop_rst        ),
-    .sdram_addr     ( sdram_addr      ),
-    .sdram_req      ( sdram_req       ),
-    .sdram_bank     ( sdram_bank      ),
-    .sdram_ack      ( sdram_ack       ),
-    .data_read      ( data_read       ),
-    .data_rdy       ( data_rdy        ),
-    .refresh_en     ( refresh_en      ),
-    .prog_addr      ( prog_addr       ),
-    .prog_data      ( prog_data       ),
-    .prog_mask      ( prog_mask       ),
-    .prog_we        ( prog_we         ),
-    .prog_rd        ( prog_rd         ),
-    .prog_bank      ( prog_bank       ),
-    // write back support
-    .sdram_wrmask   ( sdram_wrmask    ),
-    .sdram_rnw      ( sdram_rnw       ),
-    .data_write     ( data_write      ),
+    // Bank 0: allows R/W
+    .ba0_addr   ( ba0_addr      ),
+    .ba0_rd     ( ba0_rd        ),
+    .ba0_wr     ( ba0_wr        ),
+    .ba0_din    ( ba0_din       ),
+    .ba0_din_m  ( ba0_din_m     ),  // write mask
+    .ba0_rdy    ( ba0_rdy       ),
+    .ba0_ack    ( ba0_ack       ),
+
+    // Bank 1: Read only
+    .ba1_addr   ( ba1_addr      ),
+    .ba1_rd     ( ba1_rd        ),
+    .ba1_rdy    ( ba1_rdy       ),
+    .ba1_ack    ( ba1_ack       ),
+
+    // Bank 2: Read only
+    .ba2_addr   ( ba2_addr      ),
+    .ba2_rd     ( ba2_rd        ),
+    .ba2_rdy    ( ba2_rdy       ),
+    .ba2_ack    ( ba2_ack       ),
+
+    // Bank 3: Read only
+    .ba3_addr   ( ba3_addr      ),
+    .ba3_rd     ( ba3_rd        ),
+    .ba3_rdy    ( ba3_rdy       ),
+    .ba3_ack    ( ba3_ack       ),
+
+    // ROM-load interface
+    .prog_addr  ( prog_addr     ),
+    .prog_ba    ( prog_ba       ),
+    .prog_rd    ( prog_rd       ),
+    .prog_we    ( prog_we       ),
+    .prog_data  ( prog_data     ),
+    .prog_mask  ( prog_mask     ),
+    .prog_rdy   ( prog_rdy      ),
+    .prog_ack   ( prog_ack      ),
+    // SDRAM interface
+    .SDRAM_DQ   ( SDRAM_DQ      ),
+    .SDRAM_A    ( SDRAM_A       ),
+    .SDRAM_DQML ( SDRAM_DQML    ),
+    .SDRAM_DQMH ( SDRAM_DQMH    ),
+    .SDRAM_nWE  ( SDRAM_nWE     ),
+    .SDRAM_nCAS ( SDRAM_nCAS    ),
+    .SDRAM_nRAS ( SDRAM_nRAS    ),
+    .SDRAM_nCS  ( SDRAM_nCS     ),
+    .SDRAM_BA   ( SDRAM_BA      ),
+    .SDRAM_CKE  ( SDRAM_CKE     ),
+
+    // Common signals
+    .sdram_dout ( sdram_dout    ),
+    .rfsh_en    ( rfsh_en       ),
 
     // Base video
     .osd_rotate     ( rotate          ),
@@ -313,15 +353,6 @@ jtframe_board #(
     .direct_video   ( 1'b0            ),
     .hdmi_arx       (                 ),
     .hdmi_ary       (                 ),
-    .hdmi_clk       (                 ),
-    .hdmi_cen       (                 ),
-    .hdmi_r         (                 ),
-    .hdmi_g         (                 ),
-    .hdmi_b         (                 ),
-    .hdmi_hs        (                 ),
-    .hdmi_vs        (                 ),
-    .hdmi_de        (                 ),
-    .hdmi_sl        (                 ),
     .scan2x_cen     (                 ),
     .scan2x_de      (                 )
 );
