@@ -483,6 +483,15 @@ fi
 
 # Search for a macro definition file
 # Only supported for iverilog and ncverilog
+
+# if the macro definition file has not been defined
+# try with a default location
+if [ -z "$DEFFILE" ]; then
+    if [ -e ../../hdl/jt${SYSNAME}.def ]; then
+        DEFFILE=../../hdl/jt${SYSNAME}.def
+    fi
+fi
+
 if [ -n "$DEFFILE" ]; then
     awk -f $JTFRAME/bin/jtmacros.awk target=$TARGET mode=$SIMULATOR $DEFFILE > core.def
     COREDEF="-f core.def"

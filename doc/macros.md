@@ -1,3 +1,5 @@
+# Macros for FPGA Synthesis
+
 Macro                    | Target  |  Usage
 -------------------------|---------|----------------------
 JTFRAME_180SHIFT         | MiSTer  | Use DDIO cell instead of PLL to create the SDRAM phase shift
@@ -45,6 +47,16 @@ JTFRAME_SDRAM_MUXLATCH   |         | Extra latch for SDRAM mux for <64MHz operat
 JTFRAME_SDRAM_NO_DWNRFSH |         | No refresh during download (non-interleaved SDRAM controller)
 JTFRAME_SDRAM_REPACK     |         | Extra latch stage at SDRAM mux output
 JTFRAME_SDRAM_STATS      |         | Produce SDRAM usage data during simulation
+
+# Simulation-only Macros
+
+The following macros only have an effect if SIMULATION is defined.
+
+Macro                    | Target  |  Usage
+-------------------------|---------|---------------------------------------------
+JTFRAME_SIM_ROMRQ_NOCHECK|         | Disable protocol checking of romrq
 JTFRAME_SIM_DIPS         |         | Define DIP switch values during simulation
 JTFRAME_SIM_LOAD_EXTRA   |         | Extra wait time when transferring ROM in simulation
-JTFRAME_SIM_SCAN2X       |         | Enable it to simulate the scan doubler
+JTFRAME_SIM_SCAN2X       |         | Enables scan doubler simulation
+SIMULATION               |         | Enables simulation features
+LOADROM                  |         | Sends ROM data via serial interface

@@ -571,15 +571,15 @@ u_game(
 );
 
 `ifndef JTFRAME_SDRAM_BANKS
-assign ba0_wr    = 1'b0;
-assign prog_ba   = 2'd0;
-// tie down unused bank signals
-assign ba1_addr = 22'd0;
-assign ba1_rd   = 0;
-assign ba2_addr = 22'd0;
-assign ba2_ack  = 0;
-assign ba3_addr = 22'd0;
-assign ba3_rd   = 0;
+    assign ba0_wr    = 1'b0;
+    assign prog_ba   = 2'd0;
+    // tie down unused bank signals
+    assign ba1_addr = 22'd0;
+    assign ba1_rd   = 0;
+    assign ba2_addr = 22'd0;
+    assign ba2_ack  = 0;
+    assign ba3_addr = 22'd0;
+    assign ba3_rd   = 0;
 `endif
 
 `ifdef SIMULATION
