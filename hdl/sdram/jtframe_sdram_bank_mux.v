@@ -71,7 +71,7 @@ module jtframe_sdram_bank_mux #(
     input               prog_wr,
     input      [  15:0] prog_din,
     input      [   1:0] prog_din_m,  // write mask
-    output              prog_rdy,
+    output reg          prog_rdy,
     output              prog_ack,
 
     // Signals to SDRAM controller
@@ -113,7 +113,6 @@ reg  [    3:0] queue;
 reg  [    4:0] bwait;
 
 assign ba0_rq  = ba0_rd | ba0_wr;
-assign prog_rdy= prog_en & ctl_rdy;
 assign prog_ack= prog_en & ctl_ack;
 
 assign ba0_ack = ctl_ack && ctl_ba_rq==2'd0 && !prog_en;
@@ -173,7 +172,8 @@ always @(posedge clk, posedge rst ) begin
             ba2_rdy <= ctl_ba_rdy==2'd2;
             ba3_rdy <= ctl_ba_rdy==2'd3;
         end
-        dout    <= ctl_dout;
+        prog_rdy <= prog_en && ctl_rdy;
+        dout     <= ctl_dout;
     end
 end
 `else
@@ -182,8 +182,10 @@ always @(*) begin
     ba1_rdy = !prog_en && ctl_rdy && ctl_ba_rdy==2'd1;
     ba2_rdy = !prog_en && ctl_rdy && ctl_ba_rdy==2'd2;
     ba3_rdy = !prog_en && ctl_rdy && ctl_ba_rdy==2'd3;
+    prog_rdy=  prog_en && ctl_rdy;
     dout    = ctl_dout;
 end
+
 `endif
 
 // Produce one refresh cycle after each programming write

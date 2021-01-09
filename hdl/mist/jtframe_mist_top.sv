@@ -530,7 +530,7 @@ u_game(
     .loop_rst   ( 1'b0          ),
     .sdram_req  ( ba0_rd        ),
     .sdram_addr ( ba0_addr      ),
-    .data_rdy   ( ba0_rdy       ),
+    .data_rdy   ( ba0_rdy | prog_rdy ),
     .sdram_ack  ( ba0_ack | prog_ack ),
     `endif
 
