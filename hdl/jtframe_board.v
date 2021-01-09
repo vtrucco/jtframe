@@ -151,12 +151,6 @@ wire key_reset, key_pause, rot_control;
 reg       game_pause, soft_rst;
 wire      scandoubler = ~scan2x_enb;
 
-`ifdef JTFRAME_MISTER_VIDEO_DW
-localparam arcade_fx_dw = `JTFRAME_MISTER_VIDEO_DW;
-`else
-localparam arcade_fx_dw = COLORW*3;
-`endif
-
 wire [9:0] key_joy1, key_joy2, key_joy3;
 wire [3:0] key_start, key_coin;
 wire [3:0] key_gfx;
@@ -511,12 +505,8 @@ assign scan2x_clk  = clk_sys;
 assign scan2x_cen  = pxl_cen;
 assign scan2x_de   = LVBL && LHBL;
 `else
-// Always use JTFRAME_SCAN2X for MiST and SiDi
-`ifndef MISTER
-`define JTFRAME_SCAN2X
-`endif
 
-`ifdef JTFRAME_SCAN2X
+`ifndef MISTER
     localparam CLROUTW = COLORW < 5 ? COLORW+1 : COLORW;
 
     wire [CLROUTW-1:0] r_ana, g_ana, b_ana;
@@ -559,7 +549,7 @@ assign scan2x_de   = LVBL && LHBL;
     wire [CLROUTW*3-1:0] game_rgb = { r_ana, g_ana, b_ana };
     wire scan2x_hsin = bw_en ? hs_ana : hs;
 
-    // Note that VIDEO_WIDTH must include blanking for JTFRAME_SCAN2X
+    // Note that VIDEO_WIDTH must include blanking for jtframe_scan2x
     jtframe_scan2x #(.COLORW(CLROUTW), .HLEN(VIDEO_WIDTH)) u_scan2x(
         .rst_n      ( rst_n          ),
         .clk        ( clk_sys        ),

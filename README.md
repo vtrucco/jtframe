@@ -28,6 +28,8 @@ These are the compilation steps:
 6. Now go to the `core-folder` and run `source setprj.sh`
 7. Now you can compile the core using the `jtcore` script.
 
+The complete list of possible verilog macros is in [here](doc/macros.md).
+
 ## jtcore
 
 jtcore is the script used to compile the cores. It does a lot of stuff and it does it very well. Taking as an example the [CPS0 games](https://github.com/jotego/jt_gng), these are some commands:
