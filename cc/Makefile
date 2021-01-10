@@ -1,7 +1,7 @@
-programs = pcb2ver bin2m bin2raw drop1 raw2wav cen_gen bin2hex byte2hex msg2hex lut2hex hex2bin mamefilter mame2dip
+programs = pcb2ver bin2m bin2raw drop1 raw2wav cen_gen bin2hex byte2hex msg2hex lut2hex hex2bin mamefilter mame2dip raw2png
 
 all: $(programs)
-	cp $(programs) ../bin	
+	cp $(programs) ../bin
 
 pcb2ver:
 
@@ -33,3 +33,5 @@ mamegame.o:
 
 mame2dip: mame2dip.cc mamegame.o
 	g++ -g mame2dip.cc mamegame.o -o mame2dip -lxerces-c
+
+raw2png:
