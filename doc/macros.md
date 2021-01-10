@@ -27,7 +27,6 @@ JTFRAME_MIST_DIRECT      | MiST    | On by default. Define as 0 to disable. Fast
 JTFRAME_MRA_DIP          |         | DIPs are in an MRA file
 JTFRAME_MR_FASTIO        | MiSTer  | 16-bit ROM load in MiSTer
 JTFRAME_NOHOLDBUS        |         | Reduces bus noise (non-interleaved SDRAM controller)
-JTFRAME_NOROM            |         | Specifies that the core has no ROM downloading
 JTFRAME_OSDCOLOR         |         | Sets the OSD colour
 JTFRAME_OSD_FLIP         |         | flip option on OSD
 JTFRAME_OSD_NOCREDITS    |         | No credits option on OSD

@@ -31,6 +31,7 @@ module jtframe_board #(parameter
     output            game_rst_n,
     // reset forcing signals:
     input             rst_req,
+    input             pll_locked,
 
     input             clk_sys,
     input             clk_rom,
@@ -158,11 +159,13 @@ wire       key_service;
 jtframe_reset u_reset(
     .clk_sys    ( clk_sys       ),
     .clk_rom    ( clk_rom       ),
+    .pxl_cen    ( pxl_cen       ),
 
     .downloading( downloading   ),
     .dip_flip   ( dip_flip      ),
     .soft_rst   ( soft_rst      ),
     .rst_req    ( rst_req       ),
+    .pll_locked ( pll_locked    ),
 
     .rst        ( rst           ),
     .rst_n      ( rst_n         ),

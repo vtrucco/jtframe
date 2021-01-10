@@ -19,11 +19,13 @@
 module jtframe_reset(
     input       clk_sys,
     input       clk_rom,
+    input       pxl_cen,
 
     input       downloading,
     input       dip_flip,
     input       soft_rst,
     input       rst_req,
+    input       pll_locked,
 
     // clk_sys:
     output  reg rst,
@@ -36,41 +38,23 @@ module jtframe_reset(
 localparam MAIN_RSTW = 4,
            GAME_RSTW = 8;
 
-reg [MAIN_RSTW-1:0] rst_cnt={MAIN_RSTW{1'b1}};
+reg [MAIN_RSTW-1:0] rst_cnt;
 reg [GAME_RSTW-1:0] game_rst_cnt;
 reg [MAIN_RSTW-1:0] rst_rom; // rst in clk_rom domain
-reg                 last_dwn, dwn_done;
 
-
-always @(negedge clk_sys) begin
-    if( rst_cnt[0] ) begin
+always @(negedge clk_sys, negedge pll_locked) begin
+    if( !pll_locked ) begin
+        rst_cnt <= {MAIN_RSTW{1'b1}};
         rst     <= 1;
         rst_n   <= 0;
-        rst_cnt <= rst_cnt >> 1;
     end else begin
-        rst     <= 0;
-        rst_n   <= 1;
-    end
-end
-
-`ifdef JTFRAME_NOROM
-    initial begin
-        dwn_done <= 1;
-    end
-`else
-    always @(posedge clk_sys, posedge rst) begin
-        if( rst ) begin
-            dwn_done <= 0;
-            last_dwn <= 0;
-        end else begin
-            last_dwn <= downloading;
-            if( downloading )
-                dwn_done <= 0;
-            else if( last_dwn ) dwn_done <= 1;
+        rst_cnt <= rst_cnt >> 1;
+        if( !rst_cnt[0] ) begin
+            rst     <= 0;
+            rst_n   <= 1;
         end
     end
-`endif
-
+end
 
 `ifdef JTFRAME_FLIP_RESET
     reg last_dip_flip, rst_flip;
@@ -82,15 +66,13 @@ end
     wire rst_flip = 0;
 `endif
 
-always @(posedge clk_sys, posedge rst ) begin
-    if( rst ) begin
+// Game reset generation
+always @(posedge clk_sys ) begin
+    if( downloading | rst | rst_req
+    | rst_flip | soft_rst )
         rst_rom <= {MAIN_RSTW{1'b1}};
-    end else begin
-        if( !dwn_done | rst | rst_req
-        | rst_flip | soft_rst )
-            rst_rom <= {MAIN_RSTW{1'b1}};
-        else
-            rst_rom <= rst_rom >> 1;
+    else if(pxl_cen) begin
+        rst_rom <= rst_rom >> 1;
     end
 end
 

@@ -240,6 +240,7 @@ jtframe_board #(
     .game_rst       ( game_rst        ),
     .game_rst_n     ( game_rst_n      ),
     .rst_req        ( rst_req         ),
+    .pll_locked     ( pll_locked      ),
     .downloading    ( dwnld_busy      ), // use busy signal from game module
 
     .clk_sys        ( clk_sys         ),
