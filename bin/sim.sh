@@ -351,6 +351,7 @@ case "$1" in
         fi
         rm -f video.bin
         rm -f video*.jpg
+        rm -f frame.raw
         VIDEO_DUMP=TRUE
         ;;
     -videow)
@@ -501,8 +502,10 @@ else
     EXTRA="$EXTRA ${MACROPREFIX}GAMETOP=jt${SYSNAME}_game"
 fi
 
-#mkfifo video.pipe
-#raw2png -v -w $VIDEOWIDTH -h $VIDEOHEIGHT -f video.pipe : $CONVERT_OPTIONS&
+if [[ "$VIDEO_DUMP" = TRUE ]]; then
+    mkfifo video.pipe
+    raw2png -v -w $VIDEOWIDTH -h $VIDEOHEIGHT -f video.pipe : $CONVERT_OPTIONS&
+fi
 
 case $SIMULATOR in
 iverilog)
@@ -513,6 +516,7 @@ iverilog)
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
         $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
         $MAXFRAME -DIVERILOG $EXTRA \
+        -DDUMP_VIDEO_FNAME=\"video.pipe\" \
     || exit 1
     $SHOWCMD sim -lxt;;
 ncverilog)
@@ -525,8 +529,8 @@ ncverilog)
         -ncvhdl_args,-V93 $JTFRAME/hdl/cpu/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
         $EXTRA_VHDL $COREDEF \
         $JTFRAME/hdl/cpu/tv80/*.v \
+        +define+DUMP_VIDEO_FNAME=\"video.pipe\" \
         $EXTRA -l /dev/null || exit $?;;
-        # +define+DUMP_VIDEO_FNAME=\"video.pipe\" \
 verilator)
     $SHOWCMD verilator -I../../hdl \
         -f game.f $PERCORE \
@@ -538,9 +542,7 @@ verilator)
         $MAXFRAME -DSIM_MS=$SIM_MS --lint-only $EXTRA;;
 esac
 
-raw2png -v -w $VIDEOWIDTH -h $VIDEOHEIGHT -f video.raw : $CONVERT_OPTIONS
-# ls -lh video.pipe
-# rm video.pipe
+rm -f video.pipe
 
 #if [[ "$VIDEO_DUMP" = TRUE && -e video.raw ]]; then
 # convert -size 384x240 -depth 8 RGBA:video.raw -resize 200% video.png

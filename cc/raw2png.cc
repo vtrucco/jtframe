@@ -89,7 +89,7 @@ int main( int argc, char *argv[]) {
                 if( wrcnt == bufsize ) {
                     char exes[1024];
                     sprintf(exes,"convert %s -filter Point "
-                        "-size %dx%d -depth 8 RGBA:frame.raw frame_%d.png",
+                        "-size %dx%d -depth 8 RGBA:frame.raw frame_%d.jpg",
                         extra.c_str(), width, height, framecnt);
                     if( verbose ) puts(exes);
                     system(exes);
