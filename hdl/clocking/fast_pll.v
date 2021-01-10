@@ -59,16 +59,20 @@ endmodule // jtgng_pll0
 
 // 48 MHz PLL
 module jtframe_pll0(
-    input    inclk0,
+    input        inclk0,
     output   reg c0,     // 96
     output   reg c1,     // 48
     output       c2,     // 48 (shifted by -2.5ns)
     output   reg c3,     // 24
     output   reg c4,     // 6
-    output   locked
+    output   reg locked
 );
 
-assign locked = 1'b1;
+initial begin
+    locked = 0;
+    #30 locked = 1;
+end
+
 reg nc;
 
 `ifdef BASE_CLK
