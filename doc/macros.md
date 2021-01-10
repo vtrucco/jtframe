@@ -59,3 +59,7 @@ JTFRAME_SIM_LOAD_EXTRA   |         | Extra wait time when transferring ROM in si
 JTFRAME_SIM_SCAN2X       |         | Enables scan doubler simulation
 SIMULATION               |         | Enables simulation features
 LOADROM                  |         | Sends ROM data via serial interface
+DUMP_VIDEO               |         | Enables video dump to a file
+DUMP_VIDEO_FNAME         |         | Internal. Do not assign.
+VIDEO_START              |         | First frame for which video output is provided
+                         |         | use it to prevent a split first frame

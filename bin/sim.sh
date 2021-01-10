@@ -501,6 +501,9 @@ else
     EXTRA="$EXTRA ${MACROPREFIX}GAMETOP=jt${SYSNAME}_game"
 fi
 
+#mkfifo video.pipe
+#raw2png -v -w $VIDEOWIDTH -h $VIDEOHEIGHT -f video.pipe : $CONVERT_OPTIONS&
+
 case $SIMULATOR in
 iverilog)
     $SHOWCMD iverilog -g2005-sv $MIST $COREDEF \
@@ -523,6 +526,7 @@ ncverilog)
         $EXTRA_VHDL $COREDEF \
         $JTFRAME/hdl/cpu/tv80/*.v \
         $EXTRA -l /dev/null || exit $?;;
+        # +define+DUMP_VIDEO_FNAME=\"video.pipe\" \
 verilator)
     $SHOWCMD verilator -I../../hdl \
         -f game.f $PERCORE \
@@ -534,12 +538,16 @@ verilator)
         $MAXFRAME -DSIM_MS=$SIM_MS --lint-only $EXTRA;;
 esac
 
-if [[ "$VIDEO_DUMP" = TRUE && -e video.raw ]]; then
+raw2png -v -w $VIDEOWIDTH -h $VIDEOHEIGHT -f video.raw : $CONVERT_OPTIONS
+# ls -lh video.pipe
+# rm video.pipe
+
+#if [[ "$VIDEO_DUMP" = TRUE && -e video.raw ]]; then
 # convert -size 384x240 -depth 8 RGBA:video.raw -resize 200% video.png
-    convert -filter Point $CONVERT_OPTIONS -size ${VIDEOWIDTH}x${VIDEOHEIGHT} \
-        -depth 8 RGBA:video.raw video.jpg
-    rmdup.sh
-fi
+#    convert -filter Point $CONVERT_OPTIONS -size ${VIDEOWIDTH}x${VIDEOHEIGHT} \
+#        -depth 8 RGBA:video.raw video.jpg
+#    rmdup.sh
+#fi
 
 # convert raw sound file to wav format
 if [ -e sound.raw ]; then

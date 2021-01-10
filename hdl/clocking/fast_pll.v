@@ -2,16 +2,19 @@
 
 // 96 MHz PLL
 module jtframe_pll96(
-    input    inclk0,
+    input        inclk0,
     output   reg c0,     // 48
     output   reg c1,     // 96
     output       c2,     // 96 (shifted by -2.5ns)
     output   reg c3,     // 24
     output   reg c4,     // 6
-    output   locked
+    output   reg locked
 );
 
-assign locked = 1'b1;
+initial begin
+    locked = 0;
+    #30 locked = 1;
+end
 
 real base_clk = 10.417; //  96 MHz -> 10.417ns
 reg  c3n;
@@ -123,14 +126,17 @@ endmodule // jtgng_pll1
 // 20 MHz PLL
 
 module jtframe_pll20_fast(
-    input    inclk0,
+    input        inclk0,
     output   reg c0,     // 20
     output   reg c1,     // 80
     output   reg c2,     // 80 (shifted by -2.5ns)
-    output   locked
+    output   reg locked
 );
 
-    assign locked = 1'b1;
+    initial begin
+        locked = 0;
+        #30 locked = 1;
+    end
 
     `ifdef BASE_CLK
     real base_clk = `BASE_CLK;

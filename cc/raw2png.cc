@@ -1,11 +1,14 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
+
+using namespace std;
 
 int main( int argc, char *argv[]) {
     int width=256, height=224;
     char fname[512]="/dev/stdin";
-    char extra[512]="";
+    string extra;
     int framecnt=1;
     bool verbose=false;
 
@@ -41,16 +44,10 @@ int main( int argc, char *argv[]) {
             continue;
         }
         if( strcmp(":", argv[k])==0 ) {
-            int rest=512, cp=0;
-            while( ++k < argc && rest>0 ) {
-                strncpy( extra+cp, argv[k], rest );
-                cp += strlen( argv[k] );
-                if( cp < 512 )
-                    extra[cp++]=' ';
-                else
-                    break;
+            while( ++k < argc ) {
+                extra+=argv[k];
+                extra+=" ";
             }
-            extra[ cp<512 ? cp : 511 ]=0;
             break;
         }
         if( strcmp("--help", argv[k])==0 || strcmp("-help", argv[k])==0 ) {
@@ -69,13 +66,13 @@ int main( int argc, char *argv[]) {
     "       -f      input file name\n"
             );
         }
-        printf("Unknown argument %s\n", argv[k] );
+        printf("raw2png: unknown argument %s\n", argv[k] );
         return 1;
     }
 
     FILE *f = fopen(fname,"rb");
     if( f == NULL ) {
-        printf("Cannot open file %s\n", fname );
+        printf("raw2png: cannot open file %s.\n", fname );
         return 1;
     }
     const int bufsize = width*height*4;
@@ -93,15 +90,20 @@ int main( int argc, char *argv[]) {
                     char exes[1024];
                     sprintf(exes,"convert %s -filter Point "
                         "-size %dx%d -depth 8 RGBA:frame.raw frame_%d.png",
-                        extra, width, height, framecnt);
+                        extra.c_str(), width, height, framecnt);
                     if( verbose ) puts(exes);
                     system(exes);
-                }
+                } else if(verbose) printf("raw2png: skipping duplicated frame.\n");
                 fclose(fout);
             }
             framecnt++;
-        } else break;
+        } else {
+            if( verbose ) printf("raw2png: exiting because of split frame %d (%d)",
+                rdcnt, bufsize);
+            break;
+        }
     }
+    if( verbose ) puts("raw2png: exit");
     fclose(f);
     delete[] buf;
     buf = nullptr;

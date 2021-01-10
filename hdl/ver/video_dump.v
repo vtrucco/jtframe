@@ -22,9 +22,17 @@ module video_dump(
 
 
 `ifdef DUMP_VIDEO
+
+`ifndef DUMP_VIDEO_FNAME
+    `define DUMP_VIDEO_FNAME "video.raw"
+    initial $display("WARNING: DUMP_VIDEO_FNAME undefined\n");
+`else
+    initial $display("INFO: dumping video to %s\n",`DUMP_VIDEO_FNAME);
+`endif
+
 integer fvideo;
 initial begin
-    fvideo = $fopen("video.raw","wb");
+    fvideo = $fopen(`DUMP_VIDEO_FNAME,"wb");
 end
 
 wire [31:0] video_dump = { 8'hff, {2{blue}}, {2{green}}, {2{red}} };
