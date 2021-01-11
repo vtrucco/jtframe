@@ -14,7 +14,7 @@
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
-    Date: 6-12-2019 */
+    Date: 11-1-2021 */
 
 // 1 slots for SDRAM read-only access
 // Each slot can be used for 8, 16 or 32 bit access
