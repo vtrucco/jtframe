@@ -99,7 +99,7 @@ int main( int argc, char *argv[]) {
             framecnt++;
         } else {
             if( verbose ) printf("raw2png: exiting because of split frame %d (%d)",
-                rdcnt, bufsize);
+                (int)rdcnt, bufsize);
             break;
         }
     }
