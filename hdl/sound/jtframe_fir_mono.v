@@ -32,7 +32,7 @@ module jtframe_fir_mono(
     input             clk,
     input             sample,
     input      signed [15:0] din,
-    output reg signed [15:0] dout,
+    output reg signed [15:0] dout
 );
 
 parameter [7:0] KMAX = 8'd68;

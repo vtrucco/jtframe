@@ -148,6 +148,7 @@ fi
 if [ "$MSM6295" = 1 ]; then
     echo "INFO: MSM6295 support added."
     PERCORE="$PERCORE $(add_dir $MODULES/jt6295/hdl jt6295.f)"
+    cp -f $MODULES/jt6295/hdl/jt6295_up4.hex .
 fi
 
 case "$SYSNAME" in
