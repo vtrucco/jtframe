@@ -83,15 +83,15 @@ module jtframe_cen3p57(
 
 parameter CLK24=0;
 
-localparam [10:0] STEP=11'd105<<CLK24;
-localparam [10:0] LIM    = 11'd1408;
+localparam [15:0] STEP   = 16'd3758<<CLK24;
+localparam [15:0] LIM    = 16'd50393;
 localparam        ALT0   = 1;
 
-wire [10:0] absmax = LIM+STEP;
+wire [15:0] absmax = LIM+STEP;
 
-reg  [10:0] cencnt=11'd0;
-reg  [10:0] next;
-reg  [10:0] next2;
+reg  [15:0] cencnt=16'd0;
+reg  [15:0] next;
+reg  [15:0] next2;
 
 always @(*) begin
     next  = cencnt+STEP;
@@ -102,9 +102,9 @@ reg alt=ALT0[0];
 
 `ifdef SIMULATION
 initial begin
-    cencnt = 11'd0;
-    next   = 11'd0;
-    next2  = 11'd0;
+    cencnt = 16'd0;
+    next   = 16'd0;
+    next2  = 16'd0;
     alt    = 0;
 end
 `endif
@@ -112,7 +112,7 @@ end
 always @(posedge clk) begin
     if( cencnt >= absmax ) begin
         // something went wrong: restart
-        cencnt   <= 11'd0;
+        cencnt   <= 16'd0;
         alt      <= ALT0[0];
         cen_3p57 <= 1;
         cen_1p78 <= 1;
@@ -129,13 +129,6 @@ always @(posedge clk) begin
     end
 end
 
-`ifdef SIMULATION
-initial begin
-    cencnt = 11'd0;
-    next   = 11'd0;
-    next2  = 11'd0;
-end
-`endif
 endmodule
 
 ////////////////////////////////////////////////////////////////////

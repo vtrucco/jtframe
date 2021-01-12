@@ -28,15 +28,16 @@ int main(int argc, char *argv[]) {
     }
     float best=input_freq;
     int best_n=0, best_d=0;
-    for( int n=1; n<1024; n++) {
-        for( int d=1; d<1024; d++) {
+    for( int n=1; n<1024*4; n++) {
+        for( int d=1; d<1024*1024; d++) {
             float f = (input_freq*n)/d;
             float err = abs(target_freq-f);
             if( err < best ) {
                 best_n = n;
                 best_d = d;
                 best = err;
-                cout << n << "/" << d << " = " << f << endl;
+                if( err/f < 0.05 )
+                    printf("%3d/%3d = %7.2f (error %.2f)\n", n, d, f, err );
             }
         }
     }

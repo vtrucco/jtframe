@@ -10,5 +10,6 @@ hc_fft=abs(fft(hc));
 hdb=20*log10(hc_fft);
 haux=hc';
 save filter2 haux
-printf("Gain at DC %d dB = %d \n", hdb(1), hc_fft(1))
+printf("Gain at DC %d dB = %d. Reject at f2 = %.0f dB. BW=%.3f\n", hdb(1), hc_fft(1), hdb(round(N*f2))-hdb(1), bw )
+printf("Group delay=%d\n", grpdelay(hc)(10))
 # use freqz(hc) to display the frequency response
