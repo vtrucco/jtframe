@@ -2,7 +2,7 @@
 create_clock -period "50.0 MHz" [get_ports FPGA_CLK1_50]
 create_clock -period "50.0 MHz" [get_ports FPGA_CLK2_50]
 create_clock -period "50.0 MHz" [get_ports FPGA_CLK3_50]
-create_clock -period "100.0 MHz" [get_pins -compatibility_mode *|h2f_user0_clk] 
+create_clock -period "100.0 MHz" [get_pins -compatibility_mode *|h2f_user0_clk]
 create_clock -period "100.0 MHz" [get_pins -compatibility_mode spi|sclk_out] -name spi_sck
 
 derive_pll_clocks
@@ -58,3 +58,8 @@ set_false_path -from {ascal|o_ivsize*}
 set_false_path -from {ascal|o_format*}
 set_false_path -from {ascal|o_hdown}
 set_false_path -from {ascal|o_vdown}
+
+# JTFRAME
+set_false_path -from {*u_dip|enable_psg*}
+set_false_path -from {*u_dip|enable_fm*}
+set_multicycle_path -to {*u_reset|rst_rom_sync*} -setup 2

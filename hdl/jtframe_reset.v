@@ -41,6 +41,7 @@ localparam MAIN_RSTW = 4,
 reg [MAIN_RSTW-1:0] rst_cnt;
 reg [GAME_RSTW-1:0] game_rst_cnt;
 reg [MAIN_RSTW-1:0] rst_rom; // rst in clk_rom domain
+reg                 rst_rom_sync;
 
 always @(negedge clk_sys, negedge pll_locked) begin
     if( !pll_locked ) begin
@@ -77,7 +78,11 @@ always @(posedge clk_sys ) begin
 end
 
 always @(negedge clk_rom) begin
-    if( rst_rom[0] ) begin
+    rst_rom_sync <= rst_rom[0];
+end
+
+always @(negedge clk_rom) begin
+    if( rst_rom_sync ) begin
         game_rst_cnt   <= {GAME_RSTW{1'b1}};
         game_rst_n     <= 0;
         game_rst       <= 1;

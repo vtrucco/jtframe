@@ -38,14 +38,13 @@ module jtframe_fir_mono(
 parameter [7:0] KMAX = 8'd68;
 parameter     COEFFS = "filter.hex";
 
-reg signed [15:0] ram[0:511];   // dual port RAM
-                                // the first half contains the coefficients
-                                // the second half, contains the signal
-reg        [ 7:0] pt_wr, pt_rd, cnt;
-reg               st;
-reg signed [35:0] acc;
-reg signed [15:0] coeff;
-reg signed [31:0] p;
+reg         [ 7:0] pt_wr, pt_rd, cnt;
+reg         [ 8:0] rd_addr;
+reg                st, wt_ram;
+reg  signed [35:0] acc;
+reg  signed [15:0] coeff;
+reg  signed [31:0] p;
+wire signed [15:0] ram_dout;
 
 function signed [35:0] ext;
     input signed [31:0] p;
@@ -62,6 +61,29 @@ function signed [15:0] sat;
     sat = a[35:30] == {6{a[29]}} ? a[29:14] : { a[35], {15{~a[35]}} };
 endfunction
 
+always @(*) begin
+    rd_addr = st==0 ? {1'd0, cnt} : {1'd1, pt_rd};
+end
+
+// dual port RAM
+// the first half contains the coefficients
+// the second half, contains the signal
+
+jtframe_dual_ram #(.dw(16), .aw(9), .synfile(COEFFS)) u_ram(
+    .clk0   ( clk           ),
+    .clk1   ( clk           ),
+    // Port 0: write
+    .data0  ( din           ),
+    .addr0  ( {1'd1, pt_wr} ),
+    .we0    ( sample        ),
+    .q0     (               ),
+    // Port 1: read
+    .data1  ( 16'd0         ),
+    .addr1  ( rd_addr       ),
+    .we1    ( 1'd0          ),
+    .q1     ( ram_dout      )
+);
+
 always@(posedge clk, posedge rst) begin
     if( rst ) begin
         dout  <= 16'd0;
@@ -75,41 +97,31 @@ always@(posedge clk, posedge rst) begin
         if( sample ) begin
             pt_rd <= pt_wr;
             cnt   <= 0;
-            ram[ { 2'd1, pt_wr } ] <= din;
+            // ram[ { 1'd1, pt_wr } ] <= din;
             pt_wr <= loop_inc( pt_wr );
             acc   <= 36'd0;
             p     <= 32'd0;
             st    <= 0;
+            wt_ram<= 1;
         end else begin
-            if( cnt < KMAX ) begin
-                st <= ~st;
-                if( st == 0 ) begin
-                    coeff <= ram[ {1'd0, cnt } ];
+            wt_ram <= ~wt_ram;
+            if( !wt_ram ) begin
+                if( cnt < KMAX ) begin
+                    st <= ~st;
+                    if( st == 0 ) begin
+                        coeff <= ram_dout;
+                    end else begin
+                        p     <= ram_dout * coeff;
+                        acc   <= acc + ext(p);
+                        cnt   <= cnt+7'd1;
+                        pt_rd <= loop_inc( pt_rd );
+                    end
                 end else begin
-                    p     <= ram[ {1'd1, pt_rd } ] * coeff;
-                    acc   <= acc + ext(p);
-                    cnt   <= cnt+7'd1;
-                    pt_rd <= loop_inc( pt_rd );
+                    dout <= sat(acc);
                 end
-            end else begin
-                dout <= sat(acc);
             end
         end
     end
-end
-
-`ifdef SIMULATION
-    integer aux;
-`endif
-
-
-initial begin
-`ifdef SIMULATION
-    for( aux=0;aux<512; aux=aux+1 ) begin
-        ram[aux] = 16'd0;
-    end
-`endif
-    $readmemh( COEFFS, ram );
 end
 
 endmodule
