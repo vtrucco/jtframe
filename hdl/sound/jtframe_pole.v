@@ -52,7 +52,8 @@ end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        sout <= ZERO;
+        sout      <= ZERO;
+        last_prod <= ZERO;
     end else begin
         if(sample)
             sout <= last_prod + prod[WS+WA-1:WA];

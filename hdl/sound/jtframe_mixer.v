@@ -106,6 +106,7 @@ end
 endmodule // jtframe_mixer
 
 module jtframe_limamp #(parameter WIN=16,WOUT=16)(
+    input                    rst,
     input                    clk,
     input                    cen,
     // input signals
@@ -117,6 +118,7 @@ module jtframe_limamp #(parameter WIN=16,WOUT=16)(
 );
 
 jtframe_mixer #(.W0(WIN),.WOUT(WOUT)) u_amp(
+    .rst    ( rst       ),
     .clk    ( clk       ),
     .cen    ( cen       ),
     .ch0    ( sndin     ),

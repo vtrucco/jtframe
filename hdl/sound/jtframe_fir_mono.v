@@ -68,6 +68,9 @@ always@(posedge clk, posedge rst) begin
         pt_rd <= 8'd0;
         pt_wr <= 8'd0;
         cnt   <= 8'd0;
+        acc   <= 36'd0;
+        p     <= 32'd0;
+        coeff <= 16'd0;
     end else begin
         if( sample ) begin
             pt_rd <= pt_wr;
@@ -95,7 +98,17 @@ always@(posedge clk, posedge rst) begin
     end
 end
 
+`ifdef SIMULATION
+    integer aux;
+`endif
+
+
 initial begin
+`ifdef SIMULATION
+    for( aux=0;aux<512; aux=aux+1 ) begin
+        ram[aux] = 16'd0;
+    end
+`endif
     $readmemh( COEFFS, ram );
 end
 

@@ -4,6 +4,7 @@ jtframe_mist_base.v
 ../jtframe_led.v
 ../jtframe_reset.v
 ../jtframe_dip.v
+../jtframe_enlarger.v
 ../ram/jtframe_dual_ram.v
 ../sound/hybrid_pwm_sd.v
 -sv user_io.v

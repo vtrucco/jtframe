@@ -69,6 +69,10 @@ always@(posedge clk, posedge rst) begin
         pt_rd <= 7'd0;
         pt_wr <= 7'd0;
         cnt   <= 7'd0;
+        acc_l <= 36'd0;
+        acc_r <= 36'd0;
+        p_l   <= 32'd0;
+        p_r   <= 32'd0;
     end else begin
         if( sample ) begin
             pt_rd <= pt_wr;
