@@ -301,6 +301,12 @@ if [ $SKIP_COMPILE = FALSE ]; then
         ln -srf $i
     done
 
+    # If JT6295 exists, adds its filter file to the folder
+    if [ -d $MODULES/jt6295 ]; then
+        ln -srf $MODULES/jt6295/hdl/jt6295_up4.hex .
+        git add --force jt6295_up4.hex
+    fi
+
     ############################################
     # Recompile
     rm -rf db incremental_db output_files

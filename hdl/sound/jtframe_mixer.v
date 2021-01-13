@@ -27,6 +27,7 @@
 // Select gain for each signal
 
 module jtframe_mixer #(parameter W0=16,W1=16,W2=16,W3=16,WOUT=16)(
+    input                    rst,
     input                    clk,
     input                    cen,
     // input signals
@@ -39,7 +40,8 @@ module jtframe_mixer #(parameter W0=16,W1=16,W2=16,W3=16,WOUT=16)(
     input  [7:0]             gain1,
     input  [7:0]             gain2,
     input  [7:0]             gain3,
-    output     signed [WOUT-1:0] mixed
+    output     signed [WOUT-1:0] mixed,
+    output                   peak   // overflow signal (time enlarged)
 );
 
 localparam WM = 16;
@@ -63,14 +65,16 @@ end
 `endif
 
 wire signed [WM+7:0] ch0_pre, ch1_pre, ch2_pre, ch3_pre;
-wire signed [WM+3:0] pre_sum;
+wire signed [WM+3:0] pre_sum; // 4 extra bits for overflow guard
 reg  signed [WM-1:0] sum;
+wire                 ov_pos, ov_neg;
 
 // rescale to WM
 wire signed [WM-1:0] scaled0 = { ch0, {WM-W0{1'b0}} };
 wire signed [WM-1:0] scaled1 = { ch1, {WM-W1{1'b0}} };
 wire signed [WM-1:0] scaled2 = { ch2, {WM-W2{1'b0}} };
 wire signed [WM-1:0] scaled3 = { ch3, {WM-W3{1'b0}} };
+
 
 wire signed [8:0]
     g0 = {1'b0, gain0},
@@ -85,10 +89,18 @@ assign ch3_pre = g3 * scaled3;
 assign pre_sum = (ch0_pre + ch1_pre + ch2_pre + ch3_pre)>>>4;
 assign mixed   = sum[WM-1:WM-WOUT];
 
+assign peak    = pre_sum[WM+3:WM] != {4{pre_sum[WM-1]}};
+assign ov_pos  = peak && !pre_sum[WM+3];
+assign ov_neg  = peak &&  pre_sum[WM+3];
+
 // Apply gain
 always @(posedge clk) if(cen) begin
-    sum     <= pre_sum > MAXPOS ? MAXPOS[WM-1:0] : (
-               pre_sum < MAXNEG ? MAXNEG[WM-1:0] :pre_sum[WM-1:0] );
+    if( rst ) begin // synchronous
+        sum <= sum>>>1;
+    end else begin
+        sum <= ov_pos ? MAXPOS[WM-1:0] : (
+               ov_neg ? MAXNEG[WM-1:0] : pre_sum[WM-1:0] );
+    end
 end
 
 endmodule // jtframe_mixer
@@ -100,7 +112,8 @@ module jtframe_limamp #(parameter WIN=16,WOUT=16)(
     input signed [WIN-1:0]   sndin,
     // gain for each channel in 4.4 fixed point format
     input  [7:0]             gain,
-    output signed [WOUT-1:0] sndout
+    output signed [WOUT-1:0] sndout,
+    output                   peak
 );
 
 jtframe_mixer #(.W0(WIN),.WOUT(WOUT)) u_amp(
@@ -114,7 +127,8 @@ jtframe_mixer #(.W0(WIN),.WOUT(WOUT)) u_amp(
     .gain1  ( 8'h0      ),
     .gain2  ( 8'h0      ),
     .gain3  ( 8'h0      ),
-    .mixed  ( sndout    )
+    .mixed  ( sndout    ),
+    .peak   ( peak      )
 );
 
 endmodule

@@ -244,7 +244,7 @@ assign sim_hb = ~LHBL;
 `endif
 
 `ifdef JTFRAME_GAME_LED
-assign game_led[1] = 1'b1;
+assign game_led[1] = 1'b0; // Let system LED info go through too
 `else
 assign game_led = 2'b0;
 `endif

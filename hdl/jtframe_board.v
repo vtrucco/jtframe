@@ -176,6 +176,7 @@ jtframe_reset u_reset(
 jtframe_led u_led(
     .rst        ( rst           ),
     .clk        ( clk_sys       ),
+    .LVBL       ( LVBL          ),
     .downloading( downloading   ),
     .osd_shown  ( osd_shown     ),
     .gfx_en     ( gfx_en        ),
