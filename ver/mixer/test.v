@@ -39,7 +39,7 @@ always @(posedge clk, posedge rst) begin
         ch1 <= ch1 + 1;
         ch2 <= ch2 + 1;
         ch3 <= ch3 + 1;
-        if( &ch0 ) begin
+        if( ch0==16'h7FFF ) begin
             gain <= {gain[6:0],1'b1};
             if( &gain ) $finish;
         end

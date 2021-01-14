@@ -185,7 +185,7 @@ assign joystick1 = 32'd0;
 assign joystick2 = 32'd0;
 assign joystick3 = 32'd0;
 assign joystick4 = 32'd0;
-assign status    = 63'd0;
+assign status    = 64'd0;
 assign ps2_kbd_data = 1'b0;
 assign ps2_kbd_clk  = 1'b0;
 `ifndef SCANDOUBLER_DISABLE

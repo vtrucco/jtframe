@@ -44,9 +44,11 @@ module jtframe_mixer #(parameter W0=16,W1=16,W2=16,W3=16,WOUT=16)(
     output                   peak   // overflow signal (time enlarged)
 );
 
-localparam WM = 16;
-localparam WA = WM+8; // width for the amplification
-localparam WS = WA+3; // width for the sum
+localparam WM = 16,
+           WD =  4,    // decimal part
+           WA = WM+8,  // width for the amplification
+           WS = WA+2,  // width for the sum
+           WI = WS-WD; // width of the integer part of the sum
 localparam signed [WM+3:0] MAXPOS = {  5'b0, {WM-1{1'b1}}};
 localparam signed [WM+3:0] MAXNEG = { ~5'b0, {WM-1{1'b0}}};
 
@@ -64,10 +66,10 @@ initial begin
 end
 `endif
 
-wire signed [WM+7:0] ch0_pre, ch1_pre, ch2_pre, ch3_pre;
-reg  signed [WM+9:0] pre_sum; // 4 extra bits for overflow guard
+wire signed [WA-1:0] ch0_pre, ch1_pre, ch2_pre, ch3_pre;
+reg  signed [WS-1:0] pre_sum; // 4 extra bits for overflow guard
 reg  signed [WM-1:0] sum;
-reg  signed [WM+5:0] pre_int; // no fractional part
+reg  signed [WI-1:0] pre_int; // no fractional part
 wire                 ov_pos, ov_neg;
 
 // rescale to WM
@@ -89,13 +91,18 @@ assign ch2_pre = g2 * scaled2;
 assign ch3_pre = g3 * scaled3;
 assign mixed   = sum[WM-1:WM-WOUT];
 
-assign peak    = pre_int[WM+5:WM] != {6{pre_int[WM-1]}};
-assign ov_pos  = peak && !pre_int[WM+5];
-assign ov_neg  = peak &&  pre_int[WM+5];
+assign peak    = pre_int[WI-1:WM] != {WI-WM{pre_int[WM-1]}};
+assign ov_pos  = peak && !pre_int[WI-1];
+assign ov_neg  = peak &&  pre_int[WI-1];
+
+function [WS-1:0] ext;
+    input [WA-1:0] a;
+    ext = { {WS-WA{a[WA-1]}}, a };
+endfunction
 
 always @(*) begin
-    pre_sum = ch0_pre + ch1_pre + ch2_pre + ch3_pre;
-    pre_int = pre_sum[WM+9:4];
+    pre_sum = ext(ch0_pre) + ext(ch1_pre) + ext(ch2_pre) + ext(ch3_pre);
+    pre_int = pre_sum[WS-1:WD];
 end
 
 // Apply gain

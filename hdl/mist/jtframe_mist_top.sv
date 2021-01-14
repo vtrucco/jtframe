@@ -116,6 +116,7 @@ localparam CONF_STR = {
 wire          rst, rst_n, clk_sys, clk_rom, clk6, clk24, clk48, clk96;
 wire [63:0]   status;
 wire [31:0]   joystick1, joystick2;
+wire [31:0]   game_status;
 wire [24:0]   ioctl_addr;
 wire [ 7:0]   ioctl_data;
 wire [ 7:0]   ioctl_data2sd;
@@ -428,6 +429,8 @@ localparam DIPBASE=16;
     wire [31:0] dipsw = status[31+DIPBASE:DIPBASE];
 `endif
 
+assign game_status = { {32-DIPBASE{1'b0}}, status[DIPBASE-1:0] };
+
 `GAMETOP
 u_game(
     .rst         ( game_rst       ),
@@ -539,7 +542,7 @@ u_game(
     .prog_mask  ( prog_mask     ),
 
     // DIP switches
-    .status      ( status[31:0]   ),
+    .status      ( game_status    ),
     .dip_pause   ( dip_pause      ),
     .dip_flip    ( dip_flip       ),
     .dip_test    ( dip_test       ),

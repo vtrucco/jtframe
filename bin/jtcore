@@ -332,7 +332,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
         if grep "Worst-case.*-[0-9.]*" "$LOG"; then
             report FAIL
         else
-            figlet PASS
+            figlet PASS $PRJ
             report PASS
         fi
     else
