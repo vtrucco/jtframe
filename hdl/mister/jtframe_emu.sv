@@ -328,11 +328,7 @@ wire [COLORW-1:0] game_r, game_g, game_b;
 wire              LHBL, LVBL;
 wire              hs, vs, sample;
 
-`ifdef JTFRAME_GAME_LED
 assign game_led[1] = 1'b1;
-`else
-assign game_led = 2'b0;
-`endif
 
 `ifndef SIGNED_SND
 assign AUDIO_S = 1'b1; // Assume signed by default
@@ -534,9 +530,7 @@ end
     .field        ( field            ),
 `endif
     // LED
-`ifdef JTFRAME_GAME_LED
     .game_led    ( game_led[0]    ),
-`endif
 
     .start_button ( game_start       ),
     .coin_input   ( game_coin        ),

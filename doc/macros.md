@@ -20,7 +20,6 @@ JTFRAME_DONTSIM_SCAN2X   |         | Internal. Do not define externally
 JTFRAME_DUAL_RAM_DUMP    |         | Enables dumping of RAM contents in simulation
 JTFRAME_DWNLD_PROM_ONLY  |         | Quick download sim with only PROM contents
 JTFRAME_FLIP_RESET       |         | Varying the flip DIP setting causes a reset
-JTFRAME_GAME_LED         |         | The core can control the system LED
 JTFRAME_INTERLACED       |         | Support for interlaced games
 JTFRAME_MIST_DIPBASE     | MiST    | Starting base in status word for MiST dip switches
 JTFRAME_MIST_DIRECT      | MiST    | On by default. Define as 0 to disable. Fast ROM load

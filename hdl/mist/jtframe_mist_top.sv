@@ -243,11 +243,7 @@ assign sim_hb = ~LHBL;
 `define BUTTONS 2
 `endif
 
-`ifdef JTFRAME_GAME_LED
 assign game_led[1] = 1'b0; // Let system LED info go through too
-`else
-assign game_led = 2'b0;
-`endif
 
 localparam BUTTONS=`BUTTONS;
 
@@ -464,9 +460,7 @@ u_game(
     .HS          ( hs             ),
     .VS          ( vs             ),
     // LED
-    `ifdef JTFRAME_GAME_LED
     .game_led    ( game_led[0]    ),
-    `endif
 
     .start_button( game_start[STARTW-1:0]      ),
     .coin_input  ( game_coin[STARTW-1:0]       ),
