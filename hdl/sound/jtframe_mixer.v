@@ -65,8 +65,9 @@ end
 `endif
 
 wire signed [WM+7:0] ch0_pre, ch1_pre, ch2_pre, ch3_pre;
-wire signed [WM+3:0] pre_sum; // 4 extra bits for overflow guard
+reg  signed [WM+9:0] pre_sum; // 4 extra bits for overflow guard
 reg  signed [WM-1:0] sum;
+reg  signed [WM+5:0] pre_int; // no fractional part
 wire                 ov_pos, ov_neg;
 
 // rescale to WM
@@ -86,12 +87,16 @@ assign ch0_pre = g0 * scaled0;
 assign ch1_pre = g1 * scaled1;
 assign ch2_pre = g2 * scaled2;
 assign ch3_pre = g3 * scaled3;
-assign pre_sum = (ch0_pre + ch1_pre + ch2_pre + ch3_pre)>>>4;
 assign mixed   = sum[WM-1:WM-WOUT];
 
-assign peak    = pre_sum[WM+3:WM] != {4{pre_sum[WM-1]}};
-assign ov_pos  = peak && !pre_sum[WM+3];
-assign ov_neg  = peak &&  pre_sum[WM+3];
+assign peak    = pre_int[WM+5:WM] != {6{pre_int[WM-1]}};
+assign ov_pos  = peak && !pre_int[WM+5];
+assign ov_neg  = peak &&  pre_int[WM+5];
+
+always @(*) begin
+    pre_sum = ch0_pre + ch1_pre + ch2_pre + ch3_pre;
+    pre_int = pre_sum[WM+9:4];
+end
 
 // Apply gain
 always @(posedge clk) if(cen) begin
@@ -99,7 +104,7 @@ always @(posedge clk) if(cen) begin
         sum <= sum>>>1;
     end else begin
         sum <= ov_pos ? MAXPOS[WM-1:0] : (
-               ov_neg ? MAXNEG[WM-1:0] : pre_sum[WM-1:0] );
+               ov_neg ? MAXNEG[WM-1:0] : pre_int[WM-1:0] );
     end
 end
 

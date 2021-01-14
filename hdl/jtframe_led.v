@@ -30,7 +30,7 @@ module jtframe_led(
 wire  sys_led, enlarged;
 reg   last_LVBL, cen_VB;
 
-assign sys_led = ~( downloading | osd_shown | (|(~gfx_en)));
+assign sys_led = ~( downloading /*| osd_shown*/ | (|(~gfx_en)));
 
 always @(posedge clk) begin
     last_LVBL <= LVBL;

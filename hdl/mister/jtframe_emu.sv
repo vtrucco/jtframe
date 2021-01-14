@@ -123,21 +123,15 @@ localparam CONF_STR = {
     `endif
     "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 
-    `ifndef NOSOUND
-        // sound OSD options are ommitted for compilations without sound
-        `ifdef JTFRAME_OSD_VOL
-        "O8,PSG,On,Off;",
-        "O9,FM ,On,Off;",
-        "O67,FX volume, high, very high, very low, low;",
-        `else
-            `ifdef JTFRAME_ADPCM
-            "O8,ADPCM,On,Off;",
-            `endif
-            `ifdef JT51
-            "O9,FM ,On,Off;",
-            `endif
-        `endif
+    // Sound control
+    `ifdef JTFRAME_OSD_VOL
+    "O67,FX volume, high, very high, very low, low;",
     `endif
+    `ifdef JTFRAME_OSD_SND_EN
+    "O8,FX,On,Off;",
+    "O9,FM,On,Off;",
+    `endif
+
     `ifdef JTFRAME_OSD_TEST
     "OA,Test mode,Off,On;",
     `endif

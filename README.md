@@ -187,10 +187,9 @@ bit     |  meaning                | Enabled with macro
 2       | Rotate screen           | VERTICAL_SCREEN (MiSTer)
 3-4     | Scan lines              | Scan-line mode (MiST only)
 3-5     | Scandoubler Fx          | Scan line mode and HQ2X enable (MiSTer only)
-6-7     | FX Volume               | JT12
-8       | ADPCM                   | JTFRAME_ADPCM && !JT12 && !JTFRAME_OSD_NOSND
-8       | PSG                     | JT12 && !JTFRAME_OSD_NOSND
-9       | FM                      | (JT51 || JT12) && !JTFRAME_OSD_NOSND
+6-7     | FX Volume               | JTFRAME_OSD_VOL
+8       | FX enable/disable       | JTFRAME_OSD_SND_EN
+9       | FM enable/disable       | JTFRAME_OSD_SND_EN
 10      | Test mode               | JTFRAME_OSD_TEST
 11      | Aspect Ratio            | MiSTer only
 12      | Credits/Pause           | JTFRAME_OSD_NOCREDITS (disables it)

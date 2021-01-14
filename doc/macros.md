@@ -4,7 +4,6 @@ Macro                    | Target  |  Usage
 -------------------------|---------|----------------------
 JTFRAME_180SHIFT         | MiSTer  | Use DDIO cell instead of PLL to create the SDRAM phase shift
 JTFRAME_4PLAYERS         |         | Extra inputs for 4 players
-JTFRAME_ADPCM            |         | OSD option to enable/disable ADPCM
 JTFRAME_ANALOG           |         | Enables analog sticks
 JTFRAME_ARX              | MiSTer  | Defines aspect ratio
 JTFRAME_ARY              | MiSTer  | Defines aspect ratio
@@ -30,9 +29,9 @@ JTFRAME_OSDCOLOR         |         | Sets the OSD colour
 JTFRAME_OSD_FLIP         |         | flip option on OSD
 JTFRAME_OSD_NOCREDITS    |         | No credits option on OSD
 JTFRAME_OSD_NOLOAD       |         | No load option on OSD
-JTFRAME_OSD_NOSND        |         | No sound options on OSD
+JTFRAME_OSD_SND_EN       |         | OSD option to enable/disable FX and FM channels
+JTFRAME_OSD_VOL          |         | Show FX volume control on OSD
 JTFRAME_OSD_TEST         |         | Test option on OSD
-JTFRAME_OSD_NOSND        |         | Show volume control on OSD
 JTFRAME_RELEASE          |         | Disables gfx_en control via keyboard
 JTFRAME_SAVESDRAM        |         | Saves SDRAM contents at the end of each frame (slow)
 JTFRAME_SCAN2X_NOBLEND   | MiST    | Disables pixel blending

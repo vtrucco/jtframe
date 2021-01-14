@@ -81,20 +81,16 @@ localparam CONF_STR = {
     //     // is assimilated to player 1 joystick
     // `endif
     "O34,Video Mode, pass thru, linear, analogue, dark;",
-    `ifndef JTFRAME_OSD_NOSND
-        `ifdef JTFRAME_OSD_VOL
-        "O67,FX volume, high, very high, very low, low;",
-        "O8,PSG,On,Off;",
-        "O9,FM ,On,Off;",
-        `else
-            `ifdef JTFRAME_ADPCM
-            "O8,ADPCM,On,Off;",
-            `endif
-            `ifdef JT51
-            "O9,FM ,On,Off;",
-            `endif
-        `endif
+
+    // Sound control
+    `ifdef JTFRAME_OSD_VOL
+    "O67,FX volume, high, very high, very low, low;",
     `endif
+    `ifdef JTFRAME_OSD_SND_EN
+    "O8,FX,On,Off;",
+    "O9,FM,On,Off;",
+    `endif
+
     `ifdef JTFRAME_OSD_TEST
     "OA,Test mode,Off,On;",
     `endif
