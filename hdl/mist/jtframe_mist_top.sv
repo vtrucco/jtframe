@@ -82,7 +82,7 @@ localparam CONF_STR = {
     // `endif
     "O34,Video Mode, pass thru, linear, analogue, dark;",
     `ifndef JTFRAME_OSD_NOSND
-        `ifdef JT12
+        `ifdef JTFRAME_OSD_VOL
         "O67,FX volume, high, very high, very low, low;",
         "O8,PSG,On,Off;",
         "O9,FM ,On,Off;",

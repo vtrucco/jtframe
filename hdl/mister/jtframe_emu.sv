@@ -125,7 +125,7 @@ localparam CONF_STR = {
 
     `ifndef NOSOUND
         // sound OSD options are ommitted for compilations without sound
-        `ifdef JT12
+        `ifdef JTFRAME_OSD_VOL
         "O8,PSG,On,Off;",
         "O9,FM ,On,Off;",
         "O67,FX volume, high, very high, very low, low;",

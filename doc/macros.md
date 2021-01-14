@@ -32,6 +32,7 @@ JTFRAME_OSD_NOCREDITS    |         | No credits option on OSD
 JTFRAME_OSD_NOLOAD       |         | No load option on OSD
 JTFRAME_OSD_NOSND        |         | No sound options on OSD
 JTFRAME_OSD_TEST         |         | Test option on OSD
+JTFRAME_OSD_NOSND        |         | Show volume control on OSD
 JTFRAME_RELEASE          |         | Disables gfx_en control via keyboard
 JTFRAME_SAVESDRAM        |         | Saves SDRAM contents at the end of each frame (slow)
 JTFRAME_SCAN2X_NOBLEND   | MiST    | Disables pixel blending
