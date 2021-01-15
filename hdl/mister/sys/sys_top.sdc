@@ -62,4 +62,7 @@ set_false_path -from {ascal|o_vdown}
 # JTFRAME
 set_false_path -from {*u_dip|enable_psg*}
 set_false_path -from {*u_dip|enable_fm*}
-set_multicycle_path -to {*u_reset|rst_rom_sync*} -setup 2
+
+# Reset synchronization signal
+set_false_path -from [get_keepers {jtframe_mist:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom[0]}] -to [get_keepers {jtframe_mist:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom_sync}]
+

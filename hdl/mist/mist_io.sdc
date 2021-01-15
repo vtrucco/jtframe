@@ -95,6 +95,9 @@ set_false_path -to [get_ports {VGA_*}]
 set_false_path -from [get_registers {u_frame|u_board|u_dip|enable_psg}]
 set_false_path -from [get_registers {:u_frame|u_board|u_dip|enable_fm}]
 
+# Reset synchronization signal
+set_false_path -from [get_keepers {jtframe_mist:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom[0]}] -to [get_keepers {jtframe_mist:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom_sync}]
+
 #**************************************************************
 # Set Multicycle Path
 #**************************************************************
@@ -136,3 +139,4 @@ set_input_delay -clock SPI_SCK -min 3.2 [get_ports CONF_DATA0]
 
 set_output_delay -add_delay -max -clock SPI_SCK  6.4 [get_ports SPI_DO]
 set_output_delay -add_delay -min -clock SPI_SCK  3.2 [get_ports SPI_DO]
+
