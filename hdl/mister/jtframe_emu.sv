@@ -75,7 +75,7 @@ module emu
     output        SDRAM_CLK,
     output        SDRAM_CKE,
     output [12:0] SDRAM_A,
-    output  [1:0] SDRAM_BA,
+    output [ 1:0] SDRAM_BA,
     inout  [15:0] SDRAM_DQ,
     output        SDRAM_DQML,
     output        SDRAM_DQMH,
@@ -83,6 +83,37 @@ module emu
     output        SDRAM_nCAS,
     output        SDRAM_nRAS,
     output        SDRAM_nWE,
+
+    `ifdef VERTICAL_SCREEN
+    output        FB_EN,
+    output [ 4:0] FB_FORMAT,
+    output [11:0] FB_WIDTH,
+    output [11:0] FB_HEIGHT,
+    output [31:0] FB_BASE,
+    output [13:0] FB_STRIDE,
+    input         FB_VBL,
+    input         FB_LL,
+    output        FB_FORCE_BLANK,
+
+    // Palette control for 8bit modes.
+    // Ignored for other video modes.
+    output        FB_PAL_CLK,
+    output [ 7:0] FB_PAL_ADDR,
+    output [23:0] FB_PAL_DOUT,
+    input  [23:0] FB_PAL_DIN,
+    output        FB_PAL_WR,
+
+    output        DDRAM_CLK,
+    input         DDRAM_BUSY,
+    output [ 7:0] DDRAM_BURSTCNT,
+    output [28:0] DDRAM_ADDR,
+    input  [63:0] DDRAM_DOUT,
+    input         DDRAM_DOUT_READY,
+    output        DDRAM_RD,
+    output [63:0] DDRAM_DIN,
+    output [ 7:0] DDRAM_BE,
+    output        DDRAM_WE,
+    `endif
 
     // Open-drain User port.
     // 0 - D+/RX
@@ -92,10 +123,10 @@ module emu
     input   [6:0] USER_IN,
     output  [6:0] USER_OUT
     `ifdef SIMULATION
-    ,output         sim_pxl_cen,
-    output          sim_pxl_clk,
-    output          sim_vb,
-    output          sim_hb
+    ,output       sim_pxl_cen,
+    output        sim_pxl_clk,
+    output        sim_vb,
+    output        sim_hb
     `endif
 );
 
@@ -365,6 +396,36 @@ u_frame(
     .vs             ( vs             ),
     .pxl_cen        ( pxl_cen        ),
     .pxl2_cen       ( pxl2_cen       ),
+
+    `ifdef VERTICAL_SCREEN
+    // Screen rotation
+    .FB_EN          ( FB_EN          ),
+    .FB_FORMAT      ( FB_FORMAT      ),
+    .FB_WIDTH       ( FB_WIDTH       ),
+    .FB_HEIGHT      ( FB_HEIGHT      ),
+    .FB_BASE        ( FB_BASE        ),
+    .FB_STRIDE      ( FB_STRIDE      ),
+    .FB_VBL         ( FB_VBL         ),
+    .FB_LL          ( FB_LL          ),
+    .FB_FORCE_BLANK ( FB_FORCE_BLANK ),
+
+    .FB_PAL_CLK     ( FB_PAL_CLK     ),
+    .FB_PAL_ADDR    ( FB_PAL_ADDR    ),
+    .FB_PAL_DOUT    ( FB_PAL_DOUT    ),
+    .FB_PAL_DIN     ( FB_PAL_DIN     ),
+    .FB_PAL_WR      ( FB_PAL_WR      ),
+
+    .DDRAM_CLK      ( DDRAM_CLK      ),
+    .DDRAM_BUSY     ( DDRAM_BUSY     ),
+    .DDRAM_BURSTCNT ( DDRAM_BURSTCNT ),
+    .DDRAM_ADDR     ( DDRAM_ADDR     ),
+    .DDRAM_DOUT     ( DDRAM_DOUT     ),
+    .DDRAM_DOUT_READY(DDRAM_DOUT_READY ),
+    .DDRAM_RD       ( DDRAM_RD       ),
+    .DDRAM_DIN      ( DDRAM_DIN      ),
+    .DDRAM_BE       ( DDRAM_BE       ),
+    .DDRAM_WE       ( DDRAM_WE       ),
+    `endif
     // SDRAM interface
     .SDRAM_CLK      ( SDRAM_CLK      ),
     .SDRAM_DQ       ( SDRAM_DQ       ),

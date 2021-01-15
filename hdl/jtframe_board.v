@@ -597,12 +597,7 @@ assign scan2x_de   = LVBL && LHBL;
     endgenerate
 
     // VIDEO_WIDTH does not include blanking:
-    arcade_video #(.WIDTH(VIDEO_WIDTH),.HEIGHT(VIDEO_HEIGHT),.DW(VIDEO_DW)
-        // Disable Gamma correction for MiST/SiDi
-        `ifndef MISTER
-        ,.GAMMA(0)
-        `endif
-        )
+    arcade_video #(.WIDTH(VIDEO_WIDTH),.DW(VIDEO_DW))
     u_arcade_video(
         .clk_video  ( clk_sys       ),
         .ce_pix     ( pxl_cen       ),
@@ -613,8 +608,8 @@ assign scan2x_de   = LVBL && LHBL;
         .HSync      ( hs            ),
         .VSync      ( vs            ),
 
-        .VGA_CLK    (  scan2x_clk   ),
-        .VGA_CE     (  scan2x_cen   ),
+        .CLK_VIDEO  (  scan2x_clk   ),
+        .CE_PIXEL   (  scan2x_cen   ),
         .VGA_R      (  scan2x_r     ),
         .VGA_G      (  scan2x_g     ),
         .VGA_B      (  scan2x_b     ),
@@ -622,32 +617,11 @@ assign scan2x_de   = LVBL && LHBL;
         .VGA_VS     (  scan2x_vs    ),
         .VGA_DE     (  scan2x_de    ),
 
-        .HDMI_CLK   (               ),
-        .HDMI_CE    (               ),
-        .HDMI_R     (               ),
-        .HDMI_G     (               ),
-        .HDMI_B     (               ),
-        .HDMI_HS    (               ),
-        .HDMI_VS    (               ),
-        .HDMI_DE    (               ),
-        .HDMI_SL    (               ),
         .gamma_bus  ( gamma_bus     ),
-
-
-        .fx                ( scanlines   ),
-        .forced_scandoubler( ~scan2x_enb ),
-        .rotate_ccw        ( 1'b0        ),
-        `ifdef MISTER
-        .no_rotate         ( ~rotate[0]  ) // the no_rotate name
-            // is misleading. A low value in no_rotate will actually
-            // rotate the game video. If the game is vertical, a low value
-            // presents the game correctly on a horizontal screen
-        `else
-        // MiST / SiDi don't have enough BRAM to rotate the video
-        // nor do they have HDMI pins
-        .no_rotate         ( 1'b1        )
-        `endif
+        .fx         ( scanlines     ),
+        .forced_scandoubler( ~scan2x_enb )
     );
+
 `endif
 `endif
 

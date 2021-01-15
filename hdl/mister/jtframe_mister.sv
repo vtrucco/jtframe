@@ -56,6 +56,37 @@ module jtframe_mister #(parameter
     input           SDRAM_CLK,      // SDRAM Clock
     output          SDRAM_CKE,      // SDRAM Clock Enable
 
+    // Signals to rotate the screen
+    `ifdef VERTICAL_SCREEN
+    output          FB_EN,
+    output  [4:0]   FB_FORMAT,
+    output [11:0]   FB_WIDTH,
+    output [11:0]   FB_HEIGHT,
+    output [31:0]   FB_BASE,
+    output [13:0]   FB_STRIDE,
+    input           FB_VBL,
+    input           FB_LL,
+    output          FB_FORCE_BLANK,
+
+    // Palette control for 8bit modes.
+    // Ignored for other video modes.
+    output          FB_PAL_CLK,
+    output  [7:0]   FB_PAL_ADDR,
+    output [23:0]   FB_PAL_DOUT,
+    input  [23:0]   FB_PAL_DIN,
+    output          FB_PAL_WR,
+
+    output          DDRAM_CLK,
+    input           DDRAM_BUSY,
+    output  [7:0]   DDRAM_BURSTCNT,
+    output [28:0]   DDRAM_ADDR,
+    input  [63:0]   DDRAM_DOUT,
+    input           DDRAM_DOUT_READY,
+    output          DDRAM_RD,
+    output [63:0]   DDRAM_DIN,
+    output  [7:0]   DDRAM_BE,
+    output          DDRAM_WE,
+    `endif
     // ROM programming
     output       [24:0] ioctl_addr,
     output       [ 7:0] ioctl_data,
@@ -136,7 +167,7 @@ module jtframe_mister #(parameter
     output    [31:0]  dipsw,
     // Debug
     output            LED,
-    output   [3:0]    gfx_en
+    output    [ 3:0]  gfx_en
 );
 
 wire [21:0] gamma_bus;
@@ -147,15 +178,19 @@ wire        ioctl_download;
 
 wire [ 3:0] hoffset, voffset;
 
+wire [15:0] joystick1, joystick2, joystick3, joystick4;
+wire        ps2_kbd_clk, ps2_kbd_data;
+wire        force_scan2x, direct_video;
+
+reg  [6:0]  core_mod;
+
+wire        hs_resync, vs_resync;
+
 assign { voffset, hoffset } = status[31:24];
 
-wire [15:0]   joystick1, joystick2, joystick3, joystick4;
-wire          ps2_kbd_clk, ps2_kbd_data;
-wire          force_scan2x, direct_video;
-
-reg  [6:0]    core_mod;
-
-wire          hs_resync, vs_resync;
+`ifdef VERTICAL_SCREEN
+assign {FB_PAL_CLK, FB_FORCE_BLANK, FB_PAL_ADDR, FB_PAL_DOUT, FB_PAL_WR} = '0;
+`endif
 
 always @(posedge clk_sys) begin
     downloading <= ioctl_download && ioctl_index==8'd0;
@@ -443,5 +478,40 @@ jtframe_board #(
     // Debug
     .gfx_en         ( gfx_en          )
 );
+
+`ifdef VERTICAL_SCREEN
+screen_rotate u_rotate(
+    .CLK_VIDEO      ( scan2x_clk        ),
+    .CE_PIXEL       ( scan2x_cen        ),
+
+    .VGA_R          ( scan2x_r          ),
+    .VGA_G          ( scan2x_g          ),
+    .VGA_B          ( scan2x_b          ),
+    .VGA_HS         ( scan2x_hs         ),
+    .VGA_VS         ( scan2x_vs         ),
+    .VGA_DE         ( scan2x_de         ),
+
+    .rotate_ccw     ( 1'b0              ),
+    .no_rotate      ( ~rotate[0]        ),
+
+    .FB_EN          ( FB_EN             ),
+    .FB_FORMAT      ( FB_FORMAT         ),
+    .FB_WIDTH       ( FB_WIDTH          ),
+    .FB_HEIGHT      ( FB_HEIGHT         ),
+    .FB_BASE        ( FB_BASE           ),
+    .FB_STRIDE      ( FB_STRIDE         ),
+    .FB_VBL         ( FB_VBL            ),
+    .FB_LL          ( FB_LL             ),
+
+    .DDRAM_CLK      ( DDRAM_CLK         ),
+    .DDRAM_BUSY     ( DDRAM_BUSY        ),
+    .DDRAM_BURSTCNT ( DDRAM_BURSTCNT    ),
+    .DDRAM_ADDR     ( DDRAM_ADDR        ),
+    .DDRAM_DIN      ( DDRAM_DIN         ),
+    .DDRAM_BE       ( DDRAM_BE          ),
+    .DDRAM_WE       ( DDRAM_WE          ),
+    .DDRAM_RD       ( DDRAM_RD          )
+);
+`endif
 
 endmodule
