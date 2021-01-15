@@ -30,6 +30,12 @@ module jtframe_led(
 wire  sys_led, enlarged;
 reg   last_LVBL, cen_VB;
 
+`ifdef MISTER
+localparam POL = 1;
+`else
+localparam POL = 0;
+`endif
+
 assign sys_led = ~( downloading /*| osd_shown*/ | (|(~gfx_en)));
 
 always @(posedge clk) begin
@@ -50,9 +56,9 @@ jtframe_enlarger #(.W(4)) u_enlarger(
 // downloading, PLL lock lost, OSD is shown or in reset state
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        led <= 0;
+        led <= 0 ^ POL[0];
     end else begin
-        led <= ~enlarged & (sys_led | game_led[1]);
+        led <= (~enlarged & (sys_led | game_led[1])) ^ POL[0];
     end
 end
 
