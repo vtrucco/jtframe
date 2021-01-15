@@ -116,7 +116,6 @@ localparam CONF_STR = {
 wire          rst, rst_n, clk_sys, clk_rom, clk6, clk24, clk48, clk96;
 wire [63:0]   status;
 wire [31:0]   joystick1, joystick2;
-wire [31:0]   game_status;
 wire [24:0]   ioctl_addr;
 wire [ 7:0]   ioctl_data;
 wire [ 7:0]   ioctl_data2sd;
@@ -240,6 +239,12 @@ assign sim_hb = ~LHBL;
 `define BUTTONS 2
 `endif
 
+`ifdef JTFRAME_MIST_DIPBASE
+localparam DIPBASE=`JTFRAME_MIST_DIPBASE;
+`else
+localparam DIPBASE=16;
+`endif
+
 assign game_led[1] = 1'b0; // Let system LED info go through too
 
 localparam BUTTONS=`BUTTONS;
@@ -248,6 +253,7 @@ jtframe_mist #(
     .CONF_STR     ( CONF_STR       ),
     .SIGNED_SND   ( `SIGNED_SND    ),
     .BUTTONS      ( BUTTONS        ),
+    .DIPBASE      ( DIPBASE        ),
     .COLORW       ( COLORW         )
     `ifdef VIDEO_WIDTH
     ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
@@ -410,12 +416,6 @@ localparam STARTW=4;
 localparam STARTW=2;
 `endif
 
-`ifdef JTFRAME_MIST_DIPBASE
-localparam DIPBASE=`JTFRAME_MIST_DIPBASE;
-`else
-localparam DIPBASE=16;
-`endif
-
 // For simulation, either ~32'd0 or `JTFRAME_SIM_DIPS will be used for DIPs
 `ifdef SIMULATION
 `ifndef JTFRAME_SIM_DIPS
@@ -428,8 +428,6 @@ localparam DIPBASE=16;
 `else
     wire [31:0] dipsw = status[31+DIPBASE:DIPBASE];
 `endif
-
-assign game_status = { {32-DIPBASE{1'b0}}, status[DIPBASE-1:0] };
 
 `GAMETOP
 u_game(
@@ -542,7 +540,7 @@ u_game(
     .prog_mask  ( prog_mask     ),
 
     // DIP switches
-    .status      ( game_status    ),
+    .status      ( status         ),
     .dip_pause   ( dip_pause      ),
     .dip_flip    ( dip_flip       ),
     .dip_test    ( dip_test       ),

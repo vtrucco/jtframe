@@ -19,6 +19,7 @@
 module jtframe_mist #(parameter
     SIGNED_SND             = 1'b0,
     BUTTONS                = 2,
+    DIPBASE                = 16,
     GAME_INPUTS_ACTIVE_LOW = 1'b1,
     CONF_STR               = "",
     COLORW                 = 4,
@@ -147,7 +148,7 @@ module jtframe_mist #(parameter
 localparam SDRAMW=22;
 
 // control
-wire [31:0]   joystick1, joystick2, joystick3, joystick4;
+wire [31:0]   joystick1, joystick2, joystick3, joystick4, board_status;
 wire          ps2_kbd_clk, ps2_kbd_data;
 wire          osd_shown;
 
@@ -157,6 +158,8 @@ wire          scan2x_enb;
 wire [6:0]    core_mod;
 
 wire  [ 1:0]  rotate;
+
+assign board_status = { {32-DIPBASE{1'b0}}, status[DIPBASE-1:0] };
 
 jtframe_mist_base #(
     .CONF_STR    (CONF_STR          ),
@@ -262,7 +265,7 @@ jtframe_board #(
     .game_start     ( game_start      ),
     .game_service   ( game_service    ),
     // DIP and OSD settings
-    .status         ( status[31:0]    ),
+    .status         ( board_status    ),
     .enable_fm      ( enable_fm       ),
     .enable_psg     ( enable_psg      ),
     .dip_test       ( dip_test        ),
