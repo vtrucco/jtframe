@@ -337,11 +337,12 @@ if [ $SKIP_COMPILE = FALSE ]; then
             else
                 RPTPATH=.
             fi
-
-            if ! diff <(grep "SDRAM_.* is stuck" $RPTPATH/jt$PRJ.map.rpt | grep "SDRAM_[^\"]*" -o |sort) \
-                      <(gawk -f $JTFRAME/bin/jtioreg.awk $RPTPATH/jt$PRJ.fit.rpt | sort) >/dev/null; then
+            grep "SDRAM_.* is stuck" $RPTPATH/jt$PRJ.map.rpt | grep "SDRAM_[^\"]*" -o > $RPTPATH/sdram_stuck.rpt
+            gawk -f $JTFRAME/bin/jtioreg.awk $RPTPATH/jt$PRJ.fit.rpt > $RPTPATH/sdram_io.rpt
+            cat $RPTPATH/sdram_stuck.rpt $RPTPATH/sdram_io.rpt | sort | uniq --unique > sdram_badio.rpt
+            if [ -s sdram_badio.rpt ]; then
                 echo "ERROR: some SDRAM signals are not IO registers"
-                gawk -f $JTFRAME/bin/jtioreg.awk $RPTPATH/jt$PRJ.fit.rpt
+                cat sdram_badio.rpt
                 report FAIL
             else
                 figlet PASS $PRJ
