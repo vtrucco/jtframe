@@ -540,7 +540,7 @@ u_game(
     .prog_mask  ( prog_mask     ),
 
     // DIP switches
-    .status      ( status         ),
+    .status      ( status[31:0]   ),
     .dip_pause   ( dip_pause      ),
     .dip_flip    ( dip_flip       ),
     .dip_test    ( dip_test       ),

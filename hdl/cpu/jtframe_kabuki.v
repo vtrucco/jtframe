@@ -34,7 +34,7 @@ module jtframe_kabuki(
 
 reg  [15:0] addr_hit;
 reg  [87:0] kabuki_keys;
-reg         en_cpy;
+reg         en_cpy, last_we;
 
 wire [31:0] swap_key1, swap_key2;
 wire [15:0] addr_key;
@@ -43,7 +43,8 @@ wire [ 7:0] xor_key;
 assign { swap_key1, swap_key2, addr_key, xor_key } = kabuki_keys;
 
 always @(posedge clk) begin
-    if( prog_we ) begin
+    last_we <= prog_we;
+    if( !prog_we && last_we ) begin
         kabuki_keys <= { kabuki_keys[79:0], prog_data };
     end
     en_cpy <= en;
