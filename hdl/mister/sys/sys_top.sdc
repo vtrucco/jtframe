@@ -64,5 +64,4 @@ set_false_path -from {*u_dip|enable_psg*}
 set_false_path -from {*u_dip|enable_fm*}
 
 # Reset synchronization signal
-set_false_path -from [get_keepers {jtframe_mist:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom[0]}] -to [get_keepers {jtframe_mist:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom_sync}]
-
+set_false_path -from [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom[0]}] -to [get_keepers {emu:emu|jtframe_mister:u_frame|jtframe_board:u_board|jtframe_reset:u_reset|rst_rom_sync}]

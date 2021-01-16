@@ -329,25 +329,25 @@ if [ $SKIP_COMPILE = FALSE ]; then
             report FAIL
             exit 1
         fi
-        if grep --color=auto "Worst-case.*-[0-9.]*" "$LOG"; then
-            report FAIL
+        if [ ! -e jt$PRJ.map.rpt ]; then
+            RPTPATH=$OUTPUTDIR
         else
-            if [ ! -e jt$PRJ.map.rpt ]; then
-                RPTPATH=$OUTPUTDIR
-            else
-                RPTPATH=.
-            fi
-            grep "SDRAM_.* is stuck" $RPTPATH/jt$PRJ.map.rpt | grep "SDRAM_[^\"]*" -o > $RPTPATH/sdram_stuck.rpt
-            gawk -f $JTFRAME/bin/jtioreg.awk $RPTPATH/jt$PRJ.fit.rpt > $RPTPATH/sdram_io.rpt
-            cat $RPTPATH/sdram_stuck.rpt $RPTPATH/sdram_io.rpt | sort | uniq --unique > sdram_badio.rpt
-            if [ -s sdram_badio.rpt ]; then
-                echo "ERROR: some SDRAM signals are not IO registers"
-                cat sdram_badio.rpt
-                report FAIL
-            else
-                figlet PASS $PRJ
-                report PASS
-            fi
+            RPTPATH=.
+        fi
+        grep "SDRAM_.* is stuck" $RPTPATH/jt$PRJ.map.rpt | grep "SDRAM_[^\"]*" -o > $RPTPATH/sdram_stuck.rpt
+        gawk -f $JTFRAME/bin/jtioreg.awk $RPTPATH/jt$PRJ.fit.rpt > $RPTPATH/sdram_io.rpt
+        cat $RPTPATH/sdram_stuck.rpt $RPTPATH/sdram_io.rpt | sort | uniq --unique > sdram_badio.rpt
+        if [ -s sdram_badio.rpt ]; then
+            echo "ERROR: some SDRAM signals are not IO registers"
+            cat sdram_badio.rpt
+        fi
+        grep --color=auto "Worst-case.*-[0-9.]*" "$LOG"
+        if [[ $? = 0 || -s sdram_badio.rpt ]]; then
+            report FAIL
+            figlet FAIL $PRJ
+        else
+            echo PASS
+            report PASS
         fi
     else
         # Simulation

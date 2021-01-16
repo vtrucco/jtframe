@@ -96,9 +96,13 @@ wire [   1:0] ctl_ba_rdy;
 wire [  15:0] ctl_din;
 wire [   1:0] ctl_din_m;  // write mask
 wire [  31:0] ctl_dout;
+reg           local_rst;
+
+always @(negedge clk)
+    local_rst <= rst;
 
 jtframe_sdram_bank_mux #(.AW(AW),.HF(HF)) u_mux(
-    .rst        ( rst           ),
+    .rst        ( local_rst     ),
     .clk        ( clk           ),
 
     // Bank 0: allows R/W
@@ -158,7 +162,7 @@ jtframe_sdram_bank_mux #(.AW(AW),.HF(HF)) u_mux(
 );
 
 jtframe_sdram_bank_core #(.AW(AW),.HF(HF),.SHIFTED(SHIFTED)) u_core(
-    .rst        ( rst           ),
+    .rst        ( local_rst     ),
     .clk        ( clk           ),
     .addr       ( ctl_addr      ),
     .rd         ( ctl_rd        ),

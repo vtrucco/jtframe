@@ -152,7 +152,11 @@ localparam CONF_STR = {
         `endif
     "O2,Rotate screen,Yes,No;",
     `endif
-    "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+    `ifdef JTFRAME_NOHQ2X
+        "O35,Scandoubler Fx,None,N/A,CRT 25%,CRT 50%,CRT 75%;",
+    `else
+        "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
+    `endif
 
     // Sound control
     `ifdef JTFRAME_OSD_VOL
