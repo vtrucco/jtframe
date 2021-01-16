@@ -58,6 +58,12 @@ module jtframe_dip(
 // "OAB,FX volume, high, very high, very low, low;",
 // core-specific settings should start at letter G (i.e. 16)
 
+`ifdef MISTER
+localparam MISTER=1;
+`else
+localparam MISTER=0;
+`endif
+
 `ifdef JTFRAME_ARX
 localparam [11:0] ARX = `JTFRAME_ARX;
 `else
@@ -71,7 +77,7 @@ localparam [11:0] ARY = 12'd3;
 `endif
 
 `ifdef JTFRAME_OSD_FLIP
-assign dip_flip    = ~status[1];
+assign dip_flip    = ~status[1]^MISTER[0];
 `endif
 
 `ifdef JTFRAME_OSD_TEST
@@ -105,10 +111,11 @@ always @(*) begin
     endcase // status[4:3]
 end
 `endif
+
 `ifndef JTFRAME_OSD_NOCREDITS
-assign osd_pause   = status[12];
+    assign osd_pause   = status[12];
 `else
-assign osd_pause   = 1'b0;
+    assign osd_pause   = 1'b0;
 `endif
 
 `ifdef VERTICAL_SCREEN
@@ -117,11 +124,11 @@ assign osd_pause   = 1'b0;
     // status[13]  = 0 Rotate screen
     //             = 1 no rotation
     `ifdef MISTER
-    wire   tate   = ~status[2] & core_mod[0]; // 1 if screen is vertical (tate in Japanese)
-    assign rot_control = 1'b0;
+        wire   tate   = ~status[2] & core_mod[0]; // 1 if screen is vertical (tate in Japanese)
+        assign rot_control = 1'b0;
     `else
-    wire   tate   = 1'b1 & core_mod[0];      // MiST is always vertical
-    assign rot_control = status[2];
+        wire   tate   = 1'b1 & core_mod[0];      // MiST is always vertical
+        assign rot_control = status[2];
     `endif
     wire   swap_ar = ~tate | ~core_mod[0];
 `else
