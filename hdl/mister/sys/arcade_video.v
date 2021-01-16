@@ -117,7 +117,11 @@ video_mixer #(.LINE_LENGTH(WIDTH+4), .HALF_DEPTH(DW!=24), .GAMMA(GAMMA)) video_m
 	.ce_pix_out(CE_PIXEL),
 
 	.scandoubler(scandoubler),
-	.hq2x(fx==1),
+	`ifdef JTFRAME_NOHQ2X
+		.hq2x(1'b0),	// HQ2X is slow to compile, compromises STA and nobody likes it
+	`else
+		.hq2x(fx==1),
+	`endif
 	.gamma_bus(gamma_bus),
 
 	.R((DW!=24) ? R[7:4] : R),
@@ -246,7 +250,7 @@ always @(posedge CLK_VIDEO) begin
 	if(CE_PIXEL) begin
 		old_vs <= VGA_VS;
 		old_de <= VGA_DE;
-		
+
 		hcnt <= hcnt + 1'd1;
 		if(~old_de & VGA_DE) begin
 			hcnt <= 1;
