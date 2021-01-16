@@ -144,7 +144,7 @@ assign status[5:3]    = {2'b00, vgactrl_en[1]}; //Scandoubler Fx "Solo usamos el
 assign status[6]      = vgactrl_en[3];          //Entrar al modo TEST
 assign status[9:7]    = 3'd0;
 assign status[11:10]  = 2'b00;           //FX volume, high, very high, very low, low
-`ifdef VERTICAL_SCREEN
+`ifdef JTFRAME_VERTICAL
 assign status[12]     = vgactrl_en[2];  //~vgactrl_en[2]; Dar la vuelta a la pantalla en los verticales para que que sea como la mayoria de verticales.
 `else                                   //No lo uso porque da gliches algun core al estar invertida
 assign status[12]     = vgactrl_en[2];   //Mantente la pantalla sin girar en los horizontales (a no ser que pulsemos F6)

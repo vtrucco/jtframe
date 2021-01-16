@@ -182,9 +182,9 @@ Values above 8 are not available in MiST if **JTFRAME_MRA_DIP** is defined.
 bit     |  meaning                | Enabled with macro
 --------|-------------------------|-------------------------------------
 0       | Reset in MiST           |
-1       | Flip screen             | VERTICAL_SCREEN && JTFRAME_OSD_FLIP
-2       | Rotate controls         | VERTICAL_SCREEN (MiST)
-2       | Rotate screen           | VERTICAL_SCREEN (MiSTer)
+1       | Flip screen             | JTFRAME_VERTICAL && JTFRAME_OSD_FLIP
+2       | Rotate controls         | JTFRAME_VERTICAL (MiST)
+2       | Rotate screen           | JTFRAME_VERTICAL (MiSTer)
 3-4     | Scan lines              | Scan-line mode (MiST only)
 3-5     | Scandoubler Fx          | Scan line mode and HQ2X enable (MiSTer only)
 6-7     | FX Volume               | JTFRAME_OSD_VOL
@@ -236,7 +236,7 @@ Bit  |    Meaning            | Default value
  0   |  1 = vertical screen  |     1
  1   |  1 = 4 way joystick   |     0
 
- The vertical screen bit is only read if JTFRAME was compiled with the **VERTICAL_SCREEN** macro. This macro enables support for vertical games in the RBF. Then the same RBF can switch between horizontal and vertical games by using the MOD byte.
+ The vertical screen bit is only read if JTFRAME was compiled with the **JTFRAME_VERTICAL** macro. This macro enables support for vertical games in the RBF. Then the same RBF can switch between horizontal and vertical games by using the MOD byte.
 
 # Joysticks
 By default the frame supports two joysticks only and will try to connect to game modules based on this assumption. For games that need four joysticks, define the macro **JTFRAME_4PLAYERS**.

@@ -84,7 +84,7 @@ module emu
     output        SDRAM_nRAS,
     output        SDRAM_nWE,
 
-    `ifdef VERTICAL_SCREEN
+    `ifdef JTFRAME_VERTICAL
     output        FB_EN,
     output [ 4:0] FB_FORMAT,
     output [11:0] FB_WIDTH,
@@ -146,7 +146,7 @@ localparam CONF_STR = {
     "F,rom;",
     `endif
     "H0OB,Aspect Ratio,Original,Wide;",
-    `ifdef VERTICAL_SCREEN
+    `ifdef JTFRAME_VERTICAL
         `ifdef JTFRAME_OSD_FLIP
         "O1,Flip screen,Off,On;",
         `endif
@@ -401,7 +401,7 @@ u_frame(
     .pxl_cen        ( pxl_cen        ),
     .pxl2_cen       ( pxl2_cen       ),
 
-    `ifdef VERTICAL_SCREEN
+    `ifdef JTFRAME_VERTICAL
     // Screen rotation
     .FB_EN          ( FB_EN          ),
     .FB_FORMAT      ( FB_FORMAT      ),

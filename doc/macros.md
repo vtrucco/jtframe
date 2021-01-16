@@ -45,6 +45,7 @@ JTFRAME_SDRAM_MUXLATCH   |         | Extra latch for SDRAM mux for <64MHz operat
 JTFRAME_SDRAM_NO_DWNRFSH |         | No refresh during download (non-interleaved SDRAM controller)
 JTFRAME_SDRAM_REPACK     |         | Extra latch stage at SDRAM mux output
 JTFRAME_SDRAM_STATS      |         | Produce SDRAM usage data during simulation
+JTFRAME_VERTICAL         |         | Enables support for vertical games
 
 # Simulation-only Macros
 

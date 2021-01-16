@@ -118,7 +118,7 @@ end
     assign osd_pause   = 1'b0;
 `endif
 
-`ifdef VERTICAL_SCREEN
+`ifdef JTFRAME_VERTICAL
     // core_mod[0] = 0 horizontal game
     //             = 1 vertical game
     // status[13]  = 0 Rotate screen

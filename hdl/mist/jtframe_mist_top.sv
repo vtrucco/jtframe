@@ -70,7 +70,7 @@ localparam CONF_STR = {
     `ifndef JTFRAME_OSD_NOLOAD
     "F,rom;",
     `endif
-    `ifdef VERTICAL_SCREEN
+    `ifdef JTFRAME_VERTICAL
     `ifdef JTFRAME_OSD_FLIP
     "O1,Flip screen,Off,On;",
     `endif

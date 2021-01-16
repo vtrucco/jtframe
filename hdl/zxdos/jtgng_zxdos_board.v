@@ -364,7 +364,7 @@ jtgng_sdram u_sdram(
 // For horizontal games, the scaler can be chosen with the SCAN2X_TYPE macro
 // and overridden with a parameter.
 
-`ifdef VERTICAL_SCREEN
+`ifdef JTFRAME_VERTICAL
     `ifdef MISTER
     localparam ROTATE_FX=1;
     `else

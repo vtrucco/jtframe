@@ -57,7 +57,7 @@ module jtframe_mister #(parameter
     output          SDRAM_CKE,      // SDRAM Clock Enable
 
     // Signals to rotate the screen
-    `ifdef VERTICAL_SCREEN
+    `ifdef JTFRAME_VERTICAL
     output          FB_EN,
     output  [4:0]   FB_FORMAT,
     output [11:0]   FB_WIDTH,
@@ -188,7 +188,7 @@ wire        hs_resync, vs_resync;
 
 assign { voffset, hoffset } = status[31:24];
 
-`ifdef VERTICAL_SCREEN
+`ifdef JTFRAME_VERTICAL
 assign {FB_PAL_CLK, FB_FORCE_BLANK, FB_PAL_ADDR, FB_PAL_DOUT, FB_PAL_WR} = '0;
 `endif
 
@@ -479,7 +479,7 @@ jtframe_board #(
     .gfx_en         ( gfx_en          )
 );
 
-`ifdef VERTICAL_SCREEN
+`ifdef JTFRAME_VERTICAL
 screen_rotate u_rotate(
     .CLK_VIDEO      ( scan2x_clk        ),
     .CE_PIXEL       ( scan2x_cen        ),

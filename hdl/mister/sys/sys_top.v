@@ -30,7 +30,7 @@
 	`endif
 `endif
 
-`ifdef VERTICAL_SCREEN
+`ifdef JTFRAME_VERTICAL
 	`define USE_FB
 	`define USE_DDRAM
 `endif
