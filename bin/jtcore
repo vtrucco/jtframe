@@ -329,11 +329,18 @@ if [ $SKIP_COMPILE = FALSE ]; then
             report FAIL
             exit 1
         fi
-        if grep "Worst-case.*-[0-9.]*" "$LOG"; then
+        if grep --color=auto "Worst-case.*-[0-9.]*" "$LOG"; then
             report FAIL
         else
-            figlet PASS $PRJ
-            report PASS
+            if ! diff <(grep "SDRAM_.* is stuck" jt$PRJ.map.rpt | grep "SDRAM_[^\"]*" -o |sort) \
+                      <(gawk -f $JTFRAME/bin/jtioreg.awk jt$PRJ.fit.rpt | sort) >/dev/null; then
+                echo "ERROR: some SDRAM signals are not IO registers"
+                gawk -f $JTFRAME/bin/jtioreg.awk jt$PRJ.fit.rpt
+                report FAIL
+            else
+                figlet PASS $PRJ
+                report PASS
+            fi
         fi
     else
         # Simulation
