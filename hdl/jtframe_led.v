@@ -56,7 +56,7 @@ jtframe_enlarger #(.W(4)) u_enlarger(
 // downloading, PLL lock lost, OSD is shown or in reset state
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        led <= 0 ^ POL[0];
+        led <= POL[0];
     end else begin
         led <= (~enlarged & (sys_led | game_led[1])) ^ POL[0];
     end
