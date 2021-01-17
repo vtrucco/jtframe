@@ -39,6 +39,7 @@ PROG=FALSE
 TARGET=mist
 SKIP_COMPILE=FALSE
 RENAME=
+FAIL=0
 
 # Verilog macros
 MACROS=
@@ -348,6 +349,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
         fi
         grep --color=auto "Worst-case.*-[0-9.]*" "$LOG"
         if [[ $? = 0 || -s sdram_badio.rpt ]]; then
+            FAIL=1
             report FAIL
             figlet FAIL $PRJ
         else
@@ -473,3 +475,4 @@ EOF
     quartus_pgm -c "$CABLE" $FILE
 fi
 echo completed at $(date)
+exit $FAIL

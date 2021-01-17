@@ -5,7 +5,9 @@ echo "Create a jtseed.last file at this folder to stop at the next compilation"
 rm -f jtseed.last
 
 while true; do
-    jtcore $* -seed $RANDOM | tee -a $1_seed.log
+    if jtcore $* -seed $RANDOM; then
+        break
+    fi
     # parallel jtcore $* -seed {} ::: $RANDOM $RANDOM | tee -a $1_seed.log
     if [ -e jtseed.last ]; then
         rm jtseed.last
