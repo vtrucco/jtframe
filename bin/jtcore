@@ -308,6 +308,11 @@ if [ $SKIP_COMPILE = FALSE ]; then
         git add --force jt6295_up4*.hex
     fi
 
+    # Link .hex files in hdl, if they exist
+    for i in $PRJPATH/hdl/*.hex; do
+        ln -srf $i $PRJPATH/$TARGET/$(basename $i)
+    done
+
     ############################################
     # Recompile
     rm -rf db incremental_db output_files
