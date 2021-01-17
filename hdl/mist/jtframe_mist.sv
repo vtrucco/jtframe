@@ -358,7 +358,8 @@ jtframe_board #(
     .hdmi_arx       (                 ),
     .hdmi_ary       (                 ),
     .scan2x_cen     (                 ),
-    .scan2x_de      (                 )
+    .scan2x_de      (                 ),
+    .scan2x_sl      (                 )
 );
 
 endmodule // jtframe

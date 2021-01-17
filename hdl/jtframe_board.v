@@ -138,6 +138,7 @@ module jtframe_board #(parameter
     output            scan2x_clk,
     output            scan2x_cen,
     output            scan2x_de,
+    output    [1:0]   scan2x_sl,
     // GFX enable
     output reg [3:0]  gfx_en
 );
@@ -507,6 +508,7 @@ assign scan2x_vs   = vs;
 assign scan2x_clk  = clk_sys;
 assign scan2x_cen  = pxl_cen;
 assign scan2x_de   = LVBL && LHBL;
+assign scan2x_sl   = 2'd0;
 `else
 
 `ifndef MISTER
@@ -575,6 +577,7 @@ assign scan2x_de   = LVBL && LHBL;
     assign scan2x_de    = ~(scan2x_vs | scan2x_hs);
     assign scan2x_cen   = pxl2_cen;
     assign scan2x_clk   = clk_sys;
+    assign scan2x_sl    = scanlines[1:0];
     // unused in MiST
     assign gamma_bus    = 22'd0;
 `else
@@ -608,14 +611,15 @@ assign scan2x_de   = LVBL && LHBL;
         .HSync      ( hs            ),
         .VSync      ( vs            ),
 
-        .CLK_VIDEO  (  scan2x_clk   ),
-        .CE_PIXEL   (  scan2x_cen   ),
-        .VGA_R      (  scan2x_r     ),
-        .VGA_G      (  scan2x_g     ),
-        .VGA_B      (  scan2x_b     ),
-        .VGA_HS     (  scan2x_hs    ),
-        .VGA_VS     (  scan2x_vs    ),
-        .VGA_DE     (  scan2x_de    ),
+        .CLK_VIDEO  ( scan2x_clk    ),
+        .CE_PIXEL   ( scan2x_cen    ),
+        .VGA_R      ( scan2x_r      ),
+        .VGA_G      ( scan2x_g      ),
+        .VGA_B      ( scan2x_b      ),
+        .VGA_HS     ( scan2x_hs     ),
+        .VGA_VS     ( scan2x_vs     ),
+        .VGA_DE     ( scan2x_de     ),
+        .VGA_SL     ( scan2x_sl     ),
 
         .gamma_bus  ( gamma_bus     ),
         .fx         ( scanlines     ),

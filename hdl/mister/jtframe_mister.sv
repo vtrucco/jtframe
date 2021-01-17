@@ -152,14 +152,15 @@ module jtframe_mister #(parameter
 
     output          dip_test,
     // scan doubler
-    output reg [7:0]  scan2x_r,
-    output reg [7:0]  scan2x_g,
-    output reg [7:0]  scan2x_b,
-    output reg        scan2x_hs,
-    output reg        scan2x_vs,
-    output reg        scan2x_clk,
-    output reg        scan2x_cen,
-    output reg        scan2x_de,
+    output    [7:0] scan2x_r,
+    output    [7:0] scan2x_g,
+    output    [7:0] scan2x_b,
+    output          scan2x_hs,
+    output          scan2x_vs,
+    output          scan2x_clk,
+    output          scan2x_cen,
+    output          scan2x_de,
+    output    [1:0] scan2x_sl,
     // non standard:
     output            dip_pause,
     inout             dip_flip,
@@ -410,6 +411,7 @@ jtframe_board #(
     .scan2x_cen     ( scan2x_cen      ),
     .scan2x_de      ( scan2x_de       ),
     .scan2x_enb     ( ~force_scan2x   ),
+    .scan2x_sl      ( scan2x_sl       ),
 
     // SDRAM interface
     // Bank 0: allows R/W

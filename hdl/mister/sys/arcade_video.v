@@ -106,9 +106,9 @@ generate
 	end
 endgenerate
 
-assign VGA_SL  = sl[1:0];
 wire [2:0] sl = fx ? fx - 1'd1 : 3'd0;
 wire scandoubler = fx || forced_scandoubler;
+assign VGA_SL  = sl[1:0];
 
 video_mixer #(.LINE_LENGTH(WIDTH+4), .HALF_DEPTH(DW!=24), .GAMMA(GAMMA)) video_mixer
 (

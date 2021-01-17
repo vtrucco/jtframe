@@ -198,7 +198,6 @@ wire   field;
 assign VGA_F1=field;
 `endif
 
-assign VGA_SL     = 2'd0;
 assign VGA_SCALER = 0;
 assign USER_OUT   = '1;
 // assign BUTTONS    = 2'd0; // MiSTer board button emulation from core
@@ -529,6 +528,7 @@ u_frame(
     .scan2x_clk     ( CLK_VIDEO      ),
     .scan2x_cen     ( CE_PIXEL       ),
     .scan2x_de      ( VGA_DE         ),
+    .scan2x_sl      ( VGA_SL         ),
     // Debug
     .gfx_en         ( gfx_en         )
 );
