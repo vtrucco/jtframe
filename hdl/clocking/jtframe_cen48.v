@@ -31,6 +31,7 @@ module jtframe_cen48(
     output  reg cen3q, // 1/4 advanced with respect to cen3
     output  reg cen1p5,
     // 180 shifted signals
+    output  reg cen16b,
     output  reg cen12b,
     output  reg cen6b,
     output  reg cen3b,
@@ -55,6 +56,7 @@ always @(posedge clk) begin
     if(cencnt[1:0]==2'b0) cencnt4_12 <= { cencnt4_12[1:0], cencnt4_12[2]};
     cen4_12 <= cencnt[1:0]==2'd0 && cencnt4_12[2];
     cen16  <= cencnt6 == 3'd0 || cencnt6 == 3'd3;
+    cen16b <= cencnt6 == 3'd2 || cencnt6 == 3'd5;
     cen8   <= cencnt6     == 3'd0;
     cen4   <= cencnt6     == 3'd0 && cencnt12;
     cen6   <= cencnt[2:0] == 3'd0;
