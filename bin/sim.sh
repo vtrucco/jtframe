@@ -351,7 +351,7 @@ case "$1" in
             echo Simulate up to $1 frames
         fi
         rm -f video.bin
-        rm -f video*.jpg
+        rm -f frame_*.jpg
         rm -f frame.raw
         VIDEO_DUMP=TRUE
         ;;
@@ -544,6 +544,7 @@ verilator)
 esac
 
 rm -f video.pipe
+killall --quiet raw2png
 
 #if [[ "$VIDEO_DUMP" = TRUE && -e video.raw ]]; then
 # convert -size 384x240 -depth 8 RGBA:video.raw -resize 200% video.png
