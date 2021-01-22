@@ -526,14 +526,14 @@ ncverilog)
         -F $JTFRAME/hdl/ver/$SIMFILE -disable_sem2009 $MIST \
         +define+SIM_MS=$SIM_MS +define+SIMULATION \
         $DUMP $LOADROM \
-        $MAXFRAME \
+        $MAXFRAME +nctop+$TOP \
         -ncvhdl_args,-V93 $JTFRAME/hdl/cpu/t80/T80{pa,_ALU,_Reg,_MCode,"",s}.vhd \
         $EXTRA_VHDL $COREDEF \
         $JTFRAME/hdl/cpu/tv80/*.v \
         +define+DUMP_VIDEO_FNAME=\"video.pipe\" \
         $EXTRA -l /dev/null || exit $?;;
 verilator)
-    $SHOWCMD verilator -I../../hdl \
+    $SHOWCMD verilator -I../../hdl --top-module $TOP \
         -f game.f $PERCORE \
         $MODULES/tv80/*.v \
         $MODULES/ver/quick_sdram.v \

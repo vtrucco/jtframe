@@ -44,7 +44,6 @@ JTFRAME_SDRAM_DEBUG      |         | Outputs debug messages for SDRAM during sim
 JTFRAME_SDRAM_MUXLATCH   |         | Extra latch for SDRAM mux for <64MHz operation
 JTFRAME_SDRAM_NO_DWNRFSH |         | No refresh during download (non-interleaved SDRAM controller)
 JTFRAME_SDRAM_REPACK     |         | Extra latch stage at SDRAM mux output
-JTFRAME_SDRAM_STATS      |         | Produce SDRAM usage data during simulation
 JTFRAME_VERTICAL         |         | Enables support for vertical games
 
 # Simulation-only Macros
@@ -53,6 +52,7 @@ The following macros only have an effect if SIMULATION is defined.
 
 Macro                    | Target  |  Usage
 -------------------------|---------|---------------------------------------------
+JTFRAME_SDRAM_STATS      |         | Produce SDRAM usage data during simulation
 JTFRAME_SIM_ROMRQ_NOCHECK|         | Disable protocol checking of romrq
 JTFRAME_SIM_DIPS         |         | Define DIP switch values during simulation
 JTFRAME_SIM_LOAD_EXTRA   |         | Extra wait time when transferring ROM in simulation
