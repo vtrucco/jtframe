@@ -90,7 +90,7 @@ if [ "$MODULES" = "" ]; then
 fi
 
 # switch to NCVerilog if available
-if which ncverilog; then
+if which ncverilog > /dev/null; then
     SIMULATOR=ncverilog
     MACROPREFIX="+define+"
 fi
@@ -381,10 +381,15 @@ case "$1" in
             exit 1
         fi
         ;;
+    "-help-macros")
+        cat $JTFRAME/doc/macros.md
+        exit 0;;
     "-help")
         cat << EOF
-JT_GNG simulation tool. (c) Jose Tejada 2019, @topapate
-    -d        Add specific Verilog macros for the simulation. Common options
+JTFRAME simulation tool. (c) Jose Tejada 2019, @topapate
+    -d        Add specific Verilog macros for the simulation.
+              Use -help-macros to display all macros
+              Some common options:
         VIDEO_START=X   video output will start on frame X
         DUMP_START=X    waveform dump will start on frame X
         DIP_TEST        Enable the test bit (active low)
@@ -507,6 +512,11 @@ if [[ "$VIDEO_DUMP" = TRUE ]]; then
     mkfifo video.pipe
     raw2png -v -w $VIDEOWIDTH -h $VIDEOHEIGHT -f video.pipe : $CONVERT_OPTIONS&
 fi
+
+# Link to hex files in HDL folder
+for i in ../../hdl/*.hex; do
+    ln -fs $i $(basename $i)
+done
 
 case $SIMULATOR in
 iverilog)
