@@ -3,6 +3,7 @@ set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) j
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_sdram_bank_mux.v  ]
 
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_ram_2slots.v  ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_ram_3slots.v  ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_rom_1slot.v   ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_rom_2slots.v  ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_rom_3slots.v  ]

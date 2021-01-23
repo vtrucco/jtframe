@@ -128,7 +128,7 @@ cd $JTROOT
 MODULES=$JTROOT/modules
 JTFRAME=$MODULES/jtframe
 # This is the FTP host to which files will be copied
-HOST=mr
+HOST=MiSTer.home
 if [ -z "$FTP_FOLDER" ]; then
     FTP_FOLDER=JT
 fi
@@ -436,7 +436,7 @@ if [ -e $JTROOT/../jtbin ]; then
     if [ $TARGET = mister ]; then
         # If Mr is online, copy the file to the _Arcade/cores folder
         if ping $HOST -w 1 -c 1 > /dev/null; then
-            sshpass -p 1 scp $RELEASE.rbf root@mr:/media/fat/_${FTP_FOLDER}/cores
+            sshpass -p 1 scp $RELEASE.rbf root@${HOST}:/media/fat/_${FTP_FOLDER}/cores
         fi
     fi
     # Add to git but don't commit
