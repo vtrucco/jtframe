@@ -98,20 +98,34 @@ jtframe_sdram_stats_bank #(3) u_bank3(
     .samerow    ( samerow3  )
 );
 
-integer last_cnt, new_cnt;
+integer last_cnt, last0, last1, last2, last3, new_cnt, delta;
 
 initial begin
     last_cnt = 0;
+    last0    = 0;
+    last1    = 0;
+    last2    = 0;
+    last3    = 0;
     forever begin
         #16_666_667;
         new_cnt = count0 + count1 + count2 + count3;
-        $display("Data %5d kiB/s => BA STATS: %2d%% (%5d) - %2d%% (%5d) - %2d%% (%5d) - %2d%% (%5d)",
-            (new_cnt-last_cnt)*4*60/1024,
+        delta=new_cnt-last_cnt;
+        $display("Data %5d kiB/s => BA STATS: %5d (%2d%%) - %5d (%2d%%) - %5d (%2d%%) - %5d%% (%2d%%)",
+            delta*4*60/1024,
+            (count0-last0)*4*60/1024, ((count0-last0)*100)/delta,
+            (count1-last1)*4*60/1024, ((count1-last1)*100)/delta,
+            (count2-last2)*4*60/1024, ((count2-last2)*100)/delta,
+            (count3-last3)*4*60/1024, ((count3-last3)*100)/delta );
+        $display("                 => Same row: %2d%% (%5d) - %2d%% (%5d) - %2d%% (%5d) - %2d%% (%5d)",
             (samerow0*100)/count0, longest0,
             (samerow1*100)/count1, longest1,
             (samerow2*100)/count2, longest2,
             (samerow3*100)/count3, longest3 );
         last_cnt = new_cnt;
+        last0 = count0;
+        last1 = count1;
+        last2 = count2;
+        last3 = count3;
     end
 end
 

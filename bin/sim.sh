@@ -2,7 +2,6 @@
 
 DUMP=
 CHR_DUMP=NOCHR_DUMP
-RAM_INFO=NORAM_INFO
 FIRMWARE=gng_test.s
 VGACONV=NOVGACONV
 LOADROM=
@@ -338,9 +337,9 @@ case "$1" in
             exit 1
         fi
         ;;
-    "-info")
-        RAM_INFO=RAM_INFO
-        echo RAM information enabled
+    "-stats")
+        EXTRA="$EXTRA ${MACROPREFIX}JTFRAME_SDRAM_STATS"
+        echo RAM stats enabled
         ;;
     "-video")
         EXTRA="$EXTRA ${MACROPREFIX}DUMP_VIDEO"
@@ -384,6 +383,7 @@ case "$1" in
         ;;
     "-help-macros")
         cat $JTFRAME/doc/macros.md
+        echo
         exit 0;;
     "-help")
         cat << EOF
@@ -421,6 +421,7 @@ JTFRAME simulation tool. (c) Jose Tejada 2019, @topapate
     -nosnd    Disable SOUND hardware. Speeds up simulation a lot!
     -pause    Enable pause DIP setting. Same as -d DIP_PAUSE
     -srate    Sampling rate of the .wav file
+    -stats    Run SDRAM usage analysis
     -t        Compile and load test file for main CPU. It can be used with the
               name of an assembly language file.
     -t2       Same as -t but for the sound CPU
@@ -526,7 +527,7 @@ iverilog)
         $(add_dir $JTFRAME/hdl/ver $SIMFILE ) \
         $JTFRAME/hdl/cpu/tv80/*.v  \
         -s $TOP -o sim -DSIM_MS=$SIM_MS -DSIMULATION \
-        $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM \
+        $DUMP -D$CHR_DUMP -D$VGACONV $LOADROM \
         $MAXFRAME -DIVERILOG $EXTRA \
         -DDUMP_VIDEO_FNAME=\"video.pipe\" \
     || exit 1
@@ -549,7 +550,7 @@ verilator)
         $MODULES/tv80/*.v \
         $MODULES/ver/quick_sdram.v \
         --top-module jt${SYSNAME}_game -o sim \
-        $DUMP -D$CHR_DUMP -D$RAM_INFO -D$VGACONV $LOADROM -DFASTSDRAM \
+        $DUMP -D$CHR_DUMP -D$VGACONV $LOADROM -DFASTSDRAM \
         -DVERILATOR_LINT \
         $MAXFRAME -DSIM_MS=$SIM_MS --lint-only $EXTRA;;
 esac
