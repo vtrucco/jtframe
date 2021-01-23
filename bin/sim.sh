@@ -27,6 +27,7 @@ VIDEOHEIGHT=224
 SAMPLING_RATE=
 
 rm -f test2.bin
+rm -f video.pipe
 
 function add_dir {
     if [ ! -d "$1" ]; then
