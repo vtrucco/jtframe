@@ -555,7 +555,7 @@ verilator)
 esac
 
 rm -f video.pipe
-killall --quiet raw2png
+# killall --quiet raw2png
 
 #if [[ "$VIDEO_DUMP" = TRUE && -e video.raw ]]; then
 # convert -size 384x240 -depth 8 RGBA:video.raw -resize 200% video.png
