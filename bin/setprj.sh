@@ -79,6 +79,11 @@ function pull_jtframe {
     cd -
 }
 
+function jtmacros {
+    cat $JTFRAME/doc/macros.md
+    echo
+}
+
 # check that git hooks are present
 # Only the pre-commit is added automatically, the post-commit must
 # be copied manually as it implies automatic pushing to the server
