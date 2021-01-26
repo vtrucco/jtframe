@@ -26,7 +26,7 @@
 
 `timescale 1ns/1ps
 
-module jtframe_dual_ram #(parameter dw=8, aw=10, 
+module jtframe_dual_ram #(parameter dw=8, aw=10,
     simfile="", simhexfile="", synfile="", dumpfile="dump.hex"
 )(
     input   clk0,
@@ -55,7 +55,10 @@ initial begin
         f=$fopen(simfile,"rb");
         if( f != 0 ) begin
             readcnt=$fread( mem, f );
-            $display("INFO: Read %14s (%4d bytes) for %m",simfile, readcnt);
+            $display("INFO: Read %14s (%4d bytes/%2d%%) for %m",
+                simfile, readcnt, readcnt*100/(2**aw));
+            if( readcnt != 2**aw )
+                $display("      the memory was not filled by the file data");
             $fclose(f);
         end else begin
             $display("WARNING: %m cannot open file: %s", simfile);

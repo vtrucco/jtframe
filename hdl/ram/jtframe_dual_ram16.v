@@ -42,7 +42,7 @@ module jtframe_dual_ram16 #(parameter aw=10,
 
 jtframe_dual_ram #(
     .dw        ( 8             ),
-    .aw        ( aw-1          ),
+    .aw        ( aw            ),
     .simfile   ( simfile_lo    ),
     .simhexfile( simhexfile_lo )  )
 u_lo(
@@ -62,7 +62,7 @@ u_lo(
 
 jtframe_dual_ram #(
     .dw        ( 8             ),
-    .aw        ( aw-1          ),
+    .aw        ( aw            ),
     .simfile   ( simfile_hi    ),
     .simhexfile( simhexfile_hi )  )
 u_hi(
