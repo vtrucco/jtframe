@@ -20,6 +20,17 @@ alias jtcore="$JTFRAME/bin/jtcore"
 # derived variables
 if [ -e $JTROOT/cores ]; then
     CORES=$JTROOT/cores
+    # Adds all core names to the auto-completion list of bash
+    echo $CORES
+    ALLFOLDERS=
+    for i in $CORES/*; do
+        j=$(basename $i)
+        if [[ -d $i && $j != modules ]]; then
+            ALLFOLDERS="$ALLFOLDERS $j "
+        fi
+    done
+    complete -W "$ALLFOLDERS" jtcore
+    unset ALLFOLDERS
 else
     CORES=$JTROOT
 fi
