@@ -26,18 +26,18 @@ module jtframe_dual_ram16 #(parameter aw=10,
     simfile_lo="", simhexfile_lo="",
     simfile_hi="", simhexfile_hi=""
 )(
-    input   clk0,
-    input   clk1,
+    input            clk0,
+    input            clk1,
     // Port 0
     input   [  15:0] data0,
     input   [aw-1:0] addr0,
     input   [   1:0] we0,
-    output reg [15:0] q0,
+    output  [  15:0] q0,
     // Port 1
     input   [  15:0] data1,
     input   [aw-1:0] addr1,
     input   [   1:0] we1,
-    output reg [15:0] q1
+    output  [  15:0] q1
 );
 
 jtframe_dual_ram #(
