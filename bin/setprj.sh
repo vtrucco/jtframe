@@ -30,6 +30,7 @@ if [ -e $JTROOT/cores ]; then
         fi
     done
     complete -W "$ALLFOLDERS" jtcore
+    complete -W "$ALLFOLDERS" swcore
     unset ALLFOLDERS
 else
     CORES=$JTROOT
