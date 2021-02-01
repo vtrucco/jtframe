@@ -5,6 +5,7 @@ NETWORK=
 DRYRUN=
 CORES=".*"
 MAX_JOBS=
+CMD=jtcore
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -35,6 +36,9 @@ while [ $# -gt 0 ]; do
             shift
             MAX_JOBS="--jobs $1"
             ;;
+        -seed)
+            CMD=jtseed
+            ;;
         -network)
             shift
             if [ ! -e "$1" ]; then
@@ -55,6 +59,7 @@ Updates all JT cores. Usage:
     -cores  list of cores to update as \"gng 1943\"
     -dry    dry run
     -test   test build. Disables sound and HDMI. Does not define JTFRAME_RELEASE.
+    -seed   run a seed sweep if needed
     -jobs   Maximum number of jobs to run in parallel. For MiSTer 2 is recommended.
     :       options for jtcore script can be added after a colon
 EOF
@@ -92,5 +97,5 @@ fi
 
 cat $TASKS | parallel --no-run-if-empty --colsep " "  --shuf  --workdir $JTROOT \
     $DRYRUN $NETWORK $MAX_JOBS\
-    --delay 0.25 $JTFRAME/bin/jtcore {} $EXTRA | tee $JTROOT/log/update.log
+    --delay 0.25 $JTFRAME/bin/$CMD {} $EXTRA | tee $JTROOT/log/update.log
 

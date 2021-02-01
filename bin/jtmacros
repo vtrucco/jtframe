@@ -1,0 +1,3 @@
+#!/bin/bash
+cat $JTFRAME/doc/macros.md
+echo
