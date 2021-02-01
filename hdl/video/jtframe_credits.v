@@ -60,7 +60,7 @@ reg  [MSGW-1:0]   scan_addr;
 wire [9:0]        font_addr = {scan_data[6:0], vdump[2:0] };
 wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
-reg               show;
+reg               show, hide;
 
 jtframe_ram #(.dw(9), .aw(MSGW),.synbinfile("msg.bin")) u_msg(
     .clk    ( clk       ),
@@ -349,18 +349,18 @@ endfunction
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         show        <= 0;
+        hide        <= 0;
         last_toggle <= 0;
         last_enable <= 0;
     end else begin
-        last_toggle <= toggle;
         last_enable <= enable;
-
+        last_toggle <= toggle;
         if( enable ) begin
-            if( !last_enable ) show <= 1;
-            else if( toggle && !last_toggle ) show <= ~show;
-        end else begin
-            show <= 0;
-        end
+            show <= ~hide;
+            if( toggle && !last_toggle ) begin
+                hide <= ~hide;
+            end
+        end else show <= 0;
     end
 end
 
