@@ -143,14 +143,14 @@ module jtframe_board #(parameter
     output reg [3:0]  gfx_en
 );
 
-wire  [ 2:0]  scanlines;
-wire          bw_en, blend_en;
-wire          en_mixing;
-wire          osd_pause;
+wire  [ 2:0] scanlines;
+wire         bw_en, blend_en;
+wire         en_mixing;
+wire         osd_pause;
 
-wire invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
-wire key_reset, key_pause, rot_control;
-reg       game_pause, soft_rst;
+wire         invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
+wire         key_reset, key_pause, key_test, rot_control;
+reg          game_pause, soft_rst;
 
 wire [9:0] key_joy1, key_joy2, key_joy3;
 wire [3:0] key_start, key_coin;
@@ -199,6 +199,7 @@ jtframe_keyboard u_keyboard(
     .key_start   ( key_start     ),
     .key_coin    ( key_coin      ),
     .key_reset   ( key_reset     ),
+    .key_test    ( key_test      ),
     .key_pause   ( key_pause     ),
     .key_service ( key_service   ),
     .key_gfx     ( key_gfx       )
@@ -212,6 +213,7 @@ assign key_coin    = 2'd0;
 assign key_reset   = 1'b0;
 assign key_pause   = 1'b0;
 assign key_service = 1'b0;
+assign key_test    = 1'b0;
 `endif
 
 reg  [15:0] joy1_sync, joy2_sync, joy3_sync, joy4_sync;
@@ -368,6 +370,7 @@ jtframe_dip u_dip(
     .enable_fm  ( enable_fm     ),
     .enable_psg ( enable_psg    ),
     .osd_pause  ( osd_pause     ),
+    .key_test   ( key_test      ),
     .dip_test   ( dip_test      ),
     .dip_pause  ( dip_pause     ),
     .dip_flip   ( dip_flip      ),

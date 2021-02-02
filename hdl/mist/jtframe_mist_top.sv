@@ -166,7 +166,7 @@ wire [15:0] snd_left, snd_right;
 
 wire [9:0] game_joy1, game_joy2, game_joy3, game_joy4;
 wire [3:0] game_coin, game_start;
-wire game_rst;
+wire       game_rst, game_service;
 wire [3:0] gfx_en;
 // SDRAM
 wire data_rdy, sdram_ack;
@@ -373,7 +373,7 @@ u_frame(
     .game_joystick4 ( game_joy4      ),
     .game_coin      ( game_coin      ),
     .game_start     ( game_start     ),
-    .game_service   (                ), // unused
+    .game_service   ( game_service   ),
     .joystick_analog_0( joystick_analog_0 ),
     .joystick_analog_1( joystick_analog_1 ),
     .LED            ( LED            ),
@@ -545,6 +545,7 @@ u_game(
     .dip_flip    ( dip_flip       ),
     .dip_test    ( dip_test       ),
     .dip_fxlevel ( dip_fxlevel    ),
+    .service     ( game_service   ),
     `ifdef JTFRAME_MRA_DIP
     .dipsw       ( dipsw          ),
     `endif

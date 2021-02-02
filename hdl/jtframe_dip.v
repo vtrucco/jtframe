@@ -36,7 +36,8 @@ module jtframe_dip(
     output reg         enable_psg,
     output             osd_pause,
 
-    inout              dip_test,
+    input              key_test,
+    output             dip_test,
     // non standard:
     output reg         dip_pause,
     inout              dip_flip,    // this might be set by the core
@@ -88,10 +89,10 @@ assign dip_flip    = ~status[1]^MISTER[0];
         assign dip_test = 1;
         `endif
     `else
-        assign dip_test = ~status[10];
+        assign dip_test = ~(status[10] | key_test); // assumes it is always active low
     `endif
 `else
-assign dip_test = 1;
+assign dip_test = ~key_test;
 `endif
 
 wire   widescreen  = status[11];    // only MiSTer

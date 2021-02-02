@@ -310,7 +310,7 @@ wire [ 3:0] game_coin, game_start;
 wire [ 3:0] gfx_en;
 wire [15:0] joystick_analog_0, joystick_analog_1;
 
-wire        game_rst, rst, rst_n;
+wire        game_rst, game_service, rst, rst_n;
 wire        rst_req   = RESET | status[0] | buttons[1];
 
 assign LED_DISK  = 2'b0;
@@ -502,7 +502,7 @@ u_frame(
     .game_joystick4 ( game_joy4      ),
     .game_coin      ( game_coin      ),
     .game_start     ( game_start     ),
-    .game_service   (                ), // unused
+    .game_service   ( game_service   ),
     .joystick_analog_0( joystick_analog_0 ),
     .joystick_analog_1( joystick_analog_1 ),
     .LED            ( LED_USER       ),
@@ -668,6 +668,7 @@ end
 
     // DIP switches
     .status       ( status           ),
+    .service      ( game_service     ),
     .dip_pause    ( dip_pause        ),
     .dip_flip     ( dip_flip         ),
     .dip_test     ( dip_test         ),

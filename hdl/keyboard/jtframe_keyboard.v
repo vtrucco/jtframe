@@ -34,6 +34,7 @@ module jtframe_keyboard(
     output reg [3:0] key_coin,
     output reg key_reset,
     output reg key_pause,
+    output reg key_test,
     output reg key_service,
     output reg [3:0] key_gfx
 );
@@ -62,6 +63,7 @@ always @(posedge clk) begin
       key_reset    <= 1'b0;
       key_pause    <= 1'b0;
       key_service  <= 1'b0;
+      key_test     <= 1'b0;
     end else begin
         // ps2 decoder has received a valid ps2byte
         if(valid) begin
@@ -77,6 +79,9 @@ always @(posedge clk) begin
 
                 case({key_extended, ps2byte})
                     // first joystick
+                    9'h0_22: key_joy1[9] <= !key_released;   // Button 6 (X)
+                    9'h0_1a: key_joy1[8] <= !key_released;   // Button 5 (Z)
+                    9'h0_12: key_joy1[7] <= !key_released;   // Button 4 (L shift)
                     9'h0_29: key_joy1[6] <= !key_released;   // Button 3
                     9'h0_11: key_joy1[5] <= !key_released;   // Button 2
                     9'h0_14: key_joy1[4] <= !key_released;   // Button 1
@@ -85,6 +90,8 @@ always @(posedge clk) begin
                     9'h1_6b: key_joy1[1] <= !key_released;   // Left
                     9'h1_74: key_joy1[0] <= !key_released;   // Right
                     // second joystick
+                    9'h0_24: key_joy2[8] <= !key_released;   // Button 5
+                    9'h0_1d: key_joy2[7] <= !key_released;   // Button 4
                     9'h0_15: key_joy2[6] <= !key_released;   // Button 3
                     9'h0_1b: key_joy2[5] <= !key_released;   // Button 2
                     9'h0_1c: key_joy2[4] <= !key_released;   // Button 1
@@ -93,26 +100,28 @@ always @(posedge clk) begin
                     9'h0_23: key_joy2[1] <= !key_released;   // Left
                     9'h0_34: key_joy2[0] <= !key_released;   // Right
                     // third joystick
-                    9'h0_5a: key_joy3[4] <= !key_released;   // Button 1
-                    9'h0_59: key_joy3[5] <= !key_released;   // Button 2
-                    9'h0_43: key_joy3[3] <= !key_released;   // Up
-                    9'h0_42: key_joy3[2] <= !key_released;   // Down
-                    9'h0_3b: key_joy3[1] <= !key_released;   // Left
-                    9'h0_4b: key_joy3[0] <= !key_released;   // Right
+                    9'h0_5a: key_joy3[6] <= !key_released;   // Button 3 (return)
+                    9'h0_59: key_joy3[5] <= !key_released;   // Button 2 (R shift)
+                    9'h1_14: key_joy3[4] <= !key_released;   // Button 1 (R ctrl)
+                    9'h0_43: key_joy3[3] <= !key_released;   // Up (I)
+                    9'h0_42: key_joy3[2] <= !key_released;   // Down (K)
+                    9'h0_3b: key_joy3[1] <= !key_released;   // Left (J)
+                    9'h0_4b: key_joy3[0] <= !key_released;   // Right (L)
                     // coins
-                    9'h2e                : key_coin[0] <= !key_released;  // 1st coin
+                    9'h2e: key_coin[0] <= !key_released;  // 1st coin
                     9'h36: key_coin[1] <= !key_released;  // 2nd coin
                     9'h3d: key_coin[2] <= !key_released;  // 3rd coin
                     9'h3e: key_coin[3] <= !key_released;  // 4th coin
                     // start
-                    9'h16, 9'h05 /* 1, F1 */: key_start[0] <= !key_released; // 1P start
-                    9'h1e, 9'h06 /* 2, F2 */: key_start[1] <= !key_released; // 2P start
-                    9'h26        /* 3     */: key_start[2] <= !key_released; // 3P start
-                    9'h25        /* 4     */: key_start[3] <= !key_released; // 4P start
+                    9'h16: key_start[0] <= !key_released; // 1P start (1)
+                    9'h1e: key_start[1] <= !key_released; // 2P start (2)
+                    9'h26: key_start[2] <= !key_released; // 3P start (3)
+                    9'h25: key_start[3] <= !key_released; // 4P start (4)
                     // system control
-                    9'h4d        /*    */: key_pause <= !key_released;
-                    9'h04        /* F3 */: key_reset <= !key_released;
-                    9'h46        /*  9 */: key_service <= !key_released;
+                    9'h4d: key_pause   <= !key_released; //  P
+                    9'h06: key_test    <= !key_released; // F2
+                    9'h04: key_reset   <= !key_released; // F3
+                    9'h46: key_service <= !key_released; //  9
                     // GFX enable
                     9'h0_83: key_gfx[0] <= !key_released; // F7: CHAR enable
                     9'h0_0a: key_gfx[1] <= !key_released; // F8: SCR1 enable
@@ -139,6 +148,5 @@ ps2_intf ps2_keyboard (
     .VALID    ( valid  ),
     .ERROR    ( error  )
 );
-
 
 endmodule
