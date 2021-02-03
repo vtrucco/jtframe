@@ -37,7 +37,7 @@ while [ $# -gt 0 ]; do
             MAX_JOBS="--jobs $1"
             ;;
         -seed)
-            CMD=jtseed
+            CMD="jtseed 4"
             ;;
         -network)
             shift

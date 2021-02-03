@@ -4,7 +4,17 @@ echo "Create a jtseed.last file at this folder to stop at the next compilation"
 
 rm -f jtseed.last
 
-while true; do
+MAXREPS=100
+
+re='^[0-9]+$'
+if [[ $1 =~ $re ]] ; then
+   MAXREPS=$1
+   shift
+else
+    echo "Call jtseed with a number as the first argument to limit the iterations"
+fi
+
+while [ $MAXREPS -gt 0 ]; do
     if jtcore $* -seed $RANDOM; then
         break
     fi
@@ -13,4 +23,11 @@ while true; do
         rm jtseed.last
         exit 0
     fi
+    MAXREPS=$((MAXREPS-1))
 done
+
+if [ $MAXREPS -gt 0 ]; then
+    # aborted before completing because of reaching the iteration limit
+    echo Maximum number of seed trial reached
+    exit 1
+fi
