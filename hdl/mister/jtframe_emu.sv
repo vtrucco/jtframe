@@ -355,6 +355,8 @@ localparam GAME_BUTTONS=`BUTTONS;
 wire [COLORW-1:0] game_r, game_g, game_b;
 wire              LHBL, LVBL;
 wire              hs, vs, sample;
+wire [       7:0] ioctl_data2sd;
+wire              ioctl_ram;
 
 assign game_led[1] = 1'b1;
 
@@ -476,6 +478,8 @@ u_frame(
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_data     ( ioctl_data     ),
     .ioctl_rom_wr   ( ioctl_rom_wr   ),
+    .ioctl_ram      ( ioctl_ram      ),
+    .ioctl_data2sd  ( ioctl_data2sd  ),
 
     .prog_addr      ( prog_addr      ),
     .prog_data      ( prog_data      ),
@@ -610,6 +614,10 @@ end
     .ioctl_addr   ( ioctl_addr       ),
     .ioctl_data   ( ioctl_data       ),
     .ioctl_wr     ( ioctl_rom_wr     ),
+`ifdef CORE_NVRAM_SIZE
+    .ioctl_ram    ( ioctl_ram        ),
+    .ioctl_data2sd(ioctl_data2sd     ),
+`endif
 
     // ROM load
     .downloading ( downloading    ),

@@ -87,10 +87,15 @@ module jtframe_mister #(parameter
     output  [7:0]   DDRAM_BE,
     output          DDRAM_WE,
     `endif
+
     // ROM programming
     output       [24:0] ioctl_addr,
     output       [ 7:0] ioctl_data,
     output              ioctl_rom_wr,
+    // NVRAM
+    input        [ 7:0] ioctl_data2sd,
+    output reg          ioctl_ram,
+
     input               dwnld_busy,
     output reg          downloading,
 
@@ -195,6 +200,7 @@ assign {FB_PAL_CLK, FB_FORCE_BLANK, FB_PAL_ADDR, FB_PAL_DOUT, FB_PAL_WR} = '0;
 
 always @(posedge clk_sys) begin
     downloading <= ioctl_download && ioctl_index==8'd0;
+    ioctl_ram   <= ioctl_index == 8'h2 && ioctl_download;
 end
 
 jtframe_resync u_resync(
@@ -212,29 +218,29 @@ jtframe_resync u_resync(
 
 
 `ifndef JTFRAME_MRA_DIP
-// DIP switches through regular OSD options
-assign ioctl_rom_wr = ioctl_wr;
-assign dipsw        = status;
+    // DIP switches through regular OSD options
+    assign ioctl_rom_wr = ioctl_wr;
+    assign dipsw        = status;
 `else
-// Dip switches through MRA file
-// Support for 32 bits only for now.
-reg  [ 7:0] dsw[4];
+    // Dip switches through MRA file
+    // Support for 32 bits only for now.
+    reg  [ 7:0] dsw[4];
 
-`ifndef SIMULATION
-    assign dipsw = {dsw[3],dsw[2],dsw[1],dsw[0]};
-`else // SIMULATION:
-    `ifndef JTFRAME_SIM_DIPS
-        assign dipsw = ~32'd0;
-    `else
-        assign dipsw = `JTFRAME_SIM_DIPS;
+    `ifndef SIMULATION
+        assign dipsw = {dsw[3],dsw[2],dsw[1],dsw[0]};
+    `else // SIMULATION:
+        `ifndef JTFRAME_SIM_DIPS
+            assign dipsw = ~32'd0;
+        `else
+            assign dipsw = `JTFRAME_SIM_DIPS;
+        `endif
     `endif
-`endif
 
-assign ioctl_rom_wr = (ioctl_wr && ioctl_index==8'd0);
+    assign ioctl_rom_wr = (ioctl_wr && ioctl_index==8'd0);
 
-always @(posedge clk_rom) begin
-    if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[24:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
-end
+    always @(posedge clk_rom) begin
+        if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[24:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
+    end
 `endif
 
 always @(posedge clk_rom, posedge rst) begin
@@ -279,9 +285,9 @@ generate
         reg        dwnld_addr0, half_wr;
         reg [DWNLD_W-1:0] dwnld_st;
         // reg       dwnld_wr_last;
-        assign ioctl_wr   = half_wr;
-        assign ioctl_addr = {dwnld_addr[24:1], dwnld_addr0};
-        assign ioctl_data = dwnld_half;
+        assign ioctl_wr   = ioctl_ram ? dwnld_wr         : half_wr;
+        assign ioctl_addr = ioctl_ram ? dwnld_addr       : {dwnld_addr[24:1], dwnld_addr0};
+        assign ioctl_data = ioctl_ram ? dwnld_data[7:0] : dwnld_half;
 
         always @( posedge clk_rom, posedge rst ) begin
             if( rst ) begin
@@ -332,6 +338,14 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .ioctl_dout      ( dwnld_data     ),
     //.ioctl_din       ( ioctl_data2sd  ),
     .ioctl_index     ( ioctl_index    ),
+    // NVRAM support
+    .ioctl_upload    (                ), // no need
+    .ioctl_rd        (                ), // no need
+    `ifdef JTFRAME_MR_FASTIO
+        .ioctl_din   ( {8'd0,{ioctl_data2sd}} ),
+    `else
+        .ioctl_din   ( ioctl_data2sd  ),
+    `endif
 
     .joystick_0      ( joystick1      ),
     .joystick_1      ( joystick2      ),
