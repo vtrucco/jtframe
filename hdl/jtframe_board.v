@@ -458,6 +458,8 @@ wire              pre2x_LHBL, pre2x_LVBL;
     `define JTFRAME_CREDITS_PAGES 3
     `endif
     wire toggle = |(game_start ^ {4{invert_inputs}});
+    wire fast_scroll = |({game_joystick1[2], game_joystick2[2]} ^ {2{invert_inputs}});
+
     // To do: HS and VS should actually be delayed inside jtframe_credits too
     jtframe_credits #(
         .PAGES  ( `JTFRAME_CREDITS_PAGES ),
@@ -478,6 +480,7 @@ wire              pre2x_LHBL, pre2x_LVBL;
             .enable ( ~dip_pause    ),
         `endif
         .toggle     ( toggle        ),
+        .fast_scroll( fast_scroll   ),
         // output image
         .HB_out     ( pre2x_LHBL      ),
         .VB_out     ( pre2x_LVBL      ),

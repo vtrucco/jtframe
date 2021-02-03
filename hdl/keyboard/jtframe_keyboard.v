@@ -104,7 +104,10 @@ always @(posedge clk) begin
                     9'h0_59: key_joy3[5] <= !key_released;   // Button 2 (R shift)
                     9'h1_14: key_joy3[4] <= !key_released;   // Button 1 (R ctrl)
                     9'h0_43: key_joy3[3] <= !key_released;   // Up (I)
-                    9'h0_42: key_joy3[2] <= !key_released;   // Down (K)
+                    9'h0_42: begin // K is used for both 2P and 3P
+                        key_joy3[2] <= !key_released;   // 3P Down (K)
+                        key_joy2[9] <= !key_released;   // 2P Button 6
+                    end
                     9'h0_3b: key_joy3[1] <= !key_released;   // Left (J)
                     9'h0_4b: key_joy3[0] <= !key_released;   // Right (L)
                     // coins

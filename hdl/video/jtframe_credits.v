@@ -36,8 +36,11 @@ module jtframe_credits #(
     input               HB,
     input               VB,
     input [COLW*3-1:0]  rgb_in,
+
+    // control
     input               enable, // shows the screen and resets the scroll counter
     input               toggle, // disables the screen. Only has an effect if enable is high
+    input               fast_scroll,
 
     // output image
     output reg              HB_out,
@@ -52,8 +55,14 @@ localparam MSGW  = PAGES == 1 ? 10 :
 localparam VPOSW = MSGW-2;
 localparam [VPOSW-1:0] MAXVISIBLE = PAGES*32*8-1;
 
-reg  [7:0] hn  ;
-reg  [VPOSW-1:0 ] vpos, vrender, vdump, vdump1;
+`ifndef JTFRAME_CREDITS_HSTART
+    localparam [8:0] HSTART=9'h0;
+`else
+    localparam [8:0] HSTART=9'h0-`JTFRAME_CREDITS_HSTART;
+`endif
+
+reg  [8:0]        hn;
+reg  [VPOSW-1:0]  vpos, vrender, vdump, vdump1;
 wire [8:0]        scan_data;
 wire [7:0]        font_data;
 reg  [MSGW-1:0]   scan_addr;
@@ -61,6 +70,7 @@ wire [9:0]        font_addr = {scan_data[6:0], vdump[2:0] };
 wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
 reg               show, hide;
+wire              hvisible;
 
 jtframe_ram #(.dw(9), .aw(MSGW),.synbinfile("msg.bin")) u_msg(
     .clk    ( clk       ),
@@ -97,7 +107,7 @@ wire hb_edge = hb && !last_hb;
 
 always @(posedge clk) begin
     if( rst ) begin
-        hn       <= 8'd0;
+        hn       <= HSTART;
         vpos     <= {VPOSW{1'b0}};
         vrender  <= 8'd0;
         scr_base <= 4'd0;
@@ -105,12 +115,12 @@ always @(posedge clk) begin
         last_hb <= hb;
         last_vb <= vb;
         if( hb_edge ) begin
-            hn      <= 8'd0;
+            hn      <= HSTART;
             vrender <= vrender + 8'd1;
             vdump1  <= vpos + vrender;
             vdump   <= vdump1;
-        end else if( !hb && hn  !=8'hff ) begin
-            hn   <= hn   + 8'd1;
+        end else if( !hb ) begin
+            hn <= hn + 9'd1;
         end
         // vpos: scroll counter
         // gets reset each time the pause button is pressed
@@ -122,23 +132,24 @@ always @(posedge clk) begin
                 if( !last_vb && SCROLL_EN ) begin
                     // Scroll runs at max speed when the visible pages are over
                     // otherwise it runs at SPEED
-                    if( scr_base == SPEED || vrender>MAXVISIBLE ) begin
+                    if( scr_base == SPEED || vrender>MAXVISIBLE || fast_scroll ) begin
                         vpos <= vpos + 1'b1;
                         scr_base <= 4'd0;
                     end else scr_base <= scr_base + 4'd1;
                 end
             end
         end
-        if( hn  [2:0]==3'd0 || hb || vb ) begin
-            scan_addr <= { vdump[VPOSW-1:3], hn  [7:3] };
+        if( hn[2:0]==3'd0 || hb || vb ) begin
+            scan_addr <= { vdump[VPOSW-1:3], hn[7:3] };
         end
         // Draw
         pxl <= { pal, pxl_data[7] };
-        if( hn  [2:0]==3'd1) begin
+        if( hn[2:0]==3'd1 ) begin
             pal      <= scan_data[8:7];
             pxl_data <= font_data;
-        end else
+        end else begin
             pxl_data <= pxl_data << 1;
+        end
     end
 end
 
@@ -174,7 +185,7 @@ jtframe_dual_ram #(.dw(8), .aw(9)) u_linebuffer(
     .q0     (           ),
     // Port 1
     .data1  ( ~8'd0     ),
-    .addr1  ( { ~line, hn   } ),
+    .addr1  ( { ~line, hn[7:0] } ),
     .we1    ( buf_we1   ),
     .q1     ( pal_addr  )
 );
@@ -302,7 +313,9 @@ always @(posedge clk ) begin
         3: begin
             obj_pxl <= pal_data;
             obj_ok  <= pal_addr[3:0] != 4'hf; // visible pixel
-            buf_we1 <= 1'b1;
+            buf_we1 <= !hn[8]; // do not empty the line buffer when
+                               // scanning the left side of the screen
+                               // This applies when JTFRAME_CREDITS_HSTART!=0
         end
         4: begin
             buf_we1 <= 1'b0;
@@ -364,11 +377,18 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
+jtframe_sh #(.width(1),.stages(3)) u_hnsh(
+    .clk    ( clk       ),
+    .clk_en ( pxl_cen   ),
+    .din    ( hn[8]     ),
+    .drop   ( hvisible  )
+);
+
 always @(posedge clk) if(pxl_cen) begin
     old1 <= rgb_in;
     old2 <= old1;
     { blanks, HB_out, VB_out } <= { HB, VB, blanks };
-    if( !show )
+    if( !show || hvisible || !VB )
         rgb_out <= old2;
     else begin
         if( (!pxl[0] && !obj_ok) || !visible
