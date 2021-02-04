@@ -3,9 +3,23 @@ TARGET=
 EXTRA="-d JTFRAME_RELEASE -g"
 NETWORK=
 DRYRUN=
-CORES=".*"
+CORELIST=".*"
 MAX_JOBS=
 CMD=jtcore
+BAD=0
+
+function add_core {
+    if [ -d $CORES/$1 ]; then
+        if [ "$CORELIST" = ".*" ]; then
+            CORELIST="$1"
+        else
+            CORELIST="$CORELIST\|$1"
+        fi
+    else
+        echo "Error: core $1 cannot be found in $CORES"
+        BAD=1
+    fi
+}
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -25,11 +39,7 @@ while [ $# -gt 0 ]; do
         -cores)
             shift
             for i in $1; do
-                if [ "$CORES" = ".*" ]; then
-                    CORES="$i"
-                else
-                    CORES="$CORES\|$i"
-                fi
+                add_core $i
             done
             ;;
         -jobs)
@@ -70,8 +80,10 @@ EOF
             shift
             EXTRA="$EXTRA $*"
             break;;
-        *)  echo "ERROR: jtupdate does not know option $1";
+        -*) echo "ERROR: jtupdate does not know option $1";
             exit 1;;
+        *)
+            add_core $1;;
     esac
     shift
 done
@@ -81,13 +93,17 @@ if [ -z "$TARGET" ]; then
     exit 1
 fi
 
+if [ $BAD = 1 ]; then
+    exit 1
+fi
+
 TASKS=/tmp/$RANDOM_$RANDOM
 
 (
     for i in $TARGET; do
         if [ -e $i.cores ]; then cat $i.cores; echo ; fi;
     done
-) | grep --word-regexp "$CORES" > $TASKS
+) | grep --word-regexp "$CORELIST" > $TASKS
 
 if [ $(cat $TASKS|wc -l) = 0 ]; then
     echo no target.cores files were found. For example mister.cores.

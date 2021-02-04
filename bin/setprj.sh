@@ -19,7 +19,7 @@ alias jtcore="$JTFRAME/bin/jtcore"
 
 # derived variables
 if [ -e $JTROOT/cores ]; then
-    CORES=$JTROOT/cores
+    export CORES=$JTROOT/cores
     # Adds all core names to the auto-completion list of bash
     echo $CORES
     ALLFOLDERS=
@@ -33,7 +33,7 @@ if [ -e $JTROOT/cores ]; then
     complete -W "$ALLFOLDERS" swcore
     unset ALLFOLDERS
 else
-    CORES=$JTROOT
+    export CORES=$JTROOT
 fi
 
 export ROM=$JTROOT/rom
