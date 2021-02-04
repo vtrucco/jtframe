@@ -24,7 +24,7 @@ JTFRAME_INTERLACED       |         | Support for interlaced games
 JTFRAME_MIST_DIPBASE     | MiST    | Starting base in status word for MiST dip switches
 JTFRAME_MIST_DIRECT      | MiST    | On by default. Define as 0 to disable. Fast ROM load
 JTFRAME_MRA_DIP          |         | DIPs are in an MRA file
-JTFRAME_MR_FASTIO        | MiSTer  | 16-bit ROM load in MiSTer
+JTFRAME_MR_FASTIO        | MiSTer  | 16-bit ROM load in MiSTer. Set by default if CLK96 is set
 JTFRAME_NOHOLDBUS        |         | Reduces bus noise (non-interleaved SDRAM controller)
 JTFRAME_OSDCOLOR         |         | Sets the OSD colour
 JTFRAME_OSD_FLIP         |         | flip option on OSD

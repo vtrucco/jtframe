@@ -176,6 +176,11 @@ module jtframe_mister #(parameter
     output    [ 3:0]  gfx_en
 );
 
+localparam [7:0] IDX_ROM   = 8'h0,
+                 IDX_MOD   = 8'h1,
+                 IDX_NVRAM = 8'h2,
+                 IDX_DIPSW = 8'd254;
+
 wire [21:0] gamma_bus;
 
 wire [ 7:0] ioctl_index;
@@ -199,8 +204,8 @@ assign {FB_PAL_CLK, FB_FORCE_BLANK, FB_PAL_ADDR, FB_PAL_DOUT, FB_PAL_WR} = '0;
 `endif
 
 always @(posedge clk_sys) begin
-    downloading <= ioctl_download && ioctl_index==8'd0;
-    ioctl_ram   <= ioctl_index == 8'h2 && ioctl_download;
+    downloading <= ioctl_download && ioctl_index==IDX_ROM;
+    ioctl_ram   <= ioctl_download && ioctl_index==IDX_NVRAM;
 end
 
 jtframe_resync u_resync(
@@ -217,9 +222,10 @@ jtframe_resync u_resync(
 );
 
 
+assign ioctl_rom_wr = ioctl_wr && (ioctl_index==IDX_ROM || ioctl_index==IDX_NVRAM);
+
 `ifndef JTFRAME_MRA_DIP
     // DIP switches through regular OSD options
-    assign ioctl_rom_wr = ioctl_wr;
     assign dipsw        = status;
 `else
     // Dip switches through MRA file
@@ -236,10 +242,9 @@ jtframe_resync u_resync(
         `endif
     `endif
 
-    assign ioctl_rom_wr = (ioctl_wr && ioctl_index==8'd0);
 
     always @(posedge clk_rom) begin
-        if (ioctl_wr && (ioctl_index==8'd254) && !ioctl_addr[24:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
+        if (ioctl_wr && (ioctl_index==IDX_DIPSW) && !ioctl_addr[24:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
     end
 `endif
 
@@ -249,7 +254,7 @@ always @(posedge clk_rom, posedge rst) begin
     end else begin
         // The ioctl_addr[0]==1'b0 condition is needed in case JTFRAME_MR_FASTIO is enabled
         // as it always creates two write events and the second would delete the data of the first
-        if (ioctl_wr && (ioctl_index==1) && ioctl_addr[0]==1'b0) core_mod <= ioctl_data[6:0];
+        if (ioctl_wr && (ioctl_index==IDX_MOD) && ioctl_addr[0]==1'b0) core_mod <= ioctl_data[6:0];
     end
 end
 
@@ -262,57 +267,6 @@ end
 `endif
 
 localparam JTFRAME_MR_FASTIO=`JTFRAME_MR_FASTIO;
-
-wire                                dwnld_wr;
-wire [26:0]                         dwnld_addr;
-wire [(JTFRAME_MR_FASTIO?16:8)-1:0] dwnld_data;
-
-generate
-    if( JTFRAME_MR_FASTIO==0 ) begin
-        assign ioctl_wr   = dwnld_wr;
-        assign ioctl_addr = dwnld_addr[24:0];
-        assign ioctl_data = dwnld_data;
-    end else begin
-        // 16 to 8 bit conversion
-        // It transforms one 16-bit write request in two 8-bit requests
-        // Measured in MiSTer firmware of April 2020, there are ~100 96MHz clock
-        // cycles between two ioctl_wr requests (about 1us per data)
-        // During that time, two 8 bit writes must fit
-        // DWNLD_W marks the time it takes to process one 8-bit packet
-        // It has only been tested for 96MHz clock
-        localparam DWNLD_W=24;
-        reg [7:0]  dwnld_half;
-        reg        dwnld_addr0, half_wr;
-        reg [DWNLD_W-1:0] dwnld_st;
-        // reg       dwnld_wr_last;
-        assign ioctl_wr   = ioctl_ram ? dwnld_wr         : half_wr;
-        assign ioctl_addr = ioctl_ram ? dwnld_addr       : {dwnld_addr[24:1], dwnld_addr0};
-        assign ioctl_data = ioctl_ram ? dwnld_data[7:0] : dwnld_half;
-
-        always @( posedge clk_rom, posedge rst ) begin
-            if( rst ) begin
-                dwnld_half  <= 8'd0;
-                dwnld_addr0 <= 1'b0;
-                half_wr     <= 1'b0;
-                dwnld_st    <= 0;
-            end else begin
-                dwnld_st <= dwnld_st<<1;
-                if( dwnld_wr ) begin
-                    dwnld_half <= dwnld_data[7:0];
-                    dwnld_addr0<= 1'b0;
-                    half_wr    <= 1'b1;
-                    dwnld_st[0]<= 1'b1;
-                end else if( dwnld_st[DWNLD_W-1] ) begin
-                    dwnld_half <= dwnld_data[15:8];
-                    dwnld_addr0<= 1'b1;
-                    half_wr    <= 1'b1;
-                end else begin
-                    half_wr <= 1'b0;
-                end
-            end
-        end
-    end
-endgenerate
 
 wire [15:0] status_menumask;
 
@@ -333,19 +287,14 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .forced_scandoubler(force_scan2x  ),
 
     .ioctl_download  ( ioctl_download ),
-    .ioctl_wr        ( dwnld_wr       ),
-    .ioctl_addr      ( dwnld_addr     ),
-    .ioctl_dout      ( dwnld_data     ),
-    //.ioctl_din       ( ioctl_data2sd  ),
+    .ioctl_wr        ( ioctl_wr       ),
+    .ioctl_addr      ( ioctl_addr     ),
+    .ioctl_dout      ( ioctl_data     ),
+    .ioctl_din       ( ioctl_data2sd  ),
     .ioctl_index     ( ioctl_index    ),
     // NVRAM support
     .ioctl_upload    (                ), // no need
     .ioctl_rd        (                ), // no need
-    `ifdef JTFRAME_MR_FASTIO
-        .ioctl_din   ( {8'd0,{ioctl_data2sd}} ),
-    `else
-        .ioctl_din   ( ioctl_data2sd  ),
-    `endif
 
     .joystick_0      ( joystick1      ),
     .joystick_1      ( joystick2      ),

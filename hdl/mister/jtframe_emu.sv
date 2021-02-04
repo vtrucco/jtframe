@@ -301,7 +301,7 @@ wire        enable_fm, enable_psg;
 wire        dip_pause, dip_flip, dip_test;
 wire [31:0] dipsw;
 
-wire        ioctl_rom_wr;
+wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire [ 7:0] ioctl_data;
 
@@ -477,7 +477,7 @@ u_frame(
     // ROM load
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_data     ( ioctl_data     ),
-    .ioctl_rom_wr   ( ioctl_rom_wr   ),
+    .ioctl_rom_wr   ( ioctl_wr       ),
     .ioctl_ram      ( ioctl_ram      ),
     .ioctl_data2sd  ( ioctl_data2sd  ),
 
@@ -613,7 +613,7 @@ end
     // PROM programming
     .ioctl_addr   ( ioctl_addr       ),
     .ioctl_data   ( ioctl_data       ),
-    .ioctl_wr     ( ioctl_rom_wr     ),
+    .ioctl_wr     ( ioctl_wr         ),
 `ifdef CORE_NVRAM_SIZE
     .ioctl_ram    ( ioctl_ram        ),
     .ioctl_data2sd(ioctl_data2sd     ),

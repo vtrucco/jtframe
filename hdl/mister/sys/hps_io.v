@@ -25,6 +25,12 @@
 //
 // WIDE=1 for 16 bit file I/O
 // VDNUM 1-4
+
+
+// JTFRAME version:
+// This module has been modified to always offer an 8-bit interface to the core
+// Regardless of whether WIDE is 1 or 0
+
 module hps_io #(parameter STRLEN=0, PS2DIV=0, WIDE=0, VDNUM=1, PS2WE=0)
 (
 	input             clk_sys,
@@ -40,7 +46,7 @@ module hps_io #(parameter STRLEN=0, PS2DIV=0, WIDE=0, VDNUM=1, PS2WE=0)
 	output reg [31:0] joystick_3,
 	output reg [31:0] joystick_4,
 	output reg [31:0] joystick_5,
-	
+
 	// analog -127..+127, Y: [15:8], X: [7:0]
 	output reg [15:0] joystick_analog_0,
 	output reg [15:0] joystick_analog_1,
@@ -108,9 +114,9 @@ module hps_io #(parameter STRLEN=0, PS2DIV=0, WIDE=0, VDNUM=1, PS2WE=0)
 	output reg [15:0] ioctl_index,        // menu index used to upload the file
 	output reg        ioctl_wr,
 	output reg [26:0] ioctl_addr,         // in WIDE mode address will be incremented by 2
-	output reg [DW:0] ioctl_dout,
+	output reg [ 7:0] ioctl_dout,
 	output reg        ioctl_upload = 0,   // signal indicating an active upload
-	input      [DW:0] ioctl_din,
+	input      [ 7:0] ioctl_din,
 	output reg        ioctl_rd,
 	output reg [31:0] ioctl_file_ext,
 	input             ioctl_wait,
@@ -166,6 +172,7 @@ localparam MAX_W = $clog2((512 > (STRLEN+1)) ? 512 : (STRLEN+1))-1;
 localparam DW = (WIDE) ? 15 : 7;
 localparam AW = (WIDE) ?  7 : 8;
 localparam VD = VDNUM-1;
+localparam DWNLD_W=23;
 
 wire        io_strobe= HPS_BUS[33];
 wire        io_enable= HPS_BUS[34];
@@ -173,6 +180,8 @@ wire        fp_enable= HPS_BUS[35];
 wire        io_wide  = (WIDE) ? 1'b1 : 1'b0;
 wire [15:0] io_din   = HPS_BUS[31:16];
 reg  [15:0] io_dout;
+
+reg [DWNLD_W-1:0] dwnld_st;
 
 assign HPS_BUS[37]   = ioctl_wait;
 assign HPS_BUS[36]   = clk_sys;
@@ -468,7 +477,7 @@ always@(posedge clk_sys) begin : uio_block
 
 				//menu mask
 				'h2E: if(byte_cnt == 1) io_dout <= status_menumask;
-				
+
 				//sdram size set
 				'h31: if(byte_cnt == 1) sdram_sz <= io_din;
 
@@ -575,10 +584,40 @@ always@(posedge clk_sys) begin : fio_block
 	reg        has_cmd;
 	reg [26:0] addr;
 	reg        wr;
-	
+	reg		   wide_dwnl, wide_upld;
+
 	ioctl_rd <= 0;
 	ioctl_wr <= wr;
 	wr <= 0;
+
+	dwnld_st <= dwnld_st << 1;
+
+	// download data bit width conversion
+	if( dwnld_st[DWNLD_W-1] && ioctl_download) begin
+		wide_dwnl <= 0;
+		if( wide_dwnl ) begin
+			wr         <= 1;
+			ioctl_dout <= io_din[15:8];
+			ioctl_addr <= addr;
+			addr       <= addr + 1'd1;
+		end
+	end
+	// upload data bit width conversion
+	if( ioctl_upload ) begin
+		if( ioctl_rd ) begin
+			wide_upld   <= WIDE;
+			dwnld_st[0] <= 1;
+		end
+		if( dwnld_st[3] ) begin
+			fp_dout[ 7:0]<= ioctl_din;
+			ioctl_addr   <= ioctl_addr + 1'd1;
+		end
+		if( wide_upld && dwnld_st[8] ) begin
+			fp_dout[15:8]<= ioctl_din;
+			ioctl_addr   <= ioctl_addr + 1'd1;
+			wide_upld    <= 0;
+		end
+	end
 
 	if(~fp_enable) has_cmd <= 0;
 	else begin
@@ -608,30 +647,30 @@ always@(posedge clk_sys) begin : fio_block
 					FIO_FILE_TX:
 						begin
 							cnt <= cnt + 1'd1;
-							case(cnt) 
+							case(cnt)
 								0:	if(io_din[7:0] == 8'hAA) begin
-										ioctl_addr <= 0;
+										ioctl_addr   <= WIDE ? -27'd2 : 27'd0;
 										ioctl_upload <= 1;
-										ioctl_rd <= 1;
+										ioctl_rd     <= 1;
 									end
 									else if(io_din[7:0]) begin
-										addr <= 0;
+										addr           <= 0;
 										ioctl_download <= 1;
 									end
 									else begin
 										if(ioctl_download) ioctl_addr <= addr;
 										ioctl_download <= 0;
-										ioctl_upload <= 0;
+										ioctl_upload   <= 0;
 									end
 
 								1: begin
 										ioctl_addr[15:0] <= io_din;
-										addr[15:0] <= io_din;
+										addr[15:0]       <= io_din;
 									end
 
 								2: begin
 										ioctl_addr[26:16] <= io_din[10:0];
-										addr[26:16] <= io_din[10:0];
+										addr[26:16]       <= io_din[10:0];
 									end
 							endcase
 						end
@@ -639,14 +678,16 @@ always@(posedge clk_sys) begin : fio_block
 					FIO_FILE_TX_DAT:
 						if(ioctl_download) begin
 							ioctl_addr <= addr;
-							ioctl_dout <= io_din[DW:0];
+							ioctl_dout <= io_din[7:0];
 							wr   <= 1;
-							addr <= addr + (WIDE ? 2'd2 : 2'd1);
+							addr <= addr + 1'd1;
+							if( WIDE ) begin
+								wide_dwnl   <= 1;
+								dwnld_st[0] <= 1;
+							end
 						end
 						else begin
-							ioctl_addr <= ioctl_addr + (WIDE ? 2'd2 : 2'd1);
-							fp_dout <= ioctl_din;
-							ioctl_rd <= 1;
+							ioctl_rd   <= 1;
 						end
 				endcase
 			end

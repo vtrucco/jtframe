@@ -152,6 +152,8 @@ set_global_assignment -name VERILOG_MACRO "JTFRAME_MIST_DIRECT=0"
 ## MiSTer
 In order to preserve the 8-bit ROM download interface with MiST, _jtframe_mister_ presents it too. However it can operate internally with 16-bit packets if the macro **JTFRAME_MR_FASTIO** is set to 1. This has only been tested with 96MHz clock. Indeed, if **JTFRAME_CLK96** is defined and **JTFRAME_MR_FASTIO** is not, then it will be defined to 1.
 
+The measured speed for data transfers in MiSTer is about 1.2MHz (800ns) per request. If **JTFRAME_MR_FASTIO** is set, each request is 16-bit words, otherwise, 8 bits.
+
 # DIP switches and OSD
 
 To enable support of DIP switches in MRA files define the macro **JTFRAME_MRA_DIP**. The maximum length of DIP switches is 32 bits. To alter the value of DIP switches in simulation use **JTFRAME_SIM_DIPS**.
