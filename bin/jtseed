@@ -26,7 +26,7 @@ while [ $MAXREPS -gt 0 ]; do
     MAXREPS=$((MAXREPS-1))
 done
 
-if [ $MAXREPS -gt 0 ]; then
+if [ $MAXREPS = 0 ]; then
     # aborted before completing because of reaching the iteration limit
     echo Maximum number of seed trial reached
     exit 1
