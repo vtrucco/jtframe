@@ -46,6 +46,7 @@ JTFRAME_SDRAM_DEBUG      |         | Outputs debug messages for SDRAM during sim
 JTFRAME_SDRAM_MUXLATCH   |         | Extra latch for SDRAM mux for <64MHz operation
 JTFRAME_SDRAM_NO_DWNRFSH |         | No refresh during download (non-interleaved SDRAM controller)
 JTFRAME_SDRAM_REPACK     |         | Extra latch stage at SDRAM mux output
+JTFRAME_SUPPORT_4WAY     |         | Enables support for 4-way joysticks if the MRA sets it
 JTFRAME_VERTICAL         |         | Enables support for vertical games
 
 # Simulation-only Macros

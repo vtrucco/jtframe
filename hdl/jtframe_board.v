@@ -218,7 +218,11 @@ assign key_test    = 1'b0;
 
 reg  [15:0] joy1_sync, joy2_sync, joy3_sync, joy4_sync;
 wire [ 3:0] joy4way1p, joy4way2p, joy4way3p, joy4way4p;
-wire        en4way = core_mod[1];
+`ifdef JTFRAME_SUPPORT_4WAY
+    wire en4way = core_mod[1];
+`else
+    wire en4way = 0;
+`endif
 
 always @(posedge clk_sys) begin
     joy1_sync <= { board_joystick1[15:4], joy4way1p[3:0] };
