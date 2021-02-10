@@ -99,7 +99,7 @@ wire [1:0] ar = status[15:14];    // only MiSTer
 `ifdef MISTER
 always @(*) begin
     scanlines = status[5:3];
-    bw_en     = 1'd0;
+    bw_en     = status[11];
     blend_en  = 1'd0;
 end
 `else

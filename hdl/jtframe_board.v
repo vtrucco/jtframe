@@ -521,42 +521,44 @@ assign scan2x_de   = LVBL && LHBL;
 assign scan2x_sl   = 2'd0;
 `else
 
+// Limited bandwidth for video signal
+localparam CLROUTW = COLORW < 5 ? COLORW+1 : COLORW;
+
+wire [CLROUTW-1:0] r_ana, g_ana, b_ana;
+wire               hs_ana, vs_ana;
+wire               pxl_ana;
+
+jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) u_wirebw(
+    .clk        ( clk_sys   ),
+    .spl_in     ( pxl_cen   ),
+    .r_in       ( pre2x_r   ),
+    .g_in       ( pre2x_g   ),
+    .b_in       ( pre2x_b   ),
+    .HS_in      ( hs        ),
+    .VS_in      ( vs        ),
+    .enable     ( bw_en     ),
+    // filtered video
+    .HS_out     ( hs_ana    ),
+    .VS_out     ( vs_ana    ),
+    .spl_out    (           ),
+    .r_out      ( r_ana     ),
+    .g_out      ( g_ana     ),
+    .b_out      ( b_ana     )
+);
+
+function [7:0] extend8;
+    input [CLROUTW-1:0] a;
+    case( CLROUTW )
+        3: extend8 = { a, a, a[2:1] };
+        4: extend8 = { a, a         };
+        5: extend8 = { a, a[4:2]    };
+        6: extend8 = { a, a[5:4]    };
+        7: extend8 = { a, a[6]      };
+        8: extend8 = a;
+    endcase
+endfunction
+
 `ifndef MISTER
-    localparam CLROUTW = COLORW < 5 ? COLORW+1 : COLORW;
-
-    wire [CLROUTW-1:0] r_ana, g_ana, b_ana;
-    wire               hs_ana, vs_ana;
-    wire               pxl_ana;
-
-    jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) u_wirebw(
-        .clk        ( clk_sys   ),
-        .spl_in     ( pxl_cen   ),
-        .r_in       ( pre2x_r   ),
-        .g_in       ( pre2x_g   ),
-        .b_in       ( pre2x_b   ),
-        .HS_in      ( hs        ),
-        .VS_in      ( vs        ),
-        .enable     ( bw_en     ),
-        // filtered video
-        .HS_out     ( hs_ana    ),
-        .VS_out     ( vs_ana    ),
-        .spl_out    (           ),
-        .r_out      ( r_ana     ),
-        .g_out      ( g_ana     ),
-        .b_out      ( b_ana     )
-    );
-
-    function [7:0] extend8;
-        input [CLROUTW-1:0] a;
-        case( CLROUTW )
-            3: extend8 = { a, a, a[2:1] };
-            4: extend8 = { a, a         };
-            5: extend8 = { a, a[4:2]    };
-            6: extend8 = { a, a[5:4]    };
-            7: extend8 = { a, a[6]      };
-            8: extend8 = a;
-        endcase
-    endfunction
 
     // This scan doubler takes very little memory. Some games in MiST
     // can only use this
@@ -591,20 +593,20 @@ assign scan2x_sl   = 2'd0;
     // unused in MiST
     assign gamma_bus    = 22'd0;
 `else
-    localparam VIDEO_DW = COLORW!=5 ? 3*COLORW : 24;
+    localparam VIDEO_DW = CLROUTW!=5 ? 3*CLROUTW : 24;
 
     wire [VIDEO_DW-1:0] game_rgb;
 
     // arcade video does not support 15bpp colour, so for that
     // case we need to convert it to 24bpp
     generate
-        if( COLORW!=5 ) begin
-            assign game_rgb = {pre2x_r, pre2x_g, pre2x_b };
+        if( CLROUTW!=5 ) begin
+            assign game_rgb = {r_ana, g_ana, b_ana };
         end else begin
             assign game_rgb = {
-                pre2x_r, pre2x_r[4:2],
-                pre2x_g, pre2x_g[4:2],
-                pre2x_b, pre2x_b[4:2]
+                r_ana, r_ana[4:2],
+                g_ana, g_ana[4:2],
+                b_ana, b_ana[4:2]
             };
         end
     endgenerate
@@ -618,8 +620,8 @@ assign scan2x_sl   = 2'd0;
         .RGB_in     ( game_rgb      ),
         .HBlank     ( ~pre2x_LHBL   ),
         .VBlank     ( ~pre2x_LVBL   ),
-        .HSync      ( hs            ),
-        .VSync      ( vs            ),
+        .HSync      ( hs_ana        ),
+        .VSync      ( vs_ana        ),
 
         .CLK_VIDEO  ( scan2x_clk    ),
         .CE_PIXEL   ( scan2x_cen    ),

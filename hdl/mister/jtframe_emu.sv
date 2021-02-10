@@ -152,6 +152,7 @@ localparam CONF_STR = {
         `endif
     "O2,Rotate screen,Yes,No;",
     `endif
+    "OB,Old TV,No,Yes;",
     `ifdef JTFRAME_NOHQ2X
         "O35,Scandoubler Fx,None,N/A,CRT 25%,CRT 50%,CRT 75%;",
     `else
