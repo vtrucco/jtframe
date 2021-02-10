@@ -14,8 +14,8 @@ JTFRAME_CLK6             |         | Adds an additional clock input
 JTFRAME_CLK96            |         | Adds an additional clock input
 JTFRAME_CREDITS          |         | Adds credits screen
 JTFRAME_CREDITS_AON      |         | credits screen is always on
-JTFRAME_CREDITS_PAGES    |         | number of pages of credits text
 JTFRAME_CREDITS_HSTART   |         | Horizontal offset for the 256-pxl wide credits
+JTFRAME_CREDITS_PAGES    |         | number of pages of credits text
 JTFRAME_DONTSIM_SCAN2X   |         | Internal. Do not define externally
 JTFRAME_DUAL_RAM_DUMP    |         | Enables dumping of RAM contents in simulation
 JTFRAME_DWNLD_PROM_ONLY  |         | Quick download sim with only PROM contents
@@ -23,17 +23,18 @@ JTFRAME_FLIP_RESET       |         | Varying the flip DIP setting causes a reset
 JTFRAME_INTERLACED       |         | Support for interlaced games
 JTFRAME_MIST_DIPBASE     | MiST    | Starting base in status word for MiST dip switches
 JTFRAME_MIST_DIRECT      | MiST    | On by default. Define as 0 to disable. Fast ROM load
-JTFRAME_MRA_DIP          |         | DIPs are in an MRA file
 JTFRAME_MR_FASTIO        | MiSTer  | 16-bit ROM load in MiSTer. Set by default if CLK96 is set
+JTFRAME_MRA_DIP          |         | DIPs are in an MRA file
 JTFRAME_NOHOLDBUS        |         | Reduces bus noise (non-interleaved SDRAM controller)
-JTFRAME_OSDCOLOR         |         | Sets the OSD colour
+JTFRAME_NOHQ2X           | MiSTer  | Disables HQ2X filter in MiSTer
 JTFRAME_OSD_FLIP         |         | flip option on OSD
 JTFRAME_OSD_NOCREDITS    |         | No credits option on OSD
 JTFRAME_OSD_NOLOAD       |         | No load option on OSD
 JTFRAME_OSD_NOLOGO       |         | Disables the JT logo as OSD background
 JTFRAME_OSD_SND_EN       |         | OSD option to enable/disable FX and FM channels
-JTFRAME_OSD_VOL          |         | Show FX volume control on OSD
 JTFRAME_OSD_TEST         |         | Test option on OSD
+JTFRAME_OSD_VOL          |         | Show FX volume control on OSD
+JTFRAME_OSDCOLOR         |         | Sets the OSD colour
 JTFRAME_RELEASE          |         | Disables gfx_en control via keyboard
 JTFRAME_SAVESDRAM        |         | Saves SDRAM contents at the end of each frame (slow)
 JTFRAME_SCAN2X_NOBLEND   | MiST    | Disables pixel blending
@@ -55,14 +56,14 @@ The following macros only have an effect if SIMULATION is defined.
 
 Macro                    | Target  |  Usage
 -------------------------|---------|---------------------------------------------
-JTFRAME_SDRAM_STATS      |         | Produce SDRAM usage data during simulation
-JTFRAME_SIM_ROMRQ_NOCHECK|         | Disable protocol checking of romrq
-JTFRAME_SIM_DIPS         |         | Define DIP switch values during simulation
-JTFRAME_SIM_LOAD_EXTRA   |         | Extra wait time when transferring ROM in simulation
-JTFRAME_SIM_SCAN2X       |         | Enables scan doubler simulation
-SIMULATION               |         | Enables simulation features
-LOADROM                  |         | Sends ROM data via serial interface
 DUMP_VIDEO               |         | Enables video dump to a file
 DUMP_VIDEO_FNAME         |         | Internal. Do not assign.
+JTFRAME_SDRAM_STATS      |         | Produce SDRAM usage data during simulation
+JTFRAME_SIM_DIPS         |         | Define DIP switch values during simulation
+JTFRAME_SIM_LOAD_EXTRA   |         | Extra wait time when transferring ROM in simulation
+JTFRAME_SIM_ROMRQ_NOCHECK|         | Disable protocol checking of romrq
+JTFRAME_SIM_SCAN2X       |         | Enables scan doubler simulation
+LOADROM                  |         | Sends ROM data via serial interface
+SIMULATION               |         | Enables simulation features
 VIDEO_START              |         | First frame for which video output is provided
                          |         | use it to prevent a split first frame

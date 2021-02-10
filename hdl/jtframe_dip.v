@@ -95,7 +95,7 @@ assign dip_flip    = ~status[1]^MISTER[0];
 assign dip_test = ~key_test;
 `endif
 
-wire   widescreen  = status[11];    // only MiSTer
+wire [1:0] ar = status[15:14];    // only MiSTer
 `ifdef MISTER
 always @(*) begin
     scanlines = status[5:3];
@@ -151,8 +151,8 @@ always @(posedge clk) begin
     enable_psg  <= ~status[8];
     `endif
     // only for MiSTer
-    hdmi_arx    <= widescreen ? 12'd16 : swap_ar ? ARX : ARY;
-    hdmi_ary    <= widescreen ? 12'd9  : swap_ar ? ARY : ARX;
+    hdmi_arx    <= (!ar) ? (swap_ar ? ARX : ARY) : (ar-2'd1);
+    hdmi_ary    <= (!ar) ? (swap_ar ? ARY : ARX) : 12'd0;
 
     `ifdef SIMULATION
         `ifdef DIP_PAUSE

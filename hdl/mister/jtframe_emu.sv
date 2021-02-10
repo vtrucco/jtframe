@@ -145,7 +145,7 @@ localparam CONF_STR = {
     `ifndef JTFRAME_OSD_NOLOAD
     "F,rom;",
     `endif
-    "H0OB,Aspect Ratio,Original,Wide;",
+    "H0OEF,Aspect Ratio,Original,Full screen,[ARC1],[ARC2];",
     `ifdef JTFRAME_VERTICAL
         `ifdef JTFRAME_OSD_FLIP
         "O1,Flip screen,Off,On;",
