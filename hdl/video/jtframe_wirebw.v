@@ -16,22 +16,6 @@
     Version: 1.0
     Date: 25-9-2019 */
 
-// Simple scan doubler
-// CRT-like output:
-//  -simple blending of neighbouring pixels
-//  -50% scan lines
-
-// sl_mode for scan lines
-// 0 = no scan lines
-// 1 = dimmed
-// 2 = more dimmed
-// 3 = blank scan lines
-
-// hz_mode for horizontal pixel blending
-// 0 = no blending
-// 1 = linear interpolation
-// 2 = blank (zero)
-
 module jtframe_wirebw #(parameter WIN=4, WOUT=5) (
     input  clk,
     input  spl_in,
