@@ -132,6 +132,7 @@ module jtframe_mister #(parameter
     output       [31:0] sdram_dout,
 
     // User port
+    output              db9_en,
     output              USER_OSD,
     output       [ 1:0] USER_MODE,
     input        [ 7:0] USER_IN,
@@ -207,6 +208,7 @@ wire        hs_resync, vs_resync;
 
 
 assign { voffset, hoffset } = status[31:24];
+assign db9_en = status[13];
 
 `ifdef JTFRAME_VERTICAL
 assign {FB_PAL_CLK, FB_FORCE_BLANK, FB_PAL_ADDR, FB_PAL_DOUT, FB_PAL_WR} = '0;
@@ -282,6 +284,8 @@ wire [15:0] status_menumask;
 assign status_menumask[15:1] = 15'd0;
 assign status_menumask[0]    = direct_video;
 
+wire [1:0] db_coin, db_start;
+
 jtframe_dbxjoy u_dbxjoy(
     .rst      ( rst       ),
     .clk      ( clk_rom   ),
@@ -292,6 +296,9 @@ jtframe_dbxjoy u_dbxjoy(
 
     .mix_joy0 ( joystick1 ),
     .mix_joy1 ( joystick2 ),
+
+    .coin     ( db_coin   ),
+    .start    ( db_start  ),
     // User port
     .user_osd ( USER_OSD  ),
     .user_in  ( USER_IN   ),
@@ -369,6 +376,9 @@ jtframe_board #(
     .game_joystick2 ( game_joystick2  ),
     .game_joystick3 ( game_joystick3  ),
     .game_joystick4 ( game_joystick4  ),
+
+    .db_coin        ( db_coin         ),
+    .db_start       ( db_start        ),
     .game_coin      ( game_coin       ),
     .game_start     ( game_start      ),
     .game_service   ( game_service    ),

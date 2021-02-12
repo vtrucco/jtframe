@@ -27,14 +27,24 @@ module jtframe_dbxjoy(
     output reg   [15:0] mix_joy1,
     output reg   [ 5:0] raw_joy,
 
+    output reg   [ 1:0] start,
+    output reg   [ 1:0] coin,
+
     output reg          user_osd,
     input        [ 7:0] user_in,
     output reg   [ 7:0] user_out
 );
 
-reg          cen;
-reg   [ 3:0] cen_cnt;
-reg   [ 7:0] latch;     // user_in data is latched
+// All joysticks:
+// joy[11]  = mode/select
+// joy[10]  = start
+// joy[3:0] = directions
+
+parameter CNTW=10;
+
+reg            cen;
+reg [CNTW-1:0] cen_cnt;
+reg     [ 7:0] latch;     // user_in data is latched
 
 wire         neo_hooked, md_hooked, neo_sample, md_sample;
 reg   [ 1:0] scan;
@@ -50,7 +60,7 @@ assign       { neo_scan, md_scan } = scan;
 
 always @(posedge clk or posedge rst) begin
     if(rst) begin
-        cen_cnt <= 4'd0;
+        cen_cnt <= {CNTW{1'b0}};
     end else begin
         cen_cnt <= cen_cnt + 1'd1;
         cen     <= &cen_cnt;
@@ -69,15 +79,18 @@ always @(posedge clk) begin
     { db_joy1, db_joy0 } <= neo_hooked ? { neo_joy1, neo_joy0 } : (
                             md_hooked  ? { md_joy1, md_joy0 } : 24'd0 );
 
-    user_osd <= 0; //db_joy0[10] & db_joy0[6];
+    user_osd <= db_joy0[10] & db_joy0[6];
     raw_joy  <= db_joy0[5:0] | db_joy1[5:0];
 
-    mix_joy0 <= {4'd0, db_joy0[11:0]} | usb_joy0;
-    mix_joy1 <= {4'd0, db_joy1[11:0]} | usb_joy1;
+    mix_joy0 <= { {12-`BUTTONS{1'b0}}, db_joy0[`BUTTONS+3:0]} | usb_joy0;
+    mix_joy1 <= { {12-`BUTTONS{1'b0}}, db_joy1[`BUTTONS+3:0]} | usb_joy1;
+
+    start    <= { db_joy1[10], db_joy0[10] };
+    coin     <= { db_joy1[11], db_joy0[11] };
 
     // user port pins
     latch    <= user_in;
-    user_out <= { 3'b111, md_split, 2'b11, /*joy_clk*/1'b1, md_sel & loadb};
+    user_out <= { 3'b111, md_split, 2'b11, /*joy_clk*/1'b1, md_sel /*& loadb*/};
 end
 
 jtframe_db9joy u_db9(

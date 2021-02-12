@@ -82,12 +82,12 @@ function parse_args {
                 MACROS="$1 $MACROS"
                 ;;
             -q|-quick)
-                MACROS="$MACROS NOSOUND OSD_NOBCK";;
+                MACROS="$MACROS NOSOUND JTFRAME_OSD_NOLOGO";;
             -qq|-veryquick)
-                MACROS="$MACROS NOSOUND OSD_NOBCK DEBUG_NOHDMI"
+                MACROS="$MACROS NOSOUND JTFRAME_OSD_NOLOGO DEBUG_NOHDMI"
                 TARGET=mister;;
             -credits)
-                MACROS="$MACROS NOSOUND DEBUG_NOHDMI NOMAIN"
+                MACROS="$MACROS NOSOUND DEBUG_NOHDMI NOMAIN JTFRAME_OSD_NOLOGO"
                 TARGET=mister;;
             -help | -h)
                 show_usage;;

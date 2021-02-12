@@ -195,7 +195,9 @@ bit     |  meaning                | Enabled with macro
 10      | Test mode               | JTFRAME_OSD_TEST
 11      | Horizontal filter       | MiSTer only
 12      | Credits/Pause           | JTFRAME_OSD_NOCREDITS (disables it)
+13      | DB9 Support             | MiSTer only
 14-15   | Aspect Ratio            | MiSTer only
+24-31   | CRT offset              | MiSTer only
 
 
 If **JTFRAME_FLIP_RESET** is defined a change in dip_flip will reset the game.

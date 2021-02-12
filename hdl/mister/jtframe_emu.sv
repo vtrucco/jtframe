@@ -121,6 +121,7 @@ module emu
     // 2..6 - USR2..USR6
     // DB9 joystick support
     // Set USER_OUT to 1 to read from USER_IN.
+    output        db9_en,
     output        USER_OSD,
     input   [7:0] USER_IN,
     output  [7:0] USER_OUT
@@ -182,6 +183,7 @@ localparam CONF_STR = {
     `CORE_OSD
     `endif
     `SEPARATOR
+    "OD,DB9 gamepad,Off,On;",
     "R0,Reset;",
     `ifndef JTFRAME_OSD_NOCREDITS
     "OC,Credits,Off,On;",
@@ -497,6 +499,7 @@ u_frame(
     .dwnld_busy     ( dwnld_busy     ),
 
     // User port (DB9)
+    .db9_en         ( db9_en         ),
     .USER_OSD       ( USER_OSD       ),
     .USER_IN        ( USER_IN        ),
     .USER_OUT       ( USER_OUT       ),

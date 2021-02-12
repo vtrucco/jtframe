@@ -140,7 +140,8 @@ module sys_top
 	inout   [7:0] USER_IO
 );
 
-wire user_osd;
+wire       user_osd;
+wire [7:0] user_out, user_in;
 
 //////////////////////  Secondary SD  ///////////////////////////////////
 wire SD_CS, SD_CLK, SD_MOSI;
@@ -1348,8 +1349,8 @@ alsa alsa
 );
 
 ////////////////  User I/O (USB 3.0 connector) /////////////////////////
-wire db9_enb = 0; // for future use, 0=DB9, 1=no DB9
-wire [7:0] db9_dout = db9_enb | user_out;
+wire db9_en;
+wire [7:0] db9_dout = db9_en ? user_out : 8'hff;
 
 assign USER_IO[0] = db9_dout[0] ? 1'bz : 1'b0;
 assign USER_IO[1] = db9_dout[1] ? 1'bz : 1'b0;
@@ -1393,8 +1394,6 @@ wire  [1:0] btn;
 
 sync_fix sync_v(clk_vid, vs_emu, vs_fix);
 sync_fix sync_h(clk_vid, hs_emu, hs_fix);
-
-wire  [7:0] user_out, user_in;
 
 `ifndef USE_SDRAM
 assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = {39'bZ};
@@ -1560,6 +1559,7 @@ emu emu
 `endif
 
 	// DB 9 support
+	.db9_en		( db9_en	),
 	.USER_OSD	( user_osd	),
 	.USER_OUT	( user_out	),
 	.USER_IN 	( USER_IO	)

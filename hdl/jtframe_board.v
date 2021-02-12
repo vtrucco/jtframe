@@ -97,8 +97,12 @@ module jtframe_board #(parameter
     output reg [9:0]  game_joystick2,
     output reg [9:0]  game_joystick3,
     output reg [9:0]  game_joystick4,
+
+    input      [1:0]  db_coin,
+    input      [1:0]  db_start,
     output reg [3:0]  game_coin,
     output reg [3:0]  game_start,
+
     output reg        game_service,
     // DIP and OSD settings
     input     [31:0]  status,
@@ -326,11 +330,11 @@ always @(posedge clk_sys)
         game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, ~dip_flip, invert_inputs);
         game_coin      <= {4{invert_inputs}} ^
             ({  joy4_sync[COIN_BIT],joy3_sync[COIN_BIT],
-                joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
+                joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin | {2'b0, db_coin} );
 
         game_start     <= {4{invert_inputs}} ^
             ({  joy4_sync[START_BIT],joy3_sync[START_BIT],
-                joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start);
+                joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start | {2'b0, db_start} );
         `endif
         game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, ~dip_flip, invert_inputs);
         game_joystick3 <= apply_rotation(joy3_sync | key_joy3, rot_control, ~dip_flip, invert_inputs);
