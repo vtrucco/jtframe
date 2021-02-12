@@ -45,7 +45,7 @@ wire [11:0] joy_sorted;
 wire [ 5:0] not_din;
 reg         last_split, last_but, md6;
 
-assign { split, mdsel } = scan ? { cnt[3], cnt[0] } : 2'b11;
+assign { split, mdsel } = scan ? { cnt[3], /*cnt[0]*/ 1'b1 } : 2'b11;
 assign not_din = ~din;
 
 assign joy_sorted = {joy_scan[8],joy_scan[7],joy_scan[11:9],joy_scan[5:4],joy_scan[6],joy_scan[3:0]};
@@ -75,7 +75,7 @@ always @(posedge clk, posedge rst) begin
                     last_but <= joy0[4];
                     if( last_but && !joy0[4] ) hooked <= 1;
                 end else begin
-                    //joy1 <= joy_sorted;
+                    joy1 <= joy_sorted;
                     sample <= 1;
                 end
             end
