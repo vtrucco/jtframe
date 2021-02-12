@@ -20,20 +20,21 @@ module jtframe_dbxjoy(
     input               rst,
     input               clk,
 
-    input        [15:0] joystick_0_USB,
-    input        [15:0] joystick_1_USB,
+    input        [15:0] usb_joy0,
+    input        [15:0] usb_joy1,
 
-    output reg   [15:0] joystick_0,
-    output reg   [15:0] joystick_1,
-    output reg   [ 5:0] joy_raw,
+    output reg   [15:0] mix_joy0,
+    output reg   [15:0] mix_joy1,
+    output reg   [ 5:0] raw_joy,
 
-    output reg          USER_OSD,
-    input        [ 7:0] USER_IN,
-    output       [ 7:0] USER_OUT
+    output reg          user_osd,
+    input        [ 7:0] user_in,
+    output reg   [ 7:0] user_out
 );
 
 reg          cen;
 reg   [ 3:0] cen_cnt;
+reg   [ 7:0] latch;     // user_in data is latched
 
 wire         neo_hooked, md_hooked, neo_sample, md_sample;
 reg   [ 1:0] scan;
@@ -41,11 +42,10 @@ reg   [ 1:0] scan;
 wire  [11:0] neo_joy0, neo_joy1, md_joy0, md_joy1;
 reg   [11:0] db_joy0, db_joy1;
 wire         joy_clk, loadb, md_split, md_sel;
-wire  [ 5:0] md_din   = {USER_IN[6],USER_IN[3],USER_IN[5],USER_IN[7],USER_IN[1],USER_IN[2]};
-wire         neo_din  = USER_IN[5];
+wire  [ 5:0] md_din   = { latch[6], latch[3], latch[5], latch[7], latch[1], latch[2] };
+wire         neo_din  = latch[5];
 wire         neo_scan, md_scan;
 
-assign       USER_OUT = {3'b111,md_split,3'b111,md_sel} | {6'b111111,joy_clk,loadb};
 assign       { neo_scan, md_scan } = scan;
 
 always @(posedge clk or posedge rst) begin
@@ -67,13 +67,17 @@ end
 
 always @(posedge clk) begin
     { db_joy1, db_joy0 } <= neo_hooked ? { neo_joy1, neo_joy0 } : (
-                            md_hooked  ? { md_joy1, md_joy0 } : 24'0 );
+                            md_hooked  ? { md_joy1, md_joy0 } : 24'd0 );
 
-    USER_OSD   <= db_joy0[10] & db_joy0[6];
-    joy_raw    <= db_joy0[5:0] | db_joy1[5:0];
+    user_osd <= 0; //db_joy0[10] & db_joy0[6];
+    raw_joy  <= db_joy0[5:0] | db_joy1[5:0];
 
-    joystick_0 <= {7'd0, db_joy0[11]|(db_joy0[10]&db_joy0[5]),db_joy0[9],db_joy0[10],db_joy0[5:0]} | joystick_0_USB;
-    joystick_1 <= {7'd0, db_joy1[11]|(db_joy1[10]&db_joy1[5]),db_joy1[10],db_joy1[9],db_joy1[5:0]} | joystick_1_USB;
+    mix_joy0 <= {4'd0, db_joy0[11:0]} | usb_joy0;
+    mix_joy1 <= {4'd0, db_joy1[11:0]} | usb_joy1;
+
+    // user port pins
+    latch    <= user_in;
+    user_out <= { 3'b111, md_split, 2'b11, /*joy_clk*/1'b1, md_sel & loadb};
 end
 
 jtframe_db9joy u_db9(
@@ -92,6 +96,8 @@ jtframe_db9joy u_db9(
     .joy1   ( md_joy1   )
 );
 
+assign neo_hooked = 0;
+
 jtframe_db15joy u_db15(
     .rst     ( rst       ),
     .clk     ( clk       ),
@@ -102,7 +108,8 @@ jtframe_db15joy u_db15(
     .din     ( neo_din   ),
     .loadb   ( loadb     ),
 
-    .hooked  ( neo_hooked),
+    //.hooked  ( neo_hooked),
+    .hooked(  ),
     .sample  ( neo_sample),
     .joy0    ( neo_joy0  ),
     .joy1    ( neo_joy1  )

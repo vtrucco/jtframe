@@ -129,7 +129,13 @@ module jtframe_mister #(parameter
     output              ba3_ack,
 
     input               rfsh_en,   // ok to refresh
-    output     [  31:0] sdram_dout,
+    output       [31:0] sdram_dout,
+
+    // User port
+    output              USER_OSD,
+    output       [ 1:0] USER_MODE,
+    input        [ 7:0] USER_IN,
+    output       [ 7:0] USER_OUT,
 //////////// board
     output          rst,      // synchronous reset
     output          rst_n,    // asynchronous reset
@@ -189,13 +195,16 @@ wire        ioctl_download;
 
 wire [ 3:0] hoffset, voffset;
 
-wire [15:0] joystick1, joystick2, joystick3, joystick4;
+wire [15:0] joystick1, joystick2, joystick3, joystick4,
+            hps_joy0, hps_joy1;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire        force_scan2x, direct_video;
+wire [ 5:0] raw_joy;       // DB9 support
 
-reg  [6:0]  core_mod;
+reg  [ 6:0] core_mod;
 
 wire        hs_resync, vs_resync;
+
 
 assign { voffset, hoffset } = status[31:24];
 
@@ -273,6 +282,22 @@ wire [15:0] status_menumask;
 assign status_menumask[15:1] = 15'd0;
 assign status_menumask[0]    = direct_video;
 
+jtframe_dbxjoy u_dbxjoy(
+    .rst      ( rst       ),
+    .clk      ( clk_rom   ),
+
+    .usb_joy0 ( hps_joy0  ),
+    .usb_joy1 ( hps_joy1  ),
+    .raw_joy  ( raw_joy   ),
+
+    .mix_joy0 ( joystick1 ),
+    .mix_joy1 ( joystick2 ),
+    // User port
+    .user_osd ( USER_OSD  ),
+    .user_in  ( USER_IN   ),
+    .user_out ( USER_OUT  )
+);
+
 hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_hps_io
 (
     .clk_sys         ( clk_rom        ),
@@ -296,12 +321,13 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .ioctl_upload    (                ), // no need
     .ioctl_rd        (                ), // no need
 
-    .joystick_0      ( joystick1      ),
-    .joystick_1      ( joystick2      ),
+    .joystick_0      ( hps_joy0       ),
+    .joystick_1      ( hps_joy1       ),
     .joystick_2      ( joystick3      ),
     .joystick_3      ( joystick4      ),
     .joystick_analog_0( joystick_analog_0   ),
     .joystick_analog_1( joystick_analog_1   ),
+    .raw_joy         ( raw_joy        ),
     .ps2_kbd_clk_out ( ps2_kbd_clk    ),
     .ps2_kbd_data_out( ps2_kbd_data   ),
     // Unused:

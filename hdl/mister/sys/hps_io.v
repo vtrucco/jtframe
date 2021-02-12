@@ -54,6 +54,7 @@ module hps_io #(parameter STRLEN=0, PS2DIV=0, WIDE=0, VDNUM=1, PS2WE=0)
 	output reg [15:0] joystick_analog_3,
 	output reg [15:0] joystick_analog_4,
 	output reg [15:0] joystick_analog_5,
+	input      [ 5:0] raw_joy,
 
 	// paddle 0..255
 	output reg  [7:0] paddle_0,
@@ -329,6 +330,9 @@ always@(posedge clk_sys) begin : uio_block
 				'h11: if(byte_cnt==1) joystick_3[15:0] <= io_din; else joystick_3[31:16] <= io_din;
 				'h12: if(byte_cnt==1) joystick_4[15:0] <= io_din; else joystick_4[31:16] <= io_din;
 				'h13: if(byte_cnt==1) joystick_5[15:0] <= io_din; else joystick_5[31:16] <= io_din;
+
+				 // Reading user_io raw joy (DB9)
+				'h0f: io_dout <= { 10'd0, raw_joy };
 
 				// store incoming ps2 mouse bytes
 				'h04: begin

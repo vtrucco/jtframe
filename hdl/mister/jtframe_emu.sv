@@ -119,9 +119,12 @@ module emu
     // 0 - D+/RX
     // 1 - D-/TX
     // 2..6 - USR2..USR6
+    // DB9 joystick support
     // Set USER_OUT to 1 to read from USER_IN.
-    input   [6:0] USER_IN,
-    output  [6:0] USER_OUT
+    output        USER_OSD,
+    input   [7:0] USER_IN,
+    output  [7:0] USER_OUT
+
     `ifdef SIMULATION
     ,output       sim_pxl_cen,
     output        sim_pxl_clk,
@@ -200,7 +203,6 @@ assign VGA_F1=field;
 `endif
 
 assign VGA_SCALER = 0;
-assign USER_OUT   = '1;
 // assign BUTTONS    = 2'd0; // MiSTer board button emulation from core
 
 wire [3:0] hoffset, voffset;
@@ -373,13 +375,13 @@ assign prog_data = {2{prog_data8}};
 
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
-    .BUTTONS       ( GAME_BUTTONS        ),
+    .BUTTONS       ( GAME_BUTTONS   ),
     .COLORW        ( COLORW         )
     `ifdef VIDEO_WIDTH
-    ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
+      ,.VIDEO_WIDTH( `VIDEO_WIDTH   )
     `endif
     `ifdef VIDEO_HEIGHT
-    ,.VIDEO_HEIGHT  ( `VIDEO_HEIGHT  )
+      ,.VIDEO_HEIGHT(`VIDEO_HEIGHT  )
     `endif
 )
 u_frame(
@@ -493,6 +495,11 @@ u_frame(
 
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),
+
+    // User port (DB9)
+    .USER_OSD       ( USER_OSD       ),
+    .USER_IN        ( USER_IN        ),
+    .USER_OUT       ( USER_OUT       ),
 //////////// board
     .rst            ( rst            ),
     .rst_n          ( rst_n          ), // unused

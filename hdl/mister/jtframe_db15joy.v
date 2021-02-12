@@ -36,13 +36,18 @@ module jtframe_db15joy(
 reg         last_clk, last_but0;
 reg  [23:0] joy_latch, shr;
 reg  [ 4:0] cnt;
+reg  [ 1:0] check;      // button press check
+wire        good;
+
+assign good = joy0[1:0]!=2'd3 && joy0[1:0]!=2'd3 &&
+              joy1[1:0]!=2'd3 && joy1[1:0]!=2'd3;
 
 always @(posedge clk, posedge rst) begin
     if( rst )
         joy_clk <= 0;
     else begin
         if( !scan )
-            joy_clk <= 0;
+            joy_clk <= 1;
         else begin
             if( cen )
                 joy_clk <= ~joy_clk;
@@ -75,16 +80,21 @@ always @(posedge clk, posedge rst) begin
         cnt       <= 5'd0;
         hooked    <= 0;
         last_but0 <= 0;
+        check     <= 2'd0;
     end else begin
         last_clk <= joy_clk;
 
-        if( joy0[4] && !last_but0 )
-            hooked<=1;
+        hooked <= &check;
+
+        if( sample && good ) begin
+            last_but0 <= joy0[4];
+            if( joy0[4] != last_but0 )
+                check[ last_but0 ] <= 1;
+        end
 
         if( !scan ) begin
             cnt      <= 5'd0;
-            joy_clk  <= 1'd0;
-            loadb    <= 1'd0;
+            loadb    <= 1'd1;
             sample   <= 1'd0;
         end else begin
             sample   <= joy_clk && !last_clk && cnt==5'd25;
@@ -92,7 +102,6 @@ always @(posedge clk, posedge rst) begin
             if( joy_clk & ~last_clk ) begin
                 if( cnt==5'd0 ) begin
                     joy_latch <= shr;
-                    last_but0 <= joy0[4];
                 end
                 loadb <= cnt!=5'd25;
                 cnt   <= cnt==5'd25 ? 5'd0 : cnt+1'd1;
