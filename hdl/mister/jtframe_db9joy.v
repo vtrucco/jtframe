@@ -39,19 +39,22 @@ module jtframe_db9joy(
     output reg         hooked
 );
 
-parameter CNTW=5;
+parameter CNTW=6;
 
-localparam [CNTW-1:0] IGNORE=4;
+localparam [CNTW-1:0] IGNORE=8;
 
 reg  [CNTW-1:0] cnt;
 reg  [11:0] joy_scan;
 wire [11:0] joy_sorted;
 wire [ 5:0] not_din;
-reg         last_split, last_but, md6;
+reg         last_split, last_but, md6, md3;
 reg  [ 3:0] joy1_en;
+reg         con;        // connected
+wire        ignore;
 
 assign { split, mdsel } = scan ? { cnt[CNTW-1], cnt[0] } : 2'b11;
 assign not_din = ~din;
+assign ignore  = !cnt[CNTW-1] && cnt[CNTW-2:1] <= IGNORE;
 
 assign joy_sorted = {   joy_scan[8],    // mode
                         joy_scan[7],    // start
@@ -65,54 +68,72 @@ always @(posedge clk, posedge rst) begin
     if( rst ) begin
         joy0     <= 12'd0;
         joy1     <= 12'd0;
-        joy1_en  <= 0;
+        joy1_en  <= 4'd0;
         joy_scan <= 12'h0;
         cnt      <= {CNTW{1'b0}};
         last_but <= 0;
         hooked   <= 1;
         sample   <= 0;
         md6      <= 0;
+        md3      <= 0;
+        con      <= 0;
     end else begin
+        last_split <= cnt[CNTW-1];
         if( !scan ) begin
-            cnt <= {CNTW{1'b0}};
+            cnt        <= {CNTW{1'b0}};
+            md3        <= 0;
+            md6        <= 0;
+            joy_scan  <= 12'h0;
         end else begin
-            last_split <= split;
             sample       <= 0;
 
-            if( split != last_split ) begin
+            if( cnt[CNTW-1] != last_split ) begin
                 joy_scan <= 12'h0;
+                md3      <= 0;
                 md6      <= 0;
+                con      <= 0;
                 if( split ) begin
                     joy0 <= joy_sorted;
                     last_but <= joy0[4];
                     if( last_but && !joy0[4] ) hooked <= 1;
                 end else begin
-                    // auto detection of 2P joystick
-                    // joy1 disabled for now...
-                    // if( joy_sorted != joy0 )
-                    //     joy1_en <= { joy1_en[2:0], 1'b1 };
-                    // else if( !joy1_en[3] )
-                    //     joy1_en <= 4'd0;
+                    if( !con )  begin
+                        // detects that the controller was disconnected
+                        // this is useful when the splitter is removed
+                        // and the gamepad gets connected singlely again
+                        joy1_en <= 4'd0;
+                        joy1    <= 12'h0;
+                    end else begin
+                        // 2nd controller detection
+                        if( joy_sorted != joy0 )
+                            joy1_en <= { joy1_en[2:0], 1'b1 };
+                        else if( !joy1_en[3] )
+                            joy1_en <= 4'd0;
 
-                    if( joy1_en[3] )
-                        joy1 <= joy_sorted;
+                        if( joy1_en[3] )
+                            joy1 <= joy_sorted;
+                    end
                     sample <= 1;
                 end
             end
 
             if( cen ) begin
                 cnt <= cnt+1'd1;
-                if( cnt[CNTW-2:1] > IGNORE ) begin
+                if( !ignore ) begin
                     if( !mdsel ) begin
+                        md3 <= 0;
                         md6 <= 0;
                         if( din[3:2]==2'b0 )
                             md6 <= 1;
-                        else if( din[1:0]==2'b0 )
-                            joy_scan[7:6]  <= not_din[5:4];
+                        else if( din[1:0]==2'b0 ) begin
+                            joy_scan[7:6] <= not_din[5:4];
+                            md3 <= 1;
+                            con <= 1; // controller detected
+                        end
                     end else begin
                         if( md6 )
                             joy_scan[11:8] <= not_din[3:0];
-                        else
+                        if( md3 )
                             joy_scan[ 5:0] <= not_din[5:0];
                     end
                 end

@@ -286,7 +286,7 @@ assign status_menumask[0]    = direct_video;
 
 wire [1:0] db_coin, db_start;
 
-jtframe_dbxjoy u_dbxjoy(
+jtframe_dbxjoy #(.BUTTONS(BUTTONS)) u_dbxjoy(
     .rst      ( rst       ),
     .clk      ( clk_rom   ),
 

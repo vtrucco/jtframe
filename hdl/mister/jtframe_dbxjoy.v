@@ -40,14 +40,14 @@ module jtframe_dbxjoy(
 // joy[10]  = start
 // joy[3:0] = directions
 
-parameter CNTW=10;
+parameter BUTTONS=2, CNTW=11;
 
 reg            cen;
 reg [CNTW-1:0] cen_cnt;
 reg     [ 7:0] latch;     // user_in data is latched
 
 wire         neo_hooked, md_hooked, neo_sample, md_sample;
-reg   [ 1:0] scan;
+//reg   [ 1:0] scan;
 
 wire  [11:0] neo_joy0, neo_joy1, md_joy0, md_joy1;
 reg   [11:0] db_joy0, db_joy1;
@@ -56,17 +56,20 @@ wire  [ 5:0] md_din   = { latch[6], latch[3], latch[5], latch[7], latch[1], latc
 wire         neo_din  = latch[5];
 wire         neo_scan, md_scan;
 
-assign       { neo_scan, md_scan } = scan;
+assign       { neo_scan, md_scan } = 2'b01; //scan;
 
 always @(posedge clk or posedge rst) begin
     if(rst) begin
         cen_cnt <= {CNTW{1'b0}};
     end else begin
         cen_cnt <= cen_cnt + 1'd1;
-        cen     <= &cen_cnt;
+        if( &cen_cnt ) begin
+            latch <= user_in;
+            cen   <= 1;
+        end else cen <= 0;
     end
 end
-
+/*
 always @(posedge clk or posedge rst) begin
     if(rst) begin
         scan <= 2'b1;
@@ -74,6 +77,7 @@ always @(posedge clk or posedge rst) begin
         if( md_sample || neo_sample ) scan <= {scan[0], scan[1]};
     end
 end
+*/
 
 always @(posedge clk) begin
     { db_joy1, db_joy0 } <= neo_hooked ? { neo_joy1, neo_joy0 } : (
@@ -82,14 +86,20 @@ always @(posedge clk) begin
     user_osd <= db_joy0[10] & db_joy0[6];
     raw_joy  <= db_joy0[5:0] | db_joy1[5:0];
 
-    mix_joy0 <= { {12-`BUTTONS{1'b0}}, db_joy0[`BUTTONS+3:0]} | usb_joy0;
-    mix_joy1 <= { {12-`BUTTONS{1'b0}}, db_joy1[`BUTTONS+3:0]} | usb_joy1;
+    mix_joy0 <= { {12-BUTTONS{1'b0}}, db_joy0[BUTTONS+3:0]} | usb_joy0;
+    mix_joy1 <= { {12-BUTTONS{1'b0}}, db_joy1[BUTTONS+3:0]} | usb_joy1;
 
     start    <= { db_joy1[10], db_joy0[10] };
-    coin     <= { db_joy1[11], db_joy0[11] };
+
+    if( md_hooked && BUTTONS<6 ) begin
+        // Try to use one of the free buttons as the coin
+        coin <= { |{ db_joy1[11], db_joy1[9:4+BUTTONS] },
+                  |{ db_joy0[11], db_joy0[9:4+BUTTONS] } };
+    end else begin
+        coin <= { db_joy1[11], db_joy0[11] };
+    end
 
     // user port pins
-    latch    <= user_in;
     user_out <= { 3'b111, md_split, 2'b11, /*joy_clk*/1'b1, md_sel /*& loadb*/};
 end
 
