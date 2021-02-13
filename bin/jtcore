@@ -5,8 +5,6 @@ function show_usage() {
 JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
     Argument without - is the project name, like gng, or 1943
 
-    -skip       skips compilation and goes directly to prepare the release file
-                using the RBF file available.
     -d          Defines a verilog macro. Macros are removed from qsf file after
                 compilation.
                 Useful macros:
@@ -14,19 +12,9 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
                     MISTER_VIDEO_MIXER  uses the Mr video modules
                     JTFRAME_SCAN2X      uses simple scan doubler from JTFRAME
                     DEBUG_NOHDMI        skips MiSTer HDMI related logic. Speeds up compilation.
-    -qq         very quick compilation. Defines NOSUND and DEBUG_NOHDMI. Sets MiSTer as target.
-    -credits    Defines NOSOUND, DEBUG_NOHDMI and NOMAIN. Sets MiSTer as target.
-    -q | -quick quick compilation. Defines NOSUND and OSD_NOBCK
-    -ftp-folder Destination folder in MiSTer FTP to which final RBF will be copied
-                The full name is made by preceding this by a _
-                and adding /cores after it.
-    -git        adds the release file to git
     -mister     compiles MiSTer version. Default is MiST.
     -seed       sets random seed for compilation
     -sidi       compiles SIDI version. This uses MiST's folders and settings but different pinout
-    -prog       programs the FPGA
-    -prog-only  skips compilations and directly programs the FPGA
-    -sim        prepare quartus simulation
     -rename     name used for copying the RBF file into the SD card
     -help       displays this message
 EOF
@@ -34,8 +22,6 @@ EOF
 }
 
 SIM=FALSE
-GIT=FALSE
-PROG=FALSE
 TARGET=mist
 SKIP_COMPILE=FALSE
 RENAME=
@@ -50,45 +36,16 @@ PRJ=
 function parse_args {
     while [ $# -gt 0 ]; do
         case "$1" in
-            -skip | -s) SKIP_COMPILE=TRUE;;
-            -git | -g) GIT=TRUE;;
-            -prog | -p) PROG=TRUE;;
-            -prog-only | -w)
-                PROG=TRUE
-                SKIP_COMPILE=TRUE;;
             -mister | -mr)
                 TARGET=mister;;
             -mist)
                 TARGET=mist;;
             -sidi)
                 TARGET=sidi;;
-            -sim)
-                SIM=TRUE;;
-            -rename)
-                shift
-                RENAME=$1;;
-            -ftp-folder)
-                shift
-                FTP_FOLDER=$1;;
-            -seed | -s)
-                shift
-                SEED=$1;;
-            -showmacros)
-                SHOWMACROS=1;;
-            -gngvga)
-                MACROS="JTFRAME_VGA SCAN2X_TYPE=1 $MACROS";;
             -d)
                 shift
                 MACROS="$1 $MACROS"
                 ;;
-            -q|-quick)
-                MACROS="$MACROS NOSOUND JTFRAME_OSD_NOLOGO";;
-            -qq|-veryquick)
-                MACROS="$MACROS NOSOUND JTFRAME_OSD_NOLOGO DEBUG_NOHDMI"
-                TARGET=mister;;
-            -credits)
-                MACROS="$MACROS NOSOUND DEBUG_NOHDMI NOMAIN JTFRAME_OSD_NOLOGO"
-                TARGET=mister;;
             -help | -h)
                 show_usage;;
             *)  if [ -z "$PRJ" ]; then
@@ -127,11 +84,7 @@ fi
 cd $JTROOT
 MODULES=$JTROOT/modules
 JTFRAME=$MODULES/jtframe
-# This is the FTP host to which files will be copied
-HOST=MiSTer.home
-if [ -z "$FTP_FOLDER" ]; then
-    FTP_FOLDER=JT
-fi
+
 CORESTAMP=$(date +"%Y%m%d")
 
 if [ ! -e "$JTFRAME" ]; then
@@ -351,7 +304,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
         if [ $? = 0 ]; then
             FAIL=1
             report FAIL
-            figlet FAIL $PRJ
+            echo FAIL $PRJ
         else
             echo PASS
             report PASS
@@ -400,79 +353,6 @@ if [ ! -e $RBF ]; then
     exit 1
 fi
 cp $RBF $RELEASE.rbf
-ZIPFOLDER=$TARGET
-mkdir -p releases/$ZIPFOLDER
-# zip --update --junk-paths releases/$ZIPFOLDER/${RELEASE}.zip ${RELEASE}.rbf README.txt $* \
-#     $(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
-if [ -e $JTROOT/../jtbin ]; then
-    BINFOLDER=$JTROOT/../jtbin/$ZIPFOLDER/$PRJ
-    BINRBF=$BINFOLDER/releases/${RELEASE}
-    mkdir -p $BINFOLDER
-    mkdir -p $BINFOLDER/releases
-    cp $RELEASE.rbf ${BINRBF}.rbf -v
-    if [ -n "$SEED_SUFFIX" ]; then
-        cp $RELEASE.rbf ${BINRBF}${SEED_SUFFIX}.rbf -v
-    fi
-    OTHER=$(append_if_exists rom/{$PRJ/build_rom.sh,$PRJ/build_rom.ini,build_rom_$PRJ.bat} doc/jt$PRJ.txt )
-    OTHER="$OTHER $(append_if_exists doc/jt$PRJ.md README.md README.txt )"
-    if [ "$OTHER" != "" ]; then cp $OTHER $BINFOLDER; fi
-    # If there is a mounted SD card with the right name, copy the file to it too
-    if [ -d /media/$USER/${TARGET^^} ]; then
-        if [ -z $RENAME ]; then
-            RENAME=JT${PRJ^^}.rbf
-        else
-            RENAME=$RENAME.rbf
-        fi
-        # copy the file in three forms:
-        # with full date for reference, as core.rbf to start up with it
-        # and inside its own folder for use with ARC files
-        #cp -v $RELEASE.rbf /media/$USER/${TARGET^^}
-        cp -v $RELEASE.rbf /media/$USER/${TARGET^^}/${SHORT^^}.rbf
-        # Copy the file to the core folder so it can be used by ARC files
-        if [ -d /media/$USER/${TARGET^^}/JT${PRJ^^} ]; then
-            cp -v $RELEASE.rbf /media/$USER/${TARGET^^}/${SHORT^^}/$RENAME
-        fi
-    fi
-    if [ $TARGET = mister ]; then
-        # If Mr is online, copy the file to the _Arcade/cores folder
-        if ping $HOST -w 1 -c 1 > /dev/null; then
-            sshpass -p 1 scp $RELEASE.rbf root@${HOST}:/media/fat/_${FTP_FOLDER}/cores
-        fi
-    fi
-    # Add to git but don't commit
-    if [ $GIT = TRUE ]; then
-        cd $JTROOT/../jtbin
-        git add -f ${BINRBF}.rbf
-        cd - > /dev/null
-    fi
-fi
-rm $RELEASE.rbf
 
-
-if [ $PROG = TRUE ]; then
-    if [ $TARGET = mister ]; then
-        CABLE="DE-SoC"
-        cd $PRJPATH/mister
-        FILE=jtag.cdf
-    else
-        CABLE="USB-Blaster(Altera)"
-        FILE=$PRJPATH/${TARGET}/jt$PRJ.cdf
-        if [ ! -e $FILE ]; then
-            cat > $FILE << EOF
-JedecChain;
-    FileRevision(JESD32A);
-    DefaultMfr(6E);
-    P ActionCode(Cfg)
-        Device PartName(EP3C25E144) Path("") File("jt$PRJ.sof") MfrSpec(OpMask(1));
-ChainEnd;
-
-AlteraBegin;
-    ChainType(JTAG);
-AlteraEnd;
-EOF
-        fi
-    fi
-    quartus_pgm -c "$CABLE" $FILE
-fi
 echo completed at $(date)
 exit $FAIL
