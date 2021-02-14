@@ -92,11 +92,14 @@ always @(posedge clk, posedge rst) begin
                 //joy1 <= joy1_en ? sort( raw1 ) : 12'd0;
             end else begin
                 if( &cnt ) locked <= 0;
-                if( cnt<6'd12 ) begin
+                if( cnt<6'd14 ) begin
                     if( !mdsel ) begin
-                        md6[ split ] <= din[3:0]==4'b0;
-                        md3[ split ] <= din[3:2]!=2'd0 && din[1:0]==2'b0;
-                        if( din[1:0]==2'b0 ) begin
+                        if( din[3:0]==4'b0 ) begin
+                            md6[ split ] <= 1;
+                            md3[ split ] <= 0;
+                        end else if( din[1:0]==2'b0 ) begin
+                            md6[ split ] <= 0;
+                            md3[ split ] <= 1;
                             if( split )
                                 raw1[7:6] <= not_din[5:4];
                             else
@@ -106,8 +109,10 @@ always @(posedge clk, posedge rst) begin
                         if(md6[1] &&  split) raw1[11:8] <= not_din[3:0];
                         if(md6[0] && !split) raw0[11:8] <= not_din[3:0];
 
-                        if(md3[1] &&  split) raw1[ 5:0] <= not_din[5:0];
-                        if(md3[0] && !split) raw0[ 5:0] <= not_din[5:0];
+                        if( cnt<6'd4 ) begin
+                            if( split) raw1[ 5:0] <= not_din[5:0];
+                            if(!split) raw0[ 5:0] <= not_din[5:0];
+                        end
                     end
                 end
             end
