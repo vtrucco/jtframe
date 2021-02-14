@@ -35,7 +35,7 @@ module jtframe_db9joy(
 reg  [ 5:0] cnt;
 reg  [11:0] raw0, raw1;
 wire [ 5:0] not_din;
-reg  [ 1:0] md6, md3;
+reg  [ 1:0] md6;
 reg  [ 3:0] joy1_en;
 reg         con;        // connected
 reg         locked;
@@ -64,7 +64,6 @@ always @(posedge clk, posedge rst) begin
         hooked   <= 1;
         sample   <= 0;
         md6      <= 2'b0;
-        md3      <= 2'b0;
         con      <= 0;
         locked   <= 0;
     end else begin
@@ -72,50 +71,32 @@ always @(posedge clk, posedge rst) begin
         sample           <= cnt==6'd15 && cen_hs;
         if( !scan ) begin
             cnt    <=  4'd0;
-            raw0   <= 12'd0;
-            raw1   <= 12'd0;
             md6    <=  2'b0;
-            md3    <=  2'b0;
             locked <=  1'b0;
         end else if(cen_hs) begin
             cnt <= cnt+1'd1;
-            if( cnt==6'd15 ) begin
-                locked <= 1'b1;
-                md6    <= 2'b0;
-                md3    <= 2'b0;
-                joy0   <= sort( raw0 );
-                joy1   <= sort( raw1 );
-                raw0   <= 12'd0;
-                raw1   <= 12'd0;
-                //if( joy0 != sort(raw1) )
-                //    joy1_en <= {joy1_en}
-                //joy1 <= joy1_en ? sort( raw1 ) : 12'd0;
-            end else begin
-                if( &cnt ) locked <= 0;
-                if( cnt<6'd14 ) begin
-                    if( !mdsel ) begin
-                        if( din[3:0]==4'b0 ) begin
-                            md6[ split ] <= 1;
-                            md3[ split ] <= 0;
-                        end else if( din[1:0]==2'b0 ) begin
-                            md6[ split ] <= 0;
-                            md3[ split ] <= 1;
-                            if( split )
-                                raw1[7:6] <= not_din[5:4];
-                            else
-                                raw0[7:6] <= not_din[5:4];
-                        end
-                    end else begin
-                        if(md6[1] &&  split) raw1[11:8] <= not_din[3:0];
-                        if(md6[0] && !split) raw0[11:8] <= not_din[3:0];
+            if( &cnt ) locked <= 0;
+            case( cnt )
+                6'd0: raw0[11:0] <= 12'd0;
+                6'd1: raw1[11:0] <= 12'd0;
 
-                        if( cnt<6'd4 ) begin
-                            if( split) raw1[ 5:0] <= not_din[5:0];
-                            if(!split) raw0[ 5:0] <= not_din[5:0];
-                        end
-                    end
+                6'd2: raw0[ 5:0] <= not_din[5:0];
+                6'd3: raw1[ 5:0] <= not_din[5:0];
+
+                6'd4: raw0[ 7:6] <= not_din[5:4];
+                6'd5: raw1[ 7:6] <= not_din[5:4];
+
+                6'd8: md6[0] <= din[3:0]==4'b0;
+                6'd9: md6[1] <= din[3:0]==4'b0;
+
+                6'ha: if(md6[0]) raw0[11:8] <= not_din[3:0];
+                6'hb: if(md6[1]) raw1[11:8] <= not_din[3:0];
+                6'hf: begin
+                    locked <= 1'b1;
+                    joy0   <= sort( raw0 );
+                    joy1   <= sort( raw1 );
                 end
-            end
+            endcase
         end
     end
 end

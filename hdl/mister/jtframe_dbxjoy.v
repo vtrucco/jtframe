@@ -45,7 +45,7 @@ parameter BUTTONS=2, CNTW=5;
 
 reg            cen;
 reg [CNTW-1:0] hs_cnt;
-reg     [ 7:0] latch;     // user_in data is latched
+wire     [ 7:0] latch;     // user_in data is latched
 reg            last_hs;
 
 wire         neo_hooked, md_hooked, neo_sample, md_sample;
@@ -59,6 +59,7 @@ wire         neo_din  = latch[5];
 wire         neo_scan, md_scan;
 
 assign       { neo_scan, md_scan } = 2'b01; //scan;
+assign latch = user_in;
 
 always @(posedge clk or posedge rst) begin
     if(rst) begin
@@ -89,7 +90,7 @@ always @(posedge clk or posedge rst) begin
 end
 */
 always @(posedge clk) begin
-    latch    <= user_in;
+    //latch    <= user_in;
     { db_joy1, db_joy0 } <= neo_hooked ? { neo_joy1, neo_joy0 } : (
                             md_hooked  ? { md_joy1, md_joy0 } : 24'd0 );
 
