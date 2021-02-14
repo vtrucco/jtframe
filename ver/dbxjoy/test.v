@@ -12,8 +12,9 @@ reg  [11:0] joy0_in, joy1_in;
 wire [ 5:0] md_out;
 wire        neo_out;
 wire [ 1:0] start, coin;
+reg         hs;
 
-integer k=0;
+integer k=0, hs_cnt = 0;
 
 //`ifdef MD
     assign {user_in[6],user_in[3],user_in[5],user_in[7],user_in[1],user_in[2]} = md_out;
@@ -28,9 +29,15 @@ initial begin
     #100 rst = 0;
 end
 
+
 initial begin
     clk = 0;
     forever #10.4 clk = ~clk;
+end
+
+always @(posedge clk) begin
+    hs_cnt = hs_cnt==3076 ? 0 : hs_cnt+1;
+    hs <= hs_cnt==0;
 end
 
 always @(posedge clk) begin
@@ -47,6 +54,7 @@ always @(posedge clk) begin
 end
 
 split_md md_joy(
+    .hs     ( hs          ),
     .joy0_in( joy0_in     ),
     .joy1_in( joy1_in     ),
     .sel    ( user_out[0] ),
@@ -65,6 +73,7 @@ neogeo neo_joy(
 jtframe_dbxjoy uut(
     .rst      ( rst        ),
     .clk      ( clk        ),
+    .hs       ( hs         ),
 
     .usb_joy0 ( 16'h0      ),
     .usb_joy1 ( 16'h0      ),
@@ -90,6 +99,7 @@ endmodule
 
 ////////////////////////////////////////////////////////////
 module split_md(
+    input         hs,
     input  [11:0] joy0_in,
     input  [11:0] joy1_in,
     input         sel,
@@ -100,12 +110,14 @@ module split_md(
 wire [5:0] db0, db1;
 
 megadrive u_joy0(
+    .hs     ( hs      ),
     .joy_in ( joy0_in ),
     .sel    ( sel     ),
     .dbout  ( db0     )
 );
 
 megadrive u_joy1(
+    .hs     ( hs      ),
     .joy_in ( joy1_in ),
     .sel    ( sel     ),
     .dbout  ( db1     )
@@ -118,23 +130,40 @@ endmodule
 module megadrive(
     input      [11:0] joy_in,
     input             sel,
+    input             hs,
     output reg [ 5:0] dbout
 );
 
 reg  [2:0] st  = 3'd0;
+reg  [4:0] lock=5'd0;
+reg        locked = 0;
+reg        last_lin;
+
+wire       lock_in = &st;
 
 always @(negedge sel or posedge sel) begin
-    st  <= st+1'd1;
+    if( !locked ) st <= st+1'd1 ;
+end
+
+always @(posedge hs) begin
+    last_lin <= lock_in;
+    if( lock_in && !last_lin ) begin
+        locked <= 1;
+        lock   <= 5'd0;
+    end else if( locked ) begin
+        lock <= lock+1;
+        if( lock==5'd24 )
+            locked <= 0;
+    end
 end
 
 always @(*) begin
-    case( st[2:1] )
-        default:
-            dbout = ~joy_in[5:0];
-        2'b01:
-            dbout = st[0] ? { ~joy_in[7:6], ~joy_in[3:2], 2'd00 } : ~joy_in[5:0];
-        2'b10:
-            dbout = st[0] ? { ~joy_in[7:6], 4'b0 } : { ~joy_in[5:4], ~joy_in[11:8] };
+    case( st )
+        default: dbout = ~6'd0;
+        3'd2: dbout = { ~joy_in[7:6], 4'b1100 };
+        3'd3: dbout = ~joy_in[5:0];
+        3'd4: dbout = 6'b11_0000;
+        3'd5: dbout = { 2'b11, ~joy_in[11:8] };
     endcase
 end
 

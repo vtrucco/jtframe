@@ -19,6 +19,7 @@
 module jtframe_dbxjoy(
     input               rst,
     input               clk,
+    input               hs,     // horizontal sync
 
     input        [15:0] usb_joy0,
     input        [15:0] usb_joy1,
@@ -40,11 +41,12 @@ module jtframe_dbxjoy(
 // joy[10]  = start
 // joy[3:0] = directions
 
-parameter BUTTONS=2, CNTW=11;
+parameter BUTTONS=2, CNTW=5;
 
 reg            cen;
-reg [CNTW-1:0] cen_cnt;
+reg [CNTW-1:0] hs_cnt;
 reg     [ 7:0] latch;     // user_in data is latched
+reg            last_hs;
 
 wire         neo_hooked, md_hooked, neo_sample, md_sample;
 //reg   [ 1:0] scan;
@@ -60,26 +62,34 @@ assign       { neo_scan, md_scan } = 2'b01; //scan;
 
 always @(posedge clk or posedge rst) begin
     if(rst) begin
-        cen_cnt <= {CNTW{1'b0}};
+        hs_cnt <= {CNTW{1'b0}};
+        last_hs <= 0;
     end else begin
-        cen_cnt <= cen_cnt + 1'd1;
-        if( &cen_cnt ) begin
-            latch <= user_in;
-            cen   <= 1;
+        last_hs <= hs;
+        if( hs && !last_hs ) begin
+            cen <= 1;
+            hs_cnt <= hs_cnt + 1'd1;
         end else cen <= 0;
     end
 end
 /*
 always @(posedge clk or posedge rst) begin
     if(rst) begin
-        scan <= 2'b1;
+        //scan <= 2'b1;
+        md_scan <= 0;
     end else begin
-        if( md_sample || neo_sample ) scan <= {scan[0], scan[1]};
+        //if( md_sample || neo_sample ) scan <= {scan[0], scan[1]};
+        if( md_sample ) begin
+            md_scan <= 0;
+        end else begin
+            if( &hs_cnt )
+                md_scan <= 1;
+        end
     end
 end
 */
-
 always @(posedge clk) begin
+    latch    <= user_in;
     { db_joy1, db_joy0 } <= neo_hooked ? { neo_joy1, neo_joy0 } : (
                             md_hooked  ? { md_joy1, md_joy0 } : 24'd0 );
 
@@ -106,7 +116,7 @@ end
 jtframe_db9joy u_db9(
     .rst    ( rst       ),
     .clk    ( clk       ),
-    .cen    ( cen       ),
+    .cen_hs ( cen       ),
     .scan   ( md_scan   ),
 
     .din    ( md_din    ),

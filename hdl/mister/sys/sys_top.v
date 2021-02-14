@@ -1350,13 +1350,12 @@ alsa alsa
 
 ////////////////  User I/O (USB 3.0 connector) /////////////////////////
 wire db9_en;
-wire [7:0] db9_dout = db9_en ? user_out : 8'hff;
 
-assign USER_IO[0] = db9_dout[0] ? 1'bz : 1'b0;
-assign USER_IO[1] = db9_dout[1] ? 1'bz : 1'b0;
+assign USER_IO[0] = db9_en ? user_out[0] : 1'bz;
+assign USER_IO[1] = 1'bz; //db9_en ? db9_dout[1] ? 1'bz : 1'b0;
 assign USER_IO[2] = 1'bz;
 assign USER_IO[3] = 1'bz;
-assign USER_IO[4] = db9_dout[4] ? 1'bz : 1'b0;
+assign USER_IO[4] = db9_en ? user_out[4] : 1'bz;
 assign USER_IO[5] = 1'bz;
 assign USER_IO[6] = 1'bz;
 assign USER_IO[7] = 1'bz;

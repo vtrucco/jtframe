@@ -289,6 +289,7 @@ wire [1:0] db_coin, db_start;
 jtframe_dbxjoy #(.BUTTONS(BUTTONS)) u_dbxjoy(
     .rst      ( rst       ),
     .clk      ( clk_rom   ),
+    .hs       ( hs        ),
 
     .usb_joy0 ( hps_joy0  ),
     .usb_joy1 ( hps_joy1  ),
