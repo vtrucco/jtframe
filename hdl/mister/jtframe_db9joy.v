@@ -67,7 +67,7 @@ always @(posedge clk, posedge rst) begin
         con      <= 0;
         locked   <= 0;
     end else begin
-        { mdsel, split } <= (!scan || locked) ? 2'b11 : { cnt[1], cnt[0] };
+        { mdsel, split } <= (!scan || locked) ? 2'b10 : { cnt[2], cnt[1] };
         sample           <= cnt==6'd15 && cen_hs;
         if( !scan ) begin
             cnt    <=  4'd0;
@@ -76,27 +76,29 @@ always @(posedge clk, posedge rst) begin
         end else if(cen_hs) begin
             cnt <= cnt+1'd1;
             if( &cnt ) locked <= 0;
-            case( cnt )
-                6'd0: raw0[11:0] <= 12'd0;
-                6'd1: raw1[11:0] <= 12'd0;
+            if( !locked ) begin
+                case( cnt[4:1] )
+                    4'd0: raw0[11:0] <= 12'd0;
+                    4'd1: raw1[11:0] <= 12'd0;
 
-                6'd2: raw0[ 5:0] <= not_din[5:0];
-                6'd3: raw1[ 5:0] <= not_din[5:0];
+                    4'd2: raw0[ 5:0] <= not_din[5:0];
+                    4'd3: raw1[ 5:0] <= not_din[5:0];
 
-                6'd4: raw0[ 7:6] <= not_din[5:4];
-                6'd5: raw1[ 7:6] <= not_din[5:4];
+                    4'd4: raw0[ 7:6] <= not_din[5:4];
+                    4'd5: raw1[ 7:6] <= not_din[5:4];
 
-                6'd8: md6[0] <= din[3:0]==4'b0;
-                6'd9: md6[1] <= din[3:0]==4'b0;
+                    4'd8: md6[0] <= din[3:0]==4'b0;
+                    4'd9: md6[1] <= din[3:0]==4'b0;
 
-                6'ha: if(md6[0]) raw0[11:8] <= not_din[3:0];
-                6'hb: if(md6[1]) raw1[11:8] <= not_din[3:0];
-                6'hf: begin
-                    locked <= 1'b1;
-                    joy0   <= sort( raw0 );
-                    joy1   <= sort( raw1 );
-                end
-            endcase
+                    4'ha: if(md6[0]) raw0[11:8] <= not_din[3:0];
+                    4'hb: if(md6[1]) raw1[11:8] <= not_din[3:0];
+                    4'hf: begin
+                        locked <= 1'b1;
+                        joy0   <= sort( raw0 );
+                        joy1   <= sort( raw1 );
+                    end
+                endcase
+            end
         end
     end
 end
