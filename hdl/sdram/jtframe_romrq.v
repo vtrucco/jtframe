@@ -24,6 +24,7 @@
 module jtframe_romrq #(parameter
     AW=18,
     DW=8,
+    LATCH=0,    // dout is latched
     REPACK=0    // do not let data from SDRAM pass thru without repacking (latching) it
                 // 0 = data is let pass thru
                 // 1 = data gets repacked (adds one clock of latency)
@@ -104,21 +105,39 @@ wire [31:0] data_mux = passthru ? din :
     (hit0 ? cached_data0 : cached_data1);
 
 generate
-    if(DW==8) begin
-        always @(*)
-        case( subaddr )
-            2'd0: dout = data_mux[ 7: 0];
-            2'd1: dout = data_mux[15: 8];
-            2'd2: dout = data_mux[23:16];
-            2'd3: dout = data_mux[31:24];
-        endcase
-    end else if(DW==16) begin
-        always @(*)
-        case( subaddr[0] )
-                1'd0: dout = data_mux[15:0];
-                1'd1: dout = data_mux[31:16];
-        endcase
-    end else always @(*) dout = data_mux;
+    if( LATCH==0 ) begin : data_latch
+        if(DW==8) begin
+            always @(*)
+            case( subaddr )
+                2'd0: dout = data_mux[ 7: 0];
+                2'd1: dout = data_mux[15: 8];
+                2'd2: dout = data_mux[23:16];
+                2'd3: dout = data_mux[31:24];
+            endcase
+        end else if(DW==16) begin
+            always @(*)
+            case( subaddr[0] )
+                    1'd0: dout = data_mux[15:0];
+                    1'd1: dout = data_mux[31:16];
+            endcase
+        end else always @(*) dout = data_mux;
+    end else begin : no_data_latch
+        if(DW==8) begin
+            always @(posedge clk)
+            case( subaddr )
+                2'd0: dout <= data_mux[ 7: 0];
+                2'd1: dout <= data_mux[15: 8];
+                2'd2: dout <= data_mux[23:16];
+                2'd3: dout <= data_mux[31:24];
+            endcase
+        end else if(DW==16) begin
+            always @(posedge clk)
+            case( subaddr[0] )
+                    1'd0: dout <= data_mux[15:0];
+                    1'd1: dout <= data_mux[31:16];
+            endcase
+        end else always @(posedge clk) dout <= data_mux;
+    end
 endgenerate
 
 `ifdef JTFRAME_SDRAM_STATS
