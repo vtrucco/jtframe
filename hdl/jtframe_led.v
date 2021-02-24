@@ -58,7 +58,7 @@ always @(posedge clk, posedge rst) begin
     if( rst ) begin
         led <= POL[0];
     end else begin
-        led <= (~enlarged & (sys_led | game_led[1])) ^ POL[0];
+        led <= (~enlarged & (sys_led /*| game_led[1]*/)) ^ POL[0];
     end
 end
 
