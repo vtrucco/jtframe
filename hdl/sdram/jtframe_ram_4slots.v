@@ -31,13 +31,13 @@ module jtframe_ram_4slots #(parameter
     input  [SLOT0_AW-1:0] slot0_addr,
     input  [SLOT1_AW-1:0] slot1_addr,
     input  [SLOT2_AW-1:0] slot2_addr,
-    input  [SLOT2_AW-1:0] slot3_addr,
+    input  [SLOT3_AW-1:0] slot3_addr,
 
     //  output data
     output [SLOT0_DW-1:0] slot0_dout,
     output [SLOT1_DW-1:0] slot1_dout,
     output [SLOT2_DW-1:0] slot2_dout,
-    output [SLOT2_DW-1:0] slot3_dout,
+    output [SLOT3_DW-1:0] slot3_dout,
 
     input    [SDRAMW-1:0] offset0,
     input    [SDRAMW-1:0] offset1,
@@ -84,11 +84,13 @@ wire [SW-1:0] active = ~slot_sel & req;
 
 wire [SDRAMW-1:0] slot0_addr_req,
                   slot1_addr_req,
-                  slot2_addr_req;
+                  slot2_addr_req,
+                  slot3_addr_req;
 
 assign slot0_ok = slot_ok[0];
 assign slot1_ok = slot_ok[1];
 assign slot2_ok = slot_ok[2];
+assign slot3_ok = slot_ok[3];
 
 jtframe_ram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .rst       ( rst                    ),
