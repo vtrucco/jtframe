@@ -525,7 +525,7 @@ assign scan2x_sl   = 2'd0;
 localparam CLROUTW = COLORW < 5 ? COLORW+1 : COLORW;
 
 wire [CLROUTW-1:0] r_ana, g_ana, b_ana;
-wire               hs_ana, vs_ana;
+wire               hs_ana, vs_ana, lhbl_ana, lvbl_ana;
 wire               pxl_ana;
 
 jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) u_wirebw(
@@ -536,11 +536,14 @@ jtframe_wirebw #(.WIN(COLORW), .WOUT(CLROUTW)) u_wirebw(
     .b_in       ( pre2x_b   ),
     .HS_in      ( hs        ),
     .VS_in      ( vs        ),
+    .HB_in      ( pre2x_LHBL),
+    .VB_in      ( pre2x_LVBL),
     .enable     ( bw_en     ),
     // filtered video
     .HS_out     ( hs_ana    ),
     .VS_out     ( vs_ana    ),
-    .spl_out    (           ),
+    .HB_out     ( lhbl_ana  ),
+    .VB_out     ( lvbl_ana  ),
     .r_out      ( r_ana     ),
     .g_out      ( g_ana     ),
     .b_out      ( b_ana     )
@@ -618,8 +621,8 @@ endfunction
         .ce_pix     ( pxl_cen       ),
 
         .RGB_in     ( game_rgb      ),
-        .HBlank     ( ~pre2x_LHBL   ),
-        .VBlank     ( ~pre2x_LVBL   ),
+        .HBlank     ( ~lhbl_ana     ),
+        .VBlank     ( ~lvbl_ana     ),
         .HSync      ( hs_ana        ),
         .VSync      ( vs_ana        ),
 
