@@ -24,8 +24,6 @@
 //      simhexfile => hexadecimal file to load during simulation
 //      synfile => hexadecimal file to load for synthesis
 
-`timescale 1ns/1ps
-
 module jtframe_dual_ram #(parameter dw=8, aw=10,
     simfile="", simhexfile="", synfile="", dumpfile="dump.hex"
 )(

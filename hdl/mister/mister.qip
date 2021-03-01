@@ -1,4 +1,6 @@
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) jtframe_mister.sv              ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) jtframe_mister_dwnld.v         ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) jtframe_mr_ddrmux.v            ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../keyboard/jtframe_keyboard.v ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../keyboard/jtframe_4wayjoy.v  ]
 set_global_assignment -name VHDL_FILE          [file join $::quartus(qip_path) ../keyboard/ps2_intf.vhd       ]

@@ -20,6 +20,14 @@
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //============================================================================
 
+`ifdef JTFRAME_VERTICAL
+`define JTFRAME_MR_DDR
+`endif
+
+`ifdef JTFRAME_MR_DDRLOAD
+`define JTFRAME_MR_DDR
+`endif
+
 module emu
 (
     //Master input clock
@@ -102,6 +110,7 @@ module emu
     output [23:0] FB_PAL_DOUT,
     input  [23:0] FB_PAL_DIN,
     output        FB_PAL_WR,
+`endif
 
     output        DDRAM_CLK,
     input         DDRAM_BUSY,
@@ -113,7 +122,6 @@ module emu
     output [63:0] DDRAM_DIN,
     output [ 7:0] DDRAM_BE,
     output        DDRAM_WE,
-    `endif
 
     // Open-drain User port.
     // 0 - D+/RX
@@ -246,7 +254,6 @@ pll pll(
     .outclk_5   ( clk96sh    )
 );
 
-
 `ifdef JTFRAME_SDRAM96
     assign clk_rom = clk96;
     assign clk_sys = clk96;
@@ -303,7 +310,7 @@ wire        dip_pause, dip_flip, dip_test;
 wire [31:0] dipsw;
 
 wire        ioctl_wr;
-wire [24:0] ioctl_addr;
+wire [26:0] ioctl_addr; // up to 128MB
 wire [ 7:0] ioctl_data;
 
 wire [ 9:0] game_joy1, game_joy2, game_joy3, game_joy4;
@@ -373,13 +380,13 @@ assign prog_data = {2{prog_data8}};
 
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
-    .BUTTONS       ( GAME_BUTTONS        ),
+    .BUTTONS       ( GAME_BUTTONS   ),
     .COLORW        ( COLORW         )
     `ifdef VIDEO_WIDTH
-    ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
+    ,.VIDEO_WIDTH  ( `VIDEO_WIDTH   )
     `endif
     `ifdef VIDEO_HEIGHT
-    ,.VIDEO_HEIGHT  ( `VIDEO_HEIGHT  )
+    ,.VIDEO_HEIGHT ( `VIDEO_HEIGHT  )
     `endif
 )
 u_frame(
@@ -420,18 +427,20 @@ u_frame(
     .FB_PAL_DOUT    ( FB_PAL_DOUT    ),
     .FB_PAL_DIN     ( FB_PAL_DIN     ),
     .FB_PAL_WR      ( FB_PAL_WR      ),
+    `endif
 
-    .DDRAM_CLK      ( DDRAM_CLK      ),
-    .DDRAM_BUSY     ( DDRAM_BUSY     ),
+    // DDR interface
+    .DDRAM_CLK      ( DDRAM_CLK      ), // same as clk_rom
     .DDRAM_BURSTCNT ( DDRAM_BURSTCNT ),
     .DDRAM_ADDR     ( DDRAM_ADDR     ),
-    .DDRAM_DOUT     ( DDRAM_DOUT     ),
-    .DDRAM_DOUT_READY(DDRAM_DOUT_READY ),
-    .DDRAM_RD       ( DDRAM_RD       ),
-    .DDRAM_DIN      ( DDRAM_DIN      ),
     .DDRAM_BE       ( DDRAM_BE       ),
     .DDRAM_WE       ( DDRAM_WE       ),
-    `endif
+    .DDRAM_BUSY     ( DDRAM_BUSY     ),
+    .DDRAM_DOUT_READY(DDRAM_DOUT_READY ),
+    .DDRAM_DOUT     ( DDRAM_DOUT     ),
+    .DDRAM_RD       ( DDRAM_RD       ),
+    .DDRAM_DIN      ( DDRAM_DIN      ),
+
     // SDRAM interface
     .SDRAM_CLK      ( SDRAM_CLK      ),
     .SDRAM_DQ       ( SDRAM_DQ       ),
@@ -477,10 +486,10 @@ u_frame(
 
     // ROM load
     .ioctl_addr     ( ioctl_addr     ),
-    .ioctl_data     ( ioctl_data     ),
+    .ioctl_dout     ( ioctl_data     ),
     .ioctl_rom_wr   ( ioctl_wr       ),
     .ioctl_ram      ( ioctl_ram      ),
-    .ioctl_data2sd  ( ioctl_data2sd  ),
+    .ioctl_din      ( ioctl_data2sd  ),
 
     .prog_addr      ( prog_addr      ),
     .prog_data      ( prog_data      ),
@@ -568,18 +577,18 @@ end
     // clock inputs
     // By default clk is 48MHz, but JTFRAME_CLK96 overrides it to 96MHz
     .clk          ( clk_rom          ),
-    `ifdef JTFRAME_CLK96
+`ifdef JTFRAME_CLK96
     .clk96        ( clk96            ),
-    `endif
-    `ifdef JTFRAME_CLK48
+`endif
+`ifdef JTFRAME_CLK48
     .clk48        ( clk48            ),
-    `endif
-    `ifdef JTFRAME_CLK24
+`endif
+`ifdef JTFRAME_CLK24
     .clk24        ( clk24            ),
-    `endif
-    `ifdef JTFRAME_CLK6
+`endif
+`ifdef JTFRAME_CLK6
     .clk6         ( clk6             ),
-    `endif
+`endif
     .pxl2_cen     ( pxl2_cen         ),
     .pxl_cen      ( pxl_cen          ),
 
@@ -626,7 +635,7 @@ end
     .data_read   ( sdram_dout     ),
     .refresh_en  ( rfsh_en        ),
 
-    `ifdef JTFRAME_SDRAM_BANKS
+`ifdef JTFRAME_SDRAM_BANKS
     // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
     .ba0_rd     ( ba0_rd        ),
@@ -653,23 +662,23 @@ end
     .ba3_rd     ( ba3_rd        ),
     .ba3_rdy    ( ba3_rdy       ),
     .ba3_ack    ( ba3_ack       ),
-    `else
+`else
     .loop_rst   ( 1'b0          ),
     .sdram_req  ( ba0_rd        ),
     .sdram_addr ( ba0_addr      ),
     .data_rdy   ( ba0_rdy | prog_rdy ),
     .sdram_ack  ( ba0_ack | prog_ack ),
-    `endif
+`endif
 
     // ROM-load interface
-    `ifdef JTFRAME_SDRAM_BANKS
+`ifdef JTFRAME_SDRAM_BANKS
     .prog_ba    ( prog_ba       ),
     .prog_rdy   ( prog_rdy      ),
     .prog_ack   ( prog_ack      ),
     .prog_data  ( prog_data     ),
-    `else
+`else
     .prog_data  ( prog_data8    ),
-    `endif
+`endif
     .prog_addr  ( prog_addr     ),
     .prog_rd    ( prog_rd       ),
     .prog_we    ( prog_we       ),
@@ -682,16 +691,16 @@ end
     .dip_flip     ( dip_flip         ),
     .dip_test     ( dip_test         ),
     .dip_fxlevel  ( dip_fxlevel      ),
-    `ifdef JTFRAME_MRA_DIP
+`ifdef JTFRAME_MRA_DIP
     .dipsw        ( dipsw            ),
-    `endif
+`endif
 
-    `ifdef STEREO_GAME
+`ifdef STEREO_GAME
     .snd_left     ( snd_left         ),
     .snd_right    ( snd_right        ),
-    `else
+`else
     .snd          ( snd_left         ),
-    `endif
+`endif
     .gfx_en       ( gfx_en           ),
 
     // unconnected

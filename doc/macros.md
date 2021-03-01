@@ -24,6 +24,8 @@ JTFRAME_INTERLACED       |         | Support for interlaced games
 JTFRAME_MIST_DIPBASE     | MiST    | Starting base in status word for MiST dip switches
 JTFRAME_MIST_DIRECT      | MiST    | On by default. Define as 0 to disable. Fast ROM load
 JTFRAME_MR_FASTIO        | MiSTer  | 16-bit ROM load in MiSTer. Set by default if CLK96 is set
+JTFRAME_MR_DDRLOAD       | MiSTer  | ROM download process uses the DDR as proxy
+JTFRAME_MR_DDR           | MiSTer  | Defined internally. Do not define manually.
 JTFRAME_MRA_DIP          |         | DIPs are in an MRA file
 JTFRAME_NOHOLDBUS        |         | Reduces bus noise (non-interleaved SDRAM controller)
 JTFRAME_NOHQ2X           | MiSTer  | Disables HQ2X filter in MiSTer

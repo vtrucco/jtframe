@@ -57,7 +57,7 @@ module jtframe_mister #(parameter
     output          SDRAM_CKE,      // SDRAM Clock Enable
 
     // Signals to rotate the screen
-    `ifdef JTFRAME_VERTICAL
+`ifdef JTFRAME_VERTICAL
     output          FB_EN,
     output  [4:0]   FB_FORMAT,
     output [11:0]   FB_WIDTH,
@@ -75,29 +75,30 @@ module jtframe_mister #(parameter
     output [23:0]   FB_PAL_DOUT,
     input  [23:0]   FB_PAL_DIN,
     output          FB_PAL_WR,
+ `endif
 
-    output          DDRAM_CLK,
-    input           DDRAM_BUSY,
-    output  [7:0]   DDRAM_BURSTCNT,
-    output [28:0]   DDRAM_ADDR,
-    input  [63:0]   DDRAM_DOUT,
-    input           DDRAM_DOUT_READY,
-    output          DDRAM_RD,
-    output [63:0]   DDRAM_DIN,
-    output  [7:0]   DDRAM_BE,
-    output          DDRAM_WE,
-    `endif
+    // DDR3 RAM
+(*keep*)    output          DDRAM_CLK,
+(*keep*)    input           DDRAM_BUSY,
+(*keep*)    output  [7:0]   DDRAM_BURSTCNT,
+(*keep*)    output [28:0]   DDRAM_ADDR,
+(*keep*)    input  [63:0]   DDRAM_DOUT,
+(*keep*)    input           DDRAM_DOUT_READY,
+(*keep*)    output          DDRAM_RD,
+(*keep*)    output [63:0]   DDRAM_DIN,
+(*keep*)    output  [7:0]   DDRAM_BE,
+(*keep*)    output          DDRAM_WE,
 
     // ROM programming
-    output       [24:0] ioctl_addr,
-    output       [ 7:0] ioctl_data,
+    output       [26:0] ioctl_addr,
+    output       [ 7:0] ioctl_dout,
     output              ioctl_rom_wr,
     // NVRAM
-    input        [ 7:0] ioctl_data2sd,
-    output reg          ioctl_ram,
+    input        [ 7:0] ioctl_din,
+    output              ioctl_ram,
 
     input               dwnld_busy,
-    output reg          downloading,
+    output              downloading,
 
     input        [21:0] prog_addr,
     input        [15:0] prog_data,
@@ -176,16 +177,20 @@ module jtframe_mister #(parameter
     output    [ 3:0]  gfx_en
 );
 
-localparam [7:0] IDX_ROM   = 8'h0,
-                 IDX_MOD   = 8'h1,
-                 IDX_NVRAM = 8'h2,
-                 IDX_DIPSW = 8'd254;
+`ifndef JTFRAME_MR_FASTIO
+    `ifdef JTFRAME_CLK96
+        `define JTFRAME_MR_FASTIO 1
+    `else
+      `define JTFRAME_MR_FASTIO 0
+    `endif
+`endif
+
+localparam JTFRAME_MR_FASTIO=`JTFRAME_MR_FASTIO;
 
 wire [21:0] gamma_bus;
 
 wire [ 7:0] ioctl_index;
 wire        ioctl_wr;
-wire        ioctl_download;
 
 wire [ 3:0] hoffset, voffset;
 
@@ -193,20 +198,32 @@ wire [15:0] joystick1, joystick2, joystick3, joystick4;
 wire        ps2_kbd_clk, ps2_kbd_data;
 wire        force_scan2x, direct_video;
 
-reg  [6:0]  core_mod;
+wire [ 6:0] core_mod;
 
 wire        hs_resync, vs_resync;
+
+wire        hps_download, hps_wr, hps_wait;
+wire [15:0] hps_index;
+wire [26:0] hps_addr;
+wire [ 7:0] hps_dout;
+
+// Screen rotation
+wire [ 7:0] rot_burstcnt;
+wire [28:0] rot_addr;
+wire [63:0] rot_dout;
+wire        rot_we, rot_rd, rot_busy;
+wire [ 7:0] rot_be;
+
+// Fast DDR load
+wire [ 7:0] ddrld_burstcnt;
+wire [28:0] ddrld_addr;
+wire        ddrld_rd, ddrld_busy;
 
 assign { voffset, hoffset } = status[31:24];
 
 `ifdef JTFRAME_VERTICAL
 assign {FB_PAL_CLK, FB_FORCE_BLANK, FB_PAL_ADDR, FB_PAL_DOUT, FB_PAL_WR} = '0;
 `endif
-
-always @(posedge clk_sys) begin
-    downloading <= ioctl_download && ioctl_index==IDX_ROM;
-    ioctl_ram   <= ioctl_download && ioctl_index==IDX_NVRAM;
-end
 
 jtframe_resync u_resync(
     .clk        ( clk_sys       ),
@@ -221,57 +238,45 @@ jtframe_resync u_resync(
     .vs_out     ( vs_resync     )
 );
 
-
-assign ioctl_rom_wr = ioctl_wr && (ioctl_index==IDX_ROM || ioctl_index==IDX_NVRAM);
-
-`ifndef JTFRAME_MRA_DIP
-    // DIP switches through regular OSD options
-    assign dipsw        = status;
-`else
-    // Dip switches through MRA file
-    // Support for 32 bits only for now.
-    reg  [ 7:0] dsw[4];
-
-    `ifndef SIMULATION
-        assign dipsw = {dsw[3],dsw[2],dsw[1],dsw[0]};
-    `else // SIMULATION:
-        `ifndef JTFRAME_SIM_DIPS
-            assign dipsw = ~32'd0;
-        `else
-            assign dipsw = `JTFRAME_SIM_DIPS;
-        `endif
-    `endif
-
-
-    always @(posedge clk_rom) begin
-        if (ioctl_wr && (ioctl_index==IDX_DIPSW) && !ioctl_addr[24:2]) dsw[ioctl_addr[1:0]] <= ioctl_data;
-    end
-`endif
-
-always @(posedge clk_rom, posedge rst) begin
-    if( rst ) begin
-        core_mod <= 7'b01; // see readme file for documentation on each bit
-    end else begin
-        // The ioctl_addr[0]==1'b0 condition is needed in case JTFRAME_MR_FASTIO is enabled
-        // as it always creates two write events and the second would delete the data of the first
-        if (ioctl_wr && (ioctl_index==IDX_MOD) && ioctl_addr[0]==1'b0) core_mod <= ioctl_data[6:0];
-    end
-end
-
-`ifndef JTFRAME_MR_FASTIO
-    `ifdef JTFRAME_CLK96
-        `define JTFRAME_MR_FASTIO 1
-    `else
-      `define JTFRAME_MR_FASTIO 0
-    `endif
-`endif
-
-localparam JTFRAME_MR_FASTIO=`JTFRAME_MR_FASTIO;
-
 wire [15:0] status_menumask;
 
 assign status_menumask[15:1] = 15'd0;
 assign status_menumask[0]    = direct_video;
+
+jtframe_mister_dwnld u_dwnld(
+    .rst            ( rst            ),
+    .clk            ( clk_rom        ),
+
+    .prog_we        ( prog_we        ),
+    .prog_rdy       ( prog_rdy       ),
+    .downloading    ( downloading    ),
+    .dwnld_busy     ( dwnld_busy     ),
+
+    .hps_download   ( hps_download   ),
+    .hps_index      ( hps_index[7:0] ),
+    .hps_wr         ( hps_wr         ),
+    .hps_addr       ( hps_addr       ),
+    .hps_dout       ( hps_dout       ),
+    .hps_wait       ( hps_wait       ),
+
+    .ioctl_rom_wr   ( ioctl_rom_wr   ),
+    .ioctl_addr     ( ioctl_addr     ),
+    .ioctl_dout     ( ioctl_dout     ),
+    .ioctl_ram      ( ioctl_ram      ),
+
+    // Configuration
+    .core_mod       ( core_mod       ),
+    .status         ( status         ),
+    .dipsw          ( dipsw          ),
+
+    // DDR
+    .ddram_busy     ( ddrld_busy       ),
+    .ddram_burstcnt ( ddrld_burstcnt   ),
+    .ddram_addr     ( ddrld_addr       ),
+    .ddram_dout     ( DDRAM_DOUT       ),
+    .ddram_dout_ready(DDRAM_DOUT_READY ),
+    .ddram_rd       ( ddrld_rd         )
+);
 
 hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_hps_io
 (
@@ -286,12 +291,13 @@ hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_
     .direct_video    ( direct_video   ),
     .forced_scandoubler(force_scan2x  ),
 
-    .ioctl_download  ( ioctl_download ),
-    .ioctl_wr        ( ioctl_wr       ),
-    .ioctl_addr      ( ioctl_addr     ),
-    .ioctl_dout      ( ioctl_data     ),
-    .ioctl_din       ( ioctl_data2sd  ),
-    .ioctl_index     ( ioctl_index    ),
+    .ioctl_download  ( hps_download   ),
+    .ioctl_wr        ( hps_wr         ),
+    .ioctl_addr      ( hps_addr       ),
+    .ioctl_dout      ( hps_dout       ),
+    .ioctl_din       ( ioctl_din      ),
+    .ioctl_index     ( hps_index      ),
+    .ioctl_wait      ( hps_wait       ),
     // NVRAM support
     .ioctl_upload    (                ), // no need
     .ioctl_rd        (                ), // no need
@@ -444,39 +450,73 @@ jtframe_board #(
     .gfx_en         ( gfx_en          )
 );
 
+wire rot_clk;
+
 `ifdef JTFRAME_VERTICAL
-screen_rotate u_rotate(
-    .CLK_VIDEO      ( scan2x_clk        ),
-    .CE_PIXEL       ( scan2x_cen        ),
+    screen_rotate u_rotate(
+        .CLK_VIDEO      ( scan2x_clk     ),
+        .CE_PIXEL       ( scan2x_cen     ),
 
-    .VGA_R          ( scan2x_r          ),
-    .VGA_G          ( scan2x_g          ),
-    .VGA_B          ( scan2x_b          ),
-    .VGA_HS         ( scan2x_hs         ),
-    .VGA_VS         ( scan2x_vs         ),
-    .VGA_DE         ( scan2x_de         ),
+        .VGA_R          ( scan2x_r       ),
+        .VGA_G          ( scan2x_g       ),
+        .VGA_B          ( scan2x_b       ),
+        .VGA_HS         ( scan2x_hs      ),
+        .VGA_VS         ( scan2x_vs      ),
+        .VGA_DE         ( scan2x_de      ),
 
-    .rotate_ccw     ( 1'b0              ),
-    .no_rotate      ( ~rotate[0]        ),
+        .rotate_ccw     ( 1'b0           ),
+        .no_rotate      ( ~rotate[0]     ),
 
-    .FB_EN          ( FB_EN             ),
-    .FB_FORMAT      ( FB_FORMAT         ),
-    .FB_WIDTH       ( FB_WIDTH          ),
-    .FB_HEIGHT      ( FB_HEIGHT         ),
-    .FB_BASE        ( FB_BASE           ),
-    .FB_STRIDE      ( FB_STRIDE         ),
-    .FB_VBL         ( FB_VBL            ),
-    .FB_LL          ( FB_LL             ),
+        .FB_EN          ( FB_EN          ),
+        .FB_FORMAT      ( FB_FORMAT      ),
+        .FB_WIDTH       ( FB_WIDTH       ),
+        .FB_HEIGHT      ( FB_HEIGHT      ),
+        .FB_BASE        ( FB_BASE        ),
+        .FB_STRIDE      ( FB_STRIDE      ),
+        .FB_VBL         ( FB_VBL         ),
+        .FB_LL          ( FB_LL          ),
 
-    .DDRAM_CLK      ( DDRAM_CLK         ),
-    .DDRAM_BUSY     ( DDRAM_BUSY        ),
-    .DDRAM_BURSTCNT ( DDRAM_BURSTCNT    ),
-    .DDRAM_ADDR     ( DDRAM_ADDR        ),
-    .DDRAM_DIN      ( DDRAM_DIN         ),
-    .DDRAM_BE       ( DDRAM_BE          ),
-    .DDRAM_WE       ( DDRAM_WE          ),
-    .DDRAM_RD       ( DDRAM_RD          )
-);
+        //muxed
+        .DDRAM_BUSY     ( rot_busy       ),
+        .DDRAM_BURSTCNT ( rot_burstcnt   ),
+        .DDRAM_ADDR     ( rot_addr       ),
+        .DDRAM_BE       ( rot_be         ),
+        .DDRAM_WE       ( rot_we         ),
+        .DDRAM_RD       ( rot_rd         ),
+        // umuxed
+        .DDRAM_CLK      ( rot_clk        ), // same as clk_rom
+        .DDRAM_DIN      ( DDRAM_DIN      )
+    );
+`else
+    assign DDRAM_DIN=64'd0;
+    assign rot_clk = clk_rom;
 `endif
+
+jtframe_mr_ddrmux u_ddrmux(
+    .rst            ( rst             ),
+    .clk            ( clk_rom         ),
+    .downloading    ( downloading     ),
+    // Fast DDR load
+    .ddrld_burstcnt ( ddrld_burstcnt  ),
+    .ddrld_addr     ( ddrld_addr      ),
+    .ddrld_rd       ( ddrld_rd        ),
+    .ddrld_busy     ( ddrld_busy      ),
+    // Rotation signals
+    .rot_clk        ( rot_clk         ),
+    .rot_burstcnt   ( rot_burstcnt    ),
+    .rot_addr       ( rot_addr        ),
+    .rot_rd         ( rot_rd          ),
+    .rot_we         ( rot_we          ),
+    .rot_be         ( rot_be          ),
+    .rot_busy       ( rot_busy        ),
+    // DDR Signals
+    .ddr_clk        ( DDRAM_CLK       ),
+    .ddr_busy       ( DDRAM_BUSY      ),
+    .ddr_burstcnt   ( DDRAM_BURSTCNT  ),
+    .ddr_addr       ( DDRAM_ADDR      ),
+    .ddr_rd         ( DDRAM_RD        ),
+    .ddr_we         ( DDRAM_WE        ),
+    .ddr_be         ( DDRAM_BE        )
+);
 
 endmodule

@@ -35,6 +35,10 @@
 	`define USE_DDRAM
 `endif
 
+`ifdef JTFRAME_MR_DDRLOAD
+	`define USE_DDRAM
+`endif
+
 module sys_top
 (
 	/////////// CLOCK //////////
@@ -1378,16 +1382,16 @@ wire        clk_vid, ce_pix, clk_ihdmi, ce_hpix;
 wire        vga_force_scaler;
 
 `ifdef USE_DDRAM
-	wire        ram_clk;
-	wire [28:0] ram_address;
-	wire [7:0]  ram_burstcount;
-	wire        ram_waitrequest;
-	wire [63:0] ram_readdata;
-	wire        ram_readdatavalid;
-	wire        ram_read;
-	wire [63:0] ram_writedata;
-	wire [7:0]  ram_byteenable;
-	wire        ram_write;
+wire        ram_clk;
+wire [28:0] ram_address;
+wire [7:0]  ram_burstcount;
+wire        ram_waitrequest;
+wire [63:0] ram_readdata;
+wire        ram_readdatavalid;
+wire        ram_read;
+wire [63:0] ram_writedata;
+wire [7:0]  ram_byteenable;
+wire        ram_write;
 `endif
 
 wire        led_user;
