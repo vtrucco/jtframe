@@ -136,8 +136,9 @@ jtframe_dual_ram #(.dw(64),.aw(BW)) u_buffer(
     .q1     ( dump_data  )
 );
 
-reg ddr_dwn, last_dwn, last_dwnbusy, wr_latch;
-reg dump_we;
+reg        ddr_dwn, last_dwn, last_dwnbusy, wr_latch;
+reg        dump_we;
+reg [26:0] ddr_len;
 
 assign hps_wait = ddr_dwn;
 
@@ -156,6 +157,7 @@ always @(posedge clk, posedge rst) begin
         last_dwn    <= 0;
         ddr_dwn     <= 0;
         downloading <= 0;
+        ddr_len     <= 27'd0;
     end else begin
         last_dwn <= hps_download;
         last_dwnbusy <= dwnld_busy;
@@ -169,10 +171,11 @@ always @(posedge clk, posedge rst) begin
             if( wr_latch )
                 downloading <= 0;   // regular download
             else begin
+                ddr_len  <= hps_addr; // the ROM length is notified here
                 ddr_dwn  <= 1;
             end
         end
-        if( last_dwnbusy && !dwnld_busy ) begin
+        if( last_dwnbusy && !dwnld_busy || (ddr_dwn && ioctl_addr==ddr_len)) begin
             downloading <= 0;
             ddr_dwn     <= 0;
         end
