@@ -40,14 +40,15 @@ module jtframe_pole #(parameter
 );
 
 localparam [WS-1:0] ZERO={WS{1'b0}}, ONE={ {WS-WA-1{1'b0}}, 1'b1, {WA{1'b0}}};
-reg signed [WS-1:0] factor, last_prod;
+reg signed [WS-1:0] factor, last_prod, fmux;
 
 wire signed [   WS-1:0] aext = { {WS-WA{1'b0}}, a };
 reg  signed [ 2*WS-1:0] prod;
 
 always @(*) begin
     factor = sample ? (ONE-aext) : aext;
-    prod   = factor * (sample ? sin : sout );
+    fmux   = sample ? sin : sout;
+    prod   = factor * fmux;
 end
 
 always @(posedge clk, posedge rst) begin
