@@ -20,7 +20,7 @@
 
 module jtframe_ram_2slots #(parameter
     SDRAMW = 22,
-    SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8,
+    SLOT0_DW =16, SLOT1_DW = 8, SLOT2_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8,
     parameter REF_FILE="sdram_bank3.hex"
 )(
@@ -75,7 +75,7 @@ wire [SDRAMW-1:0] slot0_addr_req,
 assign slot0_ok = slot_ok[0];
 assign slot1_ok = slot_ok[1];
 
-jtframe_ram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
+jtframe_ram_rq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .addr      ( slot0_addr             ),
@@ -93,7 +93,7 @@ jtframe_ram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot1_clr              ),

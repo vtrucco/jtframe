@@ -22,6 +22,7 @@
 // guarantee that, it should toggle addr_ok for each request
 
 module jtframe_romrq #(parameter
+    SDRAMW=22,  // SDRAM width
     AW=18,
     DW=8,
     LATCH=0,    // dout is latched
@@ -32,7 +33,7 @@ module jtframe_romrq #(parameter
     input               rst,
     input               clk,
     input               clr, // clears the cache
-    input [21:0]        offset,
+    input [SDRAMW-1:0]  offset,
     input [AW-1:0]      addr,
     input               addr_ok,    // signals that value in addr is valid
     input [31:0]        din,
@@ -40,7 +41,7 @@ module jtframe_romrq #(parameter
     input               we,
     output reg          req,
     output reg          data_ok,    // strobe that signals that data is ready
-    output     [21:0]   sdram_addr,
+    output [SDRAMW-1:0] sdram_addr,
     output reg [DW-1:0] dout
 );
 
@@ -50,13 +51,12 @@ reg [AW-1:0] cached_addr0;
 reg [AW-1:0] cached_addr1;
 reg [31:0]   cached_data0;
 reg [31:0]   cached_data1;
-reg [1:0]    subaddr;
 reg [1:0]    good;
 reg          hit0, hit1;
 wire         passthru;
+wire [AW-1:0] shifted;
 
-wire  [21:0] size_ext = { {22-AW{1'b0}}, addr_req };
-assign sdram_addr = (DW==8?(size_ext>>1):size_ext ) + offset;
+assign sdram_addr = offset + { {SDRAMW-AW{1'b0}}, addr_req>>(DW==8?1:0)};
 assign passthru   = din_ok && we && !REPACK[0];
 
 always @(*) begin
@@ -93,11 +93,6 @@ always @(posedge clk, posedge rst)
         end
     end
 
-always @(*) begin
-    subaddr[1] = addr[1];
-    subaddr[0] = addr[0];
-end
-
 // data_mux selects one of two cache registers
 // but if we are getting fresh data, it selects directly the new data
 // this saves one clock cycle at the expense of more LUTs
@@ -108,7 +103,7 @@ generate
     if( LATCH==0 ) begin : data_latch
         if(DW==8) begin
             always @(*)
-            case( subaddr )
+            case( addr[1:0] )
                 2'd0: dout = data_mux[ 7: 0];
                 2'd1: dout = data_mux[15: 8];
                 2'd2: dout = data_mux[23:16];
@@ -116,7 +111,7 @@ generate
             endcase
         end else if(DW==16) begin
             always @(*)
-            case( subaddr[0] )
+            case( addr[0] )
                     1'd0: dout = data_mux[15:0];
                     1'd1: dout = data_mux[31:16];
             endcase
@@ -124,7 +119,7 @@ generate
     end else begin : no_data_latch
         if(DW==8) begin
             always @(posedge clk)
-            case( subaddr )
+            case( addr[1:0] )
                 2'd0: dout <= data_mux[ 7: 0];
                 2'd1: dout <= data_mux[15: 8];
                 2'd2: dout <= data_mux[23:16];
@@ -132,7 +127,7 @@ generate
             endcase
         end else if(DW==16) begin
             always @(posedge clk)
-            case( subaddr[0] )
+            case( addr[0] )
                     1'd0: dout <= data_mux[15:0];
                     1'd1: dout <= data_mux[31:16];
             endcase
@@ -236,7 +231,9 @@ end
 
 initial begin
     forever begin
+        /* verilator lint_off STMTDLY */
         #16_666_667;
+        /* verilator lint_on STMTDLY */
         if( !first )
             $display("Latency %m %2d - %2d - %2d",
                 shortest, total/acc_cnt, longest );

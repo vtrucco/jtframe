@@ -92,7 +92,7 @@ assign slot1_ok = slot_ok[1];
 assign slot2_ok = slot_ok[2];
 assign slot3_ok = slot_ok[3];
 
-jtframe_ram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
+jtframe_ram_rq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .addr      ( slot0_addr             ),
@@ -110,7 +110,7 @@ jtframe_ram_rq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.LATCH(LATCH1)) u_slot1(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.LATCH(LATCH1)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot1_clr              ),
@@ -126,7 +126,7 @@ jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.LATCH(LATCH1)) u_slot1(
     .we        ( slot_sel[1]            )
 );
 
-jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW),.LATCH(LATCH2)) u_slot2(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT2_AW),.DW(SLOT2_DW),.LATCH(LATCH2)) u_slot2(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot2_clr              ),
@@ -142,7 +142,7 @@ jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW),.LATCH(LATCH2)) u_slot2(
     .we        ( slot_sel[2]            )
 );
 
-jtframe_romrq #(.AW(SLOT3_AW),.DW(SLOT3_DW),.LATCH(LATCH3)) u_slot3(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT3_AW),.DW(SLOT3_DW),.LATCH(LATCH3)) u_slot3(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot3_clr              ),

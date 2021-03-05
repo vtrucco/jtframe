@@ -21,12 +21,11 @@
 // Small 4 byte cache used for each slot
 
 module jtframe_rom_1slot #(parameter
+    SDRAMW       = 22,
     SLOT0_DW     = 8,
     SLOT0_AW     = 8,
     SLOT0_REPACK = 0,
-    LATCH0       = 0,
-
-    parameter [21:0] SLOT0_OFFSET = 22'h0
+    LATCH0       = 0
 )(
     input               rst,
     input               clk,
@@ -37,13 +36,11 @@ module jtframe_rom_1slot #(parameter
     output [SLOT0_DW-1:0] slot0_dout,
 
     input               slot0_cs,
-    input       [21:0]  slot0_offset,
-
     output              slot0_ok,
     // SDRAM controller interface
     input               sdram_ack,
     output              sdram_req,
-    output      [21:0]  sdram_addr,
+    output [SDRAMW-1:0] sdram_addr,
     input               data_rdy,
     input       [31:0]  data_read
 );
@@ -61,11 +58,11 @@ always @(posedge clk, posedge rst ) begin
     end
 end
 
-jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(LATCH0)) u_slot0(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(LATCH0)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
-    .offset    ( slot0_offset           ),
+    .offset    ( {SLOT0_AW{1'b0}}       ), // no need for offset when there is only one module
     .addr      ( slot0_addr             ),
     .addr_ok   ( slot0_cs               ),
     .sdram_addr( sdram_addr             ),

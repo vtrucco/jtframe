@@ -22,7 +22,8 @@ module jtframe_mister #(parameter
     CONF_STR                = "",
     COLORW                  = 4,
     VIDEO_WIDTH             = 384,
-    VIDEO_HEIGHT            = 224
+    VIDEO_HEIGHT            = 224,
+    SDRAMW                  = 23
 )(
     input           clk_sys,
     input           clk_rom,
@@ -100,7 +101,7 @@ module jtframe_mister #(parameter
     input               dwnld_busy,
     output              downloading,
 
-    input        [21:0] prog_addr,
+    input  [SDRAMW-1:0] prog_addr,
     input        [15:0] prog_data,
     input        [ 1:0] prog_mask,
     input        [ 1:0] prog_ba,
@@ -109,22 +110,22 @@ module jtframe_mister #(parameter
     output              prog_rdy,
     output              prog_ack,
     // ROM access from game
-    input        [21:0] ba0_addr,
+    input  [SDRAMW-1:0] ba0_addr,
     input               ba0_rd,
     input               ba0_wr,
     input        [15:0] ba0_din,
     input        [ 1:0] ba0_din_m,  // write mask
     output              ba0_rdy,
     output              ba0_ack,
-    input        [21:0] ba1_addr,
+    input  [SDRAMW-1:0] ba1_addr,
     input               ba1_rd,
     output              ba1_rdy,
     output              ba1_ack,
-    input        [21:0] ba2_addr,
+    input  [SDRAMW-1:0] ba2_addr,
     input               ba2_rd,
     output              ba2_rdy,
     output              ba2_ack,
-    input        [21:0] ba3_addr,
+    input  [SDRAMW-1:0] ba3_addr,
     input               ba3_rd,
     output              ba3_rdy,
     output              ba3_ack,
@@ -324,7 +325,8 @@ jtframe_board #(
     .GAME_INPUTS_ACTIVE_LOW(GAME_INPUTS_ACTIVE_LOW),
     .COLORW                ( COLORW               ),
     .VIDEO_WIDTH           ( VIDEO_WIDTH          ),
-    .VIDEO_HEIGHT          ( VIDEO_HEIGHT         )
+    .VIDEO_HEIGHT          ( VIDEO_HEIGHT         ),
+    .SDRAMW                ( SDRAMW               )
 ) u_board(
     .rst            ( rst             ),
     .rst_n          ( rst_n           ),

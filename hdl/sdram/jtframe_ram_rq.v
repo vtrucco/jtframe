@@ -24,7 +24,7 @@
 /////// so it should go up and stay up until the data is served. It should go down
 /////// after that.
 
-module jtframe_ram_rq #(parameter AW=18, DW=8 )(
+module jtframe_ram_rq #(parameter SDRAMW=22,AW=18, DW=8 )(
     input               rst,
     input               clk,
     input [AW-1:0]      addr,
@@ -37,12 +37,12 @@ module jtframe_ram_rq #(parameter AW=18, DW=8 )(
     output reg          req,
     output reg          req_rnw,
     output reg          data_ok,    // strobe that signals that data is ready
-    output reg [21:0]   sdram_addr,
+    output reg [SDRAMW-1:0]   sdram_addr,
     input      [DW-1:0] wrdata,
     output reg [DW-1:0] dout        // sends SDRAM data back to requester
 );
 
-    wire  [21:0] size_ext   = { {22-AW{1'b0}}, addr };
+    wire  [SDRAMW-1:0] size_ext   = { {SDRAMW-AW{1'b0}}, addr };
 
     reg    last_cs;
     wire   cs_posedge = addr_ok && !last_cs;

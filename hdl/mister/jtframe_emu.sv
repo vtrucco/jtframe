@@ -142,6 +142,12 @@ module emu
 `include "build_id.v"
 `define SEPARATOR "-;",
 
+`ifdef JTFRAME_SDRAM_LARGE
+    localparam SDRAMW=23; // 64 MB
+`else
+    localparam SDRAMW=22; // 32 MB
+`endif
+
 `ifdef SIMULATION
 localparam CONF_STR="JTGNG;;";
 `else
@@ -327,7 +333,7 @@ assign LED_POWER = 2'b0;
 // ROM download
 wire        downloading, dwnld_busy;
 
-wire [21:0] prog_addr;
+wire [SDRAMW-1:0] prog_addr;
 wire [15:0] prog_data;
 `ifndef JTFRAME_SDRAM_BANKS
 wire [ 7:0]   prog_data8;
@@ -336,15 +342,15 @@ wire [ 1:0] prog_mask, prog_ba;
 wire        prog_we, prog_rd, prog_rdy, prog_ack;
 
 // ROM access from game
-wire [21:0] ba0_addr;
+wire [SDRAMW-1:0] ba0_addr;
 wire        ba0_rd, ba0_wr, ba0_rdy, ba0_ack;
 wire [15:0] ba0_din;
 wire [ 1:0] ba0_din_m;
-wire [21:0] ba1_addr;
+wire [SDRAMW-1:0] ba1_addr;
 wire        ba1_rd, ba1_rdy, ba1_ack;
-wire [21:0] ba2_addr;
+wire [SDRAMW-1:0] ba2_addr;
 wire        ba2_rd, ba2_rdy, ba2_ack;
-wire [21:0] ba3_addr;
+wire [SDRAMW-1:0] ba3_addr;
 wire        ba3_rd, ba3_rdy, ba3_ack;
 wire        sdram_req, rfsh_en;
 wire [31:0] sdram_dout;
@@ -380,6 +386,7 @@ assign prog_data = {2{prog_data8}};
 
 jtframe_mister #(
     .CONF_STR      ( CONF_STR       ),
+    .SDRAMW        ( SDRAMW         ),
     .BUTTONS       ( GAME_BUTTONS   ),
     .COLORW        ( COLORW         )
     `ifdef VIDEO_WIDTH

@@ -25,18 +25,18 @@ module jtframe_board #(parameter
     VIDEO_WIDTH             = 384,
     VIDEO_HEIGHT            = 224
 )(
-    output            rst,
-    output            rst_n,
-    output            game_rst,
-    output            game_rst_n,
+    output              rst,
+    output              rst_n,
+    output              game_rst,
+    output              game_rst_n,
     // reset forcing signals:
-    input             rst_req,
-    input             pll_locked,
+    input               rst_req,
+    input               pll_locked,
 
-    input             clk_sys,
-    input             clk_rom,
+    input               clk_sys,
+    input               clk_rom,
 
-    input  [ 6:0]     core_mod,
+    input        [ 6:0] core_mod,
     // LED
     input               osd_shown,
     input        [ 1:0] game_led,
@@ -115,7 +115,7 @@ module jtframe_board #(parameter
     inout             dip_flip,     // A change in dip_flip implies a reset if JTFRAME_FLIP_RESET is defined
     output    [ 1:0]  dip_fxlevel,
     // Base video
-    input     [ 1:0]  osd_rotate,
+    input       [ 1:0] osd_rotate,
     input [COLORW-1:0] game_r,
     input [COLORW-1:0] game_g,
     input [COLORW-1:0] game_b,
@@ -130,15 +130,15 @@ module jtframe_board #(parameter
     input             direct_video,
     // scan doubler
     input             scan2x_enb,
-    output    [7:0]   scan2x_r,
-    output    [7:0]   scan2x_g,
-    output    [7:0]   scan2x_b,
+    output     [7:0]  scan2x_r,
+    output     [7:0]  scan2x_g,
+    output     [7:0]  scan2x_b,
     output            scan2x_hs,
     output            scan2x_vs,
     output            scan2x_clk,
     output            scan2x_cen,
     output            scan2x_de,
-    output    [1:0]   scan2x_sl,
+    output     [1:0]  scan2x_sl,
     // GFX enable
     output reg [3:0]  gfx_en
 );
@@ -384,7 +384,8 @@ jtframe_dip u_dip(
 // support for 48MHz
 // Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
 // clock is shifted or not.
-jtframe_sdram_bank #(.AW(SDRAMW),
+jtframe_sdram_bank #(
+    .AW(SDRAMW),
 `ifdef JTFRAME_SDRAM96
     .HF(1),
     .SHIFTED(0)

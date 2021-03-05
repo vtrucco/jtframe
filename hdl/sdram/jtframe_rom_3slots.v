@@ -77,7 +77,7 @@ wire [SDRAMW-1:0] offset0 = SLOT0_OFFSET,
                   offset1 = SLOT1_OFFSET,
                   offset2 = SLOT2_OFFSET;
 
-jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK)) u_slot0(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'd0                   ),
@@ -93,7 +93,7 @@ jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK)) u_slot0(
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK)) u_slot1(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'd0                   ),
@@ -109,7 +109,7 @@ jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK)) u_slot1(
     .we        ( slot_sel[1]            )
 );
 
-jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW),.REPACK(SLOT2_REPACK)) u_slot2(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT2_AW),.DW(SLOT2_DW),.REPACK(SLOT2_REPACK)) u_slot2(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'd0                   ),
