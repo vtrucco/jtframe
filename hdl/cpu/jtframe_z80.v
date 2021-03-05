@@ -68,7 +68,7 @@ module jtframe_sysz80(
 always @(negedge rst_n ) begin
     if( busrq_n === 1'bz ) begin
         $display("ERROR: assertion failed at %m.\n\tBus request signal is floating");
-        $finish;;
+        $finish;
     end
 end
 `endif
