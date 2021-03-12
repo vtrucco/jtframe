@@ -96,10 +96,12 @@ wire [   1:0] ctl_ba_rdy;
 wire [  15:0] ctl_din;
 wire [   1:0] ctl_din_m;  // write mask
 wire [  31:0] ctl_dout;
-reg           local_rst;
+reg           local_rst, rst_latch;
 
-always @(negedge clk)
-    local_rst <= rst;
+always @(negedge clk) begin
+    rst_latch <= rst;
+    local_rst <= rst_latch;
+end
 
 jtframe_sdram_bank_mux #(.AW(AW),.HF(HF)) u_mux(
     .rst        ( local_rst     ),
