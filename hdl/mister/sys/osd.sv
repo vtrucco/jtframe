@@ -22,7 +22,11 @@ module osd
 );
 
 `ifndef JTFRAME_OSDCOLOR
-`define JTFRAME_OSDCOLOR (~6'b0)
+    `ifdef JTFRAME_RELEASE
+        `define JTFRAME_OSDCOLOR (~6'b0)
+    `else
+        `define JTFRAME_OSDCOLOR (6'h3c)
+    `endif
 `endif
 
 parameter [5:0] OSD_COLOR = `JTFRAME_OSDCOLOR;

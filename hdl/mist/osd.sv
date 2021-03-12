@@ -32,9 +32,17 @@ module osd (
 	output reg	 osd_shown
 );
 
+`ifndef JTFRAME_OSDCOLOR
+    `ifdef JTFRAME_RELEASE
+        `define JTFRAME_OSDCOLOR (~6'b0)
+    `else
+        `define JTFRAME_OSDCOLOR (6'h3c)
+    `endif
+`endif
+
 parameter [9:0] OSD_X_OFFSET = 10'd0;
 parameter [9:0] OSD_Y_OFFSET = 10'd0;
-parameter [5:0] OSD_COLOR = ~6'b0;
+parameter [5:0] OSD_COLOR    = `JTFRAME_OSDCOLOR;
 
 localparam [9:0] OSD_WIDTH   = 10'd256;
 localparam [9:0] OSD_HEIGHT  = 10'd128;
