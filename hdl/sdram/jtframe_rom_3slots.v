@@ -27,9 +27,9 @@ module jtframe_rom_3slots #(parameter
     SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8,
 
-    SLOT0_REPACK = 0,
-    SLOT1_REPACK = 0,
-    SLOT2_REPACK = 0,
+    SLOT0_REPACK = 1,
+    SLOT1_REPACK = 1,
+    SLOT2_REPACK = 1,
 
     parameter [SDRAMW-1:0] SLOT0_OFFSET = 0,
     parameter [SDRAMW-1:0] SLOT1_OFFSET = 0,
@@ -135,7 +135,7 @@ if( rst ) begin
 end else begin
     if( sdram_ack ) sdram_req <= 0;
     // accept a new request
-    if( !slot_sel || data_rdy ) begin
+    if( slot_sel==0 || data_rdy ) begin
         sdram_req <= |active;
         slot_sel  <= {SW{1'b0}};
         if( active[0] ) begin

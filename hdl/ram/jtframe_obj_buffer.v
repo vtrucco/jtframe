@@ -30,12 +30,12 @@
 // with the BLANK value. The data is deleted BLANK_DLY clock cycles
 // after rd went low
 
-module jtframe_obj_buffer #(parameter 
-    DW=8, 
-    AW=9, 
-    ALPHAW=4, 
-    ALPHA=4'HF, 
-    BLANK=32'hFF,
+module jtframe_obj_buffer #(parameter
+    DW=8,
+    AW=9,
+    ALPHAW=4,
+    ALPHA=4'HF,
+    BLANK={8{ALPHA}},
     BLANK_DLY=2
 )(
     input   clk,

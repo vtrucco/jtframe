@@ -80,7 +80,7 @@ parameter [8:0] V_START  = 9'd0,
                 H_VB     = HB_START,
                 H_VS     = HS_START,
                 H_VNEXT  = HB_END,
-                HINIT    = HCNT_END,
+                HINIT    = H_VNEXT,
                 HCNT_START=9'd0;
 
 // H counter

@@ -26,7 +26,7 @@ module jtframe_romrq #(parameter
     AW=18,
     DW=8,
     LATCH=0,    // dout is latched
-    REPACK=0    // do not let data from SDRAM pass thru without repacking (latching) it
+    REPACK=1    // do not let data from SDRAM pass thru without repacking (latching) it
                 // 0 = data is let pass thru
                 // 1 = data gets repacked (adds one clock of latency)
 )(

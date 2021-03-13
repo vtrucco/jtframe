@@ -24,7 +24,7 @@ module jtframe_rom_1slot #(parameter
     SDRAMW       = 22,
     SLOT0_DW     = 8,
     SLOT0_AW     = 8,
-    SLOT0_REPACK = 0,
+    SLOT0_REPACK = 1,
     LATCH0       = 0
 )(
     input               rst,
@@ -62,7 +62,7 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
-    .offset    ( {SLOT0_AW{1'b0}}       ), // no need for offset when there is only one module
+    .offset    ( {SDRAMW{1'b0}}         ), // no need for offset when there is only one module
     .addr      ( slot0_addr             ),
     .addr_ok   ( slot0_cs               ),
     .sdram_addr( sdram_addr             ),

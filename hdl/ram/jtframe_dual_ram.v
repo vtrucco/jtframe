@@ -46,6 +46,7 @@ module jtframe_dual_ram #(parameter dw=8, aw=10,
 
 (* ramstyle = "no_rw_check" *) reg [dw-1:0] mem[0:(2**aw)-1];
 
+/* verilator lint_off WIDTH */
 `ifdef SIMULATION
 integer f, readcnt;
 initial begin
@@ -78,9 +79,7 @@ initial begin
 end
 `else
 // file for synthesis:
-/* verilator lint_off WIDTH */
 initial if(synfile!="" )$readmemh(synfile,mem);
-/* verilator lint_on WIDTH */
 `endif
 
 always @(posedge clk0) begin
@@ -106,5 +105,6 @@ always @(posedge dump) begin
         $fdisplay(fdump,"%X", mem[dumpcnt]);
 end
 `endif
+/* verilator lint_on WIDTH */
 
 endmodule
