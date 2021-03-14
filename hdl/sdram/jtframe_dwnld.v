@@ -50,15 +50,18 @@ parameter        SIMFILE   = "rom.bin";
 parameter [24:0] PROM_START= ~25'd0;
 parameter [24:0] BA1_START = ~25'd0,
                  BA2_START = ~25'd0,
-                 BA3_START = ~25'd0;
+                 BA3_START = ~25'd0,
+                 HEADER    = 0;
 
 localparam       BA_EN     = (BA1_START!=~25'd0 || BA2_START!=~25'd0 || BA3_START!=~25'd0);
 localparam       PROM_EN   = PROM_START!=~25'd0;
 
 reg  [ 7:0] data_out;
 wire        is_prom;
+reg  [24:0] part_addr;
+reg         header;
 
-assign is_prom   = PROM_EN && ioctl_addr>=PROM_START;
+assign is_prom   = PROM_EN && part_addr>=PROM_START;
 assign prog_data = {2{data_out}};
 
 `ifdef JTFRAME_SDRAM_BANKS
@@ -77,23 +80,28 @@ reg  [24:0] offset;
 reg  [24:0] eff_addr;
 
 always @(*) begin
+    header    = HEADER!=0 && ioctl_addr < HEADER;
+    part_addr = ioctl_addr-HEADER;
+end
+
+always @(*) begin
     bank = !BA_EN ? 2'd0 : (
-            ioctl_addr >= BA3_START ? 2'd3 : (
-            ioctl_addr >= BA2_START ? 2'd2 : (
-            ioctl_addr >= BA1_START ? 2'd1 : 2'd0 )));
+            part_addr >= BA3_START ? 2'd3 : (
+            part_addr >= BA2_START ? 2'd2 : (
+            part_addr >= BA1_START ? 2'd1 : 2'd0 )));
     case( bank )
         2'd0: offset = 25'd0;
         2'd1: offset = BA1_START;
         2'd2: offset = BA2_START;
         2'd3: offset = BA3_START;
     endcase // bank
-    eff_addr = ioctl_addr-offset;
+    eff_addr = part_addr-offset;
 end
 
 always @(posedge clk) begin
-    if ( ioctl_wr && downloading ) begin
+    if ( ioctl_wr && downloading && !header ) begin
         if( is_prom ) begin
-            prog_addr <= ioctl_addr[21:0];
+            prog_addr <= part_addr[21:0];
             prom_we   <= 1;
             prog_we   <= 0;
         end else begin
