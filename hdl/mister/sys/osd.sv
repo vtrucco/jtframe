@@ -22,10 +22,10 @@ module osd
 );
 
 `ifndef JTFRAME_OSDCOLOR
-    `ifdef JTFRAME_RELEASE
-        `define JTFRAME_OSDCOLOR (~6'b0)
-    `else
+    `ifdef BETA
         `define JTFRAME_OSDCOLOR (6'h3c)
+    `else
+        `define JTFRAME_OSDCOLOR (~6'b0)
     `endif
 `endif
 
