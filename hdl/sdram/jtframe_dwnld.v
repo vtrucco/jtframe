@@ -51,7 +51,8 @@ parameter [24:0] PROM_START= ~25'd0;
 parameter [24:0] BA1_START = ~25'd0,
                  BA2_START = ~25'd0,
                  BA3_START = ~25'd0,
-                 HEADER    = 0;
+                 HEADER    = 0,
+                 SWAB      = 0; // swap every pair of input bytes (SDRAM only)
 
 localparam       BA_EN     = (BA1_START!=~25'd0 || BA2_START!=~25'd0 || BA3_START!=~25'd0);
 localparam       PROM_EN   = PROM_START!=~25'd0;
@@ -113,7 +114,7 @@ always @(posedge clk) begin
             `endif
         end
         data_out  <= ioctl_data;
-        prog_mask <= eff_addr[0] ? 2'b10 : 2'b01;
+        prog_mask <= (eff_addr[0]^SWAB[0]) ? 2'b10 : 2'b01;
     end
     else begin
         if(!downloading || sdram_ack) prog_we <= 0;
