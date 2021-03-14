@@ -136,7 +136,7 @@ assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign sdram_cke = 1;
 assign sdram_dq = dq_pad;
 
-assign req_a12 = addr[AW-1:AW-2];
+assign req_a12 = AW==22 ? addr[AW-1:AW-2] : addr[AW-2:AW-3];
 assign { sdram_dqmh, sdram_dqml } =  ADQM ? sdram_a[12:11] : dqm; // This is a limitation in MiSTer's 128MB module
 
 assign dout = { dq_ff, dq_ff0 };
@@ -280,7 +280,9 @@ always @(posedge clk, posedge rst) begin
             wrtng         <= wr;
             wrmask        <= din_m;
             post_act      <= 1;
-            { sdram_a, col_fifo[1] } <= addr;
+            // Moves the top addr bit to the extra column bit in AW==23 mode
+            // So 32MB modules can work (as far as the game allows)
+            { sdram_a, col_fifo[1] } <= AW==22 ? addr : { addr[AW-2:9], addr[AW-1], addr[8:0] };
         end else begin
             post_act    <= 0;
         end
