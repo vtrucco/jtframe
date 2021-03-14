@@ -1,3 +1,21 @@
+/*  This file is part of JTFRAME.
+    JTFRAME program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    JTFRAME program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
+
+    Author: Jose Tejada Gomez. Twitter: @topapate
+    Version: 1.0
+    Date: 6-12-2019 */
+
 ///////////////////////////////////////////////////////////////////////////
 // Fractional clock enable signal
 // W refers to the number of divided down cen signals available
@@ -15,7 +33,7 @@ wire [10:0] step={1'b0,n};
 wire [10:0] lim ={1'b0,m};
 wire [10:0] absmax = lim+step;
 
-reg  [10:0] cencnt=11'd0;
+reg  [10:0] cencnt=0;
 reg  [10:0] next;
 reg  [10:0] next2;
 
@@ -28,13 +46,17 @@ reg  half    = 1'b0;
 wire over    = next>=lim;
 wire halfway = next >= (lim>>1)  && !half;
 
-reg  [W-1:0] edgecnt = {W{1'b0}};
-wire [W-1:0] next_edgecnt = edgecnt + 1'b1;
+reg  [W-1:0] edgecnt = 0;
+wire [W-1:0] next_edgecnt = edgecnt + 1;
 wire [W-1:0] toggle = next_edgecnt & ~edgecnt;
 
+reg  [W-1:0] edgecnt_b = 0;
+wire [W-1:0] next_edgecnt_b = edgecnt_b + 1;
+wire [W-1:0] toggle_b = next_edgecnt_b & ~edgecnt_b;
+
 always @(posedge clk) begin
-    cen  <= {W{1'b0}};
-    cenb <= {W{1'b0}};
+    cen  <= 0;
+    cenb <= 0;
 
     if( cencnt >= absmax ) begin
         // something went wrong: restart
@@ -42,7 +64,8 @@ always @(posedge clk) begin
     end else
     if( halfway ) begin
         half <= 1'b1;
-        cenb[0] <= 1'b1;
+        edgecnt_b <= next_edgecnt_b;
+        cenb <= { toggle_b[W-2:0], 1'b1 };
     end
     if( over ) begin
         cencnt <= next2;
