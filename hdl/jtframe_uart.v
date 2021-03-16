@@ -14,13 +14,11 @@
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
-    Date: 24-4-2019 
+    Date: 24-4-2019
 
     Originally based on a file from:
         Milkymist VJ SoC, Sebastien Bourdeauducq and Das Labor
 */
-
-`timescale 1ns/1ps
 
 module jtframe_uart(
     input            rst_n,
@@ -29,7 +27,7 @@ module jtframe_uart(
     // serial wires
     input            uart_rx,
     output reg       uart_tx, // serial signal to transmit. High when idle
-    // Rx interface 
+    // Rx interface
     output reg [7:0] rx_data,
     output reg       rx_done,
     output reg       rx_error,
@@ -42,7 +40,7 @@ module jtframe_uart(
 
 /* Division of the system clock
         For a 50MHz system clock use:
-            clk_div = 28, uart_div = 30 ->  57kbps, 0.01% timing error      
+            clk_div = 28, uart_div = 30 ->  57kbps, 0.01% timing error
             clk_div = 14, uart_div = 30 -> 115kbps, 0.01% timing error
             clk_div =  7, uart_div = 30 -> 230kbps, 0.01% timing error
     */
@@ -100,7 +98,7 @@ always @(posedge clk or negedge rst_n) begin : rx_logic
         rx_error     <= 1'b0;
     end else if(cen) begin
         rx_done      <= 1'b0;
-        
+
         if(zero) begin
             if(!rx_busy) begin // look for start bit
                 if(!uart_rx2) begin // start bit found
@@ -122,7 +120,7 @@ always @(posedge clk or negedge rst_n) begin : rx_logic
                             rx_busy <= 1'b0;
                             if(uart_rx2) begin // stop bit ok
                                 rx_data <= rx_reg;
-                                rx_done <= 1'b1;    
+                                rx_done <= 1'b1;
                             end else begin // RX error
                                 rx_done  <= 1'b1;
                                 rx_error <= 1'b1;

@@ -26,7 +26,6 @@
 //      cen_rd  => Use clock enable for reading too, by default it is used
 //                 only for writting.
 
-`timescale 1ns/1ps
 
 module jtframe_ram #(parameter dw=8, aw=10,
         simfile="", simhexfile="",

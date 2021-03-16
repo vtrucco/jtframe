@@ -16,7 +16,6 @@
     Version: 1.0
     Date: 27-10-2017 */
 
-`timescale 1ns/1ps
 
     // check_start: lowest address at which the memory check
     // comparison is performed. Useful when the dumped file to load

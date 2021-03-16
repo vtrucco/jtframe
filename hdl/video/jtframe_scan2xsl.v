@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 
 module jtframe_scan2x #(parameter DW=12, HLEN=256)(
     input       rst_n,

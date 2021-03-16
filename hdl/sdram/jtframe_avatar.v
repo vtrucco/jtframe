@@ -16,7 +16,6 @@
     Version: 1.0
     Date: 20-2-2019 */
 
-`timescale 1ns/1ps
 
 module jtframe_avatar #(parameter AW=13)(
     input             rst,

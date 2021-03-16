@@ -16,7 +16,6 @@
     Version: 1.0
     Date: 4-9-2019 */
 
-`timescale 1ns/1ps
 
 module jtframe_romflex #(parameter AW=18, DW=8, INVERT_A0=0, USE_BRAM=0 )(
     input               rst,
