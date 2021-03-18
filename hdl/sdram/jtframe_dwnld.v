@@ -102,7 +102,7 @@ end
 always @(posedge clk) begin
     if ( ioctl_wr && downloading && !header ) begin
         if( is_prom ) begin
-            prog_addr <= { part_addr[21:1], part_addr[0]^SWAB[0] };
+            prog_addr <= part_addr[21:0];
             prom_we   <= 1;
             prog_we   <= 0;
         end else begin
