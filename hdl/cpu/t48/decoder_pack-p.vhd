@@ -411,11 +411,11 @@ package body t48_decoder_pack is
         multi_cycle_v := true;
 
       when others =>
-        -- pragma translate_off
-        assert now = 0 ns
-          report "Unknown opcode."
-          severity warning;
-        -- pragma translate_on
+      --   -- pragma translate_off
+      --   assert now = 0 ns
+      --     report "Unknown opcode."
+      --     severity warning;
+      --   -- pragma translate_on
 
     end case;
 
