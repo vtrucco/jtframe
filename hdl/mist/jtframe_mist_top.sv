@@ -184,6 +184,10 @@ assign snd_right = snd_left;
 assign prog_data = {2{prog_data8}};
 `endif
 
+`ifndef JTFRAME_PLL
+    `define JTFRAME_PLL jtframe_pll0
+`endif
+
 // clk_rom is always 48MHz
 // clk96, clk24 and clk6 inputs to the core can be enabled via macros
 `ifdef JTFRAME_SDRAM96
@@ -199,7 +203,7 @@ assign prog_data = {2{prog_data8}};
     assign clk_rom = clk96;
     assign clk_sys = clk96;
 `else
-    jtframe_pll0 u_pll_game (
+    `JTFRAME_PLL u_pll_game (
         .inclk0 ( CLOCK_27[0] ),
         .c0     ( clk96       ),
         .c1     ( clk48       ), // 48 MHz

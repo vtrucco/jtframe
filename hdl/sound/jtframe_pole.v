@@ -23,8 +23,8 @@
 // Single pole IIR filter
 // y[k] = a * y[k-1] + (1-a) * x[k]
 //
-// where a = exp(-wc/T ), a<1
-// wc = radian frequency
+// where a = exp(-wc ), a<1
+// wc = radian normalized frequency
 // There is no overflow check
 
 module jtframe_pole #(parameter

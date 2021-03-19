@@ -248,7 +248,11 @@ always @(posedge clk_sys or posedge RESET) begin : pll_controller
     end
 end
 
-pll pll(
+`ifndef JTFRAME_PLL
+    `define JTFRAME_PLL pll
+`endif
+
+`JTFRAME_PLL pll(
     .refclk     ( CLK_50M    ),
     .rst        ( pll_rst    ),
     .locked     ( pll_locked ),

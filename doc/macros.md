@@ -37,6 +37,7 @@ JTFRAME_OSD_SND_EN       |         | OSD option to enable/disable FX and FM chan
 JTFRAME_OSD_TEST         |         | Test option on OSD
 JTFRAME_OSD_VOL          |         | Show FX volume control on OSD
 JTFRAME_OSDCOLOR         |         | Sets the OSD colour
+JTFRAME_PLL              |         | PLL module name to be used. Defaults to jtframe_pll0
 JTFRAME_RELEASE          |         | Disables gfx_en control via keyboard
 JTFRAME_SAVESDRAM        |         | Saves SDRAM contents at the end of each frame (slow)
 JTFRAME_SCAN2X_NOBLEND   | MiST    | Disables pixel blending
