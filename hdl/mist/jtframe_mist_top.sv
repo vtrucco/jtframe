@@ -58,17 +58,18 @@ module mist_top(
     `endif
 );
 
+`ifdef JTFRAME_SDRAM_LARGE
+    localparam SDRAMW=23; // 64 MB
+`else
+    localparam SDRAMW=22; // 32 MB
+`endif
+
 `ifdef SIMULATION
 localparam CONF_STR="JTGNG;;";
 `else
 // Config string
 `define SEPARATOR "",
 
-`ifdef JTFRAME_SDRAM_LARGE
-    localparam SDRAMW=23; // 64 MB
-`else
-    localparam SDRAMW=22; // 32 MB
-`endif
 
 localparam CONF_STR = {
     `CORENAME,";;",
