@@ -43,6 +43,7 @@ module jtframe_dwnld(
     `endif
 
     output reg           prom_we,
+    output reg           header,
     input                sdram_ack
 );
 
@@ -60,7 +61,6 @@ localparam       PROM_EN   = PROM_START!=~25'd0;
 reg  [ 7:0] data_out;
 wire        is_prom;
 reg  [24:0] part_addr;
-reg         header;
 
 assign is_prom   = PROM_EN && part_addr>=PROM_START;
 assign prog_data = {2{data_out}};

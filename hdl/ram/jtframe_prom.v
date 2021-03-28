@@ -34,6 +34,7 @@ module jtframe_prom #(parameter dw=8, aw=10, simfile="", offset=0 )(
 (* ramstyle = "no_rw_check" *) reg [dw-1:0] mem[0:(2**aw)-1];
 
 `ifdef SIMULATION
+/* verilator lint_off WIDTH */
 integer f, readcnt;
 `ifndef LOADROM
 // load the file only when SPI load is not simulated
@@ -48,11 +49,10 @@ initial begin
         end else begin
             $display("WARNING: %m cannot open %s", simfile);
         end
-        end
-    else begin
+    end else begin
         for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
             mem[readcnt] = {dw{1'b0}};
-        end
+    end
 end
 `endif
 `ifdef MEM_CHECK_TIME
@@ -86,6 +86,7 @@ end
         end
     end
 `endif
+/* verilator lint_on WIDTH */
 `endif
 
 // no clock enable for writtings to allow correct operation during SPI downloading.

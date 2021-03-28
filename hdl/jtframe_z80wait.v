@@ -147,7 +147,7 @@ assign rec_en  = 0; //&{mreq_n, iorq_n, busak_n};
 
 always @(*) begin
     rec = 0;
-    if( miss_cnt && !cen_in && rec_en )
+    if( miss_cnt!=0 && !cen_in && rec_en )
         rec = 1;
 end
 
@@ -161,7 +161,7 @@ always @(posedge clk, negedge rst_n) begin
             if( cen_in && !gate ) begin
                 if( ~&miss_cnt ) miss_cnt <= miss_cnt+4'd1;
             end else if( rec ) begin
-                if( miss_cnt ) miss_cnt <= miss_cnt - 4'd1;
+                if( miss_cnt!=0 ) miss_cnt <= miss_cnt - 4'd1;
             end
         end
     end
