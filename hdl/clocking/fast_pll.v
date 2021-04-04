@@ -185,12 +185,15 @@ module plls16(
     output       c2,     // 50.3 (shifted by -2.5ns)
     output   reg c3,     // 25.17
     output   reg c4,     // 6.29
-    output       locked
+    output   reg locked
 );
 
-assign locked=1;
+initial begin
+    locked = 0;
+    #30 locked = 1;
+end
+
 assign c1=c0;
-assign c2=c0;
 
 reg nc;
 
@@ -205,5 +208,14 @@ end
 always @(posedge c0) begin
     {c4,nc,c3} <= {c4,nc,c3} + 1'b1;
 end
+
+`ifdef SDRAM_DELAY
+real sdram_delay = `SDRAM_DELAY;
+initial $display("INFO: SDRAM_CLK delay set to %f ns",sdram_delay);
+assign #sdram_delay c2 = c1;
+`else
+initial $display("INFO: SDRAM_CLK delay set to 1 ns");
+assign #1 c2 = c1;
+`endif
 
 endmodule
