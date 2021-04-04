@@ -176,3 +176,34 @@ module jtframe_pll20_fast(
         forever c2 = #(base_clk/2.0) ~c2; // 80 MHz
     end
 endmodule
+
+// 50.3496 MHz PLL
+module plls16(
+    input        inclk0,
+    output   reg c0,     // 50.3
+    output       c1,     // 50.3
+    output       c2,     // 50.3 (shifted by -2.5ns)
+    output   reg c3,     // 25.17
+    output   reg c4,     // 6.29
+    output       locked
+);
+
+assign locked=1;
+assign c1=c0;
+assign c2=c0;
+
+reg nc;
+
+initial begin
+    c0 = 1'b0;
+    c3 = 1'b0;
+    c4 = 1'b0;
+    nc = 1'b0;
+    forever c0 = #(19.861/2.0) ~c0;
+end
+
+always @(posedge c0) begin
+    {c4,nc,c3} <= {c4,nc,c3} + 1'b1;
+end
+
+endmodule
