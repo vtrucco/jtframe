@@ -131,6 +131,12 @@ wire new_VS = VS && !VS_last;
 integer vbcnt=0, vcnt=0, hcnt=0, hbcnt=0, vs0, vs1, hs0, hs1;
 integer framecnt=0;
 
+`ifdef SIMULATION_VTIMER_FCLK
+real fclk = `SIMULATION_VTIMER_FCLK;
+`else
+real fclk = 6e6;
+`endif
+
 always @(posedge clk) if(pxl_cen) begin
     LHBL_last <= LHBL;
     HS_last   <= HS;
@@ -142,9 +148,9 @@ always @(posedge clk) if(pxl_cen) begin
         if( new_frame ) begin
             if( framecnt>0 ) begin
                 $display("VB count = %3d (sync at %2d)", vbcnt, vs1 );
-                $display("vdump  total = %3d (%.2f Hz)", vcnt, 6e6/(hcnt*vcnt) );
+                $display("vdump  total = %3d (%.2f Hz)", vcnt, fclk/(hcnt*vcnt) );
                 $display("HB count = %3d (sync at %2d)", hbcnt, hs1 );
-                $display("H  total = %3d (%.2f Hz)", hcnt, 6e6/hcnt );
+                $display("H  total = %3d (%.2f Hz)", hcnt, fclk/hcnt );
                 $display("-------------" );
             end
             vbcnt <= 1;
