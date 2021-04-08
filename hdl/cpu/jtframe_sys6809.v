@@ -44,12 +44,6 @@ module jtframe_6809wait(
 
     always @(posedge clk) if(cen) begin
         last_EQ   <= EQ;
-        if( !rstn ) begin
-            misses  <= 4'd0;
-        end else begin
-            if( !last_EQ && !EQ && !(&misses))
-                misses <= misses+4'd1;
-        end
         if( gate ) last_cen <= cencnt[1];
         if( gate || cencnt[1]==last_cen ) begin
             if( !catchup )
@@ -58,6 +52,12 @@ module jtframe_6809wait(
                 cencnt <= {~cencnt[1],1'b0};
                 misses <= misses-4'd1;
             end
+        end else if(!gate) begin
+            if( !last_EQ && !EQ && !(&misses))
+                misses <= misses+4'd1;
+        end
+        if( !rstn ) begin
+            misses  <= 4'd0;
         end
     end
 
