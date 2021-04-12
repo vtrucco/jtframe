@@ -150,7 +150,11 @@ always @(posedge clk27)
             #(1000*1000); // ms
             $display("%d ms",fincnt+1);
         end
+        `ifdef STOPONLY
+        $stop;
+        `else
         $finish;
+        `endif
     end
 
 initial begin
