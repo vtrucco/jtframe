@@ -22,7 +22,7 @@ module jtframe_cendiv(
     input      clk,
     input      cen_in,
     output reg cen_div, // Divided but not alligned with the original
-    ouput      cen_da   // Divided and alligned
+    output     cen_da   // Divided and alligned
 );
 
 reg d = 0;
