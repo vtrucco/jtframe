@@ -152,7 +152,7 @@ always @(posedge clk) begin
             sdram_wrmask <= 2'b11;
             if( active[0] ) begin
                 sdram_addr  <= slot0_addr_req;
-                data_write  <= {(16-SLOT0_DW)/4{slot0_din}};
+                data_write  <= {(SLOT0_DW==8?2:1){slot0_din}};
                 sdram_wrmask<= slot0_wrmask;
                 sdram_rd    <= req_rnw;
                 sdram_wr    <= ~req_rnw;
