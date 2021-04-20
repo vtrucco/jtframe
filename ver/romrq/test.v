@@ -52,7 +52,7 @@ always @(posedge clk) begin
 
     if( fail ) begin
         $display("FAILED");
-        #20 $finish;
+        #40 $finish;
     end
 end
 
@@ -82,7 +82,9 @@ jtframe_romrq #(
 initial begin
     $dumpfile("test.lxt");
     $dumpvars;
-    #20000 $finish;
+    #40000;
+    $display("PASS");
+    $finish;
 end
 
 endmodule
