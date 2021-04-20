@@ -81,6 +81,7 @@ always @(posedge clk, posedge rst)
         cached_data1 <= 'd0;
         cached_addr0 <= 'd0;
         cached_addr1 <= 'd0;
+        data_ok      <= 0;
     end else begin
         if( clr ) good <= 2'b00;
         data_ok <= addr_ok && ( hit0 || hit1 || passthru );
@@ -183,6 +184,7 @@ end
 
 endmodule // jtframe_romrq
 
+`ifdef JTFRAME_SDRAM_STATS
 ////////////////////////////////////////////////////////////////
 module jtframe_romrq_stats(
     input clk,
@@ -241,3 +243,4 @@ initial begin
 end
 
 endmodule
+`endif
