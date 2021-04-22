@@ -110,7 +110,7 @@ initial begin
         #16_666_667;
         new_cnt = count0 + count1 + count2 + count3;
         delta=new_cnt-last_cnt;
-        $display("Data %5d kiB/s => BA STATS: %5d (%2d%%) - %5d (%2d%%) - %5d (%2d%%) - %5d%% (%2d%%)",
+        $display("Data %5d kiB/s => BA STATS: %5d (%2d%%) - %5d (%2d%%) - %5d (%2d%%) - %5d (%2d%%)",
             delta*4*60/1024,
             (count0-last0)*4*60/1024, ((count0-last0)*100)/delta,
             (count1-last1)*4*60/1024, ((count1-last1)*100)/delta,

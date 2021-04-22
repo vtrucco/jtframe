@@ -88,6 +88,15 @@ assign dip_flip    = ~status[1]^MISTER[0];
         `else
         assign dip_test = 1;
         `endif
+        //reg test_aux=1;
+        //assign dip_test = test_aux;
+        //initial begin
+        //    #(20*16000000) $display("test... 20\n");
+        //    #(20*16000000) $display("test... 40\n");
+        //    #(20*16000000) $display("test... 60\n");
+        //    #(20*16000000) $display("test... 80\n");
+        //    test_aux = 0;
+        //end
     `else
         assign dip_test = ~(status[10] | key_test); // assumes it is always active low
     `endif
