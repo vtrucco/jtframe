@@ -24,8 +24,8 @@ module jtframe_rom_1slot #(parameter
     SDRAMW       = 22,
     SLOT0_DW     = 8,
     SLOT0_AW     = 8,
-    SLOT0_REPACK = 1,
-    LATCH0       = 0
+    SLOT0_REPACK = 0,
+    SLOT0_LATCH  = 1
 )(
     input               rst,
     input               clk,
@@ -58,7 +58,7 @@ always @(posedge clk, posedge rst ) begin
     end
 end
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(LATCH0)) u_slot0(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(SLOT0_LATCH)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),

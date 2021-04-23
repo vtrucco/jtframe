@@ -22,6 +22,13 @@ module jtframe_ram_3slots #(parameter
     SDRAMW = 22,
     SLOT0_DW =16, SLOT1_DW = 8, SLOT2_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8,
+
+    SLOT1_LATCH  = 1,
+    SLOT2_LATCH  = 1,
+
+    SLOT1_REPACK = 0,
+    SLOT2_REPACK = 0,
+
     parameter REF_FILE="sdram_bank3.hex"
 )(
     input               rst,
@@ -101,7 +108,7 @@ jtframe_ram_rq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK),.LATCH(SLOT1_LATCH)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot1_clr              ),
@@ -117,7 +124,7 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
     .we        ( slot_sel[1]            )
 );
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT2_AW),.DW(SLOT2_DW)) u_slot2(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT2_AW),.DW(SLOT2_DW),.REPACK(SLOT2_REPACK),.LATCH(SLOT2_LATCH)) u_slot2(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot2_clr              ),

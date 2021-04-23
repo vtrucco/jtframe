@@ -27,11 +27,11 @@ module jtframe_rom_2slots #(parameter
     SLOT0_DW = 8, SLOT1_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8,
 
-    SLOT0_REPACK = 1,
-    SLOT1_REPACK = 1,
+    SLOT0_REPACK = 0,
+    SLOT1_REPACK = 0,
 
-    LATCH0 = 0,
-    LATCH1 = 0,
+    SLOT0_LATCH  = 1,
+    SLOT1_LATCH  = 1,
 
     parameter [SDRAMW-1:0] SLOT0_OFFSET = 0,
     parameter [SDRAMW-1:0] SLOT1_OFFSET = 0,
@@ -75,7 +75,7 @@ assign slot1_ok = ok[1];
 wire [SDRAMW-1:0] offset0 = SLOT0_OFFSET,
                   offset1 = SLOT1_OFFSET;
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(LATCH0)) u_slot0(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(SLOT0_LATCH)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
@@ -91,7 +91,7 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK),.LATCH(LATCH1)) u_slot1(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK),.LATCH(SLOT1_LATCH)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
