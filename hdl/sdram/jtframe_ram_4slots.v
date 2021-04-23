@@ -21,13 +21,13 @@ module jtframe_ram_4slots #(parameter
     SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8, SLOT3_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8, SLOT3_AW = 8,
 
-    SLOT1_LATCH  = 1,
-    SLOT2_LATCH  = 1,
-    SLOT3_LATCH  = 1,
+    SLOT1_LATCH  = 0,
+    SLOT2_LATCH  = 0,
+    SLOT3_LATCH  = 0,
 
-    SLOT1_REPACK = 0,
-    SLOT2_REPACK = 0,
-    SLOT3_REPACK = 0,
+    SLOT1_REPACK = 1,
+    SLOT2_REPACK = 1,
+    SLOT3_REPACK = 1,
 
     REF_FILE="sdram_bank3.hex"
 )(

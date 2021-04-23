@@ -27,13 +27,13 @@ module jtframe_rom_3slots #(parameter
     SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8,
 
-    SLOT0_REPACK = 0,
-    SLOT1_REPACK = 0,
-    SLOT2_REPACK = 0,
+    SLOT0_REPACK = 1,
+    SLOT1_REPACK = 1,
+    SLOT2_REPACK = 1,
 
-    SLOT0_LATCH  = 1,
-    SLOT1_LATCH  = 1,
-    SLOT2_LATCH  = 1,
+    SLOT0_LATCH  = 0,
+    SLOT1_LATCH  = 0,
+    SLOT2_LATCH  = 0,
 
 
     parameter [SDRAMW-1:0] SLOT0_OFFSET = 0,

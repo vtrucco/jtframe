@@ -24,8 +24,8 @@ module jtframe_rom_1slot #(parameter
     SDRAMW       = 22,
     SLOT0_DW     = 8,
     SLOT0_AW     = 8,
-    SLOT0_REPACK = 0,
-    SLOT0_LATCH  = 1
+    SLOT0_REPACK = 1,
+    SLOT0_LATCH  = 0
 )(
     input               rst,
     input               clk,
