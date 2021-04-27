@@ -42,7 +42,8 @@ module jtframe_sdram64 #(
     output              sdram_nwe,      // SDRAM Write Enable
     output              sdram_ncas,     // SDRAM Column Address Strobe
     output              sdram_nras,     // SDRAM Row Address Strobe
-    output              sdram_ncs       // SDRAM Chip Select
+    output              sdram_ncs,      // SDRAM Chip Select
+    output              sdram_cke       // SDRAM Chip Select
 );
 
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd,
@@ -54,7 +55,7 @@ wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a;
 
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = sdram_a[12:11];
-
+assign sdram_cke = 1;
 
 always @(posedge clk) begin
     dst   <= ba_dst;
@@ -112,7 +113,13 @@ jtframe_sdram64_bank #(
     .cmd        ( bx0_cmd    )
 );
 
+assign br[3:1]=0;
+assign bx3_cmd = 4'd7;
+assign bx3_a = 0;
+
 always @(*) begin
+    if( init ) bg=0;
+    else
     case( {br, prio[1:0]} )
         6'b0000_00: bg=4'b0000;
         6'b0000_01: bg=4'b0000;

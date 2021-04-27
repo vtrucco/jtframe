@@ -15,7 +15,7 @@ module jtframe_sdram64_bank #(
     input               rd,
     input               wr,
 
-    output reg          ack,
+    output              ack,
     output              dst,    // data starts
     output              dbusy,
     output              rdy,
@@ -40,9 +40,10 @@ localparam ROW=13,
 localparam IDLE    = 0,
            // PRECHARGE 1+2(1)
            PRE_ACT = HF ? 3:2,
+           ACT     = PRE_ACT+1,
            PRE_RD  = PRE_ACT + (HF ? 3:2),
            READ    = PRE_RD+1,
-           DST     = PRE_RD + 2,
+           DST     = READ + 2,
            RDY     = DST + 2 + (BANKLEN==1 ? 1 : (BANKLEN==2? 2 : 4));
 
 //                             /CS /RAS /CAS /WE
@@ -60,7 +61,7 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
 reg            prechd;
 reg  [ROW-1:0] row;
 wire [ROW-1:0] addr_row;
-reg  [STW-1:0] st, next_st;
+reg  [STW-1:0] st, next_st, rot_st;
 
 reg            adv, do_prech, do_act, do_read;
 
@@ -73,10 +74,15 @@ assign addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW];
 
 always @(*) begin
     adv=0;
-    if( st[IDLE] && rd && br ) adv=1;
-    if( (st[PRE_ACT] || st[PRE_RD]) && br ) adv=1;
-    if( !st[IDLE] && !st[PRE_ACT] && !st[PRE_RD] ) adv=1;
-    next_st = adv ? { st[STW-2:0], st[STW-1] } : st;
+    rot_st  = { st[STW-2:0], st[STW-1] };
+    next_st = st;
+    if( st[IDLE] && rd && bg ) begin
+        if(do_prech) next_st = rot_st;
+        if(do_act  ) next_st = 1<<ACT;
+        if(do_read ) next_st = 1<<READ;
+    end
+    if( (st[PRE_ACT] || st[PRE_RD]) && bg ) next_st = rot_st;
+    if( !st[IDLE] && !st[PRE_ACT] && !st[PRE_RD] ) next_st = rot_st;
 end
 
 always @(*) begin

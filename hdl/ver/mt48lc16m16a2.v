@@ -84,10 +84,43 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         // end else begin
         //     $display("ERROR: Cannot open file %s", filename);
         // end
-        $readmemh("sdram_bank0.hex",  Bank0 );
-        $readmemh("sdram_bank1.hex",  Bank1 );
-        $readmemh("sdram_bank2.hex",  Bank2 );
-        $readmemh("sdram_bank3.hex",  Bank3 );
+
+        file=$fopen("sdram_bank0.bin","rb");
+        if( file==0 ) begin
+            $readmemh("sdram_bank0.hex",  Bank0 );
+        end else begin
+            romfilecnt=$fread( Bank0, file );
+            $display("Read 0x%X bytes from sdram_bank0.bin",romfilecnt);
+            $fclose(file);
+        end
+
+        file=$fopen("sdram_bank1.bin","rb");
+        if( file==0 ) begin
+            $readmemh("sdram_bank1.hex",  Bank1 );
+        end else begin
+            romfilecnt=$fread( Bank1, file );
+            $display("Read 0x%X bytes from sdram_bank1.bin",romfilecnt);
+            $fclose(file);
+        end
+
+        file=$fopen("sdram_bank2.bin","rb");
+        if( file==0 ) begin
+            $readmemh("sdram_bank0.hex",  Bank2 );
+        end else begin
+            romfilecnt=$fread( Bank2, file );
+            $display("Read 0x%X bytes from sdram_bank2.bin",romfilecnt);
+            $fclose(file);
+        end
+
+        file=$fopen("sdram_bank3.bin","rb");
+        if( file==0 ) begin
+            $readmemh("sdram_bank3.hex",  Bank3 );
+        end else begin
+            romfilecnt=$fread( Bank3, file );
+            $display("Read 0x%X bytes from sdram_bank3.bin",romfilecnt);
+            $fclose(file);
+        end
+
         `ifdef TESTROM
         file=$fopen("test.bin", "rb");
         romfilecnt=$fread( Bank0, file );
