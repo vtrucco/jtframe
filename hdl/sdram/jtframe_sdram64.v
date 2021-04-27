@@ -25,7 +25,7 @@ module jtframe_sdram64 #(
 
     output        [3:0] ack,
     output reg    [3:0] dst,
-    output reg    [3:0] dbusy,
+    output        [3:0] dok,
     output reg    [3:0] rdy,
     output reg   [15:0] dout,
 
@@ -48,25 +48,27 @@ module jtframe_sdram64 #(
 
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd,
             ba_dst, ba_dbusy, ba_rdy, init_cmd;
-wire        init;
-reg   [3:0] bg, cmd;
+wire        init, all_dbusy;
+reg   [3:0] bg, cmd, dbusy;
 reg   [1:0] prio;    // this could be a lfsr...
 wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a;
 
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = sdram_a[12:11];
 assign sdram_cke = 1;
+assign all_dbusy = |dbusy;
 
 always @(posedge clk) begin
     dst   <= ba_dst;
     rdy   <= ba_rdy;
     dbusy <= ba_dbusy;
     dout  <= sdram_dq;
-    { cmd, sdram_a } <= init ? {init_cmd, init_a } : (
-                       bg[0] ? {bx0_cmd, bx0_a } : (
-                       bg[1] ? {bx1_cmd, bx1_a } : (
-                       bg[2] ? {bx2_cmd, bx2_a } : {bx3_cmd,bx3_a})));
-    sdram_ba <= (init || bg[0]) ? 2'd0 : ( bg[1] ? 2'd1 :( bg[2] ? 2'd2 : 2'd3 ));
+    { sdram_ba, cmd, sdram_a } <=
+                        init ? { 2'd0, init_cmd, init_a } : (
+                       bg[0] ? { 2'd0, bx0_cmd, bx0_a } : (
+                       bg[1] ? { 2'd1, bx1_cmd, bx1_a } : (
+                       bg[2] ? { 2'd2, bx2_cmd, bx2_a } : (
+                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {4'd7, 13'd0} ))));
 end
 
 always @(posedge clk, posedge rst) begin
@@ -103,6 +105,8 @@ jtframe_sdram64_bank #(
     .ack        ( ack[0]     ),
     .dst        ( ba_dst[0]  ),    // data starts
     .dbusy      ( ba_dbusy[0]),
+    .all_dbusy  ( all_dbusy  ),
+    .dok        ( dok[0]     ),
     .rdy        ( ba_rdy[0]  ),
 
     // SDRAM interface
@@ -113,7 +117,38 @@ jtframe_sdram64_bank #(
     .cmd        ( bx0_cmd    )
 );
 
-assign br[3:1]=0;
+jtframe_sdram64_bank #(
+    .AW       ( AW      ),
+    .HF       ( HF      ),
+    .SHIFTED  ( SHIFTED ),
+    .BANKLEN  ( BA1_LEN )
+) u_bank1(
+    .rst        ( rst        ),
+    .clk        ( clk        ),
+
+    // requests
+    .addr       ( ba0_addr   ),
+    .rd         ( rd[1]      ),
+    .wr         ( wr[1]      ),
+
+    .ack        ( ack[1]     ),
+    .dst        ( ba_dst[1]  ),    // data starts
+    .dbusy      ( ba_dbusy[1]),
+    .all_dbusy  ( all_dbusy  ),
+    .dok        ( dok[1]     ),
+    .rdy        ( ba_rdy[1]  ),
+
+    // SDRAM interface
+    .br         ( br[1]      ), // bus request
+    .bg         ( bg[1]      ), // bus grant
+
+    .sdram_a    ( bx1_a      ),
+    .cmd        ( bx1_cmd    )
+);
+
+assign br[3:2]=0;
+assign dok[3:2]=0;
+assign ba_dbusy[3:2]=0;
 assign bx3_cmd = 4'd7;
 assign bx3_a = 0;
 

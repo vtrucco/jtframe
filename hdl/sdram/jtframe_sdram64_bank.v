@@ -18,6 +18,8 @@ module jtframe_sdram64_bank #(
     output              ack,
     output              dst,    // data starts
     output              dbusy,
+    input               all_dbusy,
+    output              dok,    // data ok
     output              rdy,
 
     // SDRAM interface
@@ -68,7 +70,8 @@ reg            adv, do_prech, do_act, do_read;
 // SDRAM pins
 assign ack   = st[READ],
        dst   = st[DST],
-       dbusy = |st[RDY:DST],
+       dbusy = |{st[RDY-1:READ], do_read},
+       dok   = |st[RDY:DST],
        rdy   = st[RDY];
 assign addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW];
 
@@ -95,9 +98,9 @@ always @(*) begin
         if( !prechd ) begin // not precharge, there is an address in the row
             if( bg ) begin
                 do_prech = row != addr_row; // not a good address
-                do_read  = ~do_prech; // good address
+                do_read  = ~do_prech & ~all_dbusy; // good address
             end
-        end else begin
+        end else if(bg) begin
             do_act = 1;
         end
     end

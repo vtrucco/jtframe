@@ -49,7 +49,7 @@ wire        sdram_nras;
 wire        sdram_ncs;
 wire        sdram_cke;
 
-wire [ 3:0] dbusy;
+wire [ 3:0] dok;
 
 reg  [63:0] data_cnt, ticks;
 
@@ -92,7 +92,7 @@ ba_requester #(0, 64, `WRITE_ENABLE,"sdram_bank0.bin", IDLE, `WRITE_CHANCE, MAXA
     .ba_dout_m  ( ba0_din_m     ),
     .ba_rdy     ( ba0_rdy       ),
     .ba_ack     ( ba0_ack       ),
-    .ba_dbusy   ( dbusy[0]      ),
+    .ba_dok     ( dok[0]        ),
     .sdram_dq   ( dout          ),
     // Latency
     .start      ( start         ),
@@ -108,7 +108,7 @@ ba_requester #(1, 64, 0,"sdram_bank1.bin", IDLE1, 0, MAXA ) u_ba1(
     .ba_rd      ( ba1_rd        ),
     .ba_rdy     ( ba1_rdy       ),
     .ba_ack     ( ba1_ack       ),
-    .ba_dbusy   ( dbusy[1]      ),
+    .ba_dok     ( dok[1]        ),
     .sdram_dq   ( dout          ),
     // unused ports
     .ba_wr      (               ),
@@ -128,7 +128,7 @@ ba_requester #(2, 64, 0,"sdram_bank2.bin", IDLE2, 0, MAXA ) u_ba2(
     .ba_rd      ( ba2_rd        ),
     .ba_rdy     ( ba2_rdy       ),
     .ba_ack     ( ba2_ack       ),
-    .ba_dbusy   ( dbusy[2]      ),
+    .ba_dok     ( dok[2]        ),
     .sdram_dq   ( dout          ),
     // unused ports
     .ba_wr      (               ),
@@ -149,7 +149,7 @@ ba_requester #(3, 64, 0,"sdram_bank3.bin", IDLE3, 0, MAXA ) u_ba3(
     .ba_rd      ( ba3_rd        ),
     .ba_rdy     ( ba3_rdy       ),
     .ba_ack     ( ba3_ack       ),
-    .ba_dbusy   ( dbusy[3]      ),
+    .ba_dok     ( dok[3]        ),
     .sdram_dq   ( dout          ),
     // unused ports
     .ba_wr      (               ),
@@ -182,7 +182,7 @@ jtframe_sdram64 #(.AW(22),.HF(HF),.SHIFTED(SHIFTED)) uut(
     .din        ( ba0_din       ),
     .din_m      ( ba0_din_m     ),  // write mask
     .rdy        ( rdy           ),
-    .dbusy      ( dbusy         ),
+    .dok        ( dok           ),
     .ack        ( ack           ),
 
     // SDRAM pins
@@ -275,7 +275,7 @@ module  ba_requester(
     output reg [ 1:0]   ba_dout_m,
     input               ba_rdy,
     input               ba_ack,
-    input               ba_dbusy,
+    input               ba_dok,
     input      [15:0]   sdram_dq,
     // latency measurement
     input               start,
@@ -341,7 +341,7 @@ always @(posedge clk, posedge rst) begin
         lat_acc  <= 0;
         cycles   <= 1;
     end else if(init_done) begin
-        if( ba_dbusy ) data_read <= next_data;
+        if( ba_dok ) data_read <= next_data;
         if( ba_rdy ) begin
             first <= 0;
             if( ba_rd || ba_wr ) begin
