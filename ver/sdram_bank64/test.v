@@ -240,11 +240,11 @@ initial begin
     rst=1;
     #100 rst=0;
     #SIM_TIME;
-    perf = data_cnt*2; // 2 read cycles per each data_cnt
+    perf = data_cnt*4; // 4 read cycles per each data_cnt
     perf = perf / ticks;
-    $display("Performance %.1f%% (%0dx2 / %0d)", perf*100.0, data_cnt, ticks );
+    $display("Performance %.1f%% (%0dx4 / %0d)", perf*100.0, data_cnt, ticks );
     perf = perf / `PERIOD;
-    perf = perf *2.0* 1e9/1024.0/1024.0; // 2 bytes per read cycle
+    perf = perf *4.0* 1e9/1024.0/1024.0; // 4 bytes per read cycle
     $display("Data throughput %.0f MB/s (at %.0f MHz)", perf, 1e3/`PERIOD );
     $display("Latency\nBank\tBest\tAve\tWorst");
     $display("  0\t%2d\t%2d",lat0_best, lat0_ave, lat0_worst);
@@ -356,7 +356,12 @@ always @(posedge clk, posedge rst) begin
         end
         if( !waiting || ba_rdy ) begin
             if( IDLE==0 || $random%100 >= IDLE ) begin
-                ba_addr[MAXA:2] <= $random; // bits 1:0 not used for bursts of length 4
+                if( DW==64 )
+                    ba_addr[MAXA:2] <= $random; // bits 1:0 not used for bursts of length 4
+                else if(DW==32)
+                    ba_addr[MAXA:1] <= $random; // bit 0 not used for bursts of length 2
+                else if(DW==16)
+                    ba_addr[MAXA:0] <= $random;
                 if( $random%100>(100-WRCHANCE) && RW) begin
                     ba_rd      <= 0;
                     ba_wr      <= 1;
