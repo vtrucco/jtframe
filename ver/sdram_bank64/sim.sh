@@ -50,6 +50,18 @@ while [ $# -gt 0 ]; do
             EXTRA="$EXTRA ${PARAM}test.BANK3=0";;
         -4banks)
             ;;
+        -len)
+            shift
+            if [[ ! $1 =~ [0123] ]]; then
+                echo expecting bank number "(0-3)" after -len
+                exit 1
+            fi
+            if [[ $2 != 16 && $2 != 32 && $2 != 64 ]]; then
+                echo "bank length must be 16, 32 or 64"
+                exit 1
+            fi
+            EXTRA="$EXTRA ${PARAM}test.BA${1}_LEN=$2"
+            shift;;
         -maxa)
             shift
             EXTRA="$EXTRA ${PARAM}test.MAXA=$1";;

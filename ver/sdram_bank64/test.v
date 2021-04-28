@@ -4,6 +4,7 @@ module test;
 
 parameter BANK1=1, BANK2=1, BANK3=1,
           IDLE=50, SHIFTED=0, MAXA=21;
+parameter BA0_LEN=64, BA1_LEN=64, BA2_LEN=64, BA3_LEN=64;
 
 `ifndef PERIOD
 `define PERIOD 10
@@ -82,7 +83,7 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
-ba_requester #(0, 64, `WRITE_ENABLE,"sdram_bank0.bin", IDLE, `WRITE_CHANCE, MAXA) u_ba0(
+ba_requester #(0, BA0_LEN, `WRITE_ENABLE,"sdram_bank0.bin", IDLE, `WRITE_CHANCE, MAXA) u_ba0(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba0_addr      ),
@@ -101,7 +102,7 @@ ba_requester #(0, 64, `WRITE_ENABLE,"sdram_bank0.bin", IDLE, `WRITE_CHANCE, MAXA
     .lat_ave    ( lat0_ave      )
 );
 
-ba_requester #(1, 64, 0,"sdram_bank1.bin", IDLE1, 0, MAXA ) u_ba1(
+ba_requester #(1, BA1_LEN, 0,"sdram_bank1.bin", IDLE1, 0, MAXA ) u_ba1(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba1_addr      ),
@@ -121,7 +122,7 @@ ba_requester #(1, 64, 0,"sdram_bank1.bin", IDLE1, 0, MAXA ) u_ba1(
     .lat_ave    ( lat1_ave      )
 );
 
-ba_requester #(2, 64, 0,"sdram_bank2.bin", IDLE2, 0, MAXA ) u_ba2(
+ba_requester #(2, BA2_LEN, 0,"sdram_bank2.bin", IDLE2, 0, MAXA ) u_ba2(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba2_addr      ),
@@ -142,7 +143,7 @@ ba_requester #(2, 64, 0,"sdram_bank2.bin", IDLE2, 0, MAXA ) u_ba2(
 );
 
 
-ba_requester #(3, 64, 0,"sdram_bank3.bin", IDLE3, 0, MAXA ) u_ba3(
+ba_requester #(3, BA3_LEN, 0,"sdram_bank3.bin", IDLE3, 0, MAXA ) u_ba3(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .ba_addr    ( ba3_addr      ),
@@ -169,7 +170,15 @@ assign wr = { 3'd0, ba0_wr };
 assign {ba3_rdy,ba2_rdy,ba1_rdy,ba0_rdy} = rdy;
 assign {ba3_ack,ba2_ack,ba1_ack,ba0_ack} = ack;
 
-jtframe_sdram64 #(.AW(22),.HF(HF),.SHIFTED(SHIFTED)) uut(
+jtframe_sdram64 #(
+    .AW     ( 22      ),
+    .HF     ( HF      ),
+    .SHIFTED( SHIFTED ),
+    .BA0_LEN( BA0_LEN ),
+    .BA1_LEN( BA1_LEN ),
+    .BA2_LEN( BA2_LEN ),
+    .BA3_LEN( BA3_LEN )
+) uut(
     .rst        ( rst           ),
     .clk        ( clk           ),
     // Bank 0: allows R/W
@@ -237,6 +246,7 @@ real perf;
 
 initial begin
     $display("Simulation begins HF=%d",HF);
+    $display("Bank lenths %2d, %2d, %2d, %2d",BA0_LEN, BA1_LEN, BA2_LEN, BA3_LEN );
     rst=1;
     #100 rst=0;
     #SIM_TIME;

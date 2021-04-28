@@ -5,7 +5,7 @@ module jtframe_sdram64_bank #(
               HF=1,     // 1 for HF operation (idle cycles), 0 for LF operation
                         // HF operation starts at 66.6MHz (1/15ns)
               SHIFTED=0,
-              BANKLEN=1 // 1=16 bits, 2=32 bits, 4=64 bits
+              BANKLEN=64 // 16, 32 or 64 bits
 )(
     input               rst,
     input               clk,
@@ -52,7 +52,7 @@ localparam IDLE    = 0,
            PRE_RD  = PRE_ACT + (HF ? 3:2),
            READ    = PRE_RD+1,
            DST     = READ + 2,
-           RDY     = DST + 2 + (BANKLEN==1 ? 1 : (BANKLEN==2? 2 : 4));
+           RDY     = DST + (BANKLEN==16 ? 0 : (BANKLEN==32? 1 : 3));
 
 //                             /CS /RAS /CAS /WE
 localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0

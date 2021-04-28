@@ -5,10 +5,10 @@ module jtframe_sdram64 #(
               HF=1,     // 1 for HF operation (idle cycles), 0 for LF operation
                         // HF operation starts at 66.6MHz (1/15ns)
               SHIFTED=0,
-              BA0_LEN=1, // 1=16 bits, 2=32 bits, 4=64 bits
-              BA1_LEN=1,
-              BA2_LEN=1,
-              BA3_LEN=1
+              BA0_LEN=64, // 1=16 bits, 2=32 bits, 4=64 bits
+              BA1_LEN=64,
+              BA2_LEN=64,
+              BA3_LEN=64
 )(
     input               rst,
     input               clk,
@@ -25,7 +25,7 @@ module jtframe_sdram64 #(
 
     output        [3:0] ack,
     output reg    [3:0] dst,
-    output        [3:0] dok,
+    output reg    [3:0] dok,
     output reg    [3:0] rdy,
     output reg   [15:0] dout,
 
@@ -58,8 +58,8 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_INHIBIT     = 4'b1___0____0____0; // 8
 
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd,
-            ba_dst, ba_dbusy, ba_rdy, init_cmd, post_act,
-            next_cmd, dqm_busy;
+            ba_dst, ba_dbusy, ba_rdy, ba_dok,
+            init_cmd, post_act, next_cmd, dqm_busy;
 wire        init, all_dbusy, all_act;
 reg   [3:0] bg, cmd, dbusy;
 reg  [14:0] prio_lfsr;
@@ -85,6 +85,7 @@ always @(posedge clk) begin
     dst   <= ba_dst;
     rdy   <= ba_rdy;
     dbusy <= ba_dbusy;
+    dok   <= ba_dok;
     dout  <= sdram_dq;
     cmd   <= next_cmd;
 
@@ -138,7 +139,7 @@ jtframe_sdram64_bank #(
     .dqm_busy   ( dqm_busy[0]),
     .all_dqm    ( all_dqm    ),
 
-    .dok        ( dok[0]     ),
+    .dok        ( ba_dok[0]  ),
     .rdy        ( ba_rdy[0]  ),
 
     // SDRAM interface
@@ -169,7 +170,7 @@ jtframe_sdram64_bank #(
     .all_dbusy  ( all_dbusy  ),
     .post_act   ( post_act[1]),
     .all_act    ( all_act    ),
-    .dok        ( dok[1]     ),
+    .dok        ( ba_dok[1]  ),
     .rdy        ( ba_rdy[1]  ),
 
     .dqm_busy   ( dqm_busy[1]),
@@ -203,7 +204,7 @@ jtframe_sdram64_bank #(
     .all_dbusy  ( all_dbusy  ),
     .post_act   ( post_act[2]),
     .all_act    ( all_act    ),
-    .dok        ( dok[2]     ),
+    .dok        ( ba_dok[2]  ),
     .rdy        ( ba_rdy[2]  ),
 
     .dqm_busy   ( dqm_busy[2]),
@@ -237,7 +238,7 @@ jtframe_sdram64_bank #(
     .all_dbusy  ( all_dbusy  ),
     .post_act   ( post_act[3]),
     .all_act    ( all_act    ),
-    .dok        ( dok[3]     ),
+    .dok        ( ba_dok[3]  ),
     .rdy        ( ba_rdy[3]  ),
 
     .dqm_busy   ( dqm_busy[3]),
