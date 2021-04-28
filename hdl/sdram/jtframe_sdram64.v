@@ -59,7 +59,7 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
 
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd,
             ba_dst, ba_dbusy, ba_rdy, init_cmd, post_act,
-            next_cmd;
+            next_cmd, dqm_busy;
 wire        init, all_dbusy, all_act;
 reg   [3:0] bg, cmd, dbusy;
 reg   [1:0] prio;    // this could be a lfsr...
@@ -70,6 +70,7 @@ assign {sdram_dqmh, sdram_dqml} = sdram_a[12:11];
 assign sdram_cke = 1;
 assign all_dbusy = |dbusy;
 assign all_act   = |post_act;
+assign all_dqm   = |dqm_busy;
 
 assign {next_ba, next_cmd, next_a } =
                         init ? { 2'd0, init_cmd, init_a } : (
@@ -131,6 +132,10 @@ jtframe_sdram64_bank #(
     .all_dbusy  ( all_dbusy  ),
     .post_act   ( post_act[0]),
     .all_act    ( all_act    ),
+
+    .dqm_busy   ( dqm_busy[0]),
+    .all_dqm    ( all_dqm    ),
+
     .dok        ( dok[0]     ),
     .rdy        ( ba_rdy[0]  ),
 
@@ -165,6 +170,9 @@ jtframe_sdram64_bank #(
     .dok        ( dok[1]     ),
     .rdy        ( ba_rdy[1]  ),
 
+    .dqm_busy   ( dqm_busy[1]),
+    .all_dqm    ( all_dqm    ),
+
     // SDRAM interface
     .br         ( br[1]      ), // bus request
     .bg         ( bg[1]      ), // bus grant
@@ -176,6 +184,7 @@ jtframe_sdram64_bank #(
 assign br[3:2]=0;
 assign dok[3:2]=0;
 assign ba_dbusy[3:2]=0;
+assign dqm_busy[3:2]=0;
 assign post_act[3:2]=0;
 assign bx3_cmd = 4'd7;
 assign bx3_a = 0;

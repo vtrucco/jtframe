@@ -660,7 +660,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
                 // Activate to Precharge
                 if (($time - RAS_chk0 < tRAS) || ($time - RAS_chk0 > tRASmax ) && RAS_chk0) begin
-                    $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
+                    $display ("%m : at time %t ERROR: tRAS violation during bank 0 Precharge", $time);
                     #100 $finish;
                 end
 
@@ -678,8 +678,11 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
                 RP_chk1 = $time;
 
                 // Activate to Precharge
-                if (($time - RAS_chk1 < tRAS) || ($time - RAS_chk1 > tRASmax ) && RAS_chk1) begin
-                    $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
+                if ((($time - RAS_chk1 < tRAS) || ($time - RAS_chk1 > tRASmax )) && RAS_chk1) begin
+                    $display("%m : at time %t ERROR: tRAS violation during bank 1 Precharge", $time);
+                    $display("\t\t($time - RAS_chk1 < tRAS) = %d",($time - RAS_chk1 < tRAS) );
+                    $display("\t\t($time - RAS_chk1 > tRASmax ) = %d",($time - RAS_chk1 > tRASmax ) );
+                    $display("\t\tRAS_chk1 = %t",RAS_chk1 );
                     #100 $finish;
                 end
 
@@ -698,7 +701,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
                 // Activate to Precharge
                 if (($time - RAS_chk2 < tRAS) || ($time - RAS_chk2 > tRASmax ) && RAS_chk2) begin
-                    $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
+                    $display ("%m : at time %t ERROR: tRAS violation during bank 2 Precharge", $time);
                     #100 $finish;
                 end
 
@@ -717,7 +720,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
                 // Activate to Precharge
                 if (($time - RAS_chk3 < tRAS) || ($time - RAS_chk3 > tRASmax ) && RAS_chk3) begin
-                    $display ("%m : at time %t ERROR: tRAS violation during Precharge", $time);
+                    $display ("%m : at time %t ERROR: tRAS violation during bank 3 Precharge", $time);
                     #100 $finish;
                 end
 

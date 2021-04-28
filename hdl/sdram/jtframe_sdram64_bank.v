@@ -21,7 +21,9 @@ module jtframe_sdram64_bank #(
     output              rdy,
 
     output              dbusy,
+    output              dqm_busy,   // DQM lines are used
     input               all_dbusy,
+    input               all_dqm,
 
     output              post_act, // cycles banned for activate (tRRD)
     input               all_act,
@@ -78,8 +80,9 @@ assign ack      = st[READ],
        dbusy    = |{st[RDY-1:READ], do_read},
        post_act = |last_act,
        dok      = |st[RDY:DST],
-       rdy      = st[RDY];
-assign addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW];
+       rdy      = st[RDY],
+       dqm_busy = |{st[RDY-2:READ]},
+       addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW];
 
 always @(*) begin
     adv=0;
@@ -90,8 +93,10 @@ always @(*) begin
         if(do_act  ) next_st = 1<<ACT;
         if(do_read ) next_st = 1<<READ;
     end
-    if( (st[PRE_ACT] || st[PRE_RD]) && bg ) next_st = rot_st;
-    if( !st[IDLE] && !st[PRE_ACT] && !st[PRE_RD] ) next_st = rot_st;
+    if( ( st[PRE_RD]  && bg && !all_dqm            ) ||
+        ( st[PRE_ACT] && bg && !all_dqm && !all_act) ||
+        ( !st[IDLE] && !st[PRE_ACT] && !st[PRE_RD] ) )
+          next_st = rot_st;
 end
 
 always @(*) begin
@@ -105,10 +110,10 @@ always @(*) begin
         if( !prechd ) begin // not precharge, there is an address in the row
             if( bg ) begin
                 do_prech = row != addr_row; // not a good address
-                do_read  = ~do_prech & ~all_dbusy; // good address
+                do_read  = ~do_prech & ~all_dbusy & ~all_dqm; // good address
             end
         end else if(bg) begin
-            do_act = !all_act;
+            do_act = ~all_act & ~all_dqm;
         end
     end
 end
@@ -120,7 +125,7 @@ always @(*) begin
           do_read  ? CMD_READ      : CMD_NOP ));
     sdram_a = do_read ? { 3'b0, // no precharge
                                addr[AW-1], addr[8:0] } :
-                        addr_row; // do_act
+             (do_act ? addr_row : 13'd0);
 end
 
 always @(posedge clk, posedge rst) begin
