@@ -85,7 +85,7 @@ assign ack      = st[READ],
        dbusy64  = |{st[RDY:READ], do_read},
        post_act = |last_act,
        dok      = |st[RDY:DST],
-       rdy      = st[RDY],
+       rdy      = st[RDY] | (st[READ] & wr),
        dqm_busy = |{st[RDY-2:READ]},
        addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW],
        rd_wr    = rd | wr;
@@ -103,6 +103,8 @@ always @(*) begin
         ( st[PRE_ACT] && bg && !all_dqm && !all_act) ||
         ( !st[IDLE] && !st[PRE_ACT] && !st[PRE_RD] ) )
           next_st = rot_st;
+    if( st[READ] && wr )
+        next_st <= 1; // writes finish earlier
 end
 
 always @(*) begin
