@@ -244,7 +244,7 @@ initial begin
     perf = perf / ticks;
     $display("Performance %.1f%% (%0dx4 / %0d)", perf*100.0, data_cnt, ticks );
     perf = perf / `PERIOD;
-    perf = perf *4.0* 1e9/1024.0/1024.0; // 4 bytes per read cycle
+    perf = perf *2.0* 1e9/1024.0/1024.0; // 2 bytes per effective clock cycle
     $display("Data throughput %.0f MB/s (at %.0f MHz)", perf, 1e3/`PERIOD );
     $display("Latency\nBank\tBest\tAve\tWorst");
     $display("  0\t%2d\t%2d",lat0_best, lat0_ave, lat0_worst);

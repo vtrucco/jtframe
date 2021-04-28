@@ -181,13 +181,73 @@ jtframe_sdram64_bank #(
     .cmd        ( bx1_cmd    )
 );
 
-assign br[3:2]=0;
-assign dok[3:2]=0;
-assign ba_dbusy[3:2]=0;
-assign dqm_busy[3:2]=0;
-assign post_act[3:2]=0;
-assign bx3_cmd = 4'd7;
-assign bx3_a = 0;
+jtframe_sdram64_bank #(
+    .AW       ( AW      ),
+    .HF       ( HF      ),
+    .SHIFTED  ( SHIFTED ),
+    .BANKLEN  ( BA2_LEN )
+) u_bank2(
+    .rst        ( rst        ),
+    .clk        ( clk        ),
+
+    // requests
+    .addr       ( ba2_addr   ),
+    .rd         ( rd[2]      ),
+    .wr         ( wr[2]      ),
+
+    .ack        ( ack[2]     ),
+    .dst        ( ba_dst[2]  ),    // data starts
+    .dbusy      ( ba_dbusy[2]),
+    .all_dbusy  ( all_dbusy  ),
+    .post_act   ( post_act[2]),
+    .all_act    ( all_act    ),
+    .dok        ( dok[2]     ),
+    .rdy        ( ba_rdy[2]  ),
+
+    .dqm_busy   ( dqm_busy[2]),
+    .all_dqm    ( all_dqm    ),
+
+    // SDRAM interface
+    .br         ( br[2]      ), // bus request
+    .bg         ( bg[2]      ), // bus grant
+
+    .sdram_a    ( bx2_a      ),
+    .cmd        ( bx2_cmd    )
+);
+
+jtframe_sdram64_bank #(
+    .AW       ( AW      ),
+    .HF       ( HF      ),
+    .SHIFTED  ( SHIFTED ),
+    .BANKLEN  ( BA3_LEN )
+) u_bank3(
+    .rst        ( rst        ),
+    .clk        ( clk        ),
+
+    // requests
+    .addr       ( ba3_addr   ),
+    .rd         ( rd[3]      ),
+    .wr         ( wr[3]      ),
+
+    .ack        ( ack[3]     ),
+    .dst        ( ba_dst[3]  ),    // data starts
+    .dbusy      ( ba_dbusy[3]),
+    .all_dbusy  ( all_dbusy  ),
+    .post_act   ( post_act[3]),
+    .all_act    ( all_act    ),
+    .dok        ( dok[3]     ),
+    .rdy        ( ba_rdy[3]  ),
+
+    .dqm_busy   ( dqm_busy[3]),
+    .all_dqm    ( all_dqm    ),
+
+    // SDRAM interface
+    .br         ( br[3]      ), // bus request
+    .bg         ( bg[3]      ), // bus grant
+
+    .sdram_a    ( bx3_a      ),
+    .cmd        ( bx3_cmd    )
+);
 
 always @(*) begin
     if( init ) bg=0;

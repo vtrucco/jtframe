@@ -105,7 +105,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
         file=$fopen("sdram_bank2.bin","rb");
         if( file==0 ) begin
-            $readmemh("sdram_bank0.hex",  Bank2 );
+            $readmemh("sdram_bank2.hex",  Bank2 );
         end else begin
             romfilecnt=$fread( Bank2, file );
             $display("Read 0x%X bytes from sdram_bank2.bin",romfilecnt);
