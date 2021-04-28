@@ -246,7 +246,7 @@ real perf;
 
 initial begin
     $display("Simulation begins HF=%d",HF);
-    $display("Bank lenths %2d, %2d, %2d, %2d",BA0_LEN, BA1_LEN, BA2_LEN, BA3_LEN );
+    $display("Bank lengths: %2d, %2d, %2d, %2d",BA0_LEN, BA1_LEN, BA2_LEN, BA3_LEN );
     rst=1;
     #100 rst=0;
     #SIM_TIME;

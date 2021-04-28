@@ -119,7 +119,7 @@ jtframe_sdram64_bank #(
     .AW       ( AW      ),
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
-    .BANKLEN  ( BA0_LEN )
+    .BALEN    ( BA0_LEN )
 ) u_bank0(
     .rst        ( rst        ),
     .clk        ( clk        ),
@@ -154,7 +154,7 @@ jtframe_sdram64_bank #(
     .AW       ( AW      ),
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
-    .BANKLEN  ( BA1_LEN )
+    .BALEN    ( BA1_LEN )
 ) u_bank1(
     .rst        ( rst        ),
     .clk        ( clk        ),
@@ -188,7 +188,7 @@ jtframe_sdram64_bank #(
     .AW       ( AW      ),
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
-    .BANKLEN  ( BA2_LEN )
+    .BALEN    ( BA2_LEN )
 ) u_bank2(
     .rst        ( rst        ),
     .clk        ( clk        ),
@@ -222,7 +222,7 @@ jtframe_sdram64_bank #(
     .AW       ( AW      ),
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
-    .BANKLEN  ( BA3_LEN )
+    .BALEN    ( BA3_LEN )
 ) u_bank3(
     .rst        ( rst        ),
     .clk        ( clk        ),
