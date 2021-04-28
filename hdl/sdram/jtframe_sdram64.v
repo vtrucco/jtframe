@@ -8,7 +8,8 @@ module jtframe_sdram64 #(
               BA0_LEN=64, // 1=16 bits, 2=32 bits, 4=64 bits
               BA1_LEN=64,
               BA2_LEN=64,
-              BA3_LEN=64
+              BA3_LEN=64,
+              RFSHCNT=10  // 8192 every 64ms or 1 every 7.8us ~ 8.2 per line (15kHz)
 )(
     input               rst,
     input               clk,
@@ -22,6 +23,8 @@ module jtframe_sdram64 #(
     input         [3:0] wr,
     input        [15:0] din,
     input        [ 1:0] din_m,  // write mask
+
+    input               rfsh, // triggers a distributed cycle of RFSHCNT refresh commands
 
     output        [3:0] ack,
     output reg    [3:0] dst,
@@ -57,14 +60,17 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_NOP         = 4'b0___1____1____1, // 7
            CMD_INHIBIT     = 4'b1___0____0____0; // 8
 
-wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd,
+wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd, rfsh_cmd,
             ba_dst, ba_dbusy, ba_rdy, ba_dok,
             init_cmd, post_act, next_cmd, dqm_busy;
-wire        init, all_dbusy, all_act;
+wire        init, all_dbusy, all_act, rfshing, rfsh_br;
 reg   [3:0] bg, cmd, dbusy;
 reg  [14:0] prio_lfsr;
-wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a;
+wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a;
 wire [ 1:0] next_ba, prio;
+
+reg         rfsh_bg;
+
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = sdram_a[12:11];
 assign sdram_cke = 1;
@@ -74,10 +80,11 @@ assign all_dqm   = |dqm_busy;
 
 assign {next_ba, next_cmd, next_a } =
                         init ? { 2'd0, init_cmd, init_a } : (
+                      rfshing? { 2'd0, rfsh_cmd, rfsh_a } : (
                        bg[0] ? { 2'd0, bx0_cmd, bx0_a } : (
                        bg[1] ? { 2'd1, bx1_cmd, bx1_a } : (
                        bg[2] ? { 2'd2, bx2_cmd, bx2_a } : (
-                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {2'd0, 4'd7, 13'd0} ))));
+                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {2'd0, 4'd7, 13'd0} )))));
 
 assign prio = prio_lfsr[1:0];
 
@@ -103,6 +110,7 @@ always @(posedge clk, posedge rst) begin
         prio_lfsr <= 1;
     end else begin
         prio_lfsr <= { prio_lfsr[0]^prio_lfsr[14], prio_lfsr[14:1] };
+
     end
 end
 
@@ -113,6 +121,18 @@ jtframe_sdram64_init #(.HF(HF)) u_init(
     .init       ( init      ),
     .cmd        ( init_cmd  ),
     .sdram_a    ( init_a    )
+);
+
+jtframe_sdram64_rfsh #(.HF(HF),.RFSHCNT(RFSHCNT)) u_rfsh(
+    .rst        ( rst       ),
+    .clk        ( clk       ),
+
+    .start      ( rfsh      ),
+    .br         ( rfsh_br   ),
+    .bg         ( rfsh_bg   ),
+    .rfshing    ( rfshing   ),
+    .cmd        ( rfsh_cmd  ),
+    .sdram_a    ( rfsh_a    )
 );
 
 jtframe_sdram64_bank #(
@@ -141,6 +161,7 @@ jtframe_sdram64_bank #(
 
     .dok        ( ba_dok[0]  ),
     .rdy        ( ba_rdy[0]  ),
+    .set_prech  ( rfsh_bg    ),
 
     // SDRAM interface
     .br         ( br[0]      ), // bus request
@@ -172,6 +193,7 @@ jtframe_sdram64_bank #(
     .all_act    ( all_act    ),
     .dok        ( ba_dok[1]  ),
     .rdy        ( ba_rdy[1]  ),
+    .set_prech  ( rfsh_bg    ),
 
     .dqm_busy   ( dqm_busy[1]),
     .all_dqm    ( all_dqm    ),
@@ -206,6 +228,7 @@ jtframe_sdram64_bank #(
     .all_act    ( all_act    ),
     .dok        ( ba_dok[2]  ),
     .rdy        ( ba_rdy[2]  ),
+    .set_prech  ( rfsh_bg    ),
 
     .dqm_busy   ( dqm_busy[2]),
     .all_dqm    ( all_dqm    ),
@@ -240,6 +263,7 @@ jtframe_sdram64_bank #(
     .all_act    ( all_act    ),
     .dok        ( ba_dok[3]  ),
     .rdy        ( ba_rdy[3]  ),
+    .set_prech  ( rfsh_bg    ),
 
     .dqm_busy   ( dqm_busy[3]),
     .all_dqm    ( all_dqm    ),
@@ -253,7 +277,9 @@ jtframe_sdram64_bank #(
 );
 
 always @(*) begin
-    if( init ) bg=0;
+    rfsh_bg = br==0 && rfsh_br;
+    if( init || rfshing )
+        bg=0;
     else
     case( {br, prio[1:0]} )
         6'b0000_00: bg=4'b0000;

@@ -19,6 +19,7 @@ module jtframe_sdram64_bank #(
     output              dst,    // data starts
     output              dok,    // data ok
     output              rdy,
+    input               set_prech,
 
     output              dbusy,
     output              dqm_busy,   // DQM lines are used
@@ -143,7 +144,7 @@ always @(posedge clk, posedge rst) begin
             prechd  <= 0;
         end
 
-        if( do_prech ) prechd <= 1;
+        if( do_prech || set_prech ) prechd <= 1;
     end
 end
 
