@@ -9,7 +9,7 @@ module jtframe_sdram64 #(
               BA1_LEN=64,
               BA2_LEN=64,
               BA3_LEN=64,
-              RFSHCNT=10  // 8192 every 64ms or 1 every 7.8us ~ 8.2 per line (15kHz)
+              RFSHCNT=9  // 8192 every 64ms or 1 every 7.8us ~ 8.2 per line (15kHz)
 )(
     input               rst,
     input               clk,
@@ -25,6 +25,9 @@ module jtframe_sdram64 #(
     input        [ 1:0] din_m,  // write mask
 
     input               rfsh, // triggers a distributed cycle of RFSHCNT refresh commands
+                              // This is meant to be the horizontal blanking of a 15kHz video
+                              // signal. Using HB as rfsh signal also prevents having a bank
+                              // active for longer than tRAS_max (120us)
 
     output        [3:0] ack,
     output reg    [3:0] dst,
@@ -110,7 +113,6 @@ always @(posedge clk, posedge rst) begin
         prio_lfsr <= 1;
     end else begin
         prio_lfsr <= { prio_lfsr[0]^prio_lfsr[14], prio_lfsr[14:1] };
-
     end
 end
 
@@ -277,7 +279,7 @@ jtframe_sdram64_bank #(
 );
 
 always @(*) begin
-    rfsh_bg = br==0 && rfsh_br;
+    rfsh_bg = br==0 && !all_dbusy && !all_dqm && rfsh_br && !init && !all_act && rd==0 && wr==0;
     if( init || rfshing )
         bg=0;
     else

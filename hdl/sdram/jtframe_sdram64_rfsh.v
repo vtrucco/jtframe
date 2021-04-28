@@ -1,5 +1,5 @@
 
-module jtframe_sdram64_rfsh #(parameter HF=1, RFSHCNT=8)
+module jtframe_sdram64_rfsh #(parameter HF=1, RFSHCNT=9)
 (
     input               rst,
     input               clk,

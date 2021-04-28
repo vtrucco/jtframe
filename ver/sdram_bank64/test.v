@@ -51,6 +51,8 @@ wire        sdram_ncs;
 wire        sdram_cke;
 
 wire [ 3:0] dok;
+wire        hblank;
+integer     hcnt;
 
 reg  [63:0] data_cnt, ticks;
 
@@ -67,6 +69,18 @@ assign rfsh_en = 0;
 `else
 assign rfsh_en = 1;
 `endif
+
+localparam HMAX=64_000/PERIOD;
+assign hblank = hcnt==0;
+
+// horizontal line counter
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        hcnt <= 0;
+    end else begin
+        hcnt <= hcnt == HMAX-1 ? 0 : (hcnt+1);
+    end
+end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
@@ -181,6 +195,7 @@ jtframe_sdram64 #(
 ) uut(
     .rst        ( rst           ),
     .clk        ( clk           ),
+    .rfsh       ( hblank        ),
     // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
     .ba1_addr   ( ba1_addr      ),
