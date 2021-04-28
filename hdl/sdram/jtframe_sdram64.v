@@ -64,22 +64,24 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_INHIBIT     = 4'b1___0____0____0; // 8
 
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd, rfsh_cmd,
-            ba_dst, ba_dbusy, ba_rdy, ba_dok,
+            ba_dst, ba_dbusy, ba_dbusy64, ba_rdy, ba_dok,
             init_cmd, post_act, next_cmd, dqm_busy;
-wire        init, all_dbusy, all_act, rfshing, rfsh_br;
-reg   [3:0] bg, cmd, dbusy;
+wire        init, all_dbusy, all_dbusy64, all_act, rfshing, rfsh_br;
+reg   [3:0] bg, cmd, dbusy, dbusy64;
 reg  [14:0] prio_lfsr;
 wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a;
 wire [ 1:0] next_ba, prio;
 
 reg         rfsh_bg;
+reg  [15:0] dq_pad;
 
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = sdram_a[12:11];
 assign sdram_cke = 1;
-assign all_dbusy = |dbusy;
-assign all_act   = |post_act;
-assign all_dqm   = |dqm_busy;
+assign all_dbusy   = |dbusy;
+assign all_dbusy64 = |dbusy64;
+assign all_act     = |post_act;
+assign all_dqm     = |dqm_busy;
 
 assign {next_ba, next_cmd, next_a } =
                         init ? { 2'd0, init_cmd, init_a } : (
@@ -89,21 +91,26 @@ assign {next_ba, next_cmd, next_a } =
                        bg[2] ? { 2'd2, bx2_cmd, bx2_a } : (
                        bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {2'd0, 4'd7, 13'd0} )))));
 
-assign prio = prio_lfsr[1:0];
+assign prio     = prio_lfsr[1:0];
+assign sdram_dq = dq_pad;
 
 always @(posedge clk) begin
-    dst   <= ba_dst;
-    rdy   <= ba_rdy;
-    dbusy <= ba_dbusy;
-    dok   <= ba_dok;
-    dout  <= sdram_dq;
-    cmd   <= next_cmd;
+    dst    <= ba_dst;
+    rdy    <= ba_rdy;
+    dbusy  <= ba_dbusy;
+    dbusy64<= ba_dbusy64;
+    dok    <= ba_dok;
+    dout   <= sdram_dq;
+    cmd    <= next_cmd;
 
     sdram_ba      <= next_ba;
     sdram_a[10:0] <= next_a[10:0];
 
-    if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE || next_cmd==CMD_READ || next_cmd==CMD_WRITE )
+    dq_pad <= next_cmd == CMD_WRITE ? din : 16'hzzzz;
+    if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE || next_cmd==CMD_READ )
         sdram_a[12:11] <= next_a[12:11];
+    else if( next_cmd==CMD_WRITE )
+        sdram_a[12:11] <= din_m;
     else
         sdram_a[12:11] <= 0;
 end
@@ -155,6 +162,10 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[0]  ),    // data starts
     .dbusy      ( ba_dbusy[0]),
     .all_dbusy  ( all_dbusy  ),
+
+    .dbusy64    (ba_dbusy64[0]),
+    .all_dbusy64( all_dbusy64),
+
     .post_act   ( post_act[0]),
     .all_act    ( all_act    ),
 
@@ -191,6 +202,10 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[1]  ),    // data starts
     .dbusy      ( ba_dbusy[1]),
     .all_dbusy  ( all_dbusy  ),
+
+    .dbusy64    (ba_dbusy64[1]),
+    .all_dbusy64( all_dbusy64),
+
     .post_act   ( post_act[1]),
     .all_act    ( all_act    ),
     .dok        ( ba_dok[1]  ),
@@ -226,6 +241,10 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[2]  ),    // data starts
     .dbusy      ( ba_dbusy[2]),
     .all_dbusy  ( all_dbusy  ),
+
+    .dbusy64    (ba_dbusy64[2]),
+    .all_dbusy64( all_dbusy64),
+
     .post_act   ( post_act[2]),
     .all_act    ( all_act    ),
     .dok        ( ba_dok[2]  ),
@@ -261,6 +280,10 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[3]  ),    // data starts
     .dbusy      ( ba_dbusy[3]),
     .all_dbusy  ( all_dbusy  ),
+
+    .dbusy64    (ba_dbusy64[3]),
+    .all_dbusy64( all_dbusy64),
+
     .post_act   ( post_act[3]),
     .all_act    ( all_act    ),
     .dok        ( ba_dok[3]  ),

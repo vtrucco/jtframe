@@ -21,9 +21,11 @@ module jtframe_sdram64_bank #(
     output              rdy,
     input               set_prech,
 
-    output              dbusy,
+    output              dbusy,      // DQ bus busy (read values only)
+    output              dbusy64,    // DQ bus busy (the full four clock cycles)
     output              dqm_busy,   // DQM lines are used
     input               all_dbusy,
+    input               all_dbusy64,
     input               all_dqm,
 
     output              post_act, // cycles banned for activate (tRRD)
@@ -72,6 +74,7 @@ reg  [ROW-1:0] row;
 wire [ROW-1:0] addr_row;
 reg  [STW-1:0] st, next_st, rot_st;
 reg  [    1:0] last_act;
+wire           rd_wr;
 
 reg            adv, do_prech, do_act, do_read;
 
@@ -79,17 +82,19 @@ reg            adv, do_prech, do_act, do_read;
 assign ack      = st[READ],
        dst      = st[DST],
        dbusy    = |{st[ (BALEN==16? READ+1 : RDY-3):READ], do_read},
+       dbusy64  = |{st[RDY:READ], do_read},
        post_act = |last_act,
        dok      = |st[RDY:DST],
        rdy      = st[RDY],
        dqm_busy = |{st[RDY-2:READ]},
-       addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW];
+       addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW],
+       rd_wr    = rd | wr;
 
 always @(*) begin
     adv=0;
     rot_st  = { st[STW-2:0], st[STW-1] };
     next_st = st;
-    if( st[IDLE] && rd && bg ) begin
+    if( st[IDLE] && rd_wr && bg ) begin
         if(do_prech) next_st = rot_st;
         if(do_act  ) next_st = 1<<ACT;
         if(do_read ) next_st = 1<<READ;
@@ -105,13 +110,13 @@ always @(*) begin
     do_act   = 0;
     do_read  = 0;
     br       = 0;
-    if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd ) begin
+    if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd_wr ) begin
         br = 1;
-        if( st[PRE_RD] & all_dbusy ) br = 0; // Do not try to request
+        if( st[PRE_RD] & ((all_dbusy&rd) | (all_dbusy64&wr)) ) br = 0; // Do not try to request
         if( !prechd ) begin // not precharge, there is an address in the row
             if( bg ) begin
                 do_prech = row != addr_row; // not a good address
-                do_read  = ~do_prech & ~all_dbusy & ~all_dqm; // good address
+                do_read  = ~do_prech & ~all_dbusy & (~all_dbusy64 | rd) & ~all_dqm; // good address
             end
         end else if(bg) begin
             do_act = ~all_act & ~all_dqm;
@@ -123,7 +128,7 @@ end
 always @(*) begin
     cmd = do_prech ? CMD_PRECHARGE : (
           do_act   ? CMD_ACTIVE    : (
-          do_read  ? CMD_READ      : CMD_NOP ));
+          do_read  ? (rd ? CMD_READ : CMD_WRITE ) : CMD_NOP ));
     sdram_a = do_read ? { 3'b0, // no precharge
                                addr[AW-1], addr[8:0] } :
              (do_act ? addr_row : 13'd0);
