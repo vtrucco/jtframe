@@ -46,29 +46,52 @@ module jtframe_sdram64 #(
     output              sdram_cke       // SDRAM Chip Select
 );
 
+//                             /CS /RAS /CAS /WE
+localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
+           CMD_REFRESH     = 4'b0___0____0____1, // 1
+           CMD_PRECHARGE   = 4'b0___0____1____0, // 2
+           CMD_ACTIVE      = 4'b0___0____1____1, // 3
+           CMD_WRITE       = 4'b0___1____0____0, // 4
+           CMD_READ        = 4'b0___1____0____1, // 5
+           CMD_STOP        = 4'b0___1____1____0, // 6 Burst terminate
+           CMD_NOP         = 4'b0___1____1____1, // 7
+           CMD_INHIBIT     = 4'b1___0____0____0; // 8
+
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd,
-            ba_dst, ba_dbusy, ba_rdy, init_cmd;
-wire        init, all_dbusy;
+            ba_dst, ba_dbusy, ba_rdy, init_cmd, post_act,
+            next_cmd;
+wire        init, all_dbusy, all_act;
 reg   [3:0] bg, cmd, dbusy;
 reg   [1:0] prio;    // this could be a lfsr...
-wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a;
-
+wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a;
+wire [ 1:0] next_ba;
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = sdram_a[12:11];
 assign sdram_cke = 1;
 assign all_dbusy = |dbusy;
+assign all_act   = |post_act;
+
+assign {next_ba, next_cmd, next_a } =
+                        init ? { 2'd0, init_cmd, init_a } : (
+                       bg[0] ? { 2'd0, bx0_cmd, bx0_a } : (
+                       bg[1] ? { 2'd1, bx1_cmd, bx1_a } : (
+                       bg[2] ? { 2'd2, bx2_cmd, bx2_a } : (
+                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {2'd0, 4'd7, 13'd0} ))));
 
 always @(posedge clk) begin
     dst   <= ba_dst;
     rdy   <= ba_rdy;
     dbusy <= ba_dbusy;
     dout  <= sdram_dq;
-    { sdram_ba, cmd, sdram_a } <=
-                        init ? { 2'd0, init_cmd, init_a } : (
-                       bg[0] ? { 2'd0, bx0_cmd, bx0_a } : (
-                       bg[1] ? { 2'd1, bx1_cmd, bx1_a } : (
-                       bg[2] ? { 2'd2, bx2_cmd, bx2_a } : (
-                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {4'd7, 13'd0} ))));
+    cmd   <= next_cmd;
+
+    sdram_ba      <= next_ba;
+    sdram_a[10:0] <= next_a[10:0];
+
+    if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE || next_cmd==CMD_READ || next_cmd==CMD_WRITE )
+        sdram_a[12:11] <= next_a[12:11];
+    else
+        sdram_a[12:11] <= 0;
 end
 
 always @(posedge clk, posedge rst) begin
@@ -106,6 +129,8 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[0]  ),    // data starts
     .dbusy      ( ba_dbusy[0]),
     .all_dbusy  ( all_dbusy  ),
+    .post_act   ( post_act[0]),
+    .all_act    ( all_act    ),
     .dok        ( dok[0]     ),
     .rdy        ( ba_rdy[0]  ),
 
@@ -127,7 +152,7 @@ jtframe_sdram64_bank #(
     .clk        ( clk        ),
 
     // requests
-    .addr       ( ba0_addr   ),
+    .addr       ( ba1_addr   ),
     .rd         ( rd[1]      ),
     .wr         ( wr[1]      ),
 
@@ -135,6 +160,8 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[1]  ),    // data starts
     .dbusy      ( ba_dbusy[1]),
     .all_dbusy  ( all_dbusy  ),
+    .post_act   ( post_act[1]),
+    .all_act    ( all_act    ),
     .dok        ( dok[1]     ),
     .rdy        ( ba_rdy[1]  ),
 
@@ -149,6 +176,7 @@ jtframe_sdram64_bank #(
 assign br[3:2]=0;
 assign dok[3:2]=0;
 assign ba_dbusy[3:2]=0;
+assign post_act[3:2]=0;
 assign bx3_cmd = 4'd7;
 assign bx3_a = 0;
 

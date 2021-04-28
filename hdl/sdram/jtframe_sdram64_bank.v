@@ -17,10 +17,14 @@ module jtframe_sdram64_bank #(
 
     output              ack,
     output              dst,    // data starts
-    output              dbusy,
-    input               all_dbusy,
     output              dok,    // data ok
     output              rdy,
+
+    output              dbusy,
+    input               all_dbusy,
+
+    output              post_act, // cycles banned for activate (tRRD)
+    input               all_act,
 
     // SDRAM interface
     output reg          br, // bus request
@@ -64,15 +68,17 @@ reg            prechd;
 reg  [ROW-1:0] row;
 wire [ROW-1:0] addr_row;
 reg  [STW-1:0] st, next_st, rot_st;
+reg  [    1:0] last_act;
 
 reg            adv, do_prech, do_act, do_read;
 
 // SDRAM pins
-assign ack   = st[READ],
-       dst   = st[DST],
-       dbusy = |{st[RDY-1:READ], do_read},
-       dok   = |st[RDY:DST],
-       rdy   = st[RDY];
+assign ack      = st[READ],
+       dst      = st[DST],
+       dbusy    = |{st[RDY-1:READ], do_read},
+       post_act = |last_act,
+       dok      = |st[RDY:DST],
+       rdy      = st[RDY];
 assign addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW];
 
 always @(*) begin
@@ -95,13 +101,14 @@ always @(*) begin
     br       = 0;
     if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd ) begin
         br = 1;
+        if( st[PRE_RD] & all_dbusy ) br = 0; // Do not try to request
         if( !prechd ) begin // not precharge, there is an address in the row
             if( bg ) begin
                 do_prech = row != addr_row; // not a good address
                 do_read  = ~do_prech & ~all_dbusy; // good address
             end
         end else if(bg) begin
-            do_act = 1;
+            do_act = !all_act;
         end
     end
 end
@@ -121,12 +128,16 @@ always @(posedge clk, posedge rst) begin
         prechd   <= 1;
         row      <= 0;
         st       <= 1; // IDLE
+        last_act <= 0;
     end else begin
-        st  <= next_st;
+        st       <= next_st;
+        last_act <= { do_act, last_act[1] };
+
         if( do_act ) begin
             row     <= addr_row;
             prechd  <= 0;
         end
+
         if( do_prech ) prechd <= 1;
     end
 end
