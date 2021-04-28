@@ -77,7 +77,7 @@ reg            adv, do_prech, do_act, do_read;
 // SDRAM pins
 assign ack      = st[READ],
        dst      = st[DST],
-       dbusy    = |{st[RDY-1:READ], do_read},
+       dbusy    = |{st[RDY-3:READ], do_read},
        post_act = |last_act,
        dok      = |st[RDY:DST],
        rdy      = st[RDY],

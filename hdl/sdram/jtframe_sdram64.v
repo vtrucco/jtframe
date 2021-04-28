@@ -62,9 +62,9 @@ wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd,
             next_cmd, dqm_busy;
 wire        init, all_dbusy, all_act;
 reg   [3:0] bg, cmd, dbusy;
-reg   [1:0] prio;    // this could be a lfsr...
+reg  [14:0] prio_lfsr;
 wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a;
-wire [ 1:0] next_ba;
+wire [ 1:0] next_ba, prio;
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = sdram_a[12:11];
 assign sdram_cke = 1;
@@ -78,6 +78,8 @@ assign {next_ba, next_cmd, next_a } =
                        bg[1] ? { 2'd1, bx1_cmd, bx1_a } : (
                        bg[2] ? { 2'd2, bx2_cmd, bx2_a } : (
                        bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {2'd0, 4'd7, 13'd0} ))));
+
+assign prio = prio_lfsr[1:0];
 
 always @(posedge clk) begin
     dst   <= ba_dst;
@@ -97,9 +99,9 @@ end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        prio <= 0;
+        prio_lfsr <= 1;
     end else begin
-        prio <= prio + 2'd1;
+        prio_lfsr <= { prio_lfsr[0]^prio_lfsr[14], prio_lfsr[14:1] };
     end
 end
 
