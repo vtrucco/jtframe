@@ -18,6 +18,8 @@ fi
 SDRAM_SHIFT=0
 DUMP=${MACRO}DUMP
 
+EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_BANKS"
+
 while [ $# -gt 0 ]; do
     case $1 in
         -dump) DUMP=${MACRO}DUMP;;
@@ -34,22 +36,6 @@ while [ $# -gt 0 ]; do
             EXTRA="$EXTRA ${MACRO}WRITE_ENABLE=0";;
         -norefresh)
             EXTRA="$EXTRA ${MACRO}NOREFRESH";;
-        -repack)
-            EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_REPACK";;
-        -write)
-            shift
-            EXTRA="$EXTRA ${MACRO}WRITE_CHANCE=$1";;
-        -idle)
-            shift
-            EXTRA="$EXTRA ${PARAM}test.IDLE=$1";;
-        -1banks|-1bank)
-            EXTRA="$EXTRA ${PARAM}test.BANK3=0 ${PARAM}test.BANK2=0 ${PARAM}test.BANK1=0";;
-        -2banks)
-            EXTRA="$EXTRA ${PARAM}test.BANK3=0 ${PARAM}test.BANK2=0";;
-        -3banks)
-            EXTRA="$EXTRA ${PARAM}test.BANK3=0";;
-        -4banks)
-            ;;
         -len)
             shift
             if [[ ! $1 =~ [0123] ]]; then
@@ -62,9 +48,6 @@ while [ $# -gt 0 ]; do
             fi
             EXTRA="$EXTRA ${PARAM}test.BA${1}_LEN=$2"
             shift;;
-        -maxa)
-            shift
-            EXTRA="$EXTRA ${PARAM}test.MAXA=$1";;
         -bwait)
             shift
             EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_BWAIT=$1";;
@@ -111,10 +94,9 @@ EOF
     shift
 done
 
-make || exit $?
-
 echo Extra arguments: "$EXTRA"
-$SIM test.v ../../hdl/sdram/jtframe_sdram64*.v ../../hdl/ver/mt48lc16m16a2.v \
+HDL=../../../hdl
+$SIM test.v $HDL/sdram/jtframe_{sdram64*,dwnld}.v $HDL/ver/mt48lc16m16a2.v \
     -o sim ${MACRO}JTFRAME_SDRAM_test.BANKS ${MACRO}SIMULATION $DUMP $EXTRA \
     ${MACRO}SDRAM_SHIFT=$SDRAM_SHIFT \
 && sim $EXTRA2

@@ -47,7 +47,7 @@ module jtframe_sdram64_bank #(
 
 localparam ROW=13,
            COW= AW==22 ? 9 : 10, // 9 for 32MB SDRAM, 10 for 64MB
-           STW= 15-(HF?0:2)-(BALEN==64 ? 0 : (BALEN==32?2:3));
+           STW= 15-(HF?0:2)-((BALEN==64||AUTOPRECH) ? 0 : (BALEN==32?2:3));
 
 // states
 localparam IDLE    = 0,
@@ -84,7 +84,7 @@ reg            adv, do_prech, do_act, do_read;
 assign ack      = st[READ],
        dst      = st[DST],
        dbusy    = |{st[ (BALEN==16? READ+1 : RDY-3):READ], do_read},
-       dbusy64  = |{st[RDY:READ], do_read},
+       dbusy64  = |{st[DST+3:READ], do_read},
        post_act = |last_act,
        dok      = |st[RDY:DST],
        rdy      = st[RDY] | (st[READ] & wr),
@@ -105,7 +105,7 @@ always @(*) begin
         ( st[PRE_ACT] && bg && !all_dqm && !all_act) ||
         ( !st[IDLE] && !st[PRE_ACT] && !st[PRE_RD] ) )
           next_st = rot_st;
-    if( st[READ] && wr )
+    if( st[READ] && wr && !AUTOPRECH)
         next_st <= 1; // writes finish earlier
 end
 

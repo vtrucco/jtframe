@@ -89,7 +89,7 @@ wire [ 1:0] next_ba, prio;
 wire        pre_dst, pre_dok, pre_ack;
 wire [12:0] pre_a;
 wire [ 3:0] pre_cmd;
-reg         prog_rst;
+reg         prog_rst, prog_bg;
 
 reg         rfsh_bg;
 reg  [15:0] dq_pad;
@@ -196,7 +196,7 @@ jtframe_sdram64_bank #(
     .dbusy      (            ), // prog works alone
     .all_dbusy  ( 1'd0       ),
 
-    .dbusy64    (            ),
+    .dbusy64    ( prog_busy  ),
     .all_dbusy64( 1'd0       ),
 
     .post_act   (            ),
@@ -211,7 +211,7 @@ jtframe_sdram64_bank #(
 
     // SDRAM interface
     .br         ( pre_br     ), // bus request
-    .bg         ( pre_bg     ), // bus grant
+    .bg         ( prog_bg    ), // bus grant
 
     .sdram_a    ( pre_a      ),
     .cmd        ( pre_cmd    )
@@ -375,10 +375,13 @@ jtframe_sdram64_bank #(
 );
 
 always @(*) begin
-    rfsh_bg = br==0 && !all_dbusy && !all_dqm && rfsh_br && !init && !all_act && rd==0 && wr==0;
-    if( init || rfshing || prog_en )
+    rfsh_bg = br==0 && !all_dbusy && !all_dqm && rfsh_br
+           && !init && !all_act && rd==0 && wr==0
+           && !(prog_en && (prog_rd || prog_wr )) && !prog_busy;
+    if( init || rfshing || prog_en ) begin
         bg=0;
-    else
+        prog_bg = pre_br & !rfshing;
+    end else
     case( {br, prio[1:0]} )
         6'b0000_00: bg=4'b0000;
         6'b0000_01: bg=4'b0000;

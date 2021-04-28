@@ -1,6 +1,7 @@
 *.log
 sim
 *.lxt
+*.bin
 *.o
 *.hex
 history
