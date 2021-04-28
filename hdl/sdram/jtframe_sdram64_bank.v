@@ -4,7 +4,9 @@ module jtframe_sdram64_bank #(
     parameter AW=22,
               HF=1,     // 1 for HF operation (idle cycles), 0 for LF operation
                         // HF operation starts at 66.6MHz (1/15ns)
-              SHIFTED=0,
+              SHIFTED      =0,
+              AUTOPRECH    =0,
+              PRECHARGE_ALL=0,
               BALEN=64 // 16, 32 or 64 bits
 )(
     input               rst,
@@ -49,7 +51,7 @@ localparam ROW=13,
 
 // states
 localparam IDLE    = 0,
-           // PRECHARGE 1+2(1)
+           // AUTOPRECH 1+2(1)
            PRE_ACT = HF ? 3:2,
            ACT     = PRE_ACT+1,
            PRE_RD  = PRE_ACT + (HF ? 3:2),
@@ -131,14 +133,15 @@ always @(*) begin
     cmd = do_prech ? CMD_PRECHARGE : (
           do_act   ? CMD_ACTIVE    : (
           do_read  ? (rd ? CMD_READ : CMD_WRITE ) : CMD_NOP ));
-    sdram_a = do_read ? { 3'b0, // no precharge
-                               addr[AW-1], addr[8:0] } :
-             (do_act ? addr_row : 13'd0);
+    sdram_a = do_read ? { 2'b0,
+                          AUTOPRECH,
+                          addr[AW-1], addr[8:0] } :
+             (do_act ? addr_row : {2'b0, PRECHARGE_ALL, 10'd0});
 end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        prechd   <= 1;
+        prechd   <= 0;
         row      <= 0;
         st       <= 1; // IDLE
         last_act <= 0;
@@ -151,7 +154,7 @@ always @(posedge clk, posedge rst) begin
             prechd  <= 0;
         end
 
-        if( do_prech || set_prech ) prechd <= 1;
+        if( do_prech || set_prech || (do_read && AUTOPRECH)) prechd <= 1;
     end
 end
 

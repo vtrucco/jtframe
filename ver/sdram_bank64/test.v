@@ -209,6 +209,8 @@ jtframe_sdram64 #(
     .dok        ( dok           ),
     .ack        ( ack           ),
 
+    .prog_en    ( 1'd0          ),
+
     // SDRAM pins
     .sdram_dq   ( sdram_dq      ),
     .sdram_a    ( sdram_a       ),

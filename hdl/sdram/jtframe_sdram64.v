@@ -4,11 +4,12 @@ module jtframe_sdram64 #(
     parameter AW=22,
               HF=1,     // 1 for HF operation (idle cycles), 0 for LF operation
                         // HF operation starts at 66.6MHz (1/15ns)
-              SHIFTED=0,
-              BA0_LEN=64, // 1=16 bits, 2=32 bits, 4=64 bits
-              BA1_LEN=64,
-              BA2_LEN=64,
-              BA3_LEN=64,
+              SHIFTED =0,
+              BA0_LEN =64, // 1=16 bits, 2=32 bits, 4=64 bits
+              BA1_LEN =64,
+              BA2_LEN =64,
+              BA3_LEN =64,
+              PROG_LEN=64,
               RFSHCNT=9  // 8192 every 64ms or 1 every 7.8us ~ 8.2 per line (15kHz)
 )(
     input               rst,
@@ -23,6 +24,18 @@ module jtframe_sdram64 #(
     input         [3:0] wr,
     input        [15:0] din,
     input        [ 1:0] din_m,  // write mask
+
+    // programming
+    input               prog_en,
+    input      [AW-1:0] prog_addr,
+    input               prog_rd,
+    input               prog_wr,
+    input        [15:0] prog_din,
+    input        [ 1:0] prog_din_m,
+    input        [ 1:0] prog_ba,
+    output  reg         prog_dst,
+    output  reg         prog_dok,
+    output  reg         prog_rdy,
 
     input               rfsh, // triggers a distributed cycle of RFSHCNT refresh commands
                               // This is meant to be the horizontal blanking of a 15kHz video
@@ -72,6 +85,12 @@ reg  [14:0] prio_lfsr;
 wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a;
 wire [ 1:0] next_ba, prio;
 
+// prog signals
+wire        pre_dst, pre_dok, pre_ack;
+wire [12:0] pre_a;
+wire [ 3:0] pre_cmd;
+reg         prog_rst;
+
 reg         rfsh_bg;
 reg  [15:0] dq_pad;
 
@@ -86,22 +105,32 @@ assign all_dqm     = |dqm_busy;
 assign {next_ba, next_cmd, next_a } =
                         init ? { 2'd0, init_cmd, init_a } : (
                       rfshing? { 2'd0, rfsh_cmd, rfsh_a } : (
+                      prog_en? { prog_ba, pre_cmd, pre_a} : (
                        bg[0] ? { 2'd0, bx0_cmd, bx0_a } : (
                        bg[1] ? { 2'd1, bx1_cmd, bx1_a } : (
                        bg[2] ? { 2'd2, bx2_cmd, bx2_a } : (
-                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {2'd0, 4'd7, 13'd0} )))));
+                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {2'd0, 4'd7, 13'd0} ))))));
 
 assign prio     = prio_lfsr[1:0];
 assign sdram_dq = dq_pad;
 
+always @(negedge clk) begin
+    prog_rst <= !prog_en & rst;
+end
+
 always @(posedge clk) begin
-    dst    <= ba_dst;
-    rdy    <= ba_rdy;
-    dbusy  <= ba_dbusy;
-    dbusy64<= ba_dbusy64;
-    dok    <= ba_dok;
-    dout   <= sdram_dq;
-    cmd    <= next_cmd;
+    dst      <= ba_dst;
+    rdy      <= ba_rdy;
+    dbusy    <= ba_dbusy;
+    dbusy64  <= ba_dbusy64;
+    dok      <= ba_dok;
+    dout     <= sdram_dq;
+    cmd      <= next_cmd;
+
+    // prog signals
+    prog_dst <= pre_dst;
+    prog_dok <= pre_dok;
+    prog_rdy <= pre_rdy;
 
     sdram_ba      <= next_ba;
     sdram_a[10:0] <= next_a[10:0];
@@ -142,6 +171,50 @@ jtframe_sdram64_rfsh #(.HF(HF),.RFSHCNT(RFSHCNT)) u_rfsh(
     .rfshing    ( rfshing   ),
     .cmd        ( rfsh_cmd  ),
     .sdram_a    ( rfsh_a    )
+);
+
+jtframe_sdram64_bank #(
+    .AW       ( AW      ),
+    .HF       ( HF      ),
+    .SHIFTED  ( SHIFTED ),
+    .BALEN    ( PROG_LEN),
+    // The programmer always precharges all banks
+    // at the beginning of the operation
+    .AUTOPRECH    ( 1   ),
+    .PRECHARGE_ALL( 1   )
+) u_prog(
+    .rst        ( prog_rst   ),
+    .clk        ( clk        ),
+
+    // requests
+    .addr       ( prog_addr  ),
+    .rd         ( prog_rd    ),
+    .wr         ( prog_wr    ),
+
+    .ack        ( pre_ack    ),
+    .dst        ( pre_dst    ),    // data starts
+    .dbusy      (            ), // prog works alone
+    .all_dbusy  ( 1'd0       ),
+
+    .dbusy64    (            ),
+    .all_dbusy64( 1'd0       ),
+
+    .post_act   (            ),
+    .all_act    ( 1'd0       ),
+
+    .dqm_busy   (            ),
+    .all_dqm    ( 1'd0       ),
+
+    .dok        ( pre_dok    ),
+    .rdy        ( pre_rdy    ),
+    .set_prech  ( 1'd0       ),
+
+    // SDRAM interface
+    .br         ( pre_br     ), // bus request
+    .bg         ( pre_bg     ), // bus grant
+
+    .sdram_a    ( pre_a      ),
+    .cmd        ( pre_cmd    )
 );
 
 jtframe_sdram64_bank #(
@@ -303,7 +376,7 @@ jtframe_sdram64_bank #(
 
 always @(*) begin
     rfsh_bg = br==0 && !all_dbusy && !all_dqm && rfsh_br && !init && !all_act && rd==0 && wr==0;
-    if( init || rfshing )
+    if( init || rfshing || prog_en )
         bg=0;
     else
     case( {br, prio[1:0]} )
