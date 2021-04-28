@@ -335,7 +335,7 @@ initial begin
     end
 end
 
-assign next_data = { sdram_dq, data_read[DW-1:16] };
+assign next_data = DW==16 ? sdram_dq : { sdram_dq, data_read[DW-1:(DW>16?16:0)] };
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
