@@ -93,13 +93,13 @@ always @(posedge clk, posedge rst) begin
             if( dst ) begin
                 cached_data1 <= cached_data0;
                 cached_addr1 <= cached_addr0;
-                cached_data0[15:0] <= din;
+                cached_data0[31:16] <= din;
                 cached_addr0 <= addr_req;
                 good <= { good[0], 1'b1 };
             end
             if( din_ok ) begin
-                cached_data0[15: 0] <= din;
-                cached_data0[31:16] <= cached_data0[15:0];
+                cached_data0[31:16] <= din;
+                cached_data0[15: 0] <= cached_data0[31:16];
                 if( !LATCH[0] ) data_ok <= 1;
             end
         end

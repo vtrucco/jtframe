@@ -2,7 +2,7 @@
 
 module test;
 
-parameter HF=1, SHIFTED=1,PERIOD=20;
+parameter HF=1, SHIFTED=0,PERIOD=20;
 
 reg         rst, clk, clk_sdram;
 wire [15:0] data_read;
@@ -42,7 +42,8 @@ initial begin
     clk=0;
     forever begin
         #(PERIOD/2) clk=~clk;
-        #(`SDRAM_SHIFT) clk_sdram = clk;
+        //#(`SDRAM_SHIFT) clk_sdram = clk;
+        clk_sdram=clk;
     end
 end
 
@@ -65,7 +66,7 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
-reader #(.ROM("sdram_bank0.bin"),.DW(8)) u_read0(
+reader #(.ROM("sdram_bank0.hex"),.DW(8)) u_read0(
     .rst        ( rst        ),
     .clk        ( clk        ),
     .cs         ( slot0_cs   ),
@@ -74,7 +75,7 @@ reader #(.ROM("sdram_bank0.bin"),.DW(8)) u_read0(
     .data       ( slot0_dout )
 );
 
-reader #(.ROM("sdram_bank1.bin"),.DW(16)) u_read1(
+reader #(.ROM("sdram_bank1.hex"),.DW(16)) u_read1(
     .rst        ( rst        ),
     .clk        ( clk        ),
     .cs         ( slot1_cs   ),
@@ -83,7 +84,7 @@ reader #(.ROM("sdram_bank1.bin"),.DW(16)) u_read1(
     .data       ( slot1_dout )
 );
 
-reader #(.ROM("sdram_bank2.bin"),.DW(32)) u_read2(
+reader #(.ROM("sdram_bank2.hex"),.DW(32)) u_read2(
     .rst        ( rst        ),
     .clk        ( clk        ),
     .cs         ( slot2_cs   ),
@@ -213,7 +214,7 @@ end
 
 endmodule
 
-module reader #(parameter ROM="sdram_bank0.bin",DW=8)(
+module reader #(parameter ROM="sdram_bank0.hex",DW=8)(
     input             rst,
     input             clk,
     output reg        cs,
@@ -222,23 +223,17 @@ module reader #(parameter ROM="sdram_bank0.bin",DW=8)(
     input    [DW-1:0] data
 );
 
-reg [15:0] ref[0:2047];
+reg [15:0] ref_buf[0:1<<12];
 reg [11:0] pre_addr;
 reg   waiting;
 reg   error;
 reg [DW-1:0] exp;
+wire [DW-1:0] ref_addr=ref_buf[addr];
 
 integer file,rcnt;
 
 initial begin
-    file=$fopen(ROM,"rb");
-    if( file==0 ) begin
-        $display("ERROR: cannot open file %s (%m)",ROM);
-    end else begin
-        rcnt=$fread(ref, file );
-        $display("    read %d bytes for %m", rcnt);
-        $fclose(file);
-    end
+    $readmemh(ROM,ref_buf);
 end
 
 always @(*) begin
@@ -246,11 +241,11 @@ always @(*) begin
     if( DW==32 ) addr[0]=0;
     case(DW)
         8:  case(addr[0])
-                0: exp = ref[addr>>1];
-                1: exp = ref[addr>>1]>>8;
+                0: exp = ref_buf[addr>>1];
+                1: exp = ref_buf[addr>>1]>>8;
             endcase
-        16: exp=ref[addr];
-        32: exp={ ref[addr+1], ref[addr] };
+        16: exp=ref_buf[addr];
+        32: exp={ ref_buf[addr+1'd1], ref_buf[addr] };
     endcase
     case( DW )
         default: error=1;
@@ -274,7 +269,7 @@ always @(posedge clk, posedge rst) begin
         if( cs && ok ) begin
             if( error ) begin
                 $display("ERROR: expecting %X, got %X (%m)",exp, data);
-                $finish;
+                #40 $finish;
             end
             cs <= 0;
         end
