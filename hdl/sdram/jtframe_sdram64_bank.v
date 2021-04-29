@@ -1,3 +1,21 @@
+/*  This file is part of JTFRAME.
+    JTFRAME program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    JTFRAME program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
+
+    Author: Jose Tejada Gomez. Twitter: @topapate
+    Version: 1.0
+    Date: 29-4-2021 */
+
 // SDRAM is set to burst=2 (64 bits)
 
 module jtframe_sdram64_bank #(
@@ -7,7 +25,10 @@ module jtframe_sdram64_bank #(
               SHIFTED      =0,
               AUTOPRECH    =0,
               PRECHARGE_ALL=0,
-              BALEN=64 // 16, 32 or 64 bits
+              BALEN        =64, // 16, 32 or 64 bits
+              BURSTLEN     =64,
+              READONLY     =0   // set to 1 if ALL BANKS can only read
+                                // this will make dbusy64 match dbusy
 )(
     input               rst,
     input               clk,
@@ -46,8 +67,7 @@ module jtframe_sdram64_bank #(
 );
 
 localparam ROW=13,
-           COW= AW==22 ? 9 : 10, // 9 for 32MB SDRAM, 10 for 64MB
-           STW= 15-(HF?0:2)-((BALEN==64||AUTOPRECH) ? 0 : (BALEN==32?2:3));
+           COW= AW==22 ? 9 : 10; // 9 for 32MB SDRAM, 10 for 64MB
 
 // states
 localparam IDLE    = 0,
@@ -57,6 +77,9 @@ localparam IDLE    = 0,
            PRE_RD  = PRE_ACT + (HF ? 3:2),
            READ    = PRE_RD+1,
            DST     = READ + 2,
+           DTICKS  = BURSTLEN==64 ? 4 : (BURSTLEN==32?2:1),
+           STW= 11+BURSTLEN-(HF?0:2) -((AUTOPRECH||!READONLY) ? 0 : (BURSTLEN-BALEN)),
+           BUSY    = DST+(DTICKS-1),
            RDY     = DST + (BALEN==16 ? 0 : (BALEN==32? 1 : 3));
 
 //                             /CS /RAS /CAS /WE
@@ -84,7 +107,7 @@ reg            adv, do_prech, do_act, do_read;
 assign ack      = st[READ],
        dst      = st[DST],
        dbusy    = |{st[ (BALEN==16? READ+1 : RDY-3):READ], do_read},
-       dbusy64  = |{st[DST+3:READ], do_read},
+       dbusy64  = READONLY ? dbusy : |{st[BUSY:READ], do_read},
        post_act = |last_act,
        dok      = |st[RDY:DST],
        rdy      = st[RDY] | (st[READ] & wr),

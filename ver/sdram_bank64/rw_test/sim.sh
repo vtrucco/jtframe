@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "Running: sim.sh $*"
 
 SIM=iverilog
 #SIM=cvc64
@@ -115,8 +116,15 @@ make || exit $?
 
 echo Extra arguments: "$EXTRA"
 HDL=../../../hdl
+SIMEXE=$RANDOM_$RANDOM_$RANDOM.sim
 $SIM test.v $HDL/sdram/jtframe_sdram64*.v $HDL/ver/mt48lc16m16a2.v \
-    -o sim ${MACRO}JTFRAME_SDRAM_test.BANKS ${MACRO}SIMULATION $DUMP $EXTRA \
+    -o $SIMEXE ${MACRO}JTFRAME_SDRAM_test.BANKS ${MACRO}SIMULATION $DUMP $EXTRA \
     ${MACRO}SDRAM_SHIFT=$SDRAM_SHIFT \
-&& sim $EXTRA2
-rm -f sim
+&& $SIMEXE $EXTRA2 | tee $SIMEXE.log
+
+FAIL=1
+if grep PASSED $SIMEXE.log; then
+    FAIL=0
+fi
+rm -f $SIMEXE $SIMEXE.log
+exit $FAIL

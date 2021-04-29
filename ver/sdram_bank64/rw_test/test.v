@@ -71,7 +71,7 @@ assign rfsh_en = 1;
 `endif
 
 localparam HMAX=64_000/PERIOD;
-assign hblank = hcnt==0;
+assign hblank = hcnt==0 && rfsh_en;
 
 // horizontal line counter
 always @(posedge clk, posedge rst) begin
