@@ -16,8 +16,10 @@
     Version: 1.0
     Date: 29-4-2021 */
 
-module jtframe_sdram64_init #(parameter HF=1)
-(
+module jtframe_sdram64_init #(parameter
+    HF      =1,
+    BURSTLEN=64
+) (
     input               rst,
     input               clk,
 
@@ -78,7 +80,7 @@ always @(posedge clk, posedge rst) begin
                 end
                 3'd3: begin
                     init_cmd <= CMD_LOAD_MODE;
-                    sdram_a  <= 13'b00_1_00_010_0_010; // CAS Latency = 2, burst = 4
+                    sdram_a  <= {10'b00_1_00_010_0,BURSTLEN==64?3'b010:(BURSTLEN==32?3'b001:3'b000)}; // CAS Latency = 2, burst = 1-4
                     wait_cnt <= 14'd3;
                 end
                 3'd4: begin

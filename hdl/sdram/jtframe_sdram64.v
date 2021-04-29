@@ -83,6 +83,9 @@ module jtframe_sdram64 #(
     output              sdram_cke       // SDRAM Chip Select
 );
 
+localparam BURSTLEN=(BA0_LEN>32 || BA1_LEN>32 ||BA2_LEN>32 ||BA3_LEN>32) ? 64 :(
+                    (BA0_LEN>16 || BA1_LEN>16 ||BA2_LEN>16 ||BA3_LEN>16) ? 32 : 16);
+
 //                             /CS /RAS /CAS /WE
 localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_REFRESH     = 4'b0___0____0____1, // 1
@@ -170,7 +173,7 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
-jtframe_sdram64_init #(.HF(HF)) u_init(
+jtframe_sdram64_init #(.HF(HF),.BURSTLEN(BURSTLEN)) u_init(
     .rst        ( rst       ),
     .clk        ( clk       ),
 
@@ -196,6 +199,7 @@ jtframe_sdram64_bank #(
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
     .BALEN    ( PROG_LEN),
+    .BURSTLEN ( BURSTLEN),
     // The programmer always precharges all banks
     // at the beginning of the operation
     .AUTOPRECH    ( 1   ),
@@ -239,6 +243,7 @@ jtframe_sdram64_bank #(
     .AW       ( AW      ),
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
+    .BURSTLEN ( BURSTLEN),
     .BALEN    ( BA0_LEN )
 ) u_bank0(
     .rst        ( rst        ),
@@ -279,6 +284,7 @@ jtframe_sdram64_bank #(
     .AW       ( AW      ),
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
+    .BURSTLEN ( BURSTLEN),
     .BALEN    ( BA1_LEN )
 ) u_bank1(
     .rst        ( rst        ),
@@ -318,6 +324,7 @@ jtframe_sdram64_bank #(
     .AW       ( AW      ),
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
+    .BURSTLEN ( BURSTLEN),
     .BALEN    ( BA2_LEN )
 ) u_bank2(
     .rst        ( rst        ),
@@ -357,6 +364,7 @@ jtframe_sdram64_bank #(
     .AW       ( AW      ),
     .HF       ( HF      ),
     .SHIFTED  ( SHIFTED ),
+    .BURSTLEN ( BURSTLEN),
     .BALEN    ( BA3_LEN )
 ) u_bank3(
     .rst        ( rst        ),

@@ -78,7 +78,7 @@ localparam IDLE    = 0,
            READ    = PRE_RD+1,
            DST     = READ + 2,
            DTICKS  = BURSTLEN==64 ? 4 : (BURSTLEN==32?2:1),
-           STW= 11+BURSTLEN-(HF?0:2) -((AUTOPRECH||!READONLY) ? 0 : (BURSTLEN-BALEN)),
+           STW= 9+DTICKS-(HF?0:2) -((AUTOPRECH||!READONLY) ? 0 : (BURSTLEN-BALEN)),
            BUSY    = DST+(DTICKS-1),
            RDY     = DST + (BALEN==16 ? 0 : (BALEN==32? 1 : 3));
 
