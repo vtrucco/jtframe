@@ -24,7 +24,6 @@ module jtframe_rom_1slot #(parameter
     SDRAMW       = 22,
     SLOT0_DW     = 8,
     SLOT0_AW     = 8,
-    SLOT0_REPACK = 1,
     SLOT0_LATCH  = 0
 )(
     input               rst,
@@ -41,8 +40,9 @@ module jtframe_rom_1slot #(parameter
     input               sdram_ack,
     output              sdram_req,
     output [SDRAMW-1:0] sdram_addr,
+    input               data_dst,
     input               data_rdy,
-    input       [31:0]  data_read
+    input       [15:0]  data_read
 );
 
 reg slot0_sel;
@@ -58,7 +58,7 @@ always @(posedge clk, posedge rst ) begin
     end
 end
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(SLOT0_LATCH)) u_slot0(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.LATCH(SLOT0_LATCH)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
@@ -68,6 +68,7 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK
     .sdram_addr( sdram_addr             ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot0_dout             ),
     .req       ( sdram_req              ),
     .data_ok   ( slot0_ok               ),

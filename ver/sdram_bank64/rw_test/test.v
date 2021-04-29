@@ -70,10 +70,10 @@ assign rfsh_en = 0;
 assign rfsh_en = 1;
 `endif
 
+// horizontal line counter
 localparam HMAX=64_000/PERIOD;
 assign hblank = hcnt==0 && rfsh_en;
 
-// horizontal line counter
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         hcnt <= 0;

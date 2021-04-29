@@ -1,0 +1,9 @@
+#!/bin/bash
+
+make || exit $?
+HDL=../../../hdl
+
+iverilog $HDL/sdram/jtframe_{sdram64*,rom_1slot,romrq}.v test.v \
+    $HDL/ver/mt48lc16m16a2.v -s test -o xsim \
+    -DSIMULATION -DSDRAM_SHIFT=3 -DDUMP && xsim -lxt
+rm -f xsim
