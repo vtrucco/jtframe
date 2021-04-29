@@ -110,7 +110,7 @@ end
 // data_mux selects one of two cache registers
 // but if we are getting fresh data, it selects directly the new data
 // this saves one clock cycle at the expense of more LUTs
-wire [31:0] data_mux = (hit0 ? cached_data0 : cached_data1);
+wire [31:0] data_mux = hit0 ? cached_data0 : cached_data1;
 
 generate
     if( LATCH==0 ) begin : data_latch

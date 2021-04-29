@@ -2,7 +2,7 @@
 
 module test;
 
-parameter HF=1, SHIFTED=0,PERIOD=20;
+parameter HF=1, SHIFTED=1,PERIOD=20, SIMLEN=1;
 
 reg         rst, clk, clk_sdram;
 wire [15:0] data_read;
@@ -42,15 +42,14 @@ initial begin
     clk=0;
     forever begin
         #(PERIOD/2) clk=~clk;
-        //#(`SDRAM_SHIFT) clk_sdram = clk;
-        clk_sdram=clk;
+        #(`SDRAM_SHIFT) clk_sdram = clk;
     end
 end
 
 initial begin
     rst=1;
     #100 rst=0;
-    #1_000_000 $finish;
+    #(SIMLEN*1_000_000) $finish;
 end
 
 // horizontal line counter
