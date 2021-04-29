@@ -23,7 +23,7 @@ localparam IDLE1=BANK1 ? IDLE : 200,
            IDLE2=BANK2 ? IDLE : 200,
            IDLE3=BANK3 ? IDLE : 200;
 
-localparam HF = PERIOD<15.5;
+localparam HF = PERIOD<15.5; // 64 MHz
 
 reg        rst, clk, init_done, waiting;
 
