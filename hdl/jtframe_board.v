@@ -28,7 +28,8 @@ module jtframe_board #(parameter
     BA0_LEN                 = 32,
     BA1_LEN                 = 32,
     BA2_LEN                 = 32,
-    BA3_LEN                 = 32
+    BA3_LEN                 = 32,
+    PROG_LEN                = 32
 )(
     output              rst,
     output              rst_n,
@@ -385,11 +386,12 @@ jtframe_dip u_dip(
 // Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
 // clock is shifted or not.
 jtframe_sdram64 #(
-    .AW     ( SDRAMW  ),
-    .BA0_LEN( BA0_LEN ),
-    .BA1_LEN( BA1_LEN ),
-    .BA2_LEN( BA2_LEN ),
-    .BA3_LEN( BA3_LEN ),
+    .AW      ( SDRAMW   ),
+    .BA0_LEN ( BA0_LEN  ),
+    .BA1_LEN ( BA1_LEN  ),
+    .BA2_LEN ( BA2_LEN  ),
+    .BA3_LEN ( BA3_LEN  ),
+    .PROG_LEN( PROG_LEN ),
 `ifdef JTFRAME_SDRAM96
     .HF(1),
     .SHIFTED(0)

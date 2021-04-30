@@ -92,8 +92,13 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_STOP        = 4'b0___1____1____0, // 6 Burst terminate
            CMD_NOP         = 4'b0___1____1____1, // 7
            CMD_INHIBIT     = 4'b1___0____0____0; // 8
-
-
+/*
+`ifdef SIMULATION
+initial begin
+    $display("%m\n\tREAD=%2d\n\tDST=%2d\n\tRDY=%2d\n\tSTW=%2d",READ,DST,RDY,STW);
+end
+`endif
+*/
 reg            actd, prechd;
 reg  [ROW-1:0] row;
 wire [ROW-1:0] addr_row;
