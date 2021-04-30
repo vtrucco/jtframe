@@ -78,7 +78,7 @@ wire [SDRAMW-1:0] offset0 = SLOT0_OFFSET,
                   offset1 = SLOT1_OFFSET,
                   offset2 = SLOT2_OFFSET;
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(SLOT0_LATCH)) u_slot0(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.LATCH(SLOT0_LATCH)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'd0                   ),

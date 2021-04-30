@@ -170,7 +170,6 @@ wire       game_rst, game_service;
 wire [3:0] gfx_en;
 // SDRAM
 wire data_rdy, sdram_ack;
-wire refresh_en;
 
 // PLL's
 wire clk_vga_in, clk_vga, pll_locked;
@@ -335,8 +334,8 @@ u_frame(
     .prog_data  ( prog_data     ),
     .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
-    .prog_rdy   ( prog_dst      ),
-    .prog_rdy   ( prog_dok      ),
+    .prog_dst   ( prog_dst      ),
+    .prog_dok   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
 
     // ROM load
@@ -507,12 +506,11 @@ u_game(
     .prog_data  ( prog_data     ),
     .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
-    .prog_rdy   ( prog_dst      ),
-    .prog_rdy   ( prog_dok      ),
+    .prog_dst   ( prog_dst      ),
+    .prog_dok   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
 
 `else
-    .loop_rst   ( 1'b0          ),
     .sdram_req  ( ba_rd[0]      ),
     .sdram_addr ( ba0_addr      ),
     .data_dst   ( ba_dst[0] | prog_dst ),

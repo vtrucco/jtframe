@@ -485,8 +485,8 @@ u_frame(
     .prog_data  ( prog_data     ),
     .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
-    .prog_rdy   ( prog_dst      ),
-    .prog_rdy   ( prog_dok      ),
+    .prog_dst   ( prog_dst      ),
+    .prog_dok   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
 
     .sdram_dout     ( sdram_dout     ),
@@ -630,8 +630,7 @@ end
     // ROM load
     .downloading ( downloading    ),
     .dwnld_busy  ( dwnld_busy     ),
-    .data_read   ( sdram_dout     ),
-    .refresh_en  ( rfsh_en        ),
+    .data_read   ( sdram_dout     )
 
 `ifdef JTFRAME_SDRAM_BANKS
     // Bank 0: allows R/W
@@ -656,12 +655,11 @@ end
     .prog_data  ( prog_data     ),
     .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
-    .prog_rdy   ( prog_dst      ),
-    .prog_rdy   ( prog_dok      ),
+    .prog_dst   ( prog_dst      ),
+    .prog_dok   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
 
 `else
-    .loop_rst   ( 1'b0          ),
     .sdram_req  ( ba_rd[0]      ),
     .sdram_addr ( ba0_addr      ),
     .data_dst   ( ba_dst[0] | prog_dst ),

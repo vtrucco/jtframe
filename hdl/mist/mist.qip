@@ -18,7 +18,7 @@ set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) .
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtframe_credits.v     ]
 
 # Bank interleaving SDRAM controller
-set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) ../sdram/jtframe_sdram_bank.qip]
+set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) ../sdram/jtframe_sdram64.qip]
 
 # Constraints
 set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) mist_io.sdc                    ]

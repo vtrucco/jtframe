@@ -48,7 +48,7 @@ module jtframe_romrq #(parameter
     // <-> Consumer
     input [AW-1:0]      addr,
     input               addr_ok,    // signals that value in addr is valid
-    output              data_ok,    // strobe that signals that data is ready
+    output reg          data_ok,    // strobe that signals that data is ready
     output reg [DW-1:0] dout
 );
 
@@ -59,7 +59,7 @@ reg [AW-1:0] cached_addr1;
 reg [31:0]   cached_data0;
 reg [31:0]   cached_data1;
 reg [1:0]    good;
-reg          hit0, hit1, data_ok;
+reg          hit0, hit1;
 wire [AW-1:0] shifted;
 
 assign sdram_addr = offset + { {SDRAMW-AW{1'b0}}, addr_req>>(DW==8?1:0)};

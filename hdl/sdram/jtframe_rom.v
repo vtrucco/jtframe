@@ -44,7 +44,6 @@ module jtframe_rom #(parameter
 )(
     input               rst,
     input               clk,
-    input               vblank,
 
     input  [SLOT0_AW-1:0] slot0_addr, //  32 kB
     input  [SLOT1_AW-1:0] slot1_addr, // 160 kB, addressed as 8-bit words
@@ -89,15 +88,15 @@ module jtframe_rom #(parameter
     output              slot8_ok,
     // SDRAM controller interface
     input               sdram_ack,
+    input               sdram_dst,
     output  reg         sdram_req,
-    output  reg         refresh_en,
     output  reg [21:0]  sdram_addr,
+    input               data_dst,
     input               data_rdy,
-    input       [31:0]  data_read,
+    input       [15:0]  data_read,
 
     // deprecated
-    input               downloading,
-    input               loop_rst
+    input               downloading
 );
 
 
@@ -146,6 +145,7 @@ jtframe_romrq #(.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .sdram_addr( slot0_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot0_dout             ),
     .req       ( req[0]                 ),
     .data_ok   ( ok[0]                  ),
@@ -162,6 +162,7 @@ jtframe_romrq #(.AW(SLOT1_AW),.DW(SLOT1_DW)) u_slot1(
     .sdram_addr( slot1_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot1_dout             ),
     .req       ( req[1]                 ),
     .data_ok   ( ok[1]                  ),
@@ -178,6 +179,7 @@ jtframe_romrq #(.AW(SLOT2_AW),.DW(SLOT2_DW)) u_slot2(
     .sdram_addr( slot2_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot2_dout             ),
     .req       ( req[2]                 ),
     .data_ok   ( ok[2]                  ),
@@ -194,6 +196,7 @@ jtframe_romrq #(.AW(SLOT3_AW),.DW(SLOT3_DW)) u_slot3(
     .sdram_addr( slot3_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot3_dout             ),
     .req       ( req[3]                 ),
     .data_ok   ( ok[3]                  ),
@@ -210,6 +213,7 @@ jtframe_romrq #(.AW(SLOT4_AW),.DW(SLOT4_DW)) u_slot4(
     .sdram_addr( slot4_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot4_dout             ),
     .req       ( req[4]                 ),
     .data_ok   ( ok[4]                  ),
@@ -226,6 +230,7 @@ jtframe_romrq #(.AW(SLOT5_AW),.DW(SLOT5_DW)) u_slot5(
     .sdram_addr( slot5_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot5_dout             ),
     .req       ( req[5]                 ),
     .data_ok   ( ok[5]                  ),
@@ -242,6 +247,7 @@ jtframe_romrq #(.AW(SLOT6_AW),.DW(SLOT6_DW)) u_slot6(
     .sdram_addr( slot6_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot6_dout             ),
     .req       ( req[6]                 ),
     .data_ok   ( ok[6]                  ),
@@ -258,6 +264,7 @@ jtframe_romrq #(.AW(SLOT7_AW),.DW(SLOT7_DW)) u_slot7(
     .sdram_addr( slot7_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot7_dout             ),
     .req       ( req[7]                 ),
     .data_ok   ( ok[7]                  ),
@@ -275,6 +282,7 @@ jtframe_romrq #(.AW(SLOT8_AW),.DW(SLOT8_DW)) u_slot8(
     .sdram_addr( slot8_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot8_dout             ),
     .req       ( req[8]                 ),
     .data_ok   ( ok[8]                  ),
@@ -290,11 +298,9 @@ if( rst ) begin
     ready      <=  1'b0;
     sdram_req  <=  1'b0;
     data_sel   <=  9'd0;
-    refresh_en <=  1'b1;
 end else begin
     {ready, ready_cnt}  <= {ready_cnt, 1'b1};
     if( sdram_ack ) sdram_req <= 1'b0;
-    refresh_en <= 1'b0;
     // accept a new request
     if( data_sel==9'd0 || data_rdy ) begin
         sdram_req <= |active;
@@ -336,7 +342,7 @@ end else begin
                 sdram_addr <= slot8_addr_req;
                 data_sel[8] <= 1'b1;
             end
-            default: refresh_en <= vblank;
+            default: ;
         endcase
     end
 end

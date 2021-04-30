@@ -436,7 +436,7 @@ jtframe_sdram64 #(
 
     // Common signals
     .dout       ( sdram_dout    ),
-    .rfsh_en    ( ~LHBL         )
+    .rfsh       ( ~LHBL         )
 );
 
 wire [COLORW-1:0] pre2x_r, pre2x_g, pre2x_b;

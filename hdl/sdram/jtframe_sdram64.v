@@ -54,6 +54,7 @@ module jtframe_sdram64 #(
     output  reg         prog_dst,
     output  reg         prog_dok,
     output  reg         prog_rdy,
+    output  reg         prog_ack,
 
     input               rfsh, // triggers a distributed cycle of RFSHCNT refresh commands
                               // This is meant to be the horizontal blanking of a 15kHz video
@@ -152,6 +153,7 @@ always @(posedge clk) begin
     prog_dst <= pre_dst;
     prog_dok <= pre_dok;
     prog_rdy <= pre_rdy;
+    prog_ack <= pre_ack;
 
     sdram_ba      <= next_ba;
     sdram_a[10:0] <= next_a[10:0];

@@ -294,8 +294,8 @@ jtframe_board #(
     .prog_data  ( prog_data     ),
     .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
-    .prog_rdy   ( prog_dst      ),
-    .prog_rdy   ( prog_dok      ),
+    .prog_dst   ( prog_dst      ),
+    .prog_dok   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
     // SDRAM interface
     .SDRAM_DQ   ( SDRAM_DQ      ),
