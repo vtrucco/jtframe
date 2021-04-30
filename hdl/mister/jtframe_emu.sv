@@ -630,7 +630,7 @@ end
     // ROM load
     .downloading ( downloading    ),
     .dwnld_busy  ( dwnld_busy     ),
-    .data_read   ( sdram_dout     )
+    .data_read   ( sdram_dout     ),
 
 `ifdef JTFRAME_SDRAM_BANKS
     // Bank 0: allows R/W
@@ -658,7 +658,6 @@ end
     .prog_dst   ( prog_dst      ),
     .prog_dok   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
-
 `else
     .sdram_req  ( ba_rd[0]      ),
     .sdram_addr ( ba0_addr      ),
