@@ -54,10 +54,10 @@ module jtframe_board #(parameter
     input  [SDRAMW-1:0] ba3_addr,
     input         [3:0] ba_rd,
     input         [3:0] ba_wr,
-    input         [3:0] ba_ack,
-    input         [3:0] ba_rdy,
-    input         [3:0] ba_dst,
-    input         [3:0] ba_dok,
+    output        [3:0] ba_ack,
+    output        [3:0] ba_rdy,
+    output        [3:0] ba_dst,
+    output        [3:0] ba_dok,
     input        [15:0] ba0_din,
     input        [ 1:0] ba0_din_m,  // write mask
 
@@ -69,7 +69,7 @@ module jtframe_board #(parameter
     input        [ 1:0] prog_ba,
     input               prog_we,
     input               prog_rd,
-    input               prog_dok,
+    output              prog_dok,
     output              prog_rdy,
     output              prog_dst,
     output              prog_ack,
