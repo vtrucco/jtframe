@@ -159,7 +159,7 @@ always @(posedge clk) begin
     sdram_ba      <= next_ba;
     sdram_a[10:0] <= next_a[10:0];
 
-    dq_pad <= next_cmd == CMD_WRITE ? din : 16'hzzzz;
+    dq_pad <= next_cmd == CMD_WRITE ? (prog_en ? prog_din : din) : 16'hzzzz;
     if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE || next_cmd==CMD_READ )
         sdram_a[12:11] <= next_a[12:11];
     else if( next_cmd==CMD_WRITE )
