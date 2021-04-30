@@ -108,7 +108,7 @@ wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a;
 wire [ 1:0] next_ba, prio;
 
 // prog signals
-wire        pre_dst, pre_dok, pre_ack;
+wire        pre_dst, pre_dok, pre_ack, pre_rdy;
 wire [12:0] pre_a;
 wire [ 3:0] pre_cmd;
 reg         prog_rst, prog_bg;
@@ -162,7 +162,7 @@ always @(posedge clk) begin
     if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE || next_cmd==CMD_READ )
         sdram_a[12:11] <= next_a[12:11];
     else if( next_cmd==CMD_WRITE )
-        sdram_a[12:11] <= din_m;
+        sdram_a[12:11] <= prog_en ? prog_din_m : din_m;
     else
         sdram_a[12:11] <= 0;
 end

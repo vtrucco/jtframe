@@ -164,7 +164,7 @@ end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        prechd   <= 0;
+        prechd   <= 1;
         row      <= 0;
         st       <= 1; // IDLE
         last_act <= 0;

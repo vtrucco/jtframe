@@ -216,15 +216,15 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
     reg                           Pc_b0, Pc_b1, Pc_b2, Pc_b3;       // Bank Precharge
 
     reg                   [1 : 0] Bank_precharge       [0 : 3];     // Precharge Command
-    reg                           A10_precharge        [0 : 3];     // Addr[10] = 1 (All banks)
-    reg                           Auto_precharge       [0 : 3];     // RW Auto Precharge (Bank)
-    reg                           Read_precharge       [0 : 3];     // R  Auto Precharge
-    reg                           Write_precharge      [0 : 3];     //  W Auto Precharge
-    reg                           RW_interrupt_read    [0 : 3];     // RW Interrupt Read with Auto Precharge
-    reg                           RW_interrupt_write   [0 : 3];     // RW Interrupt Write with Auto Precharge
+    reg                   [3 : 0] A10_precharge;                    // Addr[10] = 1 (All banks)
+    reg                   [3 : 0] Auto_precharge;                   // RW Auto Precharge (Bank)
+    reg                   [3 : 0] Read_precharge;                   // R  Auto Precharge
+    reg                   [3 : 0] Write_precharge;                  //  W Auto Precharge
+    reg                   [3 : 0] RW_interrupt_read;                // RW Interrupt Read with Auto Precharge
+    reg                   [3 : 0] RW_interrupt_write;               // RW Interrupt Write with Auto Precharge
     reg                   [1 : 0] RW_interrupt_bank;                // RW Interrupt Bank
-    integer                       RW_interrupt_counter [0 : 3];     // RW Interrupt Counter
-    integer                       Count_precharge      [0 : 3];     // RW Auto Precharge Counter
+    integer               [3 : 0] RW_interrupt_counter;             // RW Interrupt Counter
+    integer               [3 : 0] Count_precharge;                  // RW Auto Precharge Counter
 
     reg                           Data_in_enable;
     reg                           Data_out_enable;
