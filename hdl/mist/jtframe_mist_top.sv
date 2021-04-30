@@ -142,18 +142,14 @@ wire [15:0]   prog_data;
 wire [ 7:0]   prog_data8;
 `endif
 wire [ 1:0]   prog_mask, prog_ba;
-wire          prog_we, prog_rd, prog_rdy, prog_ack;
+wire          prog_we, prog_rd, prog_rdy, prog_ack, prog_dst, prog_dok;
 
 // ROM access from game
 wire [SDRAMW-1:0] ba0_addr, ba1_addr, ba2_addr, ba3_addr;
-wire        ba0_rd, ba0_wr, ba0_rdy, ba0_ack;
+wire [ 3:0] ba_rd, ba_wr, ba_rdy, ba_ack, ba_dst, ba_dok;
 wire [15:0] ba0_din;
 wire [ 1:0] ba0_din_m;
-wire        ba1_rd, ba1_rdy, ba1_ack;
-wire        ba2_rd, ba2_rdy, ba2_ack;
-wire        ba3_rd, ba3_rdy, ba3_ack;
-wire        sdram_req, rfsh_en;
-wire [31:0] sdram_dout;
+wire [15:0] sdram_dout;
 
 `ifndef COLORW
 `define COLORW 4
@@ -186,6 +182,8 @@ assign snd_right = snd_left;
 
 `ifndef JTFRAME_SDRAM_BANKS
 assign prog_data = {2{prog_data8}};
+assign ba_rd[3:1] = 0;
+assign ba_wr      = 0;
 `endif
 
 `ifndef JTFRAME_PLL
@@ -316,31 +314,30 @@ u_frame(
 
     // ROM access from game
     // Bank 0: allows R/W
-    .ba0_addr       ( ba0_addr       ),
-    .ba0_rd         ( ba0_rd         ),
-    .ba0_wr         ( ba0_wr         ),
-    .ba0_din        ( ba0_din        ),
-    .ba0_din_m      ( ba0_din_m      ),  // write mask
-    .ba0_rdy        ( ba0_rdy        ),
-    .ba0_ack        ( ba0_ack        ),
+    .ba0_addr   ( ba0_addr      ),
+    .ba1_addr   ( ba1_addr      ),
+    .ba2_addr   ( ba2_addr      ),
+    .ba3_addr   ( ba3_addr      ),
+    .ba_rd      ( ba_rd         ),
+    .ba_wr      ( ba_wr         ),
+    .ba_dst     ( ba_dst        ),
+    .ba_dok     ( ba_dok        ),
+    .ba_rdy     ( ba_rdy        ),
+    .ba_ack     ( ba_ack        ),
+    .ba0_din    ( ba0_din       ),
+    .ba0_din_m  ( ba0_din_m     ),  // write mask
 
-    // Bank 1: Read only
-    .ba1_addr       ( ba1_addr       ),
-    .ba1_rd         ( ba1_rd         ),
-    .ba1_rdy        ( ba1_rdy        ),
-    .ba1_ack        ( ba1_ack        ),
-
-    // Bank 2: Read only
-    .ba2_addr       ( ba2_addr       ),
-    .ba2_rd         ( ba2_rd         ),
-    .ba2_rdy        ( ba2_rdy        ),
-    .ba2_ack        ( ba2_ack        ),
-
-    // Bank 3: Read only
-    .ba3_addr       ( ba3_addr       ),
-    .ba3_rd         ( ba3_rd         ),
-    .ba3_rdy        ( ba3_rdy        ),
-    .ba3_ack        ( ba3_ack        ),
+    // ROM-load interface
+    .prog_addr  ( prog_addr     ),
+    .prog_ba    ( prog_ba       ),
+    .prog_rd    ( prog_rd       ),
+    .prog_we    ( prog_we       ),
+    .prog_data  ( prog_data     ),
+    .prog_mask  ( prog_mask     ),
+    .prog_rdy   ( prog_rdy      ),
+    .prog_rdy   ( prog_dst      ),
+    .prog_rdy   ( prog_dok      ),
+    .prog_ack   ( prog_ack      ),
 
     // ROM load
     .ioctl_addr     ( ioctl_addr     ),
@@ -349,19 +346,9 @@ u_frame(
     .ioctl_wr       ( ioctl_wr       ),
     .ioctl_ram      ( ioctl_ram      ),
 
-    .prog_addr      ( prog_addr      ),
-    .prog_data      ( prog_data      ),
-    .prog_rd        ( prog_rd        ),
-    .prog_we        ( prog_we        ),
-    .prog_mask      ( prog_mask      ),
-    .prog_ba        ( prog_ba        ),
-    .prog_rdy       ( prog_rdy       ),
-    .prog_ack       ( prog_ack       ),
-
     .downloading    ( downloading    ),
     .dwnld_busy     ( dwnld_busy     ),
 
-    .rfsh_en        ( rfsh_en        ),
     .sdram_dout     ( sdram_dout     ),
 //////////// board
     .rst            ( rst            ),
@@ -496,53 +483,54 @@ u_game(
     .downloading ( downloading    ),
     .dwnld_busy  ( dwnld_busy     ),
     .data_read   ( sdram_dout     ),
-    .refresh_en  ( rfsh_en        ),
 
-    `ifdef JTFRAME_SDRAM_BANKS
+`ifdef JTFRAME_SDRAM_BANKS
     // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
-    .ba0_rd     ( ba0_rd        ),
-    .ba0_wr     ( ba0_wr        ),
+    .ba1_addr   ( ba1_addr      ),
+    .ba2_addr   ( ba2_addr      ),
+    .ba3_addr   ( ba3_addr      ),
+    .ba_rd      ( ba_rd         ),
+    .ba_wr      ( ba_wr         ),
+    .ba_dst     ( ba_dst        ),
+    .ba_dok     ( ba_dok        ),
+    .ba_rdy     ( ba_rdy        ),
+    .ba_ack     ( ba_ack        ),
     .ba0_din    ( ba0_din       ),
     .ba0_din_m  ( ba0_din_m     ),  // write mask
-    .ba0_rdy    ( ba0_rdy       ),
-    .ba0_ack    ( ba0_ack       ),
-
-    // Bank 1: Read only
-    .ba1_addr   ( ba1_addr      ),
-    .ba1_rd     ( ba1_rd        ),
-    .ba1_rdy    ( ba1_rdy       ),
-    .ba1_ack    ( ba1_ack       ),
-
-    // Bank 2: Read only
-    .ba2_addr   ( ba2_addr      ),
-    .ba2_rd     ( ba2_rd        ),
-    .ba2_rdy    ( ba2_rdy       ),
-    .ba2_ack    ( ba2_ack       ),
-
-    // Bank 3: Read only
-    .ba3_addr   ( ba3_addr      ),
-    .ba3_rd     ( ba3_rd        ),
-    .ba3_rdy    ( ba3_rdy       ),
-    .ba3_ack    ( ba3_ack       ),
-
-    `else
-    .loop_rst   ( 1'b0          ),
-    .sdram_req  ( ba0_rd        ),
-    .sdram_addr ( ba0_addr      ),
-    .data_rdy   ( ba0_rdy | prog_rdy ),
-    .sdram_ack  ( ba0_ack | prog_ack ),
-    `endif
 
     // ROM-load interface
-    `ifdef JTFRAME_SDRAM_BANKS
+    .prog_addr  ( prog_addr     ),
+    .prog_ba    ( prog_ba       ),
+    .prog_rd    ( prog_rd       ),
+    .prog_we    ( prog_we       ),
+    .prog_data  ( prog_data     ),
+    .prog_mask  ( prog_mask     ),
+    .prog_rdy   ( prog_rdy      ),
+    .prog_rdy   ( prog_dst      ),
+    .prog_rdy   ( prog_dok      ),
+    .prog_ack   ( prog_ack      ),
+
+`else
+    .loop_rst   ( 1'b0          ),
+    .sdram_req  ( ba_rd[0]      ),
+    .sdram_addr ( ba0_addr      ),
+    .data_dst   ( ba_dst[0] | prog_dst ),
+    .data_rdy   ( ba_rdy[0] | prog_rdy ),
+    .sdram_ack  ( ba_ack[0] | prog_ack ),
+`endif
+
+    // ROM-load interface
+`ifdef JTFRAME_SDRAM_BANKS
     .prog_ba    ( prog_ba       ),
     .prog_rdy   ( prog_rdy      ),
     .prog_ack   ( prog_ack      ),
+    .prog_dok   ( prog_dok      ),
+    .prog_dst   ( prog_dst      ),
     .prog_data  ( prog_data     ),
-    `else
+`else
     .prog_data  ( prog_data8    ),
-    `endif
+`endif
     .prog_addr  ( prog_addr     ),
     .prog_rd    ( prog_rd       ),
     .prog_we    ( prog_we       ),

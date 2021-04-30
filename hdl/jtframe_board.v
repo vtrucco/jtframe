@@ -43,27 +43,19 @@ module jtframe_board #(parameter
     output              led,
     // ROM access from game
     input  [SDRAMW-1:0] ba0_addr,
-    input               ba0_rd,
-    input               ba0_wr,
+    input  [SDRAMW-1:0] ba1_addr,
+    input  [SDRAMW-1:0] ba2_addr,
+    input  [SDRAMW-1:0] ba3_addr,
+    input         [3:0] ba_rd,
+    input         [3:0] ba_wr,
+    input         [3:0] ba_ack,
+    input         [3:0] ba_rdy,
+    input         [3:0] ba_dst,
+    input         [3:0] ba_dok,
     input        [15:0] ba0_din,
     input        [ 1:0] ba0_din_m,  // write mask
-    output              ba0_rdy,
-    output              ba0_ack,
-    input  [SDRAMW-1:0] ba1_addr,
-    input               ba1_rd,
-    output              ba1_rdy,
-    output              ba1_ack,
-    input  [SDRAMW-1:0] ba2_addr,
-    input               ba2_rd,
-    output              ba2_rdy,
-    output              ba2_ack,
-    input  [SDRAMW-1:0] ba3_addr,
-    input               ba3_rd,
-    output              ba3_rdy,
-    output              ba3_ack,
 
-    input               rfsh_en,   // ok to refresh
-    output       [31:0] sdram_dout,
+    output       [15:0] sdram_dout,
     // ROM programming
     input  [SDRAMW-1:0] prog_addr,
     input        [15:0] prog_data,
@@ -71,7 +63,9 @@ module jtframe_board #(parameter
     input        [ 1:0] prog_ba,
     input               prog_we,
     input               prog_rd,
+    input               prog_dok,
     output              prog_rdy,
+    output              prog_dst,
     output              prog_ack,
     input               downloading,
     // SDRAM interface
@@ -384,7 +378,7 @@ jtframe_dip u_dip(
 // support for 48MHz
 // Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
 // clock is shifted or not.
-jtframe_sdram_bank #(
+jtframe_sdram64 #(
     .AW(SDRAMW),
 `ifdef JTFRAME_SDRAM96
     .HF(1),
@@ -401,32 +395,20 @@ jtframe_sdram_bank #(
     .rst        ( rst           ),
     .clk        ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
 
-    // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
-    .ba0_rd     ( ba0_rd        ),
-    .ba0_wr     ( ba0_wr        ),
-    .ba0_din    ( ba0_din       ),
-    .ba0_din_m  ( ba0_din_m     ),  // write mask
-    .ba0_rdy    ( ba0_rdy       ),
-    .ba0_ack    ( ba0_ack       ),
-
-    // Bank 1: Read only
     .ba1_addr   ( ba1_addr      ),
-    .ba1_rd     ( ba1_rd        ),
-    .ba1_rdy    ( ba1_rdy       ),
-    .ba1_ack    ( ba1_ack       ),
-
-    // Bank 2: Read only
     .ba2_addr   ( ba2_addr      ),
-    .ba2_rd     ( ba2_rd        ),
-    .ba2_rdy    ( ba2_rdy       ),
-    .ba2_ack    ( ba2_ack       ),
-
-    // Bank 3: Read only
     .ba3_addr   ( ba3_addr      ),
-    .ba3_rd     ( ba3_rd        ),
-    .ba3_rdy    ( ba3_rdy       ),
-    .ba3_ack    ( ba3_ack       ),
+
+    .rd         ( ba_rd         ),
+    .wr         ( ba_wr         ),
+    .din        ( ba0_din       ),
+    .din_m      ( ba0_din_m     ),  // write mask
+
+    .rdy        ( ba_rdy        ),
+    .ack        ( ba_ack        ),
+    .dok        ( ba_dok        ),
+    .dst        ( ba_dst        ),
 
     // ROM-load interface
     .prog_en    ( downloading   ),
@@ -437,6 +419,8 @@ jtframe_sdram_bank #(
     .prog_din   ( prog_data     ),
     .prog_din_m ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
+    .prog_dst   ( prog_dst      ),
+    .prog_dok   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
     // SDRAM interface
     .sdram_dq   ( SDRAM_DQ      ),
@@ -452,7 +436,7 @@ jtframe_sdram_bank #(
 
     // Common signals
     .dout       ( sdram_dout    ),
-    .rfsh_en    ( rfsh_en       )
+    .rfsh_en    ( ~LHBL         )
 );
 
 wire [COLORW-1:0] pre2x_r, pre2x_g, pre2x_b;

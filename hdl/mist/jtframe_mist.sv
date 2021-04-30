@@ -57,31 +57,24 @@ module jtframe_mist #(parameter
     input        [ 1:0] prog_ba,
     input               prog_we,
     input               prog_rd,
+    input               prog_dst,
+    input               prog_dok,
     output              prog_rdy,
     output              prog_ack,
     // ROM access from game
     input  [SDRAMW-1:0] ba0_addr,
-    input               ba0_rd,
-    input               ba0_wr,
+    input  [SDRAMW-1:0] ba1_addr,
+    input  [SDRAMW-1:0] ba2_addr,
+    input  [SDRAMW-1:0] ba3_addr,
+    input         [3:0] ba_rd,
+    input         [3:0] ba_wr,
+    input         [3:0] ba_ack,
+    input         [3:0] ba_rdy,
+    input         [3:0] ba_dst,
+    input         [3:0] ba_dok,
     input        [15:0] ba0_din,
     input        [ 1:0] ba0_din_m,  // write mask
-    output              ba0_rdy,
-    output              ba0_ack,
-    input  [SDRAMW-1:0] ba1_addr,
-    input               ba1_rd,
-    output              ba1_rdy,
-    output              ba1_ack,
-    input  [SDRAMW-1:0] ba2_addr,
-    input               ba2_rd,
-    output              ba2_rdy,
-    output              ba2_ack,
-    input  [SDRAMW-1:0] ba3_addr,
-    input               ba3_rd,
-    output              ba3_rdy,
-    output              ba3_ack,
-
-    input               rfsh_en,   // ok to refresh
-    output     [  31:0] sdram_dout,
+    output       [15:0] sdram_dout,
     // SDRAM interface
     inout    [15:0] SDRAM_DQ,       // SDRAM Data bus 16 Bits
     output   [12:0] SDRAM_A,        // SDRAM Address bus 13 Bits
@@ -281,30 +274,17 @@ jtframe_board #(
     // SDRAM interface
     // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
-    .ba0_rd     ( ba0_rd        ),
-    .ba0_wr     ( ba0_wr        ),
+    .ba1_addr   ( ba1_addr      ),
+    .ba2_addr   ( ba2_addr      ),
+    .ba3_addr   ( ba3_addr      ),
+    .ba_rd      ( ba_rd         ),
+    .ba_wr      ( ba_wr         ),
+    .ba_dst     ( ba_dst        ),
+    .ba_dok     ( ba_dok        ),
+    .ba_rdy     ( ba_rdy        ),
+    .ba_ack     ( ba_ack        ),
     .ba0_din    ( ba0_din       ),
     .ba0_din_m  ( ba0_din_m     ),  // write mask
-    .ba0_rdy    ( ba0_rdy       ),
-    .ba0_ack    ( ba0_ack       ),
-
-    // Bank 1: Read only
-    .ba1_addr   ( ba1_addr      ),
-    .ba1_rd     ( ba1_rd        ),
-    .ba1_rdy    ( ba1_rdy       ),
-    .ba1_ack    ( ba1_ack       ),
-
-    // Bank 2: Read only
-    .ba2_addr   ( ba2_addr      ),
-    .ba2_rd     ( ba2_rd        ),
-    .ba2_rdy    ( ba2_rdy       ),
-    .ba2_ack    ( ba2_ack       ),
-
-    // Bank 3: Read only
-    .ba3_addr   ( ba3_addr      ),
-    .ba3_rd     ( ba3_rd        ),
-    .ba3_rdy    ( ba3_rdy       ),
-    .ba3_ack    ( ba3_ack       ),
 
     // ROM-load interface
     .prog_addr  ( prog_addr     ),
@@ -314,6 +294,8 @@ jtframe_board #(
     .prog_data  ( prog_data     ),
     .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
+    .prog_rdy   ( prog_dst      ),
+    .prog_rdy   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
     // SDRAM interface
     .SDRAM_DQ   ( SDRAM_DQ      ),
@@ -329,7 +311,6 @@ jtframe_board #(
 
     // Common signals
     .sdram_dout ( sdram_dout    ),
-    .rfsh_en    ( rfsh_en       ),
 
     // Base video
     .osd_rotate     ( rotate          ),
