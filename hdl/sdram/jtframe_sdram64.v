@@ -138,7 +138,7 @@ assign prio     = prio_lfsr[1:0];
 assign sdram_dq = dq_pad;
 
 always @(negedge clk) begin
-    prog_rst <= !prog_en & rst;
+    prog_rst <= ~prog_en | rst;
 end
 
 always @(posedge clk) begin

@@ -23,7 +23,12 @@ module jtframe_board #(parameter
     COLORW                  = 4,
     SDRAMW                  = 22,
     VIDEO_WIDTH             = 384,
-    VIDEO_HEIGHT            = 224
+    VIDEO_HEIGHT            = 224,
+    // sdram bank lengths
+    BA0_LEN                 = 32,
+    BA1_LEN                 = 32,
+    BA2_LEN                 = 32,
+    BA3_LEN                 = 32
 )(
     output              rst,
     output              rst_n,
@@ -380,7 +385,11 @@ jtframe_dip u_dip(
 // Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
 // clock is shifted or not.
 jtframe_sdram64 #(
-    .AW(SDRAMW),
+    .AW     ( SDRAMW  ),
+    .BA0_LEN( BA0_LEN ),
+    .BA1_LEN( BA1_LEN ),
+    .BA2_LEN( BA2_LEN ),
+    .BA3_LEN( BA3_LEN ),
 `ifdef JTFRAME_SDRAM96
     .HF(1),
     .SHIFTED(0)
