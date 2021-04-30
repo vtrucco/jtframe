@@ -24,7 +24,6 @@ module jtframe_ram_2slots #(parameter
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8,
 
     SLOT1_LATCH  = 0,
-    SLOT1_REPACK = 1,
 
     parameter REF_FILE="sdram_bank3.hex"
 )(
@@ -61,7 +60,8 @@ module jtframe_ram_2slots #(parameter
     output  reg         sdram_wr,
     output  reg [SDRAMW-1:0] sdram_addr,
     input               data_rdy,
-    input       [31:0]  data_read,
+    input               data_dst,
+    input       [15:0]  data_read,
     output  reg [15:0]  data_write,  // only 16-bit writes
     output  reg [ 1:0]  sdram_wrmask // each bit is active low
 );
@@ -91,13 +91,14 @@ jtframe_ram_rq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .sdram_addr( slot0_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot0_dout             ),
     .req       ( req[0]                 ),
     .data_ok   ( slot_ok[0]             ),
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK),.LATCH(SLOT1_LATCH)) u_slot1(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.LATCH(SLOT1_LATCH)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot1_clr              ),
@@ -108,6 +109,7 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
     .dout      ( slot1_dout             ),
+    .dst       ( data_dst               ),
     .req       ( req[1]                 ),
     .data_ok   ( slot_ok[1]             ),
     .we        ( slot_sel[1]            )

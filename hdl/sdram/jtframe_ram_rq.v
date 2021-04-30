@@ -30,10 +30,11 @@ module jtframe_ram_rq #(parameter SDRAMW=22,AW=18, DW=8 )(
     input [AW-1:0]      addr,
     input [SDRAMW-1:0]  offset,     // It is not supposed to change during game play
     input               addr_ok,    // signals that value in addr is valid
-    input [31:0]        din,        // data read from SDRAM
+    input [15:0]        din,        // data read from SDRAM
     input               din_ok,
     input               wrin,
     input               we,
+    input               dst,
     output reg          req,
     output reg          req_rnw,
     output reg          data_ok,    // strobe that signals that data is ready
@@ -58,7 +59,7 @@ module jtframe_ram_rq #(parameter SDRAMW=22,AW=18, DW=8 )(
             if( cs_negedge ) data_ok <= 0;
             if( we ) begin
                 req <= 0;
-                if( din_ok ) begin
+                if( /*din_ok*/ dst ) begin
                     req_rnw <= 1;
                     data_ok <= 1;
                     dout    <= din[DW-1:0];

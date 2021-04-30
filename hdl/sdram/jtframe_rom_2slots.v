@@ -27,9 +27,6 @@ module jtframe_rom_2slots #(parameter
     SLOT0_DW = 8, SLOT1_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8,
 
-    SLOT0_REPACK = 1,
-    SLOT1_REPACK = 1,
-
     SLOT0_LATCH  = 0,
     SLOT1_LATCH  = 0,
 
@@ -56,8 +53,9 @@ module jtframe_rom_2slots #(parameter
     input               sdram_ack,
     output  reg         sdram_req,
     output  reg [SDRAMW-1:0]  sdram_addr,
+    input               data_dst,
     input               data_rdy,
-    input       [31:0]  data_read
+    input       [15:0]  data_read
 );
 
 
@@ -75,7 +73,7 @@ assign slot1_ok = ok[1];
 wire [SDRAMW-1:0] offset0 = SLOT0_OFFSET,
                   offset1 = SLOT1_OFFSET;
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK),.LATCH(SLOT0_LATCH)) u_slot0(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.LATCH(SLOT0_LATCH)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
@@ -85,13 +83,14 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.REPACK(SLOT0_REPACK
     .sdram_addr( slot0_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot0_dout             ),
     .req       ( req[0]                 ),
     .data_ok   ( ok[0]                  ),
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK),.LATCH(SLOT1_LATCH)) u_slot1(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.LATCH(SLOT1_LATCH)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( 1'b0                   ),
@@ -101,6 +100,7 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK
     .sdram_addr( slot1_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot1_dout             ),
     .req       ( req[1]                 ),
     .data_ok   ( ok[1]                  ),

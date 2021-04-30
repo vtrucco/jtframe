@@ -25,9 +25,6 @@ module jtframe_ram_4slots #(parameter
     SLOT2_LATCH  = 0,
     SLOT3_LATCH  = 0,
 
-    SLOT1_REPACK = 1,
-    SLOT2_REPACK = 1,
-    SLOT3_REPACK = 1,
 
     REF_FILE="sdram_bank3.hex"
 )(
@@ -76,7 +73,8 @@ module jtframe_ram_4slots #(parameter
     output  reg         sdram_wr,
     output  reg [SDRAMW-1:0] sdram_addr,
     input               data_rdy,
-    input       [31:0]  data_read,
+    input               data_dst,
+    input       [15:0]  data_read,
     output  reg [15:0]  data_write,  // only 16-bit writes
     output  reg [ 1:0]  sdram_wrmask // each bit is active low
 );
@@ -110,13 +108,14 @@ jtframe_ram_rq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
     .sdram_addr( slot0_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot0_dout             ),
     .req       ( req[0]                 ),
     .data_ok   ( slot_ok[0]             ),
     .we        ( slot_sel[0]            )
 );
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK),.LATCH(SLOT1_LATCH)) u_slot1(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.LATCH(SLOT1_LATCH)) u_slot1(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot1_clr              ),
@@ -126,13 +125,14 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT1_AW),.DW(SLOT1_DW),.REPACK(SLOT1_REPACK
     .sdram_addr( slot1_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot1_dout             ),
     .req       ( req[1]                 ),
     .data_ok   ( slot_ok[1]             ),
     .we        ( slot_sel[1]            )
 );
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT2_AW),.DW(SLOT2_DW),.REPACK(SLOT2_REPACK),.LATCH(SLOT2_LATCH)) u_slot2(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT2_AW),.DW(SLOT2_DW),.LATCH(SLOT2_LATCH)) u_slot2(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot2_clr              ),
@@ -142,13 +142,14 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT2_AW),.DW(SLOT2_DW),.REPACK(SLOT2_REPACK
     .sdram_addr( slot2_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot2_dout             ),
     .req       ( req[2]                 ),
     .data_ok   ( slot_ok[2]             ),
     .we        ( slot_sel[2]            )
 );
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT3_AW),.DW(SLOT3_DW),.REPACK(SLOT3_REPACK),.LATCH(SLOT3_LATCH)) u_slot3(
+jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT3_AW),.DW(SLOT3_DW),.LATCH(SLOT3_LATCH)) u_slot3(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .clr       ( slot3_clr              ),
@@ -158,6 +159,7 @@ jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT3_AW),.DW(SLOT3_DW),.REPACK(SLOT3_REPACK
     .sdram_addr( slot3_addr_req         ),
     .din       ( data_read              ),
     .din_ok    ( data_rdy               ),
+    .dst       ( data_dst               ),
     .dout      ( slot3_dout             ),
     .req       ( req[3]                 ),
     .data_ok   ( slot_ok[3]             ),
