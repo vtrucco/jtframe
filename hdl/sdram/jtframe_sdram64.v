@@ -32,6 +32,7 @@ module jtframe_sdram64 #(
 )(
     input               rst,
     input               clk,
+    output              init,
 
     // requests
     input      [AW-1:0] ba0_addr,
@@ -101,7 +102,7 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd, rfsh_cmd,
             ba_dst, ba_dbusy, ba_dbusy64, ba_rdy, ba_dok,
             init_cmd, post_act, next_cmd, dqm_busy;
-wire        init, all_dbusy, all_dbusy64, all_act, rfshing, rfsh_br;
+wire        all_dbusy, all_dbusy64, all_act, rfshing, rfsh_br;
 reg   [3:0] bg, cmd, dbusy, dbusy64;
 reg  [14:0] prio_lfsr;
 wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a;

@@ -94,7 +94,7 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_INHIBIT     = 4'b1___0____0____0; // 8
 
 
-reg            prechd;
+reg            actd, prechd;
 reg  [ROW-1:0] row;
 wire [ROW-1:0] addr_row;
 reg  [STW-1:0] st, next_st, rot_st;
@@ -140,10 +140,10 @@ always @(*) begin
     if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd_wr ) begin
         br = 1;
         if( st[PRE_RD] & ((all_dbusy&rd) | (all_dbusy64&wr)) ) br = 0; // Do not try to request
-        if( !prechd ) begin // not precharge, there is an address in the row
+        if( !prechd || !actd ) begin // not precharge (address in the row) or not activated
             if( bg ) begin
-                do_prech = row != addr_row; // not a good address
-                do_read  = ~do_prech & ~all_dbusy & (~all_dbusy64 | rd) & ~all_dqm; // good address
+                do_prech = !actd || row != addr_row; // not a good address
+                do_read  = actd & ~do_prech & ~all_dbusy & (~all_dbusy64 | rd) & ~all_dqm; // good address
             end
         end else if(bg) begin
             do_act = ~all_act & ~all_dqm;
@@ -164,7 +164,8 @@ end
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
-        prechd   <= 1;
+        prechd   <= 0;
+        actd     <= 0;
         row      <= 0;
         st       <= 1; // IDLE
         last_act <= 0;
@@ -175,9 +176,13 @@ always @(posedge clk, posedge rst) begin
         if( do_act ) begin
             row     <= addr_row;
             prechd  <= 0;
+            actd    <= 1;
         end
 
-        if( do_prech || set_prech || (do_read && AUTOPRECH)) prechd <= 1;
+        if( do_prech || set_prech || (do_read && AUTOPRECH)) begin
+            prechd <= 1;
+            actd   <= 1;
+        end
     end
 end
 

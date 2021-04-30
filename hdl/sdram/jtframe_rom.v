@@ -88,7 +88,6 @@ module jtframe_rom #(parameter
     output              slot8_ok,
     // SDRAM controller interface
     input               sdram_ack,
-    input               sdram_dst,
     output  reg         sdram_req,
     output  reg [21:0]  sdram_addr,
     input               data_dst,

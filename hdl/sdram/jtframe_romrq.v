@@ -178,15 +178,15 @@ always @(posedge clk, posedge rst) begin
             last_addr <= addr;
             waiting <= 1;
         end
-        if( din_ok ) waiting <= 0;
+        if( din_ok && we ) waiting <= 0;
         if( waiting && !addr_ok ) begin
             $display("ERROR: %m data request interrupted");
             $finish;
         end
         if( addr != last_addr && addr_ok) begin
             if( waiting ) begin
-                $display("ERROR: %m address changed");
-                $finish;
+                $display("ERROR: %m address changed at time %t",$time);
+                #40 $finish;
             end else waiting <= !hit0 && !hit1;
         end
     end

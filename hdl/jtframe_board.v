@@ -143,7 +143,7 @@ wire         en_mixing;
 wire         osd_pause;
 
 wire         invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
-wire         key_reset, key_pause, key_test, rot_control;
+wire         sdram_init, key_reset, key_pause, key_test, rot_control;
 reg          game_pause, soft_rst;
 
 wire [9:0] key_joy1, key_joy2, key_joy3;
@@ -156,6 +156,7 @@ jtframe_reset u_reset(
     .clk_rom    ( clk_rom       ),
     .pxl_cen    ( pxl_cen       ),
 
+    .sdram_init ( sdram_init    ),
     .downloading( downloading   ),
     .dip_flip   ( dip_flip      ),
     .soft_rst   ( soft_rst      ),
@@ -394,6 +395,7 @@ jtframe_sdram64 #(
 ) u_sdram(
     .rst        ( rst           ),
     .clk        ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
+    .init       ( sdram_init    ),
 
     .ba0_addr   ( ba0_addr      ),
     .ba1_addr   ( ba1_addr      ),

@@ -21,6 +21,7 @@ module jtframe_reset(
     input       clk_rom,
     input       pxl_cen,
 
+    input       sdram_init,
     input       downloading,
     input       dip_flip,
     input       soft_rst,
@@ -70,7 +71,7 @@ end
 // Game reset generation
 always @(posedge clk_sys ) begin
     if( downloading | rst | rst_req
-    | rst_flip | soft_rst )
+    | rst_flip | soft_rst | sdram_init)
         rst_rom <= {MAIN_RSTW{1'b1}};
     else if(pxl_cen) begin
         rst_rom <= rst_rom >> 1;

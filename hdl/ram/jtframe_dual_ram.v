@@ -50,6 +50,9 @@ module jtframe_dual_ram #(parameter dw=8, aw=10,
 `ifdef SIMULATION
 integer f, readcnt;
 initial begin
+    for( f=0; f<(2**aw)-1;f=f+1) begin
+        mem[f] = 0;
+    end
     if( simfile != "" ) begin
         f=$fopen(simfile,"rb");
         if( f != 0 ) begin
