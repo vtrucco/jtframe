@@ -170,6 +170,7 @@ always @(posedge clk) begin
         else
             sdram_a[12:11] <= 0;
     end else begin
+        sdram_a[12:11] <= next_a[12:11];
         mask_mux <= prog_en ? prog_din_m : din_m;
         dqm <= next_cmd==CMD_WRITE ? mask_mux : 0;
     end
