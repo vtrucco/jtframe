@@ -28,6 +28,7 @@ module jtframe_sdram64 #(
               BA2_LEN =64,
               BA3_LEN =64,
               PROG_LEN=64,
+              MISTER=1,     // shorts dqm to a bus
               RFSHCNT=9  // 8192 every 64ms or 1 every 7.8us ~ 8.2 per line (15kHz)
 )(
     input               rst,
@@ -116,9 +117,10 @@ reg         prog_rst, prog_bg;
 
 reg         rfsh_bg;
 reg  [15:0] dq_pad;
+reg  [ 1:0] dqm, mask_mux;
 
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
-assign {sdram_dqmh, sdram_dqml} = sdram_a[12:11];
+assign {sdram_dqmh, sdram_dqml} = MISTER ? sdram_a[12:11] : dqm;
 assign sdram_cke = 1;
 assign all_dbusy   = |dbusy;
 assign all_dbusy64 = |dbusy64;
@@ -160,12 +162,17 @@ always @(posedge clk) begin
     sdram_a[10:0] <= next_a[10:0];
 
     dq_pad <= next_cmd == CMD_WRITE ? (prog_en ? prog_din : din) : 16'hzzzz;
-    if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE || next_cmd==CMD_READ )
-        sdram_a[12:11] <= next_a[12:11];
-    else if( next_cmd==CMD_WRITE )
-        sdram_a[12:11] <= prog_en ? prog_din_m : din_m;
-    else
-        sdram_a[12:11] <= 0;
+    if( MISTER ) begin
+        if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE )
+            sdram_a[12:11] <= next_a[12:11];
+        else if( next_cmd==CMD_WRITE )
+            sdram_a[12:11] <= prog_en ? prog_din_m : din_m;
+        else
+            sdram_a[12:11] <= 0;
+    end else begin
+        mask_mux <= prog_en ? prog_din_m : din_m
+        dqm <= next_cmd==CMD_WRITE ? mask_mux : 0;
+    end
 end
 
 always @(posedge clk, posedge rst) begin
