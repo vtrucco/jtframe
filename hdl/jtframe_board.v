@@ -29,7 +29,8 @@ module jtframe_board #(parameter
     BA1_LEN                 = 32,
     BA2_LEN                 = 32,
     BA3_LEN                 = 32,
-    PROG_LEN                = 32
+    PROG_LEN                = 32,
+    MISTER                  = 1
 )(
     output              rst,
     output              rst_n,
@@ -392,6 +393,7 @@ jtframe_sdram64 #(
     .BA2_LEN ( BA2_LEN  ),
     .BA3_LEN ( BA3_LEN  ),
     .PROG_LEN( PROG_LEN ),
+    .MISTER  ( MISTER   ),
 `ifdef JTFRAME_SDRAM96
     .HF(1),
     .SHIFTED(0)

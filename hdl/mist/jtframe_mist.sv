@@ -229,7 +229,8 @@ jtframe_board #(
     .COLORW                ( COLORW                ),
     .VIDEO_WIDTH           ( VIDEO_WIDTH           ),
     .VIDEO_HEIGHT          ( VIDEO_HEIGHT          ),
-    .SDRAMW                ( SDRAMW                )
+    .SDRAMW                ( SDRAMW                ),
+    .MISTER                ( 0                     )
 ) u_board(
     .rst            ( rst             ),
     .rst_n          ( rst_n           ),
