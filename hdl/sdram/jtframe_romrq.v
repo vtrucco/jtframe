@@ -60,6 +60,7 @@ reg [31:0]   cached_data0;
 reg [31:0]   cached_data1;
 reg [1:0]    good;
 reg          hit0, hit1;
+reg          dend;
 wire [AW-1:0] shifted;
 
 assign sdram_addr = offset + { {SDRAMW-AW{1'b0}}, addr_req>>(DW==8?1:0)};
@@ -87,6 +88,7 @@ always @(posedge clk, posedge rst) begin
         cached_addr0 <= 'd0;
         cached_addr1 <= 'd0;
         data_ok      <= 0;
+        dend         <= 0;
     end else begin
         if( clr ) good <= 2'b00;
         if( we ) begin
@@ -96,11 +98,13 @@ always @(posedge clk, posedge rst) begin
                 cached_data0[31:16] <= din;
                 cached_addr0 <= addr_req;
                 good <= { good[0], 1'b1 };
+                dend <= 1;
             end
-            if( din_ok ) begin
+            if( dend   ) begin
                 cached_data0[31:16] <= din;
                 cached_data0[15: 0] <= cached_data0[31:16];
                 if( !LATCH[0] ) data_ok <= 1;
+                dend <= 0;
             end
         end
         else data_ok <= addr_ok && ( hit0 || hit1 );

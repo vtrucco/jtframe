@@ -146,7 +146,8 @@ wire          prog_we, prog_rd, prog_rdy, prog_ack, prog_dst, prog_dok;
 
 // ROM access from game
 wire [SDRAMW-1:0] ba0_addr, ba1_addr, ba2_addr, ba3_addr;
-wire [ 3:0] ba_rd, ba_wr, ba_rdy, ba_ack, ba_dst, ba_dok;
+wire [ 3:0] ba_rd, ba_rdy, ba_ack, ba_dst, ba_dok;
+wire        ba_wr;
 wire [15:0] ba0_din;
 wire [ 1:0] ba0_din_m;
 wire [15:0] sdram_dout;
@@ -318,7 +319,7 @@ u_frame(
     .ba2_addr   ( ba2_addr      ),
     .ba3_addr   ( ba3_addr      ),
     .ba_rd      ( ba_rd         ),
-    .ba_wr      ( ba_wr         ),
+    .ba_wr      ({ 3'd0, ba_wr }),
     .ba_dst     ( ba_dst        ),
     .ba_dok     ( ba_dok        ),
     .ba_rdy     ( ba_rdy        ),
@@ -333,10 +334,10 @@ u_frame(
     .prog_we    ( prog_we       ),
     .prog_data  ( prog_data     ),
     .prog_mask  ( prog_mask     ),
-    .prog_rdy   ( prog_rdy      ),
+    .prog_ack   ( prog_ack      ),
     .prog_dst   ( prog_dst      ),
     .prog_dok   ( prog_dok      ),
-    .prog_ack   ( prog_ack      ),
+    .prog_rdy   ( prog_rdy      ),
 
     // ROM load
     .ioctl_addr     ( ioctl_addr     ),
@@ -498,37 +499,23 @@ u_game(
     .ba0_din    ( ba0_din       ),
     .ba0_din_m  ( ba0_din_m     ),  // write mask
 
-    // ROM-load interface
-    .prog_addr  ( prog_addr     ),
     .prog_ba    ( prog_ba       ),
-    .prog_rd    ( prog_rd       ),
-    .prog_we    ( prog_we       ),
-    .prog_data  ( prog_data     ),
-    .prog_mask  ( prog_mask     ),
     .prog_rdy   ( prog_rdy      ),
-    .prog_dst   ( prog_dst      ),
-    .prog_dok   ( prog_dok      ),
     .prog_ack   ( prog_ack      ),
-
+    .prog_dok   ( prog_dok      ),
+    .prog_dst   ( prog_dst      ),
+    .prog_data  ( prog_data     ),
 `else
     .sdram_req  ( ba_rd[0]      ),
     .sdram_addr ( ba0_addr      ),
     .data_dst   ( ba_dst[0] | prog_dst ),
     .data_rdy   ( ba_rdy[0] | prog_rdy ),
     .sdram_ack  ( ba_ack[0] | prog_ack ),
-`endif
 
-    // ROM-load interface
-`ifdef JTFRAME_SDRAM_BANKS
-    .prog_ba    ( prog_ba       ),
-    .prog_rdy   ( prog_rdy      ),
-    .prog_ack   ( prog_ack      ),
-    .prog_dok   ( prog_dok      ),
-    .prog_dst   ( prog_dst      ),
-    .prog_data  ( prog_data     ),
-`else
     .prog_data  ( prog_data8    ),
 `endif
+
+    // common ROM-load interface
     .prog_addr  ( prog_addr     ),
     .prog_rd    ( prog_rd       ),
     .prog_we    ( prog_we       ),
