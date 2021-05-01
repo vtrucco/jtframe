@@ -113,7 +113,7 @@ wire [ 1:0] next_ba, prio;
 wire        pre_dst, pre_dok, pre_ack, pre_rdy;
 wire [12:0] pre_a;
 wire [ 3:0] pre_cmd;
-reg         prog_rst, prog_bg;
+reg         prog_rst, prog_bg, other_rst;
 
 reg         rfsh_bg;
 reg  [15:0] dq_pad;
@@ -140,7 +140,8 @@ assign prio     = prio_lfsr[1:0];
 assign sdram_dq = dq_pad;
 
 always @(negedge clk) begin
-    prog_rst <= ~prog_en | rst;
+    prog_rst  <= ~prog_en | rst;
+    other_rst <= prog_en | rst;
 end
 
 always @(posedge clk) begin
@@ -257,7 +258,7 @@ jtframe_sdram64_bank #(
     .BURSTLEN ( BURSTLEN),
     .BALEN    ( BA0_LEN )
 ) u_bank0(
-    .rst        ( rst        ),
+    .rst        ( other_rst  ),
     .clk        ( clk        ),
 
     // requests
@@ -298,7 +299,7 @@ jtframe_sdram64_bank #(
     .BURSTLEN ( BURSTLEN),
     .BALEN    ( BA1_LEN )
 ) u_bank1(
-    .rst        ( rst        ),
+    .rst        ( other_rst  ),
     .clk        ( clk        ),
 
     // requests
@@ -338,7 +339,7 @@ jtframe_sdram64_bank #(
     .BURSTLEN ( BURSTLEN),
     .BALEN    ( BA2_LEN )
 ) u_bank2(
-    .rst        ( rst        ),
+    .rst        ( other_rst  ),
     .clk        ( clk        ),
 
     // requests
@@ -378,7 +379,7 @@ jtframe_sdram64_bank #(
     .BURSTLEN ( BURSTLEN),
     .BALEN    ( BA3_LEN )
 ) u_bank3(
-    .rst        ( rst        ),
+    .rst        ( other_rst  ),
     .clk        ( clk        ),
 
     // requests

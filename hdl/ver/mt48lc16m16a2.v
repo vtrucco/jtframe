@@ -88,6 +88,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         file=$fopen("sdram_bank0.bin","rb");
         if( file==0 ) begin
             $readmemh("sdram_bank0.hex",  Bank0 );
+            $display("Read sdram_bank0.hex (%m)");
         end else begin
             romfilecnt=$fread( Bank0, file );
             $display("Read 0x%X bytes from sdram_bank0.bin",romfilecnt);
@@ -97,6 +98,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         file=$fopen("sdram_bank1.bin","rb");
         if( file==0 ) begin
             $readmemh("sdram_bank1.hex",  Bank1 );
+            $display("Read sdram_bank1.hex (%m)");
         end else begin
             romfilecnt=$fread( Bank1, file );
             $display("Read 0x%X bytes from sdram_bank1.bin",romfilecnt);
@@ -106,6 +108,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         file=$fopen("sdram_bank2.bin","rb");
         if( file==0 ) begin
             $readmemh("sdram_bank2.hex",  Bank2 );
+            $display("Read sdram_bank2.hex (%m)");
         end else begin
             romfilecnt=$fread( Bank2, file );
             $display("Read 0x%X bytes from sdram_bank2.bin",romfilecnt);
@@ -115,6 +118,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
         file=$fopen("sdram_bank3.bin","rb");
         if( file==0 ) begin
             $readmemh("sdram_bank3.hex",  Bank3 );
+            $display("Read sdram_bank3.hex (%m)");
         end else begin
             romfilecnt=$fread( Bank3, file );
             $display("Read 0x%X bytes from sdram_bank3.bin",romfilecnt);
@@ -660,7 +664,8 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
                 // Activate to Precharge
                 if (($time - RAS_chk0 < tRAS) || ($time - RAS_chk0 > tRASmax ) && RAS_chk0) begin
-                    $display ("%m : at time %t ERROR: tRAS violation during bank 0 Precharge", $time);
+                    $display ("\n%m : at time %t ERROR: tRAS violation during bank 0 Precharge", $time);
+                    $display ("$time-last RAS = ", $time-RAS_chk0);
                     #100 $finish;
                 end
 
@@ -679,7 +684,7 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
                 // Activate to Precharge
                 if ((($time - RAS_chk1 < tRAS) || ($time - RAS_chk1 > tRASmax )) && RAS_chk1) begin
-                    $display("%m : at time %t ERROR: tRAS violation during bank 1 Precharge", $time);
+                    $display("\n%m : at time %t ERROR: tRAS violation during bank 1 Precharge", $time);
                     $display("\t\t($time - RAS_chk1 < tRAS) = %d",($time - RAS_chk1 < tRAS) );
                     $display("\t\t($time - RAS_chk1 > tRASmax ) = %d",($time - RAS_chk1 > tRASmax ) );
                     $display("\t\tRAS_chk1 = %t",RAS_chk1 );
@@ -701,7 +706,8 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
                 // Activate to Precharge
                 if (($time - RAS_chk2 < tRAS) || ($time - RAS_chk2 > tRASmax ) && RAS_chk2) begin
-                    $display ("%m : at time %t ERROR: tRAS violation during bank 2 Precharge", $time);
+                    $display ("\n%m : at time %t ERROR: tRAS violation during bank 2 Precharge", $time);
+                    $display ("$time-last RAS = ", $time-RAS_chk2);
                     #100 $finish;
                 end
 
@@ -720,7 +726,8 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
                 // Activate to Precharge
                 if (($time - RAS_chk3 < tRAS) || ($time - RAS_chk3 > tRASmax ) && RAS_chk3) begin
-                    $display ("%m : at time %t ERROR: tRAS violation during bank 3 Precharge", $time);
+                    $display ("\n%m : at time %t ERROR: tRAS violation during bank 3 Precharge", $time);
+                    $display ("$time-last RAS = ", $time-RAS_chk3);
                     #100 $finish;
                 end
 
