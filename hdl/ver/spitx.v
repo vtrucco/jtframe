@@ -132,7 +132,7 @@ localparam WAIT=`JTFRAME_SIM_LOAD_EXTRA;
 
 always @(posedge clk or posedge rst)
 if( rst ) begin
-    tx_cnt <= 8500+`LOAD_RANDOM_DLY;
+    tx_cnt <= 4000+`LOAD_RANDOM_DLY;
     state <= 0;
     SPI_SS2  <= 1'b1;
     SPI_SS3  <= 1'b1;
