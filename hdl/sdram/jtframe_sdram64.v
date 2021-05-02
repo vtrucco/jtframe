@@ -114,6 +114,8 @@ wire [ 1:0] next_ba, prio;
 
 wire [AW-1:0] ba0_addr_l, ba1_addr_l, ba2_addr_l, ba3_addr_l;
 wire    [3:0] rd_l, wr_l;
+wire    [4:0] wr_busy;
+wire          wr_cycle;
 
 // prog signals
 wire        pre_dst, pre_dok, pre_ack, pre_rdy;
@@ -130,6 +132,7 @@ assign {sdram_dqmh, sdram_dqml} = MISTER ? sdram_a[12:11] : dqm;
 assign sdram_cke = 1;
 assign all_act     = |post_act;
 assign all_dqm     = |dqm_busy;
+assign wr_cycle    = |wr_busy;
 
 assign {next_ba, next_cmd, next_a } =
                         init ? { 2'd0, init_cmd, init_a } : (
@@ -166,16 +169,16 @@ always @(posedge clk) begin
     sdram_ba      <= next_ba;
     sdram_a[10:0] <= next_a[10:0];
 
-    dq_pad <= next_cmd == CMD_WRITE ? (prog_en ? prog_din : din) : 16'hzzzz;
+    dq_pad <= wr_cycle ? (prog_en ? prog_din : din) : 16'hzzzz;
     mask_mux <= prog_en ? prog_din_m : din_m;
     if( MISTER ) begin
         if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE )
             sdram_a[12:11] <= next_a[12:11];
         else
-            sdram_a[12:11] <= next_cmd==CMD_WRITE ? mask_mux : 0;
+            sdram_a[12:11] <= wr_cycle ? mask_mux : 0;
     end else begin
         sdram_a[12:11] <= next_a[12:11];
-        dqm <= next_cmd==CMD_WRITE ? mask_mux : 0;
+        dqm <= wr_cycle ? mask_mux : 0;
     end
 end
 
@@ -258,6 +261,7 @@ jtframe_sdram64_bank #(
 
     .dqm_busy   (            ),
     .all_dqm    ( 1'd0       ),
+    .wr_busy    ( wr_busy[4] ),
 
     .dok        ( pre_dok    ),
     .rdy        ( pre_rdy    ),
@@ -293,6 +297,7 @@ jtframe_sdram64_bank #(
 
     .dbusy64    (ba_dbusy64[0]),
     .all_dbusy64( all_dbusy64),
+    .wr_busy    ( wr_busy[0] ),
 
     .post_act   ( post_act[0]),
     .all_act    ( all_act    ),
@@ -334,6 +339,7 @@ jtframe_sdram64_bank #(
 
     .dbusy64    (ba_dbusy64[1]),
     .all_dbusy64( all_dbusy64),
+    .wr_busy    ( wr_busy[1] ),
 
     .post_act   ( post_act[1]),
     .all_act    ( all_act    ),
@@ -374,6 +380,7 @@ jtframe_sdram64_bank #(
 
     .dbusy64    (ba_dbusy64[2]),
     .all_dbusy64( all_dbusy64),
+    .wr_busy    ( wr_busy[2] ),
 
     .post_act   ( post_act[2]),
     .all_act    ( all_act    ),
@@ -411,6 +418,7 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[3]  ),    // data starts
     .dbusy      ( ba_dbusy[3]),
     .all_dbusy  ( all_dbusy  ),
+    .wr_busy    ( wr_busy[3] ),
 
     .dbusy64    (ba_dbusy64[3]),
     .all_dbusy64( all_dbusy64),

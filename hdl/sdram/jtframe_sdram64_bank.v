@@ -47,6 +47,7 @@ module jtframe_sdram64_bank #(
     output              dbusy,      // DQ bus busy (read values only)
     output              dbusy64,    // DQ bus busy (the full four clock cycles)
     output reg          dqm_busy,   // DQM lines are used
+    output reg          wr_busy,    // output access to DQ bus
     input               all_dbusy,
     input               all_dbusy64,
     input               all_dqm,
@@ -139,6 +140,7 @@ always @(posedge clk, posedge rst) begin
 
         if(next_st[READ]) dqm_busy<=1;
         else if(st[RDY-2] || next_st[READ-1:0]!=0) dqm_busy<=0;
+
     end
 end
 
@@ -180,6 +182,7 @@ end
 
 // module outputs
 always @(*) begin
+    wr_busy = do_read & wr;
     cmd = do_prech ? CMD_PRECHARGE : (
           do_act   ? CMD_ACTIVE    : (
           do_read  ? (rd ? CMD_READ : CMD_WRITE ) : CMD_NOP ));
