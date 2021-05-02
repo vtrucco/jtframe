@@ -28,7 +28,7 @@ module jtframe_sdram64 #(
               BA2_LEN =64,
               BA3_LEN =64,
               PROG_LEN=64,
-              MISTER=1,     // shorts dqm to a bus
+              MISTER=1,     // shorts dqm to address bus 12/11 signals
               RFSHCNT=9  // 8192 every 64ms or 1 every 7.8us ~ 8.2 per line (15kHz)
 )(
     input               rst,
@@ -167,16 +167,14 @@ always @(posedge clk) begin
     sdram_a[10:0] <= next_a[10:0];
 
     dq_pad <= next_cmd == CMD_WRITE ? (prog_en ? prog_din : din) : 16'hzzzz;
+    mask_mux <= prog_en ? prog_din_m : din_m;
     if( MISTER ) begin
         if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE )
             sdram_a[12:11] <= next_a[12:11];
-        else if( next_cmd==CMD_WRITE )
-            sdram_a[12:11] <= prog_en ? prog_din_m : din_m;
         else
-            sdram_a[12:11] <= 0;
+            sdram_a[12:11] <= next_cmd==CMD_WRITE ? mask_mux : 0;
     end else begin
         sdram_a[12:11] <= next_a[12:11];
-        mask_mux <= prog_en ? prog_din_m : din_m;
         dqm <= next_cmd==CMD_WRITE ? mask_mux : 0;
     end
 end
