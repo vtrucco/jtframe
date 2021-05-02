@@ -202,6 +202,8 @@ jtframe_sdram64_latch #(.LATCH(LATCH),.AW(AW)) u_latch(
     .ba2_addr_l ( ba2_addr_l),
     .ba3_addr_l ( ba3_addr_l),
     .prog_en    ( prog_en   ),
+    .prog_rd    ( prog_rd   ),
+    .prog_wr    ( prog_wr   ),
     .rd         ( rd        ),
     .rd_l       ( rd_l      ),
     .wr         ( wr        ),
