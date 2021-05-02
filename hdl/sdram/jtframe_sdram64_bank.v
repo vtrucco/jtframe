@@ -170,7 +170,7 @@ always @(*) begin
     do_act   = 0;
     do_read  = 0;
     if( bg ) begin
-        do_prech = !prechd && !row_match // not a good address
+        do_prech = !prechd && (!row_match || !actd) // not a good address
                 && (st[IDLE]&&rd_wr);
 
         do_act  = ((st[IDLE] & rd_wr & prechd & ~actd) | st[PRE_ACT])
