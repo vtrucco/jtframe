@@ -109,6 +109,9 @@ reg  [14:0] prio_lfsr;
 wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a;
 wire [ 1:0] next_ba, prio;
 
+wire [AW-1:0] ba0_addr_l, ba1_addr_l, ba2_addr_l, ba3_addr_l;
+wire    [3:0] rd_l, wr_l;
+
 // prog signals
 wire        pre_dst, pre_dok, pre_ack, pre_rdy;
 wire [12:0] pre_a;
@@ -184,6 +187,23 @@ always @(posedge clk, posedge rst) begin
         prio_lfsr <= { prio_lfsr[0]^prio_lfsr[14], prio_lfsr[14:1] };
     end
 end
+
+jtframe_sdram64_latch #(.HF(HF),.AW(AW)) u_latch(
+    .rst        ( rst       ),
+    .clk        ( clk       ),
+    .ba0_addr   ( ba0_addr  ),
+    .ba1_addr   ( ba1_addr  ),
+    .ba2_addr   ( ba2_addr  ),
+    .ba3_addr   ( ba3_addr  ),
+    .ba0_addr_l ( ba0_addr_l),
+    .ba1_addr_l ( ba1_addr_l),
+    .ba2_addr_l ( ba2_addr_l),
+    .ba3_addr_l ( ba3_addr_l),
+    .rd         ( rd        ),
+    .rd_l       ( rd_l      ),
+    .wr         ( wr        ),
+    .wr_l       ( wr_l      )
+);
 
 jtframe_sdram64_init #(.HF(HF),.BURSTLEN(BURSTLEN)) u_init(
     .rst        ( rst       ),
@@ -262,9 +282,9 @@ jtframe_sdram64_bank #(
     .clk        ( clk        ),
 
     // requests
-    .addr       ( ba0_addr   ),
-    .rd         ( rd[0]      ),
-    .wr         ( wr[0]      ),
+    .addr       ( ba0_addr_l ),
+    .rd         ( rd_l[0]    ),
+    .wr         ( wr_l[0]    ),
 
     .ack        ( ack[0]     ),
     .dst        ( ba_dst[0]  ),    // data starts
@@ -303,9 +323,9 @@ jtframe_sdram64_bank #(
     .clk        ( clk        ),
 
     // requests
-    .addr       ( ba1_addr   ),
-    .rd         ( rd[1]      ),
-    .wr         ( wr[1]      ),
+    .addr       ( ba1_addr_l ),
+    .rd         ( rd_l[1]    ),
+    .wr         ( wr_l[1]    ),
 
     .ack        ( ack[1]     ),
     .dst        ( ba_dst[1]  ),    // data starts
@@ -343,9 +363,9 @@ jtframe_sdram64_bank #(
     .clk        ( clk        ),
 
     // requests
-    .addr       ( ba2_addr   ),
-    .rd         ( rd[2]      ),
-    .wr         ( wr[2]      ),
+    .addr       ( ba2_addr_l ),
+    .rd         ( rd_l[2]    ),
+    .wr         ( wr_l[2]    ),
 
     .ack        ( ack[2]     ),
     .dst        ( ba_dst[2]  ),    // data starts
@@ -383,9 +403,9 @@ jtframe_sdram64_bank #(
     .clk        ( clk        ),
 
     // requests
-    .addr       ( ba3_addr   ),
-    .rd         ( rd[3]      ),
-    .wr         ( wr[3]      ),
+    .addr       ( ba3_addr_l ),
+    .rd         ( rd_l[3]    ),
+    .wr         ( wr_l[3]    ),
 
     .ack        ( ack[3]     ),
     .dst        ( ba_dst[3]  ),    // data starts
