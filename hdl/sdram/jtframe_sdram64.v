@@ -105,8 +105,9 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd, rfsh_cmd,
             ba_dst, ba_dbusy, ba_dbusy64, ba_rdy, ba_dok,
             init_cmd, post_act, next_cmd, dqm_busy;
-wire        all_dbusy, all_dbusy64, all_act, rfshing, rfsh_br;
-reg   [3:0] bg, cmd, dbusy, dbusy64;
+wire        all_act, rfshing, rfsh_br;
+reg         all_dbusy, all_dbusy64;
+reg   [3:0] bg, cmd;
 reg  [14:0] prio_lfsr;
 wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a;
 wire [ 1:0] next_ba, prio;
@@ -127,8 +128,6 @@ reg  [ 1:0] dqm, mask_mux;
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = MISTER ? sdram_a[12:11] : dqm;
 assign sdram_cke = 1;
-assign all_dbusy   = |dbusy;
-assign all_dbusy64 = |dbusy64;
 assign all_act     = |post_act;
 assign all_dqm     = |dqm_busy;
 
@@ -152,8 +151,8 @@ end
 always @(posedge clk) begin
     dst      <= ba_dst;
     rdy      <= ba_rdy;
-    dbusy    <= ba_dbusy;
-    dbusy64  <= ba_dbusy64;
+    all_dbusy    <= |ba_dbusy;
+    all_dbusy64  <= |ba_dbusy64;
     dok      <= ba_dok;
     dout     <= sdram_dq;
     cmd      <= next_cmd;
