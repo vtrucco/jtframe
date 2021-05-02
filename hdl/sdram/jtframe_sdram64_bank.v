@@ -150,7 +150,7 @@ always @(*) begin
     adv=0;
     rot_st  = { st[STW-2:0], st[STW-1] };
     next_st = st;
-    if( st[IDLE] && rd_wr && bg ) begin
+    if( st[IDLE] ) begin
         if(do_prech) next_st = rot_st;
         if(do_act  ) next_st = 1<<ACT;
         if(do_read ) next_st = 1<<READ;
@@ -163,20 +163,20 @@ always @(*) begin
         next_st <= 1; // writes finish earlier
 end
 
-wire row_match = row==addr_row;
+wire row_match = row==addr_row && actd;
 
 always @(*) begin
     do_prech = 0;
     do_act   = 0;
     do_read  = 0;
     if( bg ) begin
-        do_prech = !prechd && (!row_match || !actd) // not a good address
+        do_prech = !prechd && !row_match // not a good address
                 && (st[IDLE]&&rd_wr);
 
         do_act  = ((st[IDLE] & rd_wr & prechd & ~actd) | st[PRE_ACT])
                    & ~all_act & ~all_dqm;
 
-        do_read = ((st[IDLE] & rd_wr & row_match & actd) | st[PRE_RD]) &
+        do_read = ((st[IDLE] & rd_wr & row_match) | st[PRE_RD]) &
                     (~all_dbusy & (~all_dbusy64 | rd) & ~all_dqm);
     end
 end
