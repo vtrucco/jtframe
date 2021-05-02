@@ -29,8 +29,7 @@ module jtframe_romrq #(parameter
     SDRAMW= 22,  // SDRAM width
     AW    = 18,
     DW    =  8,
-    LATCH =  0, // dout is latched
-    CACHE =  1
+    LATCH =  0  // dout is latched
 )(
     input               rst,
     input               clk,
@@ -74,8 +73,8 @@ always @(*) begin
     endcase
     // It is important to leave === for simulations, instead of ==
     // It shouldn't have any implication for synthesis
-    hit0 = CACHE && addr_req === cached_addr0 && good[0] && !clr;
-    hit1 = CACHE && addr_req === cached_addr1 && good[1] && !clr;
+    hit0 = addr_req === cached_addr0 && good[0] && !clr;
+    hit1 = addr_req === cached_addr1 && good[1] && !clr;
     req = (clr || ( !(hit0 || hit1) && !we)) && addr_ok;
 end
 
@@ -115,7 +114,7 @@ end
 // data_mux selects one of two cache registers
 // but if we are getting fresh data, it selects directly the new data
 // this saves one clock cycle at the expense of more LUTs
-wire [31:0] data_mux = (hit0 || !CACHE) ? cached_data0 : cached_data1;
+wire [31:0] data_mux = hit0 ? cached_data0 : cached_data1;
 
 generate
     if( LATCH==0 ) begin : data_latch
