@@ -446,7 +446,7 @@ jtframe_sdram64_bank #(
 );
 
 always @(*) begin
-    rfsh_bg = &idle && !init && noreq;
+    rfsh_bg = &idle && !init && noreq && rfsh_br;
     if( init || rfshing || prog_en ) begin
         bg=0;
         prog_bg = pre_br & !rfshing;

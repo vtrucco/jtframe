@@ -71,14 +71,16 @@ assign rfsh_en = 1;
 `endif
 
 // horizontal line counter
-localparam HMAX=64_000/PERIOD;
+localparam [31:0] HMAX=64_000/PERIOD;
 assign hblank = hcnt==0 && rfsh_en;
+
+initial $display("HMAX=%d",HMAX);
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         hcnt <= 0;
     end else begin
-        hcnt <= hcnt == HMAX-1 ? 0 : (hcnt+1);
+        hcnt <= hcnt == (HMAX-1) ? 0 : (hcnt+1);
     end
 end
 

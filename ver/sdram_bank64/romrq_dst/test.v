@@ -57,6 +57,8 @@ localparam HMAX=64_000/PERIOD;
 integer    hcnt;
 assign hblank = hcnt==0;
 
+initial $display("HMAX=%d",HMAX);
+
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         hcnt <= 0;
