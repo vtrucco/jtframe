@@ -184,10 +184,14 @@ end
 generate
     if( HF==1 ) begin
         always @(posedge clk, posedge rst) begin
-            br <= 0;
-            if( (st[IDLE] || next_st[IDLE] || next_st[PRE_ACT] || next_st[PRE_RD]) && rd_wr ) begin
-                br <= 1;
-                if( next_st[PRE_RD] & (all_dbusy | (all_dbusy64&wr)) ) br <= 0; // Do not try to request
+            if( rst ) begin
+                br <= 0;
+            end else begin
+                br <= 0;
+                if( (st[IDLE] || next_st[IDLE] || next_st[PRE_ACT] || next_st[PRE_RD]) && rd_wr ) begin
+                    br <= 1;
+                    if( next_st[PRE_RD] & (all_dbusy | (all_dbusy64&wr)) ) br <= 0; // Do not try to request
+                end
             end
         end
     end else begin
