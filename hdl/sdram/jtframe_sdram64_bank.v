@@ -167,20 +167,37 @@ always @(*) begin
     do_prech = 0;
     do_act   = 0;
     do_read  = 0;
-    br       = 0;
-    if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd_wr ) begin
-        br = 1;
-        if( st[PRE_RD] & (all_dbusy | (all_dbusy64&wr)) ) br = 0; // Do not try to request
-        if( !prechd || !actd ) begin // not precharge (address in the row) or not activated
-            if( bg ) begin
+    if( bg ) begin
+        if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd_wr ) begin
+            if( !prechd || !actd ) begin // not precharge (address in the row) or not activated
                 do_prech = !actd || row != addr_row; // not a good address
                 do_read  = actd & ~do_prech & ~all_dbusy & (~all_dbusy64 | rd) & ~all_dqm; // good address
+            end else begin
+                do_act = ~all_act & ~all_dqm;
             end
-        end else if(bg) begin
-            do_act = ~all_act & ~all_dqm;
         end
     end
 end
+
+generate
+    if( HF==1 ) begin
+        always @(posedge clk, posedge rst) begin
+            br <= 0;
+            if( (st[IDLE] || next_st[IDLE] || next_st[PRE_ACT] || next_st[PRE_RD]) && rd_wr ) begin
+                br <= 1;
+                if( next_st[PRE_RD] & (all_dbusy | (all_dbusy64&wr)) ) br <= 0; // Do not try to request
+            end
+        end
+    end else begin
+        always @(*) begin
+            br = 0;
+            if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd_wr ) begin
+                br = 1;
+                if( st[PRE_RD] & (all_dbusy | (all_dbusy64&wr)) ) br = 0; // Do not try to request
+            end
+        end
+    end
+endgenerate
 
 // module outputs
 always @(*) begin
