@@ -30,7 +30,8 @@ module jtframe_sdram64_latch #(parameter LATCH=0, AW=22)(
     input         [3:0] rd,
     input         [3:0] wr,
     output reg    [3:0] rd_l,
-    output reg    [3:0] wr_l
+    output reg    [3:0] wr_l,
+    output reg          noreq
 );
 
 generate
@@ -43,6 +44,7 @@ generate
                 ba3_addr_l <= 0;
                 wr_l       <= 0;
                 rd_l       <= 0;
+                noreq      <= 1;
             end else begin
                 ba0_addr_l <= ba0_addr;
                 ba1_addr_l <= ba1_addr;
@@ -50,6 +52,7 @@ generate
                 ba3_addr_l <= ba3_addr;
                 wr_l       <= wr;
                 rd_l       <= rd;
+                noreq      <= ~|{wr,rd};
             end
         end
     end else begin
@@ -60,6 +63,7 @@ generate
                 ba3_addr_l = ba3_addr;
                 wr_l       = wr;
                 rd_l       = rd;
+                noreq      = ~|{wr,rd};
         end
     end
 endgenerate

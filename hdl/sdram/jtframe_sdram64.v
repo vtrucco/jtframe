@@ -89,7 +89,7 @@ module jtframe_sdram64 #(
 localparam BURSTLEN=(BA0_LEN>32 || BA1_LEN>32 ||BA2_LEN>32 ||BA3_LEN>32) ? 64 :(
                     (BA0_LEN>16 || BA1_LEN>16 ||BA2_LEN>16 ||BA3_LEN>16) ? 32 : 16);
 
-localparam LATCH = MISTER==0 && HF==1;  // MiST and SiDi struggle for HF
+localparam LATCH = HF==1;
 
 //                             /CS /RAS /CAS /WE
 localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
@@ -105,7 +105,7 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd, rfsh_cmd,
             ba_dst, ba_dbusy, ba_dbusy64, ba_rdy, ba_dok,
             init_cmd, post_act, next_cmd, dqm_busy;
-wire        all_act, rfshing, rfsh_br;
+wire        all_act, rfshing, rfsh_br, noreq;
 reg         all_dbusy, all_dbusy64;
 reg   [3:0] bg, cmd;
 reg  [14:0] prio_lfsr;
@@ -203,7 +203,8 @@ jtframe_sdram64_latch #(.LATCH(LATCH),.AW(AW)) u_latch(
     .rd         ( rd        ),
     .rd_l       ( rd_l      ),
     .wr         ( wr        ),
-    .wr_l       ( wr_l      )
+    .wr_l       ( wr_l      ),
+    .noreq      ( noreq     )
 );
 
 jtframe_sdram64_init #(.HF(HF),.BURSTLEN(BURSTLEN)) u_init(
@@ -435,7 +436,7 @@ jtframe_sdram64_bank #(
 
 always @(*) begin
     rfsh_bg = br==0 && !all_dbusy && !all_dqm && rfsh_br
-           && !init && !all_act && rd==0 && wr==0
+           && !init && !all_act && noreq
            && !(prog_en && (prog_rd || prog_wr )) && !prog_busy;
     if( init || rfshing || prog_en ) begin
         bg=0;
