@@ -163,19 +163,21 @@ always @(*) begin
         next_st <= 1; // writes finish earlier
 end
 
+wire row_match = row==addr_row;
+
 always @(*) begin
     do_prech = 0;
     do_act   = 0;
     do_read  = 0;
     if( bg ) begin
-        if( ( (st[IDLE]&&rd_wr) || st[PRE_ACT] || st[PRE_RD]) ) begin
-            if( !prechd || !actd ) begin // not precharge (address in the row) or not activated
-                do_prech = !actd || row != addr_row; // not a good address
-                do_read  = actd & ~do_prech & ~all_dbusy & (~all_dbusy64 | rd) & ~all_dqm; // good address
-            end else begin
-                do_act = ~all_act & ~all_dqm;
-            end
-        end
+        do_prech = !prechd && !row_match // not a good address
+                && (st[IDLE]&&rd_wr);
+
+        do_act  = ((st[IDLE] & rd_wr & prechd & ~actd) | st[PRE_ACT])
+                   & ~all_act & ~all_dqm;
+
+        do_read = ((st[IDLE] & rd_wr & row_match & actd) | st[PRE_RD]) &
+                    (~all_dbusy & (~all_dbusy64 | rd) & ~all_dqm);
     end
 end
 
@@ -230,7 +232,7 @@ always @(posedge clk, posedge rst) begin
 
         if( do_prech || set_prech || (do_read && AUTOPRECH)) begin
             prechd <= 1;
-            actd   <= 1;
+            actd   <= 0;
         end
     end
 end
