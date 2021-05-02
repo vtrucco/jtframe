@@ -89,6 +89,8 @@ module jtframe_sdram64 #(
 localparam BURSTLEN=(BA0_LEN>32 || BA1_LEN>32 ||BA2_LEN>32 ||BA3_LEN>32) ? 64 :(
                     (BA0_LEN>16 || BA1_LEN>16 ||BA2_LEN>16 ||BA3_LEN>16) ? 32 : 16);
 
+localparam LATCH = MISTER==0 && HF==1;  // MiST and SiDi struggle for HF
+
 //                             /CS /RAS /CAS /WE
 localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_REFRESH     = 4'b0___0____0____1, // 1
@@ -188,7 +190,7 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
-jtframe_sdram64_latch #(.HF(HF),.AW(AW)) u_latch(
+jtframe_sdram64_latch #(.LATCH(LATCH),.AW(AW)) u_latch(
     .rst        ( rst       ),
     .clk        ( clk       ),
     .ba0_addr   ( ba0_addr  ),

@@ -108,17 +108,34 @@ wire           rd_wr;
 
 reg            adv, do_prech, do_act, do_read;
 
+// state phases
+reg            in_busy, in_busy64;
+
 // SDRAM pins
 assign ack      = st[READ],
        dst      = st[DST] | (st[READ] & wr),
-       dbusy    = |{st[ (BALEN==16? READ+1 : RDY-2):READ], do_read},
-       dbusy64  = READONLY ? dbusy : |{st[BUSY:READ], do_read},
+       dbusy    = |{in_busy, do_read},
+       dbusy64  = READONLY ? dbusy : |{in_busy64, do_read},
        post_act = |last_act,
        dok      = |st[RDY:DST],
        rdy      = st[RDY] | (st[READ] & wr),
        dqm_busy = |{st[RDY-2:READ]},
        addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW],
        rd_wr    = rd | wr;
+
+always @(posedge clk, posedge rst) begin
+    if( rst ) begin
+        in_busy   <= 0; // |st[ (BALEN==16? READ+1 : RDY-2):READ]
+        in_busy64 <= 0; // |{st[BUSY:READ], do_read},
+    end else begin
+        if(next_st[READ]) in_busy <= 1;
+        else if( st[(BALEN==16? READ+1 : RDY-2)] || next_st[READ-1:0]!=0 ) in_busy<=0;
+
+        if(next_st[READ]) in_busy64 <= 1;
+        else if( st[BUSY] || next_st[READ-1:0]!=0 ) in_busy64<=0;
+
+    end
+end
 
 always @(*) begin
     adv=0;

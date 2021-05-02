@@ -16,7 +16,7 @@
     Version: 1.0
     Date: 29-4-2021 */
 
-module jtframe_sdram64_latch #(parameter HF=0, AW=22)(
+module jtframe_sdram64_latch #(parameter LATCH=0, AW=22)(
     input               rst,
     input               clk,
     input      [AW-1:0] ba0_addr,
@@ -34,7 +34,7 @@ module jtframe_sdram64_latch #(parameter HF=0, AW=22)(
 );
 
 generate
-    if( HF==1 ) begin
+    if( LATCH==1 ) begin
         always @(posedge clk, posedge rst) begin
             if( rst ) begin
                 ba0_addr_l <= 0;
