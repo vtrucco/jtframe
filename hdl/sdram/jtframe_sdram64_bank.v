@@ -168,7 +168,7 @@ always @(*) begin
     do_act   = 0;
     do_read  = 0;
     if( bg ) begin
-        if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd_wr ) begin
+        if( ( (st[IDLE]&&rd_wr) || st[PRE_ACT] || st[PRE_RD]) ) begin
             if( !prechd || !actd ) begin // not precharge (address in the row) or not activated
                 do_prech = !actd || row != addr_row; // not a good address
                 do_read  = actd & ~do_prech & ~all_dbusy & (~all_dbusy64 | rd) & ~all_dqm; // good address
