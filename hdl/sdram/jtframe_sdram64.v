@@ -114,7 +114,7 @@ wire [ 1:0] next_ba, prio;
 
 wire [AW-1:0] ba0_addr_l, ba1_addr_l, ba2_addr_l, ba3_addr_l;
 wire    [3:0] rd_l, wr_l;
-wire    [4:0] wr_busy;
+wire    [4:0] wr_busy, idle;
 wire          wr_cycle;
 
 // prog signals
@@ -252,6 +252,7 @@ jtframe_sdram64_bank #(
     .dst        ( pre_dst    ),    // data starts
     .dbusy      (            ), // prog works alone
     .all_dbusy  ( 1'd0       ),
+    .idle       ( idle[4]    ),
 
     .dbusy64    ( prog_busy  ),
     .all_dbusy64( 1'd0       ),
@@ -294,6 +295,7 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[0]  ),    // data starts
     .dbusy      ( ba_dbusy[0]),
     .all_dbusy  ( all_dbusy  ),
+    .idle       ( idle[0]    ),
 
     .dbusy64    (ba_dbusy64[0]),
     .all_dbusy64( all_dbusy64),
@@ -336,6 +338,7 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[1]  ),    // data starts
     .dbusy      ( ba_dbusy[1]),
     .all_dbusy  ( all_dbusy  ),
+    .idle       ( idle[1]    ),
 
     .dbusy64    (ba_dbusy64[1]),
     .all_dbusy64( all_dbusy64),
@@ -377,6 +380,7 @@ jtframe_sdram64_bank #(
     .dst        ( ba_dst[2]  ),    // data starts
     .dbusy      ( ba_dbusy[2]),
     .all_dbusy  ( all_dbusy  ),
+    .idle       ( idle[2]    ),
 
     .dbusy64    (ba_dbusy64[2]),
     .all_dbusy64( all_dbusy64),
@@ -419,6 +423,7 @@ jtframe_sdram64_bank #(
     .dbusy      ( ba_dbusy[3]),
     .all_dbusy  ( all_dbusy  ),
     .wr_busy    ( wr_busy[3] ),
+    .idle       ( idle[3]    ),
 
     .dbusy64    (ba_dbusy64[3]),
     .all_dbusy64( all_dbusy64),
@@ -441,9 +446,7 @@ jtframe_sdram64_bank #(
 );
 
 always @(*) begin
-    rfsh_bg = br==0 && !all_dbusy && !all_dqm && rfsh_br
-           && !init && !all_act && noreq
-           && !(prog_en && (prog_rd || prog_wr )) && !prog_busy;
+    rfsh_bg = &idle && !init && noreq;
     if( init || rfshing || prog_en ) begin
         bg=0;
         prog_bg = pre_br & !rfshing;

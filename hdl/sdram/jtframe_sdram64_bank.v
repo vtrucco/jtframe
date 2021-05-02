@@ -51,6 +51,7 @@ module jtframe_sdram64_bank #(
     input               all_dbusy,
     input               all_dbusy64,
     input               all_dqm,
+    output              idle,
 
     output              post_act, // cycles banned for activate (tRRD)
     input               all_act,
@@ -120,7 +121,8 @@ assign ack      = st[READ],
        post_act = |last_act,
        rdy      = st[RDY] | (st[READ] & wr),
        addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW],
-       rd_wr    = rd | wr;
+       rd_wr    = rd | wr,
+       idle     = st[0];
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
@@ -168,7 +170,7 @@ always @(*) begin
     br       = 0;
     if( (st[IDLE] || st[PRE_ACT] || st[PRE_RD]) && rd_wr ) begin
         br = 1;
-        if( st[PRE_RD] & ((all_dbusy&rd) | (all_dbusy64&wr)) ) br = 0; // Do not try to request
+        if( st[PRE_RD] & (all_dbusy | (all_dbusy64&wr)) ) br = 0; // Do not try to request
         if( !prechd || !actd ) begin // not precharge (address in the row) or not activated
             if( bg ) begin
                 do_prech = !actd || row != addr_row; // not a good address
