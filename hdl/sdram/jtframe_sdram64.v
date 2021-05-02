@@ -138,10 +138,10 @@ assign {next_ba, next_cmd, next_a } =
                         init ? { 2'd0, init_cmd, init_a } : (
                       rfshing? { 2'd0, rfsh_cmd, rfsh_a } : (
                       prog_en? { prog_ba, pre_cmd, pre_a} : (
-                       bg[0] ? { 2'd0, bx0_cmd, bx0_a } : (
-                       bg[1] ? { 2'd1, bx1_cmd, bx1_a } : (
+                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : (
                        bg[2] ? { 2'd2, bx2_cmd, bx2_a } : (
-                       bg[3] ? { 2'd3, bx3_cmd, bx3_a } : {2'd0, 4'd7, 13'd0} ))))));
+                       bg[1] ? { 2'd1, bx1_cmd, bx1_a } :
+                               { 2'd0, bx0_cmd, bx0_a } )))));
 
 assign prio     = prio_lfsr[1:0];
 assign sdram_dq = dq_pad;
