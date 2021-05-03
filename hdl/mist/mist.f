@@ -22,3 +22,4 @@ data_io.v
 ../ram/jtframe_dual_clk_ram.v
 -sv rgb2ypbpr.sv
 osd.sv
+../sdram/jtframe_sdram_stats.v

@@ -190,20 +190,5 @@ jtframe_sdram_bank_core #(.AW(AW),.HF(HF),.SHIFTED(SHIFTED)) u_core(
     .sdram_cke  ( sdram_cke     )
 );
 
-`ifdef SIMULATION
-`ifdef JTFRAME_SDRAM_STATS
-jtframe_sdram_stats #(.AW(AW)) u_stats(
-    .rst        ( rst           ),
-    .clk        ( clk           ),
-    // SDRAM interface
-    .sdram_a    ( sdram_a       ),
-    .sdram_ba   ( sdram_ba      ),
-    .sdram_nwe  ( sdram_nwe     ),
-    .sdram_ncas ( sdram_ncas    ),
-    .sdram_nras ( sdram_nras    ),
-    .sdram_ncs  ( sdram_ncs     )
-);
-`endif
-`endif
 
 endmodule

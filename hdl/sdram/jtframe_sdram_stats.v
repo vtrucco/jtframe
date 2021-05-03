@@ -16,6 +16,8 @@
     Version: 1.0
     Date: 22-12-2020 */
 
+`timescale 1ns/1ps
+
 module jtframe_sdram_stats #(
     parameter AW=22)(
     input               rst,

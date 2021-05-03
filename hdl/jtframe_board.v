@@ -454,6 +454,22 @@ jtframe_sdram64 #(
     .rfsh       ( ~LHBL         )
 );
 
+`ifdef SIMULATION
+`ifdef JTFRAME_SDRAM_STATS
+jtframe_sdram_stats #(.AW(SDRAMW)) u_stats(
+    .rst        ( rst           ),
+    .clk        ( clk_rom       ),
+    // SDRAM interface
+    .sdram_a    ( SDRAM_A       ),
+    .sdram_ba   ( SDRAM_BA      ),
+    .sdram_nwe  ( SDRAM_nWE     ),
+    .sdram_ncas ( SDRAM_nCAS    ),
+    .sdram_nras ( SDRAM_nRAS    ),
+    .sdram_ncs  ( SDRAM_nCS     )
+);
+`endif
+`endif
+
 wire [COLORW-1:0] pre2x_r, pre2x_g, pre2x_b;
 wire              pre2x_LHBL, pre2x_LVBL;
 
