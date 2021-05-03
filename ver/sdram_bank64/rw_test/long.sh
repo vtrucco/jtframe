@@ -2,7 +2,7 @@
 
 CMD="parallel --halt now,fail=1 "
 PERIODS="10 15.6"
-TIME=500
+TIME=100
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -26,5 +26,5 @@ done
 
 #different bank lengths
 $CMD sim.sh -nodump -period {1} -time $TIME -idle {2} \
--len 0 {3} -len 1 {4} -len 2 {5} -len 3 {5} \
+-len 0 {3} -len 1 {4} -len 2 {5} -len 3 {5} -prech 0  \
 ::: $PERIODS ::: 90 99 ::: 16 32 64 ::: 16 32 64 ::: 16 32 64 || exit $?
