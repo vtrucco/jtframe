@@ -183,7 +183,7 @@ always @(negedge clk27 or posedge rst_base)
     end
 
 `ifdef FASTSDRAM
-quick_sdram mist_sdram(
+quick_sdram u_sdram(
     .SDRAM_DQ   ( SDRAM_DQ      ),
     .SDRAM_A    ( SDRAM_A       ),
     .SDRAM_CLK  ( SDRAM_CLK     ),
@@ -193,7 +193,7 @@ quick_sdram mist_sdram(
     .SDRAM_nWE  ( SDRAM_nWE     )
 );
 `else
-mt48lc16m16a2 #(.filename(GAME_ROMNAME)) mist_sdram (
+mt48lc16m16a2 #(.filename(GAME_ROMNAME)) u_sdram (
     .Dq         ( SDRAM_DQ      ),
     .Addr       ( SDRAM_A       ),
     .Ba         ( SDRAM_BA      ),

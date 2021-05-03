@@ -658,16 +658,16 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
             // Precharge Bank 0
             if ((Addr[10] === 1'b1 || (Addr[10] === 1'b0 && Ba === 2'b00)) && Act_b0 === 1'b1) begin
-                Act_b0 = 1'b0;
-                Pc_b0 = 1'b1;
-                RP_chk0 = $time;
-
                 // Activate to Precharge
-                if (($time - RAS_chk0 < tRAS) || ($time - RAS_chk0 > tRASmax ) && RAS_chk0) begin
+                if (($time - RAS_chk0 < tRAS) || ($time - RAS_chk0 > tRASmax && Act_b0) && RAS_chk0) begin
                     $display ("\n%m : at time %t ERROR: tRAS violation during bank 0 Precharge", $time);
                     $display ("$time-last RAS = ", $time-RAS_chk0);
                     #100 $finish;
                 end
+
+                Act_b0 = 1'b0;
+                Pc_b0 = 1'b1;
+                RP_chk0 = $time;
 
                 // tWR violation check for write
                 if ($time - WR_chkm[0] < tWRm) begin
@@ -678,18 +678,18 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
             // Precharge Bank 1
             if ((Addr[10] === 1'b1 || (Addr[10] === 1'b0 && Ba === 2'b01)) && Act_b1 === 1'b1) begin
-                Act_b1 = 1'b0;
-                Pc_b1 = 1'b1;
-                RP_chk1 = $time;
-
                 // Activate to Precharge
-                if ((($time - RAS_chk1 < tRAS) || ($time - RAS_chk1 > tRASmax )) && RAS_chk1) begin
+                if ((($time - RAS_chk1 < tRAS) || ($time - RAS_chk1 > tRASmax && Act_b1)) && RAS_chk1) begin
                     $display("\n%m : at time %t ERROR: tRAS violation during bank 1 Precharge", $time);
                     $display("\t\t($time - RAS_chk1 < tRAS) = %d",($time - RAS_chk1 < tRAS) );
                     $display("\t\t($time - RAS_chk1 > tRASmax ) = %d",($time - RAS_chk1 > tRASmax ) );
                     $display("\t\tRAS_chk1 = %t",RAS_chk1 );
                     #100 $finish;
                 end
+
+                Act_b1 = 1'b0;
+                Pc_b1 = 1'b1;
+                RP_chk1 = $time;
 
                 // tWR violation check for write
                 if ($time - WR_chkm[1] < tWRm) begin
@@ -700,16 +700,16 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
             // Precharge Bank 2
             if ((Addr[10] === 1'b1 || (Addr[10] === 1'b0 && Ba === 2'b10)) && Act_b2 === 1'b1) begin
-                Act_b2 = 1'b0;
-                Pc_b2 = 1'b1;
-                RP_chk2 = $time;
-
                 // Activate to Precharge
-                if (($time - RAS_chk2 < tRAS) || ($time - RAS_chk2 > tRASmax ) && RAS_chk2) begin
+                if (($time - RAS_chk2 < tRAS) || ($time - RAS_chk2 > tRASmax && Act_b2) && RAS_chk2) begin
                     $display ("\n%m : at time %t ERROR: tRAS violation during bank 2 Precharge", $time);
                     $display ("$time-last RAS = ", $time-RAS_chk2);
                     #100 $finish;
                 end
+
+                Act_b2 = 1'b0;
+                Pc_b2 = 1'b1;
+                RP_chk2 = $time;
 
                 // tWR violation check for write
                 if ($time - WR_chkm[2] < tWRm) begin
@@ -720,16 +720,16 @@ module mt48lc16m16a2 (Dq, Addr, Ba, Clk, Cke, Cs_n, Ras_n, Cas_n, We_n, Dqm,
 
             // Precharge Bank 3
             if ((Addr[10] === 1'b1 || (Addr[10] === 1'b0 && Ba === 2'b11)) && Act_b3 === 1'b1) begin
-                Act_b3 = 1'b0;
-                Pc_b3 = 1'b1;
-                RP_chk3 = $time;
-
                 // Activate to Precharge
-                if (($time - RAS_chk3 < tRAS) || ($time - RAS_chk3 > tRASmax ) && RAS_chk3) begin
+                if (($time - RAS_chk3 < tRAS) || ($time - RAS_chk3 > tRASmax && Act_b3) && RAS_chk3) begin
                     $display ("\n%m : at time %t ERROR: tRAS violation during bank 3 Precharge", $time);
                     $display ("$time-last RAS = ", $time-RAS_chk3);
                     #100 $finish;
                 end
+
+                Act_b3 = 1'b0;
+                Pc_b3 = 1'b1;
+                RP_chk3 = $time;
 
                 // tWR violation check for write
                 if ($time - WR_chkm[3] < tWRm) begin
