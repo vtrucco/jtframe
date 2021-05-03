@@ -5,6 +5,7 @@ module test;
 parameter BANK1=1, BANK2=1, BANK3=1,
           IDLE=50, SHIFTED=0, MAXA=21;
 parameter BA0_LEN=64, BA1_LEN=64, BA2_LEN=64, BA3_LEN=64;
+parameter BA0_AUTOPRECH=0, BA1_AUTOPRECH=0, BA2_AUTOPRECH=0, BA3_AUTOPRECH=0;
 
 `ifndef PERIOD
 `define PERIOD 10
@@ -193,7 +194,11 @@ jtframe_sdram64 #(
     .BA0_LEN( BA0_LEN ),
     .BA1_LEN( BA1_LEN ),
     .BA2_LEN( BA2_LEN ),
-    .BA3_LEN( BA3_LEN )
+    .BA3_LEN( BA3_LEN ),
+    .BA0_AUTOPRECH( BA0_AUTOPRECH ),
+    .BA1_AUTOPRECH( BA1_AUTOPRECH ),
+    .BA2_AUTOPRECH( BA2_AUTOPRECH ),
+    .BA3_AUTOPRECH( BA3_AUTOPRECH )
 ) uut(
     .rst        ( rst           ),
     .clk        ( clk           ),

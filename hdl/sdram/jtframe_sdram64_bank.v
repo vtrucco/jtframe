@@ -119,7 +119,7 @@ assign ack      = st[READ],
        dbusy    = |{in_busy, do_read},
        dbusy64  = READONLY ? dbusy : |{in_busy64, do_read},
        post_act = |last_act,
-       rdy      = st[RDY] | (st[READ] & wr),
+       rdy      = st[RDY] | (st[READ] & wr & ~AUTOPRECH),
        addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW],
        rd_wr    = rd | wr,
        idle     = st[0];

@@ -69,6 +69,13 @@ while [ $# -gt 0 ]; do
         -bwait)
             shift
             EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_BWAIT=$1";;
+        -prech)
+            shift
+            if [[ ! $1 =~ [0123] ]]; then
+                echo -prech option must be followed by the bank number
+                exit 1
+            fi
+            EXTRA="$EXTRA ${PARAM}test.BA${1}_AUTOPRECH=1";;
         -shift)
             shift
             SDRAM_SHIFT=$1
@@ -100,6 +107,7 @@ Usage:
     -1banks       Only bank 0 is active
     -2banks       Only banks 0 and 1 are active
     -3banks       Only banks 0, 1 and 2 are active
+    -prech <bank> Enables auto precharge for <bank>
     -bwait        Clock cycles to wait in between new requests
 
     -mister       enables MiSTer simulation, with special constraint on DQM signals
