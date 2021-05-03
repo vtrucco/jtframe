@@ -483,6 +483,16 @@ jtframe_sdram64 #(
 );
 
 `ifdef SIMULATION
+
+jtframe_romrq_rdy_check u_rdy_check(
+    .rst       ( rst        ),
+    .clk       ( clk_rom    ),
+    .ba_rd     ( ba_rd      ),
+    .ba_wr     ( ba_wr      ),
+    .ba_ack    ( ba_ack     ),
+    .ba_rdy    ( ba_rdy     )
+);
+
 `ifdef JTFRAME_SDRAM_STATS
 jtframe_sdram_stats #(.AW(SDRAMW)) u_stats(
     .rst        ( rst           ),

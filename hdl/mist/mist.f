@@ -12,6 +12,7 @@ data_io.v
 ../keyboard/jtframe_4wayjoy.v
 ../ver/spitx.v
 ../ver/video_dump.v
+../ver/jtframe_romrq_rdy_check.v
 ../video/jtgng_vga.v
 ../video/jtgng_vgapxl.v
 ../video/jtframe_scan2x.v

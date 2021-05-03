@@ -137,6 +137,15 @@ module jtframe_z80_romwait (
     input         rom_ok
 );
 
+`ifdef SIMULATION
+always @(negedge clk) begin
+    if( A === 16'hXXXX && rst_n) begin
+        $display("\nError: Z80 address bus is XXXX (%m)\n");
+        $finish;
+    end
+end
+`endif
+
 jtframe_z80wait #(1) u_wait(
     .rst_n      ( rst_n     ),
     .clk        ( clk       ),

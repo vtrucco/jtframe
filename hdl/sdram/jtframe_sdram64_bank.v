@@ -119,7 +119,7 @@ assign ack      = st[READ],
        dbusy    = |{in_busy, do_read},
        dbusy64  = READONLY ? dbusy : |{in_busy64, do_read},
        post_act = |last_act,
-       rdy      = written ? st[READ] : st[RDY],
+       rdy      = (written && !AUTOPRECH) ? st[READ] : st[RDY],
        addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW],
        rd_wr    = rd | wr,
        idle     = st[0];
@@ -236,6 +236,7 @@ always @(posedge clk, posedge rst) begin
         end
 
         if( do_read ) written <= wr;
+            else if(st[0]) written<=0;
 
         if( do_prech || set_prech || (do_read && AUTOPRECH)) begin
             prechd <= 1;
