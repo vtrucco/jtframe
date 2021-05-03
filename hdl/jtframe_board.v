@@ -144,6 +144,30 @@ module jtframe_board #(parameter
     output reg [3:0]  gfx_en
 );
 
+`ifdef JTFRAME_BA0_AUTOPRECH
+    localparam BA0_AUTOPRECH = `JTFRAME_BA0_AUTOPRECH;
+`else
+    localparam BA0_AUTOPRECH = 0;
+`endif
+
+`ifdef JTFRAME_BA1_AUTOPRECH
+    localparam BA1_AUTOPRECH = `JTFRAME_BA1_AUTOPRECH;
+`else
+    localparam BA1_AUTOPRECH = 0;
+`endif
+
+`ifdef JTFRAME_BA2_AUTOPRECH
+    localparam BA2_AUTOPRECH = `JTFRAME_BA2_AUTOPRECH;
+`else
+    localparam BA2_AUTOPRECH = 0;
+`endif
+
+`ifdef JTFRAME_BA3_AUTOPRECH
+    localparam BA3_AUTOPRECH = `JTFRAME_BA3_AUTOPRECH;
+`else
+    localparam BA3_AUTOPRECH = 0;
+`endif
+
 wire  [ 2:0] scanlines;
 wire         bw_en, blend_en;
 wire         en_mixing;
@@ -387,13 +411,17 @@ jtframe_dip u_dip(
 // Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
 // clock is shifted or not.
 jtframe_sdram64 #(
-    .AW      ( SDRAMW   ),
-    .BA0_LEN ( BA0_LEN  ),
-    .BA1_LEN ( BA1_LEN  ),
-    .BA2_LEN ( BA2_LEN  ),
-    .BA3_LEN ( BA3_LEN  ),
-    .PROG_LEN( PROG_LEN ),
-    .MISTER  ( MISTER   ),
+    .AW           ( SDRAMW        ),
+    .BA0_LEN      ( BA0_LEN       ),
+    .BA1_LEN      ( BA1_LEN       ),
+    .BA2_LEN      ( BA2_LEN       ),
+    .BA3_LEN      ( BA3_LEN       ),
+    .BA0_AUTOPRECH( BA0_AUTOPRECH ),
+    .BA1_AUTOPRECH( BA1_AUTOPRECH ),
+    .BA2_AUTOPRECH( BA2_AUTOPRECH ),
+    .BA3_AUTOPRECH( BA3_AUTOPRECH ),
+    .PROG_LEN     ( PROG_LEN      ),
+    .MISTER       ( MISTER        ),
 `ifdef JTFRAME_SDRAM96
     .HF(1),
     .SHIFTED(0)

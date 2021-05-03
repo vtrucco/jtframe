@@ -28,6 +28,12 @@ module jtframe_sdram64 #(
               BA2_LEN =64,
               BA3_LEN =64,
               PROG_LEN=64,
+
+              BA0_AUTOPRECH=0,
+              BA1_AUTOPRECH=0,
+              BA2_AUTOPRECH=0,
+              BA3_AUTOPRECH=0,
+
               MISTER=1,     // shorts dqm to address bus 12/11 signals
               RFSHCNT=9  // 8192 every 64ms or 1 every 7.8us ~ 8.2 per line (15kHz)
 )(
@@ -280,11 +286,12 @@ jtframe_sdram64_bank #(
 );
 
 jtframe_sdram64_bank #(
-    .AW       ( AW      ),
-    .HF       ( HF      ),
-    .SHIFTED  ( SHIFTED ),
-    .BURSTLEN ( BURSTLEN),
-    .BALEN    ( BA0_LEN )
+    .AW       ( AW            ),
+    .HF       ( HF            ),
+    .SHIFTED  ( SHIFTED       ),
+    .BURSTLEN ( BURSTLEN      ),
+    .BALEN    ( BA0_LEN       ),
+    .AUTOPRECH( BA0_AUTOPRECH )
 ) u_bank0(
     .rst        ( other_rst  ),
     .clk        ( clk        ),
@@ -323,11 +330,12 @@ jtframe_sdram64_bank #(
 );
 
 jtframe_sdram64_bank #(
-    .AW       ( AW      ),
-    .HF       ( HF      ),
-    .SHIFTED  ( SHIFTED ),
-    .BURSTLEN ( BURSTLEN),
-    .BALEN    ( BA1_LEN )
+    .AW       ( AW            ),
+    .HF       ( HF            ),
+    .SHIFTED  ( SHIFTED       ),
+    .BURSTLEN ( BURSTLEN      ),
+    .BALEN    ( BA1_LEN       ),
+    .AUTOPRECH( BA1_AUTOPRECH )
 ) u_bank1(
     .rst        ( other_rst  ),
     .clk        ( clk        ),
@@ -365,11 +373,12 @@ jtframe_sdram64_bank #(
 );
 
 jtframe_sdram64_bank #(
-    .AW       ( AW      ),
-    .HF       ( HF      ),
-    .SHIFTED  ( SHIFTED ),
-    .BURSTLEN ( BURSTLEN),
-    .BALEN    ( BA2_LEN )
+    .AW       ( AW            ),
+    .HF       ( HF            ),
+    .SHIFTED  ( SHIFTED       ),
+    .BURSTLEN ( BURSTLEN      ),
+    .BALEN    ( BA2_LEN       ),
+    .AUTOPRECH( BA2_AUTOPRECH )
 ) u_bank2(
     .rst        ( other_rst  ),
     .clk        ( clk        ),
@@ -407,11 +416,12 @@ jtframe_sdram64_bank #(
 );
 
 jtframe_sdram64_bank #(
-    .AW       ( AW      ),
-    .HF       ( HF      ),
-    .SHIFTED  ( SHIFTED ),
-    .BURSTLEN ( BURSTLEN),
-    .BALEN    ( BA3_LEN )
+    .AW       ( AW            ),
+    .HF       ( HF            ),
+    .SHIFTED  ( SHIFTED       ),
+    .BURSTLEN ( BURSTLEN      ),
+    .BALEN    ( BA3_LEN       ),
+    .AUTOPRECH( BA3_AUTOPRECH )
 ) u_bank3(
     .rst        ( other_rst  ),
     .clk        ( clk        ),

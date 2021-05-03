@@ -163,7 +163,7 @@ always @(*) begin
         next_st <= 1; // writes finish earlier
 end
 
-wire row_match = row==addr_row && actd;
+wire row_match = row===addr_row && actd;
 
 always @(*) begin
     do_prech = 0;
@@ -212,7 +212,7 @@ always @(*) begin
           do_act   ? CMD_ACTIVE    : (
           do_read  ? (rd ? CMD_READ : CMD_WRITE ) : CMD_NOP ));
     sdram_a = do_read ? { 2'b0,
-                          AUTOPRECH,
+                          AUTOPRECH[0],
                           addr[AW-1], addr[8:0] } :
              (do_act ? addr_row : {2'b0, PRECHARGE_ALL, 10'd0});
 end
