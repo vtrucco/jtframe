@@ -80,9 +80,9 @@ localparam IDLE    = 0,
            READ    = PRE_RD+1,
            DST     = READ + (SHIFTED ? 1 : 2) ,
            DTICKS  = BURSTLEN==64 ? 4 : (BURSTLEN==32?2:1),
-           STW= 9+DTICKS-(HF?0:2) -((AUTOPRECH||!READONLY) ? 0 : (BURSTLEN-BALEN)),
            BUSY    = DST+(DTICKS-1),
-           RDY     = DST + (BALEN==16 ? 0 : (BALEN==32? 1 : 3));
+           RDY     = DST + (BALEN==16 ? 0 : (BALEN==32? 1 : 3)),
+           STW     = RDY + 1 + AUTOPRECH[0];
 
 //                             /CS /RAS /CAS /WE
 localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
@@ -108,7 +108,7 @@ reg  [STW-1:0] st, next_st, rot_st;
 reg  [    1:0] last_act;
 wire           rd_wr;
 
-reg            adv, do_prech, do_act, do_read;
+reg            adv, do_prech, do_act, do_read, written;
 
 // state phases
 reg            in_busy, in_busy64;
@@ -119,7 +119,7 @@ assign ack      = st[READ],
        dbusy    = |{in_busy, do_read},
        dbusy64  = READONLY ? dbusy : |{in_busy64, do_read},
        post_act = |last_act,
-       rdy      = wr ? st[READ] : st[RDY],
+       rdy      = written ? st[READ] : st[RDY],
        addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW],
        rd_wr    = rd | wr,
        idle     = st[0];
@@ -224,6 +224,7 @@ always @(posedge clk, posedge rst) begin
         row      <= 0;
         st       <= 1; // IDLE
         last_act <= 0;
+        written  <= 0;
     end else begin
         st       <= next_st;
         last_act <= { do_act, last_act[1] };
@@ -233,6 +234,8 @@ always @(posedge clk, posedge rst) begin
             prechd  <= 0;
             actd    <= 1;
         end
+
+        if( do_read ) written <= wr;
 
         if( do_prech || set_prech || (do_read && AUTOPRECH)) begin
             prechd <= 1;
