@@ -462,9 +462,9 @@ jtframe_sdram64_bank #(
 
 always @(*) begin
     rfsh_bg = &idle && noreq && rfsh_br;
-    if( rfshing || prog_en ) begin
+    prog_bg = pre_br & !rfshing;
+    if( rfshing ) begin
         bg=0;
-        prog_bg = pre_br & !rfshing;
     end else
     case( {br, prio[1:0]} )
         6'b0000_00: bg=4'b0000;
