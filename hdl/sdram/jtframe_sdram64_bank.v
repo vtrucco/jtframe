@@ -162,7 +162,7 @@ always @(*) begin
         next_st <= 1; // writes finish earlier
 end
 
-wire row_match = row===addr_row && actd;
+wire row_match = row===addr_row && actd && !AUTOPRECH[0];
 
 always @(*) begin
     do_prech = 0;
