@@ -53,7 +53,7 @@ module jtframe_sdram64_bank #(
     input               all_dqm,
     output              idle,
 
-    output              post_act, // cycles banned for activate (tRRD)
+    output reg          post_act, // cycles banned for activate (tRRD)
     input               all_act,
 
     // SDRAM interface
@@ -105,7 +105,7 @@ reg            actd, prechd;
 reg  [ROW-1:0] row;
 wire [ROW-1:0] addr_row;
 reg  [STW-1:0] st, next_st, rot_st;
-reg  [    1:0] last_act;
+reg            last_act;
 wire           rd_wr;
 
 reg            adv, do_prech, do_act, do_read, written;
@@ -118,7 +118,6 @@ assign ack      = st[READ],
        dst      = st[DST] | (st[READ] & wr),
        dbusy    = |{in_busy, do_read},
        dbusy64  = READONLY ? dbusy : |{in_busy64, do_read},
-       post_act = |last_act,
        rdy      = (written && !AUTOPRECH) ? st[READ] : st[RDY],
        addr_row = AW==22 ? addr[AW-1:AW-ROW] : addr[AW-2:AW-1-ROW],
        rd_wr    = rd | wr,
@@ -227,7 +226,13 @@ always @(posedge clk, posedge rst) begin
         written  <= 0;
     end else begin
         st       <= next_st;
-        last_act <= { do_act, last_act[1] };
+        if( do_act ) begin
+            post_act <= 1;
+            last_act <= 1;
+        end else begin
+            last_act <= 0;
+            post_act <= last_act;
+        end
 
         if( do_act ) begin
             row     <= addr_row;
