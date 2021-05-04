@@ -45,34 +45,35 @@ module jtframe_rom_1slot #(parameter
     input       [15:0]  data_read
 );
 
-reg slot0_sel;
+jtframe_rom_2slots #(
+    .SDRAMW      ( SDRAMW       ),
+    .SLOT0_AW    ( SLOT0_AW     ),
+    .SLOT0_DW    ( SLOT0_DW     ),
+    .SLOT0_LATCH ( SLOT0_LATCH  ),
+    .SLOT0_OFFSET( 'h0          )
+) u_2slots(
+    .rst    ( rst       ),
+    .clk    ( clk       ),
 
-always @(posedge clk, posedge rst ) begin
-    if( rst )
-        slot0_sel <= 0;
-    else begin
-        if( sdram_ack )
-            slot0_sel <= 1;
-        else if( data_rdy )
-            slot0_sel <= 0;
-    end
-end
+    .slot0_addr( slot0_addr ),
+    .slot1_addr(            ),
 
-jtframe_romrq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.LATCH(SLOT0_LATCH)) u_slot0(
-    .rst       ( rst                    ),
-    .clk       ( clk                    ),
-    .clr       ( 1'b0                   ),
-    .offset    ( {SDRAMW{1'b0}}         ), // no need for offset when there is only one module
-    .addr      ( slot0_addr             ),
-    .addr_ok   ( slot0_cs               ),
-    .sdram_addr( sdram_addr             ),
-    .din       ( data_read              ),
-    .din_ok    ( data_rdy               ),
-    .dst       ( data_dst               ),
-    .dout      ( slot0_dout             ),
-    .req       ( sdram_req              ),
-    .data_ok   ( slot0_ok               ),
-    .we        ( slot0_sel              )
+    //  output data
+    .slot0_dout( slot0_dout ),
+    .slot1_dout(            ),
+
+    .slot0_cs  ( slot0_cs   ),
+    .slot1_cs  ( 1'b0       ),
+
+    .slot0_ok  ( slot0_ok   ),
+    .slot1_ok  (            ),
+    // SDRAM controller interface
+    .sdram_ack ( sdram_ack  ),
+    .sdram_req ( sdram_req  ),
+    .sdram_addr( sdram_addr ),
+    .data_dst  ( data_dst   ),
+    .data_rdy  ( data_rdy   ),
+    .data_read ( data_read  )
 );
 
 endmodule
