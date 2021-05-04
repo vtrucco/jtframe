@@ -131,7 +131,8 @@ reg         prog_rst, prog_bg, other_rst;
 
 reg         rfsh_bg;
 reg  [15:0] dq_pad;
-reg  [ 1:0] dqm, mask_mux;
+reg  [ 1:0] dqm;
+wire [ 1:0] mask_mux;
 
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = MISTER ? sdram_a[12:11] : dqm;
@@ -151,6 +152,7 @@ assign {next_ba, next_cmd, next_a } =
 
 assign prio     = prio_lfsr[1:0];
 assign sdram_dq = dq_pad;
+assign mask_mux = prog_en ? prog_din_m : din_m;
 
 always @(negedge clk) begin
     prog_rst  <= ~prog_en | rst;
@@ -176,7 +178,6 @@ always @(posedge clk) begin
     sdram_a[10:0] <= next_a[10:0];
 
     dq_pad <= wr_cycle ? (prog_en ? prog_din : din) : 16'hzzzz;
-    mask_mux <= prog_en ? prog_din_m : din_m;
     if( MISTER ) begin
         if( next_cmd==CMD_LOAD_MODE || next_cmd==CMD_ACTIVE )
             sdram_a[12:11] <= next_a[12:11];
