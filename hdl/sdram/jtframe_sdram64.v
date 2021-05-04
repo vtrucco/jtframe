@@ -235,6 +235,7 @@ jtframe_sdram64_rfsh #(.HF(HF),.RFSHCNT(RFSHCNT)) u_rfsh(
     .start      ( rfsh      ),
     .br         ( rfsh_br   ),
     .bg         ( rfsh_bg   ),
+    .noreq      ( noreq     ),
     .rfshing    ( rfshing   ),
     .cmd        ( rfsh_cmd  ),
     .sdram_a    ( rfsh_a    )

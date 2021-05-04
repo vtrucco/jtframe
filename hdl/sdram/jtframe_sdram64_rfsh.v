@@ -24,6 +24,7 @@ module jtframe_sdram64_rfsh #(parameter HF=1, RFSHCNT=9)
     input               start,
     output   reg        br,
     input               bg,
+    input               noreq,
     output   reg        rfshing,
     output   reg  [3:0] cmd,
     output       [12:0] sdram_a
@@ -33,7 +34,8 @@ module jtframe_sdram64_rfsh #(parameter HF=1, RFSHCNT=9)
 // HF=0 -> 60MHz  (16.67ns)
 // HF=1 -> 100MHz (10ns)
 
-localparam STW=3+7-(HF==1? 0 : 4);
+localparam STW  = 3+7-(HF==1? 0 : 4),
+           RFRSH= HF?2:1;
 
 //                             /CS /RAS /CAS /WE
 localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
@@ -75,13 +77,22 @@ always @(posedge clk, posedge rst) begin
             br      <= 0;
             rfshing <= 1;
         end
-        if( rfshing || bg )
+        if( rfshing || bg ) begin
             st <= { st[STW-2:0], st[STW-1] };
-        if( st[STW-1] ) begin
-            rfshing <= 0;
-            if( cnt!=0) cnt <= cnt - 1'd1;
         end
-        cmd <= st[0] ? CMD_PRECHARGE : ( st[HF?2:1] ? CMD_REFRESH : CMD_NOP );
+        if( st[STW-1] ) begin
+            if( cnt!=0 ) begin
+                cnt <= cnt - 1'd1;
+                if( !noreq ) begin
+                    rfshing <= 0;
+                end else  begin
+                    st <= 1 << RFRSH; // do another refresh cycle as there are no requests
+                end
+            end else begin
+                rfshing <= 0;
+            end
+        end
+        cmd <= st[0] ? CMD_PRECHARGE : ( st[RFRSH] ? CMD_REFRESH : CMD_NOP );
     end
 end
 
