@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CMD="parallel --halt now,fail=1 "
-PERIODS="10 15.6"
+PERIODS="10 16.67"
 TIME=100
 
 while [ $# -gt 0 ]; do

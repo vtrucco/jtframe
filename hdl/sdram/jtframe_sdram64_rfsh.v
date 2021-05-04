@@ -29,8 +29,10 @@ module jtframe_sdram64_rfsh #(parameter HF=1, RFSHCNT=9)
     output       [12:0] sdram_a
 );
 
-// A clock period shorter than 10ns will need more cycles
-// to prevent a tRFC error
+// Frequency limits before getting a tRFC error
+// HF=0 -> 60MHz  (16.67ns)
+// HF=1 -> 100MHz (10ns)
+
 localparam STW=3+7-(HF==1? 0 : 4);
 
 //                             /CS /RAS /CAS /WE
