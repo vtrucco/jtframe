@@ -127,7 +127,7 @@ wire          wr_cycle;
 wire        pre_dst, pre_dok, pre_ack, pre_rdy;
 wire [12:0] pre_a;
 wire [ 3:0] pre_cmd;
-reg         prog_rst, prog_bg, other_rst;
+reg         prog_rst, prog_bg, other_rst, rfsh_rst;
 
 reg         rfsh_bg;
 reg  [15:0] dq_pad;
@@ -155,8 +155,9 @@ assign sdram_dq = dq_pad;
 assign mask_mux = prog_en ? prog_din_m : din_m;
 
 always @(negedge clk) begin
-    prog_rst  <= ~prog_en | rst;
-    other_rst <= prog_en | rst;
+    prog_rst  <= ~prog_en | init | rst;
+    rfsh_rst  <= init | rst;
+    other_rst <= prog_en | init | rst;
 end
 
 always @(posedge clk) begin
@@ -228,7 +229,7 @@ jtframe_sdram64_init #(.HF(HF),.BURSTLEN(BURSTLEN)) u_init(
 );
 
 jtframe_sdram64_rfsh #(.HF(HF),.RFSHCNT(RFSHCNT)) u_rfsh(
-    .rst        ( rst       ),
+    .rst        ( rfsh_rst  ),
     .clk        ( clk       ),
 
     .start      ( rfsh      ),
@@ -460,8 +461,8 @@ jtframe_sdram64_bank #(
 );
 
 always @(*) begin
-    rfsh_bg = &idle && !init && noreq && rfsh_br;
-    if( init || rfshing || prog_en ) begin
+    rfsh_bg = &idle && noreq && rfsh_br;
+    if( rfshing || prog_en ) begin
         bg=0;
         prog_bg = pre_br & !rfshing;
     end else
@@ -542,5 +543,14 @@ always @(*) begin
         6'b1111_11: bg=4'b1000;
     endcase
 end
+
+`ifdef SIMULATION
+always @(posedge clk) begin
+    if( (rd!=0 || wr!=0) && init ) begin
+        $display("\nERROR: SDRAM rd/wr inputs should be zero during initialization (%m)");
+        $finish;
+    end
+end
+`endif
 
 endmodule
