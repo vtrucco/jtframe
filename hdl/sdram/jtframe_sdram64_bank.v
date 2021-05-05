@@ -86,7 +86,7 @@ localparam IDLE    = 0,
            DTICKS  = BURSTLEN==64 ? 4 : (BURSTLEN==32?2:1),
            BUSY    = DST+(DTICKS-1),
            RDY     = DST + (BALEN==16 ? 0 : (BALEN==32? 1 : 3)),
-           STW     = RDY + 1 + AUTOPRECH[0];
+           STW     = BUSY + 1 + AUTOPRECH[0];
 
 //                             /CS /RAS /CAS /WE
 localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
