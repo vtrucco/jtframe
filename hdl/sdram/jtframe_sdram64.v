@@ -112,12 +112,13 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
 
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd, rfsh_cmd,
             ba_dst, ba_dbusy, ba_dbusy64, ba_rdy, ba_dok,
-            init_cmd, post_act, next_cmd, dqm_busy;
+            init_cmd, post_act, next_cmd, dqm_busy, match;
 wire        all_act, rfshing, rfsh_br, noreq;
 reg         all_dbusy, all_dbusy64;
 reg   [3:0] bg, cmd;
 reg  [14:0] prio_lfsr;
-wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a;
+wire [12:0] bx0_a, bx1_a, bx2_a, bx3_a, init_a, next_a, rfsh_a,
+            ba0_row, ba1_row, ba2_row, ba3_row;
 wire [ 1:0] next_ba, prio;
 
 wire [AW-1:0] ba0_addr_l, ba1_addr_l, ba2_addr_l, ba3_addr_l;
@@ -211,6 +212,11 @@ jtframe_sdram64_latch #(.LATCH(LATCH),.AW(AW)) u_latch(
     .ba1_addr_l ( ba1_addr_l),
     .ba2_addr_l ( ba2_addr_l),
     .ba3_addr_l ( ba3_addr_l),
+    .ba0_row    ( ba0_row   ),
+    .ba1_row    ( ba1_row   ),
+    .ba2_row    ( ba2_row   ),
+    .ba3_row    ( ba3_row   ),
+    .match      ( match     ),
     .prog_en    ( prog_en   ),
     .prog_rd    ( prog_rd   ),
     .prog_wr    ( prog_wr   ),
@@ -278,6 +284,9 @@ jtframe_sdram64_bank #(
     .all_dqm    ( 1'd0       ),
     .wr_busy    ( wr_busy[4] ),
 
+    .row        (            ),
+    .match      ( 1'b0       ),
+
     .dok        ( pre_dok    ),
     .rdy        ( pre_rdy    ),
     .set_prech  ( 1'd0       ),
@@ -326,6 +335,9 @@ jtframe_sdram64_bank #(
     .rdy        ( ba_rdy[0]  ),
     .set_prech  ( rfsh_bg    ),
 
+    .row        ( ba0_row    ),
+    .match      ( match[0]   ),
+
     // SDRAM interface
     .br         ( br[0]      ), // bus request
     .bg         ( bg[0]      ), // bus grant
@@ -368,6 +380,9 @@ jtframe_sdram64_bank #(
 
     .dqm_busy   ( dqm_busy[1]),
     .all_dqm    ( all_dqm    ),
+
+    .row        ( ba1_row    ),
+    .match      ( match[1]   ),
 
     // SDRAM interface
     .br         ( br[1]      ), // bus request
@@ -412,6 +427,9 @@ jtframe_sdram64_bank #(
     .dqm_busy   ( dqm_busy[2]),
     .all_dqm    ( all_dqm    ),
 
+    .row        ( ba2_row    ),
+    .match      ( match[2]   ),
+
     // SDRAM interface
     .br         ( br[2]      ), // bus request
     .bg         ( bg[2]      ), // bus grant
@@ -454,6 +472,9 @@ jtframe_sdram64_bank #(
 
     .dqm_busy   ( dqm_busy[3]),
     .all_dqm    ( all_dqm    ),
+
+    .row        ( ba3_row    ),
+    .match      ( match[3]   ),
 
     // SDRAM interface
     .br         ( br[3]      ), // bus request

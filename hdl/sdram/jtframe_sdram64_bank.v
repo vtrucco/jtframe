@@ -56,6 +56,10 @@ module jtframe_sdram64_bank #(
     output reg          post_act, // cycles banned for activate (tRRD)
     input               all_act,
 
+    // row matching
+    output reg  [12:0]  row,
+    input               match,
+
     // SDRAM interface
     output reg          br, // bus request
     input               bg, // bus grant
@@ -102,7 +106,6 @@ end
 `endif
 */
 reg            actd, prechd;
-reg  [ROW-1:0] row;
 wire [ROW-1:0] addr_row;
 reg  [STW-1:0] st, next_st, rot_st;
 reg            last_act;
@@ -162,7 +165,7 @@ always @(*) begin
         next_st <= 1; // writes finish earlier
 end
 
-wire row_match = row===addr_row && actd && !AUTOPRECH[0];
+wire row_match = match && actd && !AUTOPRECH[0];
 
 always @(*) begin
     do_prech = 0;
