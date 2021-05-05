@@ -67,8 +67,11 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
+wire init;
+wire rst_romrq = rst | init;
+
 reader #(.ROM("sdram_bank0.hex"),.DW(8)) u_read0(
-    .rst        ( rst        ),
+    .rst        ( rst_romrq  ),
     .clk        ( clk        ),
     .cs         ( slot0_cs   ),
     .addr       ( slot0_addr ),
@@ -77,7 +80,7 @@ reader #(.ROM("sdram_bank0.hex"),.DW(8)) u_read0(
 );
 
 reader #(.ROM("sdram_bank1.hex"),.DW(16)) u_read1(
-    .rst        ( rst        ),
+    .rst        ( rst_romrq  ),
     .clk        ( clk        ),
     .cs         ( slot1_cs   ),
     .addr       ( slot1_addr ),
@@ -86,7 +89,7 @@ reader #(.ROM("sdram_bank1.hex"),.DW(16)) u_read1(
 );
 
 reader #(.ROM("sdram_bank2.hex"),.DW(32)) u_read2(
-    .rst        ( rst        ),
+    .rst        ( rst_romrq  ),
     .clk        ( clk        ),
     .cs         ( slot2_cs   ),
     .addr       ( slot2_addr ),
@@ -97,7 +100,7 @@ reader #(.ROM("sdram_bank2.hex"),.DW(32)) u_read2(
 localparam BA0_LEN=32,BA1_LEN=32,BA2_LEN=32,BA3_LEN=32;
 
 jtframe_rom_1slot #(.SLOT0_DW( 8),.SLOT0_AW(12)) u_bank0(
-    .rst        ( rst        ),
+    .rst        ( rst_romrq  ),
     .clk        ( clk        ),
     .slot0_addr ( slot0_addr ),
     .slot0_dout ( slot0_dout ),
@@ -114,7 +117,7 @@ jtframe_rom_1slot #(.SLOT0_DW( 8),.SLOT0_AW(12)) u_bank0(
 );
 
 jtframe_rom_1slot #(.SLOT0_DW(16),.SLOT0_AW(12)) u_bank1(
-    .rst        ( rst        ),
+    .rst        ( rst_romrq  ),
     .clk        ( clk        ),
     .slot0_addr ( slot1_addr ),
     .slot0_dout ( slot1_dout ),
@@ -131,7 +134,7 @@ jtframe_rom_1slot #(.SLOT0_DW(16),.SLOT0_AW(12)) u_bank1(
 );
 
 jtframe_rom_1slot #(.SLOT0_DW(32),.SLOT0_AW(12)) u_bank2(
-    .rst        ( rst        ),
+    .rst        ( rst_romrq  ),
     .clk        ( clk        ),
     .slot0_addr ( slot2_addr ),
     .slot0_dout ( slot2_dout ),
@@ -175,6 +178,7 @@ jtframe_sdram64 #(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .rfsh       ( hblank        ),
+    .init       ( init          ),
     // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
     .ba1_addr   ( ba1_addr      ),

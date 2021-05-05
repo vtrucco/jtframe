@@ -52,6 +52,8 @@ wire        sdram_ncs;
 wire        sdram_cke;
 
 wire [ 3:0] dok;
+wire        init, rst_req;
+
 wire        hblank;
 integer     hcnt;
 
@@ -70,6 +72,8 @@ assign rfsh_en = 0;
 `else
 assign rfsh_en = 1;
 `endif
+
+assign rst_req = rst | init;
 
 // horizontal line counter
 localparam [31:0] HMAX=64_000/PERIOD;
@@ -101,7 +105,7 @@ always @(posedge clk, posedge rst) begin
 end
 
 ba_requester #(0, BA0_LEN, `WRITE_ENABLE,"sdram_bank0.bin", IDLE, `WRITE_CHANCE, MAXA) u_ba0(
-    .rst        ( rst           ),
+    .rst        ( rst_req       ),
     .clk        ( clk           ),
     .ba_addr    ( ba0_addr      ),
     .ba_rd      ( ba0_rd        ),
@@ -120,7 +124,7 @@ ba_requester #(0, BA0_LEN, `WRITE_ENABLE,"sdram_bank0.bin", IDLE, `WRITE_CHANCE,
 );
 
 ba_requester #(1, BA1_LEN, 0,"sdram_bank1.bin", IDLE1, 0, MAXA ) u_ba1(
-    .rst        ( rst           ),
+    .rst        ( rst_req       ),
     .clk        ( clk           ),
     .ba_addr    ( ba1_addr      ),
     .ba_rd      ( ba1_rd        ),
@@ -140,7 +144,7 @@ ba_requester #(1, BA1_LEN, 0,"sdram_bank1.bin", IDLE1, 0, MAXA ) u_ba1(
 );
 
 ba_requester #(2, BA2_LEN, 0,"sdram_bank2.bin", IDLE2, 0, MAXA ) u_ba2(
-    .rst        ( rst           ),
+    .rst        ( rst_req       ),
     .clk        ( clk           ),
     .ba_addr    ( ba2_addr      ),
     .ba_rd      ( ba2_rd        ),
@@ -161,7 +165,7 @@ ba_requester #(2, BA2_LEN, 0,"sdram_bank2.bin", IDLE2, 0, MAXA ) u_ba2(
 
 
 ba_requester #(3, BA3_LEN, 0,"sdram_bank3.bin", IDLE3, 0, MAXA ) u_ba3(
-    .rst        ( rst           ),
+    .rst        ( rst_req       ),
     .clk        ( clk           ),
     .ba_addr    ( ba3_addr      ),
     .ba_rd      ( ba3_rd        ),
@@ -203,6 +207,8 @@ jtframe_sdram64 #(
     .rst        ( rst           ),
     .clk        ( clk           ),
     .rfsh       ( hblank        ),
+    .init       ( init          ),
+
     // Bank 0: allows R/W
     .ba0_addr   ( ba0_addr      ),
     .ba1_addr   ( ba1_addr      ),
