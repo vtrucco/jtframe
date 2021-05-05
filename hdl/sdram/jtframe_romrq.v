@@ -73,9 +73,9 @@ always @(*) begin
     endcase
     // It is important to leave === for simulations, instead of ==
     // It shouldn't have any implication for synthesis
-    hit0 = addr_req === cached_addr0 && good[0] && !clr;
-    hit1 = addr_req === cached_addr1 && good[1] && !clr;
-    req = (clr || ( !(hit0 || hit1) && !we)) && addr_ok;
+    hit0 = addr_req === cached_addr0 && good[0];
+    hit1 = addr_req === cached_addr1 && good[1];
+    req = (!(hit0 || hit1) && !we) && addr_ok;
 end
 
 // reg [1:0] ok_sr;
@@ -90,7 +90,7 @@ always @(posedge clk, posedge rst) begin
         data_ok      <= 0;
         dend         <= 0;
     end else begin
-        if( clr ) good <= 2'b00;
+        if( clr ) good <= 0;
         if( we ) begin
             if( dst ) begin
                 cached_data1 <= cached_data0;
