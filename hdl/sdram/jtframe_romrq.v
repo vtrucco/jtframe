@@ -107,7 +107,7 @@ always @(posedge clk, posedge rst) begin
             if( dend ) begin
                 cached_data0[31:16] <= din;
                 cached_data0[15: 0] <= cached_data0[31:16];
-                if( !LATCH[0] ) data_ok <= 1;
+                if( !LATCH[0] && !DOUBLE[0] ) data_ok <= 1;
                 if( DOUBLE ) double <= ~double;
                 dend <= 0;
             end
@@ -123,40 +123,31 @@ end
 // but if we are getting fresh data, it selects directly the new data
 // this saves one clock cycle at the expense of more LUTs
 wire [31:0] data_mux = hit0 ? cached_data0 : cached_data1;
+reg  [DW-1:0] preout;
+
+generate
+    if(DW==8) begin
+        always @(*)
+        case( addr[1:0] )
+            2'd0: preout = data_mux[ 7: 0];
+            2'd1: preout = data_mux[15: 8];
+            2'd2: preout = data_mux[23:16];
+            2'd3: preout = data_mux[31:24];
+        endcase
+    end else if(DW==16) begin
+        always @(*)
+        case( addr[0] )
+                1'd0: preout = data_mux[15:0];
+                1'd1: preout = data_mux[31:16];
+        endcase
+    end else always @(*) preout = data_mux;
+endgenerate
 
 generate
     if( LATCH==0 ) begin : data_latch
-        if(DW==8) begin
-            always @(*)
-            case( addr[1:0] )
-                2'd0: dout = data_mux[ 7: 0];
-                2'd1: dout = data_mux[15: 8];
-                2'd2: dout = data_mux[23:16];
-                2'd3: dout = data_mux[31:24];
-            endcase
-        end else if(DW==16) begin
-            always @(*)
-            case( addr[0] )
-                    1'd0: dout = data_mux[15:0];
-                    1'd1: dout = data_mux[31:16];
-            endcase
-        end else always @(*) dout = data_mux;
+        always @(*) dout = preout;
     end else begin : no_data_latch
-        if(DW==8) begin
-            always @(posedge clk)
-            case( addr[1:0] )
-                2'd0: dout <= data_mux[ 7: 0];
-                2'd1: dout <= data_mux[15: 8];
-                2'd2: dout <= data_mux[23:16];
-                2'd3: dout <= data_mux[31:24];
-            endcase
-        end else if(DW==16) begin
-            always @(posedge clk)
-            case( addr[0] )
-                    1'd0: dout <= data_mux[15:0];
-                    1'd1: dout <= data_mux[31:16];
-            endcase
-        end else always @(posedge clk) dout <= data_mux;
+        always @(posedge clk) dout <= preout;
     end
 endgenerate
 
