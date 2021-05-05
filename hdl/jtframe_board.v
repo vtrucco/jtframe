@@ -24,12 +24,6 @@ module jtframe_board #(parameter
     SDRAMW                  = 22,
     VIDEO_WIDTH             = 384,
     VIDEO_HEIGHT            = 224,
-    // sdram bank lengths
-    BA0_LEN                 = 32,
-    BA1_LEN                 = 32,
-    BA2_LEN                 = 32,
-    BA3_LEN                 = 32,
-    PROG_LEN                = 32,
     MISTER                  = 1
 )(
     output              rst,
@@ -167,6 +161,34 @@ module jtframe_board #(parameter
 `else
     localparam BA3_AUTOPRECH = 0;
 `endif
+
+// sdram bank lengths
+localparam
+`ifdef JTFRAME_BA0_LEN
+    BA0_LEN                 = `JTFRAME_BA0_LEN,
+`else
+    BA0_LEN                 = 32,
+`endif
+
+`ifdef JTFRAME_BA1_LEN
+    BA1_LEN                 = `JTFRAME_BA1_LEN,
+`else
+    BA1_LEN                 = 32,
+`endif
+
+`ifdef JTFRAME_BA2_LEN
+    BA2_LEN                 = `JTFRAME_BA2_LEN,
+`else
+    BA2_LEN                 = 32,
+`endif
+
+`ifdef JTFRAME_BA3_LEN
+    BA3_LEN                 = `JTFRAME_BA3_LEN,
+`else
+    BA3_LEN                 = 32,
+`endif
+    PROG_LEN = 32;
+
 
 wire  [ 2:0] scanlines;
 wire         bw_en, blend_en;
