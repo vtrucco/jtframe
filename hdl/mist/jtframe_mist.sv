@@ -136,7 +136,8 @@ module jtframe_mist #(parameter
     output  [ 1:0]  dip_fxlevel,
     // Debug
     output          LED,
-    output   [3:0]  gfx_en
+    output   [3:0]  gfx_en,
+    output   [7:0]  debug_bus
 );
 
 // control
@@ -334,6 +335,7 @@ jtframe_board #(
     .scan2x_clk     ( scan2x_clk      ),
     // Debug
     .gfx_en         ( gfx_en          ),
+    .debug_bus      ( debug_bus       ),
     // Unused ports (MiSTer)
     .gamma_bus      (                 ),
     .direct_video   ( 1'b0            ),

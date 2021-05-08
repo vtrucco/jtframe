@@ -135,7 +135,8 @@ module jtframe_board #(parameter
     output            scan2x_de,
     output     [1:0]  scan2x_sl,
     // GFX enable
-    output reg [3:0]  gfx_en
+    output     [3:0]  gfx_en,
+    output     [7:0]  debug_bus
 );
 
 `ifdef JTFRAME_BA0_AUTOPRECH
@@ -194,6 +195,7 @@ wire  [ 2:0] scanlines;
 wire         bw_en, blend_en;
 wire         en_mixing;
 wire         osd_pause;
+wire         debug_plus, debug_minus, key_shift;
 
 wire         invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
 wire         sdram_init, key_reset, key_pause, key_test, rot_control;
@@ -250,7 +252,24 @@ jtframe_keyboard u_keyboard(
     .key_test    ( key_test      ),
     .key_pause   ( key_pause     ),
     .key_service ( key_service   ),
-    .key_gfx     ( key_gfx       )
+
+    .shift       ( key_shift     ),
+    .key_gfx     ( key_gfx       ),
+    .debug_plus  ( debug_plus    ),
+    .debug_minus ( debug_minus   )
+);
+
+jtframe_debug u_debug(
+    .clk         ( clk_sys       ),
+    .rst         ( rst           ),
+
+    .shift       ( key_shift     ),
+    .key_gfx     ( key_gfx       ),
+    .debug_plus  ( debug_plus    ),
+    .debug_minus ( debug_minus   ),
+
+    .gfx_en      ( gfx_en        ),
+    .debug_bus   ( debug_bus     )
 );
 `else
 assign key_joy3    = 10'h0;
@@ -262,6 +281,8 @@ assign key_reset   = 1'b0;
 assign key_pause   = 1'b0;
 assign key_service = 1'b0;
 assign key_test    = 1'b0;
+assign gfx_en      = 4'hf;
+assign debug_bus   = 0;
 `endif
 
 reg  [15:0] joy1_sync, joy2_sync, joy3_sync, joy4_sync;
@@ -316,10 +337,7 @@ localparam COIN_BIT   = 7+(BUTTONS-2);
 localparam PAUSE_BIT  = 8+(BUTTONS-2);
 
 reg last_pause, last_osd_pause, last_joypause, last_reset;
-reg [3:0] last_gfx;
 wire joy_pause = joy1_sync[PAUSE_BIT] | joy2_sync[PAUSE_BIT];
-
-integer cnt;
 
 function [9:0] apply_rotation;
     input [9:0] joy_in;
@@ -356,7 +374,6 @@ always @(posedge clk_sys)
         game_pause   <= 1'b0;
         game_service <= 1'b0 ^ invert_inputs;
         soft_rst     <= 1'b0;
-        gfx_en       <= 4'hf;
     end else begin
         last_pause   <= key_pause;
         last_osd_pause <= osd_pause;
@@ -386,11 +403,6 @@ always @(posedge clk_sys)
 
         soft_rst <= key_reset && !last_reset;
 
-        `ifndef JTFRAME_RELEASE
-        last_gfx <= key_gfx;
-        for(cnt=0; cnt<4; cnt=cnt+1)
-            if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
-        `endif
         // state variables:
         `ifndef DIP_PAUSE // Forces pause during simulation
         if( downloading )

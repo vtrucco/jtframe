@@ -225,6 +225,7 @@ assign ba_wr      = 0;
 
 
 wire [7:0] dipsw_a, dipsw_b;
+wire [7:0] debug_bus;
 wire [1:0] dip_fxlevel, game_led;
 wire       enable_fm, enable_psg;
 wire       dip_pause, dip_flip, dip_test;
@@ -381,7 +382,8 @@ u_frame(
     .dip_flip       ( dip_flip       ),
     .dip_fxlevel    ( dip_fxlevel    ),
     // Debug
-    .gfx_en         ( gfx_en         )
+    .gfx_en         ( gfx_en         ),
+    .debug_bus      ( debug_bus      )
 );
 
 `ifdef SIMULATION
@@ -542,6 +544,9 @@ u_game(
     .sample      ( sample         ),
     // Debug
     .gfx_en      ( gfx_en         )
+    `ifdef JTFRAME_DEBUG
+    ,.debug_bus   ( debug_bus      )
+    `endif
 );
 
 `ifndef JTFRAME_SDRAM_BANKS

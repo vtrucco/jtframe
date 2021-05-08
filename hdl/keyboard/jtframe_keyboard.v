@@ -1,16 +1,16 @@
-/*  This file is part of JT_GNG.
-    JT_GNG program is free software: you can redistribute it and/or modify
+/*  This file is part of JTFRAME.
+    JTFRAME program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    JT_GNG program is distributed in the hope that it will be useful,
+    JTFRAME program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with JT_GNG.  If not, see <http://www.gnu.org/licenses/>.
+    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
 
     Author: Jose Tejada Gomez. Twitter: @topapate
     Version: 1.0
@@ -36,7 +36,12 @@ module jtframe_keyboard(
     output reg key_pause,
     output reg key_test,
     output reg key_service,
-    output reg [3:0] key_gfx
+
+    output     shift,
+    // debug features
+    output reg [3:0] key_gfx,
+    output reg       debug_plus,
+    output reg       debug_minus
 );
 
 wire valid;
@@ -51,6 +56,8 @@ reg [7:0] ps2byte;
    "5" 2e, "F3" 4, P 4d, W 1d, a 1c, s 1b, d 23
    z 1a, x 22, c 21 */
 
+assign shift = key_joy1[7] | key_joy3[5];
+
 always @(posedge clk) begin
     if(rst) begin
       key_released <= 1'b0;
@@ -64,6 +71,9 @@ always @(posedge clk) begin
       key_pause    <= 1'b0;
       key_service  <= 1'b0;
       key_test     <= 1'b0;
+
+      debug_plus   <= 0;
+      debug_minus  <= 0;
     end else begin
         // ps2 decoder has received a valid ps2byte
         if(valid) begin
@@ -125,11 +135,15 @@ always @(posedge clk) begin
                     9'h06: key_test    <= !key_released; // F2
                     9'h04: key_reset   <= !key_released; // F3
                     9'h46: key_service <= !key_released; //  9
+                    // Debug keys
                     // GFX enable
                     9'h0_83: key_gfx[0] <= !key_released; // F7: CHAR enable
                     9'h0_0a: key_gfx[1] <= !key_released; // F8: SCR1 enable
                     9'h0_01: key_gfx[2] <= !key_released; // F9: SCR2 enable
                     9'h0_09: key_gfx[3] <= !key_released; // F10:OBJ  enable
+
+                    9'h0_5b: debug_plus  <= !key_released;
+                    9'h0_4a: debug_minus <= !key_released;
                 endcase
             end
         end

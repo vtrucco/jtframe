@@ -168,7 +168,8 @@ module jtframe_mister #(parameter
     output    [31:0]  dipsw,
     // Debug
     output            LED,
-    output    [ 3:0]  gfx_en
+    output    [ 3:0]  gfx_en,
+    output    [ 7:0]  debug_bus
 );
 
 `ifndef JTFRAME_MR_FASTIO
@@ -431,7 +432,8 @@ jtframe_board #(
     .pxl_cen        ( pxl_cen         ),
     .pxl2_cen       ( pxl2_cen        ),
     // Debug
-    .gfx_en         ( gfx_en          )
+    .gfx_en         ( gfx_en          ),
+    .debug_bus      ( debug_bus       )
 );
 
 wire rot_clk;

@@ -16,6 +16,7 @@ JTFRAME_CREDITS          |         | Adds credits screen
 JTFRAME_CREDITS_AON      |         | credits screen is always on
 JTFRAME_CREDITS_HSTART   |         | Horizontal offset for the 256-pxl wide credits
 JTFRAME_CREDITS_PAGES    |         | number of pages of credits text
+JTFRAME_DEBUG            |         | Enables the debug_bus signal connection to the game instance
 JTFRAME_DONTSIM_SCAN2X   |         | Internal. Do not define externally
 JTFRAME_DUAL_RAM_DUMP    |         | Enables dumping of RAM contents in simulation
 JTFRAME_DWNLD_PROM_ONLY  |         | Quick download sim with only PROM contents

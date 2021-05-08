@@ -326,6 +326,7 @@ wire [ 7:0] ioctl_data;
 wire [ 9:0] game_joy1, game_joy2, game_joy3, game_joy4;
 wire [ 3:0] game_coin, game_start;
 wire [ 3:0] gfx_en;
+wire [ 7:0] debug_bus;
 wire [15:0] joystick_analog_0, joystick_analog_1;
 
 wire        game_rst, game_service, rst, rst_n;
@@ -543,7 +544,8 @@ u_frame(
     .scan2x_de      ( VGA_DE         ),
     .scan2x_sl      ( VGA_SL         ),
     // Debug
-    .gfx_en         ( gfx_en         )
+    .gfx_en         ( gfx_en         ),
+    .debug_bus      ( debug_bus      )
 );
 
 `ifdef SIMULATION
@@ -687,11 +689,13 @@ end
 `else
     .snd          ( snd_left         ),
 `endif
-    .gfx_en       ( gfx_en           ),
-
     // unconnected
-    .sample       ( sample           )
-);
+    .sample       ( sample           ),
+
+    .gfx_en       ( gfx_en           )
+    `ifdef JTFRAME_DEBUG
+    ,.debug_bus   ( debug_bus        )
+    `endif);
 
 `ifndef STEREO_GAME
     assign snd_right = snd_left;
