@@ -291,9 +291,9 @@ always @(posedge clk_video) begin
     reg hs1,hs2,hs3;
 
     nrdout1 <= din;
-    ordout1 <= {{ {1{osd_pixel}},   {OSD_COLOR[5:4]&~back_pixel}, din[23:19]},// 23:16
-                  { {1{osd_pixel}}, {OSD_COLOR[3:2]&~back_pixel}, din[15:11]},// 15:8
-                  { {1{osd_pixel}}, {OSD_COLOR[1:0]&~back_pixel}, din[7:3]}}; //  7:0
+    ordout1 <= { osd_pixel, OSD_COLOR[5:4]^{1'b0,back_pixel}, din[23:19],// 23:16
+                 osd_pixel, OSD_COLOR[3:2]^{1'b0,back_pixel}, din[15:11],// 15:8
+                 osd_pixel, OSD_COLOR[1:0]^{1'b0,back_pixel}, din[7:3]  }; //  7:0
 
     osd_mux <= ~osd_de[2];
     rdout2  <= osd_mux ? nrdout1 : ordout1;

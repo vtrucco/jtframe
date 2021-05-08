@@ -252,9 +252,9 @@ always @(posedge clk_sys) begin
 
 	end
 
-	R_out <= !osd_de ? R_in : { {2{osd_pixel}}, OSD_COLOR[5:4]&{2{back_pixel}}, R_in[5:4]};
-	G_out <= !osd_de ? G_in : { {2{osd_pixel}}, OSD_COLOR[3:2]&{2{back_pixel}}, G_in[5:4]};
-	B_out <= !osd_de ? B_in : { {2{osd_pixel}}, OSD_COLOR[1:0]&{2{back_pixel}}, B_in[5:4]};
+	R_out <= !osd_de ? R_in : { {2{osd_pixel}}, OSD_COLOR[5:4]^{1'b0,back_pixel}, R_in[5:4]};
+	G_out <= !osd_de ? G_in : { {2{osd_pixel}}, OSD_COLOR[3:2]^{1'b0,back_pixel}, G_in[5:4]};
+	B_out <= !osd_de ? B_in : { {2{osd_pixel}}, OSD_COLOR[1:0]^{1'b0,back_pixel}, B_in[5:4]};
 	HSync_out <= HSync;
 	VSync_out <= VSync;
 end
