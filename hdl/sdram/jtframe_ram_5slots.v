@@ -18,6 +18,8 @@
 
 module jtframe_ram_5slots #(parameter
     SDRAMW = 22,
+    SLOT0_FASTWR = 0,
+
     SLOT0_DW = 8, SLOT1_DW = 8, SLOT2_DW = 8, SLOT3_DW = 8, SLOT4_DW = 8,
     SLOT0_AW = 8, SLOT1_AW = 8, SLOT2_AW = 8, SLOT3_AW = 8, SLOT4_AW = 8,
 
@@ -109,7 +111,7 @@ assign slot2_ok = slot_ok[2];
 assign slot3_ok = slot_ok[3];
 assign slot4_ok = slot_ok[4];
 
-jtframe_ram_rq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW)) u_slot0(
+jtframe_ram_rq #(.SDRAMW(SDRAMW),.AW(SLOT0_AW),.DW(SLOT0_DW),.FASTWR(SLOT0_FASTWR)) u_slot0(
     .rst       ( rst                    ),
     .clk       ( clk                    ),
     .addr      ( slot0_addr             ),
