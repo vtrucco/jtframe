@@ -65,18 +65,21 @@ module jtframe_ram_rq #(parameter
             data_ok <= 0;
             pending <= 0;
             dout    <= 0;
+            req_rnw <= 1;
         end else begin
             last_cs <= addr_ok;
             if( !addr_ok ) data_ok <= 0;
             if( we ) begin
-                pending <= cs_posedge && FASTWR;
+                if( cs_posedge && FASTWR ) begin
+                    data_ok <= 0;
+                    pending <= 1;
+                end
                 req <= 0;
                 if( FASTWR && !req_rnw ) begin
-                    data_ok <= req;
+                    data_ok <= 1;
                 end
                 if( /*din_ok*/ dst ) begin
-                    req_rnw <= 1;
-                    data_ok <= req_rnw || !FASTWR;
+                    if( !FASTWR || req_rnw ) data_ok <= 1;
                     dout    <= din[DW-1:0];
                 end
             end else if( cs_posedge || pending ) begin
