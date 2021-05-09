@@ -66,7 +66,7 @@ wire [AW-1:0] shifted;
 wire    [2:0] step;
 
 assign sdram_addr = offset + { {SDRAMW-AW{1'b0}}, addr_req>>(DW==8?1:0)};
-assign step = DW==8 ? 4 : 2;
+assign step = 2;
 
 always @(*) begin
     case(DW)
@@ -100,7 +100,10 @@ always @(posedge clk, posedge rst) begin
                 cached_data1 <= cached_data0;
                 cached_addr1 <= cached_addr0;
                 cached_data0[31:16] <= din;
-                cached_addr0 <= double ? (cached_addr0+step):addr_req;
+                if( double )
+                    cached_addr0[1:0] <= cached_addr0[1:0]+step;
+                else
+                    cached_addr0 <= addr_req;
                 good <= { good[0], 1'b1 };
                 dend <= 1;
             end
