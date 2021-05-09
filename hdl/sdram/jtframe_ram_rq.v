@@ -54,7 +54,7 @@ module jtframe_ram_rq #(parameter
 
     wire  [SDRAMW-1:0] size_ext   = { {SDRAMW-AW{1'b0}}, addr };
 
-    reg    last_cs;
+    reg    last_cs, pending;
     wire   cs_posedge = addr_ok && !last_cs;
     wire   cs_negedge = !addr_ok && last_cs;
 
@@ -63,23 +63,27 @@ module jtframe_ram_rq #(parameter
             last_cs <= 0;
             req     <= 0;
             data_ok <= 0;
+            pending <= 0;
+            dout    <= 0;
         end else begin
-            last_cs <= addr_ok && ( !FASTWR || !we );
+            last_cs <= addr_ok;
             if( !addr_ok ) data_ok <= 0;
             if( we ) begin
+                pending <= cs_posedge && FASTWR;
                 req <= 0;
                 if( FASTWR && !req_rnw ) begin
-                    data_ok <= 1;
+                    data_ok <= req;
                 end
                 if( /*din_ok*/ dst ) begin
                     req_rnw <= 1;
-                    data_ok <= 1;
+                    data_ok <= req_rnw || !FASTWR;
                     dout    <= din[DW-1:0];
                 end
-            end else if( cs_posedge ) begin
+            end else if( cs_posedge || pending ) begin
                 req        <= 1;
                 req_rnw    <= ~wrin;
                 data_ok    <= 0;
+                pending    <= 0;
                 sdram_addr <= size_ext + offset;
             end
 

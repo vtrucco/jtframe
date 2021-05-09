@@ -213,7 +213,7 @@ always @(posedge clk) begin
         // accept a new request
         if( !slot_sel || data_rdy ) begin
             sdram_rd     <= |active;
-            slot_sel     <= {SW{1'd0}};
+            slot_sel     <= 0;
             sdram_wrmask <= 2'b11;
             if( active[0] ) begin
                 sdram_addr  <= slot0_addr_req;
