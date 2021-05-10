@@ -452,6 +452,7 @@ wire              pre2x_LHBL, pre2x_LVBL;
     `ifndef JTFRAME_CREDITS_PAGES
     `define JTFRAME_CREDITS_PAGES 3
     `endif
+    wire invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
     wire toggle = |(game_start ^ {4{invert_inputs}});
     wire fast_scroll = |({game_joystick1[2], game_joystick2[2]} ^ {2{invert_inputs}});
 
