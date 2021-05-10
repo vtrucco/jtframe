@@ -138,73 +138,11 @@ module emu
     `endif
 );
 
-// Config string
-`include "build_id.v"
-`define SEPARATOR "-;",
-
 `ifdef JTFRAME_SDRAM_LARGE
     localparam SDRAMW=23; // 64 MB
 `else
     localparam SDRAMW=22; // 32 MB
 `endif
-
-`ifdef SIMULATION
-localparam CONF_STR="JTGNG;;";
-`else
-localparam CONF_STR = {
-    `CORENAME,";;",
-    "OOR,CRT H adjust,0,+1,+2,+3,+4,+5,+6,+7,-8,-7,-6,-5,-4,-3,-2,-1;",
-    "OSV,CRT V adjust,0,+1,+2,+3,+4,+5,+6,+7,-8,-7,-6,-5,-4,-3,-2,-1;",
-    // Common MiSTer options
-    `ifndef JTFRAME_OSD_NOLOAD
-    "F,rom;",
-    `endif
-    "H0OEF,Aspect Ratio,Original,Full screen,[ARC1],[ARC2];",
-    `ifdef JTFRAME_VERTICAL
-        `ifdef JTFRAME_OSD_FLIP
-        "O1,Flip screen,Off,On;",
-        `endif
-    "O2,Rotate screen,Yes,No;",
-    `endif
-    "OB,Old TV,No,Yes;",
-    `ifdef JTFRAME_NOHQ2X
-        "O35,Scandoubler Fx,None,N/A,CRT 25%,CRT 50%,CRT 75%;",
-    `else
-        "O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
-    `endif
-
-    // Sound control
-    `ifdef JTFRAME_OSD_VOL
-    "O67,FX volume, high, very high, very low, low;",
-    `endif
-    `ifdef JTFRAME_OSD_SND_EN
-    "O8,FX,On,Off;",
-    "O9,FM,On,Off;",
-    `endif
-
-    `ifdef JTFRAME_OSD_TEST
-    "OA,Test mode,Off,On;",
-    `endif
-    `SEPARATOR
-    `ifdef JTFRAME_MRA_DIP
-    "DIP;",
-    `endif
-    `ifdef CORE_OSD
-    `CORE_OSD
-    `endif
-    `SEPARATOR
-    "R0,Reset;",
-    `ifndef JTFRAME_OSD_NOCREDITS
-    "OC,Credits,Off,On;",
-    `endif
-    `ifdef CORE_KEYMAP
-    `CORE_KEYMAP
-    `endif
-    "V,v",`BUILD_DATE," jotego;"
-};
-`endif
-
-`undef SEPARATOR
 
 `ifndef JTFRAME_INTERLACED
 assign VGA_F1=1'b0;
@@ -390,7 +328,6 @@ assign prog_data = {2{prog_data8}};
 `endif
 
 jtframe_mister #(
-    .CONF_STR      ( CONF_STR       ),
     .SDRAMW        ( SDRAMW         ),
     .BUTTONS       ( GAME_BUTTONS   ),
     .COLORW        ( COLORW         )

@@ -38,6 +38,8 @@ module hps_io #(parameter STRLEN=0, PS2DIV=0, WIDE=0, VDNUM=1, PS2WE=0)
 
 	// parameter STRLEN and the actual length of conf_str have to match
 	input [(8*STRLEN)-1:0] conf_str,
+	output [9:0] cfg_addr,
+	input  [7:0] cfg_dout,
 
 	// buttons up to 32
 	output reg [31:0] joystick_0,
@@ -247,6 +249,8 @@ wire       extended = (~pressed ? (ps2_key_raw[23:16] == 8'he0) : (ps2_key_raw[1
 
 reg [MAX_W:0] byte_cnt;
 
+assign cfg_addr = byte_cnt;
+
 always@(posedge clk_sys) begin : uio_block
 	reg [15:0] cmd;
 	reg  [2:0] b_wr;
@@ -362,7 +366,10 @@ always@(posedge clk_sys) begin : uio_block
 						end
 
 				// reading config string, returning a byte from string
-				'h14: if(byte_cnt < STRLEN + 1) io_dout[7:0] <= conf_str[(STRLEN - byte_cnt)<<3 +:8];
+				'h14: if(byte_cnt < STRLEN + 1) begin
+					io_dout[7:0] <= cfg_dout;
+					//conf_str[(STRLEN - byte_cnt)<<3 +:8];
+				end
 
 				// reading sd card status
 				'h16: if(!byte_cnt[MAX_W:3]) begin

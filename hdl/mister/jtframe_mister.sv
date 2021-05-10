@@ -19,7 +19,6 @@
 module jtframe_mister #(parameter
     BUTTONS                 = 2,
     GAME_INPUTS_ACTIVE_LOW  =1'b1,
-    CONF_STR                = "",
     COLORW                  = 4,
     VIDEO_WIDTH             = 384,
     VIDEO_HEIGHT            = 224,
@@ -273,11 +272,26 @@ jtframe_mister_dwnld u_dwnld(
     .ddram_rd       ( ddrld_rd         )
 );
 
-hps_io #( .STRLEN($size(CONF_STR)/8), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_hps_io
+wire [9:0] cfg_addr;
+wire [7:0] cfg_dout;
+
+jtframe_ram #(.synfile("cfgstr.hex")) u_cfgstr(
+    .clk    ( clk       ),
+    .cen    ( 1'b1      ),
+    .data   (           ),
+    .addr   ( cfg_addr  ),
+    .we     ( 1'b0      ),
+    .q      ( cfg_dout  )
+);
+
+hps_io #( .STRLEN(0), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_hps_io
 (
     .clk_sys         ( clk_rom        ),
     .HPS_BUS         ( HPS_BUS        ),
-    .conf_str        ( CONF_STR       ),
+
+    .conf_str        (                ),
+    .cfg_addr        ( cfg_addr       ),
+    .cfg_dout        ( cfg_dout       ),
 
     .buttons         ( buttons        ),
     .status          ( status         ),
