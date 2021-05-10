@@ -148,7 +148,7 @@ wire [9:0] cfg_addr;
 wire [7:0] cfg_dout;
 
 jtframe_ram #(.synfile("cfgstr.hex")) u_cfgstr(
-    .clk    ( clk       ),
+    .clk    ( SPI_SCK   ),
     .cen    ( 1'b1      ),
     .data   (           ),
     .addr   ( cfg_addr  ),

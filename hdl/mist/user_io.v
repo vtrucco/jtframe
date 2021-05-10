@@ -340,8 +340,10 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 			spi_byte_out <= 0;
 			case({(!byte_cnt) ? {sbuf, SPI_MOSI} : cmd})
 			// reading config string
-			8'h14: if (STRLEN == 0) spi_byte_out <= conf_chr; else
-			       if(byte_cnt < STRLEN) spi_byte_out <= conf_str[(STRLEN - byte_cnt - 1)<<3 +:8];
+			8'h14:
+				spi_byte_out <= conf_chr;
+				//if (STRLEN == 0) spi_byte_out <= conf_chr; else
+			    //   if(byte_cnt < STRLEN) spi_byte_out <= conf_str[(STRLEN - byte_cnt - 1)<<3 +:8];
 
 			// reading sd card status
 			8'h16: if(byte_cnt == 0) begin
