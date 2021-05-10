@@ -64,62 +64,6 @@ module mist_top(
     localparam SDRAMW=22; // 32 MB
 `endif
 
-`ifdef SIMULATION
-localparam CONF_STR="JTGNG;;";
-`else
-// Config string
-`define SEPARATOR "",
-
-
-localparam CONF_STR = {
-    `CORENAME,";;",
-    // Common MiSTer options
-    `ifndef JTFRAME_OSD_NOLOAD
-    "F,rom;",
-    `endif
-    `ifdef JTFRAME_VERTICAL
-    `ifdef JTFRAME_OSD_FLIP
-    "O1,Flip screen,Off,On;",
-    `endif
-    "O2,Rotate controls,No,Yes;",
-    `endif
-    // `ifdef JOIN_JOYSTICKS
-    // "OE,Separate Joysticks,Yes,No;",    // If no, then player 2 joystick
-    //     // is assimilated to player 1 joystick
-    // `endif
-    "O34,Video Mode, pass thru, linear, analogue, dark;",
-
-    // Sound control
-    `ifdef JTFRAME_OSD_VOL
-    "O67,FX volume, high, very high, very low, low;",
-    `endif
-    `ifdef JTFRAME_OSD_SND_EN
-    "O8,FX,On,Off;",
-    "O9,FM,On,Off;",
-    `endif
-
-    `ifdef JTFRAME_OSD_TEST
-    "OA,Test mode,Off,On;",
-    `endif
-    `ifndef JTFRAME_OSD_NOCREDITS
-    "OC,Credits,Off,On;",
-    `endif
-    `SEPARATOR
-    `ifdef JTFRAME_MRA_DIP
-        "DIP;",
-    `endif
-    `ifdef CORE_OSD
-        `CORE_OSD
-    `endif
-    `ifdef CORE_NVRAM_SIZE
-        "R",`CORE_NVRAM_SIZE,",Save NVRAM;",
-    `endif
-    "T0,RST;",
-    "V,patreon.com/topapate;"
-};
-
-`undef SEPARATOR`endif
-
 wire          rst, rst_n, clk_sys, clk_rom, clk6, clk24, clk48, clk96;
 wire [63:0]   status;
 wire [31:0]   joystick1, joystick2;
@@ -257,7 +201,6 @@ assign game_led[1] = 1'b0; // Let system LED info go through too
 localparam BUTTONS=`BUTTONS;
 
 jtframe_mist #(
-    .CONF_STR     ( CONF_STR       ),
     .SDRAMW       ( SDRAMW         ),
     .SIGNED_SND   ( `SIGNED_SND    ),
     .BUTTONS      ( BUTTONS        ),

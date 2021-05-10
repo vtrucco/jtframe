@@ -21,7 +21,6 @@ module jtframe_mist #(parameter
     BUTTONS                = 2,
     DIPBASE                = 16,
     GAME_INPUTS_ACTIVE_LOW = 1'b1,
-    CONF_STR               = "",
     COLORW                 = 4,
     VIDEO_WIDTH            = 384,
     VIDEO_HEIGHT           = 224,
@@ -155,8 +154,6 @@ wire  [ 1:0]  rotate;
 assign board_status = { {32-DIPBASE{1'b0}}, status[DIPBASE-1:0] };
 
 jtframe_mist_base #(
-    .CONF_STR    (CONF_STR          ),
-    .CONF_STR_LEN($size(CONF_STR)/8 ),
     .SIGNED_SND  (SIGNED_SND        ),
     .COLORW      ( COLORW           )
 ) u_base(

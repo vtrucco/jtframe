@@ -17,8 +17,6 @@
     Date: 27-10-2017 */
 
 module jtframe_mist_base #(parameter
-    CONF_STR        = "CORE",
-    CONF_STR_LEN    = 4,
     SIGNED_SND      = 1'b0,
     COLORW          = 4
 ) (
@@ -146,10 +144,27 @@ assign snd_pwm_right = 1'b0;
 `endif
 
 `ifndef SIMULATION
-user_io #(.STRLEN(CONF_STR_LEN), .ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_userio(
+wire [9:0] cfg_addr;
+wire [7:0] cfg_dout;
+
+jtframe_ram #(.synfile("cfgstr.hex")) u_cfgstr(
+    .clk    ( clk       ),
+    .cen    ( 1'b1      ),
+    .data   (           ),
+    .addr   ( cfg_addr  ),
+    .we     ( 1'b0      ),
+    .q      ( cfg_dout  )
+);
+
+user_io #(.ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_userio(
     .rst            ( rst       ),
     .clk_sys        ( clk_sys   ),
-    .conf_str       ( CONF_STR  ),
+
+    // config string
+    .conf_str       (           ),
+    .conf_addr      ( cfg_addr  ),
+    .conf_chr       ( cfg_dout  ),
+
     .SPI_CLK        ( SPI_SCK   ),
     .SPI_SS_IO      ( CONF_DATA0),
     .SPI_MISO       ( SPI_DO    ),
