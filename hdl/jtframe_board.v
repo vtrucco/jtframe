@@ -88,13 +88,13 @@ module jtframe_board #(parameter
     input     [15:0]  board_joystick2,
     input     [15:0]  board_joystick3,
     input     [15:0]  board_joystick4,
-    output reg [9:0]  game_joystick1,
-    output reg [9:0]  game_joystick2,
-    output reg [9:0]  game_joystick3,
-    output reg [9:0]  game_joystick4,
-    output reg [3:0]  game_coin,
-    output reg [3:0]  game_start,
-    output reg        game_service,
+    output     [9:0]  game_joystick1,
+    output     [9:0]  game_joystick2,
+    output     [9:0]  game_joystick3,
+    output     [9:0]  game_joystick4,
+    output     [3:0]  game_coin,
+    output     [3:0]  game_start,
+    output            game_service,
     // DIP and OSD settings
     input     [31:0]  status,
     output    [11:0]  hdmi_arx,
@@ -197,14 +197,13 @@ wire         en_mixing;
 wire         osd_pause;
 wire         debug_plus, debug_minus, key_shift;
 
-wire         invert_inputs = GAME_INPUTS_ACTIVE_LOW[0];
 wire         sdram_init, key_reset, key_pause, key_test, rot_control;
-reg          game_pause, soft_rst;
+wire         game_pause, soft_rst;
 
-wire [9:0] key_joy1, key_joy2, key_joy3;
-wire [3:0] key_start, key_coin;
-wire [3:0] key_gfx;
-wire       key_service;
+wire   [9:0] key_joy1, key_joy2, key_joy3;
+wire   [3:0] key_start, key_coin;
+wire   [3:0] key_gfx;
+wire         key_service;
 
 jtframe_reset u_reset(
     .clk_sys    ( clk_sys       ),
@@ -283,140 +282,45 @@ assign key_service = 1'b0;
 assign key_test    = 1'b0;
 assign gfx_en      = 4'hf;
 assign debug_bus   = 0;
+assign key_gfx     = 0;
 `endif
 
-reg  [15:0] joy1_sync, joy2_sync, joy3_sync, joy4_sync;
-wire [ 3:0] joy4way1p, joy4way2p, joy4way3p, joy4way4p;
-`ifdef JTFRAME_SUPPORT_4WAY
-    wire en4way = core_mod[1];
-`else
-    wire en4way = 0;
-`endif
+jtframe_inputs u_inputs(
+    .rst            ( rst             ),
+    .clk            ( clk_sys         ),
+    .downloading    ( downloading     ),
+    .dip_flip       ( dip_flip        ),
 
-always @(posedge clk_sys) begin
-    joy1_sync <= { board_joystick1[15:4], joy4way1p[3:0] };
-    joy2_sync <= { board_joystick2[15:4], joy4way2p[3:0] };
-    joy3_sync <= { board_joystick3[15:4], joy4way3p[3:0] };
-    joy4_sync <= { board_joystick4[15:4], joy4way4p[3:0] };
-end
+    .soft_rst       ( soft_rst        ),
 
-jtframe_4wayjoy u_4way_1p(
-    .rst        ( rst                    ),
-    .clk        ( clk_sys                ),
-    .enable     ( en4way                 ),
-    .joy8way    ( board_joystick1[3:0]   ),
-    .joy4way    ( joy4way1p              )
+    .board_joy1     ( board_joystick1 ),
+    .board_joy2     ( board_joystick2 ),
+    .board_joy3     ( board_joystick3 ),
+    .board_joy4     ( board_joystick4 ),
+
+    .key_joy1       ( key_joy1        ),
+    .key_joy2       ( key_joy2        ),
+    .key_joy3       ( key_joy3        ),
+    .key_start      ( key_start       ),
+    .key_coin       ( key_coin        ),
+    .key_service    ( key_service     ),
+    .key_pause      ( key_pause       ),
+    .osd_pause      ( osd_pause       ),
+    .key_reset      ( key_reset       ),
+    .rot_control    ( rot_control     ),
+
+    .game_joy1      ( game_joystick1  ),
+    .game_joy2      ( game_joystick2  ),
+    .game_joy3      ( game_joystick3  ),
+    .game_joy4      ( game_joystick4  ),
+    .game_coin      ( game_coin       ),
+    .game_start     ( game_start      ),
+    .game_service   ( game_service    ),
+
+    // Simulation helpers
+    .game_pause     ( game_pause      ),
+    .LVBL           ( LVBL            )
 );
-
-jtframe_4wayjoy u_4way_2p(
-    .rst        ( rst                    ),
-    .clk        ( clk_sys                ),
-    .enable     ( en4way                 ),
-    .joy8way    ( board_joystick2[3:0]   ),
-    .joy4way    ( joy4way2p              )
-);
-
-jtframe_4wayjoy u_4way_3p(
-    .rst        ( rst                    ),
-    .clk        ( clk_sys                ),
-    .enable     ( en4way                 ),
-    .joy8way    ( board_joystick3[3:0]   ),
-    .joy4way    ( joy4way3p              )
-);
-
-jtframe_4wayjoy u_4way_4p(
-    .rst        ( rst                    ),
-    .clk        ( clk_sys                ),
-    .enable     ( en4way                 ),
-    .joy8way    ( board_joystick4[3:0]   ),
-    .joy4way    ( joy4way4p              )
-);
-
-localparam START_BIT  = 6+(BUTTONS-2);
-localparam COIN_BIT   = 7+(BUTTONS-2);
-localparam PAUSE_BIT  = 8+(BUTTONS-2);
-
-reg last_pause, last_osd_pause, last_joypause, last_reset;
-wire joy_pause = joy1_sync[PAUSE_BIT] | joy2_sync[PAUSE_BIT];
-
-function [9:0] apply_rotation;
-    input [9:0] joy_in;
-    input       rot;
-    input       flip;
-    input       invert;
-    begin
-    apply_rotation = {10{invert}} ^
-        (!rot ? joy_in :
-        flip ?
-         { joy_in[9:4], joy_in[1], joy_in[0], joy_in[2], joy_in[3] } :
-         { joy_in[9:4], joy_in[0], joy_in[1], joy_in[3], joy_in[2] });
-    end
-endfunction
-
-`ifdef SIM_INPUTS
-    reg [15:0] sim_inputs[0:16383];
-    integer frame_cnt;
-    initial begin : read_sim_inputs
-        integer c;
-        for( c=0; c<16384; c=c+1 ) sim_inputs[c] = 8'h0;
-        $display("INFO: input simulation enabled");
-        $readmemh( "sim_inputs.hex", sim_inputs );
-    end
-    always @(negedge LVBL, posedge rst) begin
-        if( rst )
-            frame_cnt <= 0;
-        else frame_cnt <= frame_cnt+1;
-    end
-`endif
-
-always @(posedge clk_sys)
-    if(rst ) begin
-        game_pause   <= 1'b0;
-        game_service <= 1'b0 ^ invert_inputs;
-        soft_rst     <= 1'b0;
-    end else begin
-        last_pause   <= key_pause;
-        last_osd_pause <= osd_pause;
-        last_reset   <= key_reset;
-        last_joypause <= joy_pause; // joy is active low!
-
-        // joystick, coin, start and service inputs are inverted
-        // as indicated in the instance parameter
-
-        `ifdef SIM_INPUTS
-        game_coin  = {4{invert_inputs}} ^ { 2'b0, sim_inputs[frame_cnt][1:0] };
-        game_start = {4{invert_inputs}} ^ { 2'b0, sim_inputs[frame_cnt][3:2] };
-        game_joystick1 <= {10{invert_inputs}} ^ { 4'd0, sim_inputs[frame_cnt][9:4]};
-        `else
-        game_joystick1 <= apply_rotation(joy1_sync | key_joy1, rot_control, ~dip_flip, invert_inputs);
-        game_coin      <= {4{invert_inputs}} ^
-            ({  joy4_sync[COIN_BIT],joy3_sync[COIN_BIT],
-                joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
-
-        game_start     <= {4{invert_inputs}} ^
-            ({  joy4_sync[START_BIT],joy3_sync[START_BIT],
-                joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start);
-        `endif
-        game_joystick2 <= apply_rotation(joy2_sync | key_joy2, rot_control, ~dip_flip, invert_inputs);
-        game_joystick3 <= apply_rotation(joy3_sync | key_joy3, rot_control, ~dip_flip, invert_inputs);
-        game_joystick4 <= apply_rotation(joy4_sync           , rot_control, ~dip_flip, invert_inputs);
-
-        soft_rst <= key_reset && !last_reset;
-
-        // state variables:
-        `ifndef DIP_PAUSE // Forces pause during simulation
-        if( downloading )
-            game_pause<=0;
-        else begin// toggle
-            if( (key_pause && !last_pause) || (joy_pause && !last_joypause) )
-                game_pause   <= ~game_pause;
-            if (last_osd_pause ^ osd_pause) game_pause <= osd_pause;
-        end
-        `else
-        game_pause <= 1'b1;
-        `endif
-        game_service <= key_service ^ invert_inputs;
-    end
 
 jtframe_dip u_dip(
     .clk        ( clk_sys       ),
@@ -517,29 +421,28 @@ jtframe_sdram64 #(
 );
 
 `ifdef SIMULATION
+    jtframe_romrq_rdy_check u_rdy_check(
+        .rst       ( rst        ),
+        .clk       ( clk_rom    ),
+        .ba_rd     ( ba_rd      ),
+        .ba_wr     ( ba_wr      ),
+        .ba_ack    ( ba_ack     ),
+        .ba_rdy    ( ba_rdy     )
+    );
 
-jtframe_romrq_rdy_check u_rdy_check(
-    .rst       ( rst        ),
-    .clk       ( clk_rom    ),
-    .ba_rd     ( ba_rd      ),
-    .ba_wr     ( ba_wr      ),
-    .ba_ack    ( ba_ack     ),
-    .ba_rdy    ( ba_rdy     )
-);
-
-`ifdef JTFRAME_SDRAM_STATS
-jtframe_sdram_stats #(.AW(SDRAMW)) u_stats(
-    .rst        ( rst           ),
-    .clk        ( clk_rom       ),
-    // SDRAM interface
-    .sdram_a    ( SDRAM_A       ),
-    .sdram_ba   ( SDRAM_BA      ),
-    .sdram_nwe  ( SDRAM_nWE     ),
-    .sdram_ncas ( SDRAM_nCAS    ),
-    .sdram_nras ( SDRAM_nRAS    ),
-    .sdram_ncs  ( SDRAM_nCS     )
-);
-`endif
+    `ifdef JTFRAME_SDRAM_STATS
+    jtframe_sdram_stats #(.AW(SDRAMW)) u_stats(
+        .rst        ( rst           ),
+        .clk        ( clk_rom       ),
+        // SDRAM interface
+        .sdram_a    ( SDRAM_A       ),
+        .sdram_ba   ( SDRAM_BA      ),
+        .sdram_nwe  ( SDRAM_nWE     ),
+        .sdram_ncas ( SDRAM_nCAS    ),
+        .sdram_nras ( SDRAM_nRAS    ),
+        .sdram_ncs  ( SDRAM_nCS     )
+    );
+    `endif
 `endif
 
 wire [COLORW-1:0] pre2x_r, pre2x_g, pre2x_b;

@@ -24,6 +24,9 @@ module jtframe_4wayjoy(
     output reg [3:0] joy4way
 );
 
+`ifndef JTFRAME_SUPPORT_4WAY
+    always @(*) joy4way = joy8way;
+`else
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
         joy4way <= 4'd0;
@@ -31,11 +34,12 @@ always @(posedge clk, posedge rst) begin
         if( !enable ) begin
             joy4way <= joy8way;
         end else begin
-            if( joy8way==4'b0001 || joy8way==4'b0010 || 
+            if( joy8way==4'b0001 || joy8way==4'b0010 ||
                 joy8way==4'b0100 || joy8way==4'b1000 || joy8way==4'b0000 )
                 joy4way <= joy8way;
         end
     end
 end
+`endif
 
 endmodule

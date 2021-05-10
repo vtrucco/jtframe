@@ -10,6 +10,7 @@ jtframe_mist_base.v
 -sv user_io.v
 data_io.v
 ../keyboard/jtframe_4wayjoy.v
+../keyboard/jtframe_inputs.v
 ../ver/spitx.v
 ../ver/video_dump.v
 ../ver/jtframe_romrq_rdy_check.v
