@@ -366,9 +366,8 @@ always@(posedge clk_sys) begin : uio_block
 						end
 
 				// reading config string, returning a byte from string
-				'h14: if(byte_cnt < STRLEN + 1) begin
+				'h14: begin
 					io_dout[7:0] <= cfg_dout;
-					//conf_str[(STRLEN - byte_cnt)<<3 +:8];
 				end
 
 				// reading sd card status
