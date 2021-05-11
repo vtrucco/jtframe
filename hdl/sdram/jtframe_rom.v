@@ -65,7 +65,6 @@ module jtframe_rom #(parameter
     output [SLOT6_DW-1:0] slot6_dout,
     output [SLOT7_DW-1:0] slot7_dout,
     output [SLOT8_DW-1:0] slot8_dout,
-    output  reg         ready=1'b0,
 
     input               slot0_cs,
     input               slot1_cs,
@@ -99,7 +98,6 @@ module jtframe_rom #(parameter
 );
 
 
-reg  [ 3:0] ready_cnt;
 reg  [ 3:0] rd_state_last;
 wire [ 8:0] req, ok;
 
@@ -293,12 +291,9 @@ wire [8:0] active = ~data_sel & req;
 always @(posedge clk, posedge rst)
 if( rst ) begin
     sdram_addr <= 22'd0;
-    ready_cnt  <=  4'd0;
-    ready      <=  1'b0;
     sdram_req  <=  1'b0;
     data_sel   <=  9'd0;
 end else begin
-    {ready, ready_cnt}  <= {ready_cnt, 1'b1};
     if( sdram_ack ) sdram_req <= 1'b0;
     // accept a new request
     if( data_sel==9'd0 || data_rdy ) begin
