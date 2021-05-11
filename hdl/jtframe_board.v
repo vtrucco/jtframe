@@ -288,7 +288,10 @@ assign debug_bus   = 0;
 assign key_gfx     = 0;
 `endif
 
-jtframe_inputs u_inputs(
+jtframe_inputs #(
+    .BUTTONS   ( BUTTONS                ),
+    .ACTIVE_LOW( GAME_INPUTS_ACTIVE_LOW )
+) u_inputs(
     .rst            ( rst             ),
     .clk            ( clk_sys         ),
     .downloading    ( downloading     ),
