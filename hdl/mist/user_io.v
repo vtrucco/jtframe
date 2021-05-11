@@ -388,27 +388,8 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 	end
 end
 
-localparam SW=64;
-reg          joy_up, st_up;
-reg [SW-1:0] serin;
-reg [   2:0] joy_sel;
-
-always @(posedge clk_sys) begin
-	if( joy_up ) begin
-		case( joy_sel )
-			2'd0: joystick_0 <= serin[SW-1 -:32];
-			2'd1: joystick_1 <= serin[SW-1 -:32];
-			2'd2: joystick_2 <= serin[SW-1 -:32];
-			2'd3: joystick_3 <= serin[SW-1 -:32];
-			2'd4: joystick_4 <= serin[SW-1 -:32];
-		endcase
-	end
-	if( st_up )
-		status <= serin[SW-1 -:64];
-end
-
 // Process bytes from SPI at the clk_sys domain
-always @(posedge clk_sys, posedge rst) begin
+always @(posedge clk_sys) begin
 
 	reg       spi_receiver_strobe;
 	reg       spi_transfer_end;
@@ -425,10 +406,6 @@ always @(posedge clk_sys, posedge rst) begin
 
 	if( rst ) begin
 		core_mod <= 7'b01; // see readme file for documentation on each bit
-		joy_up  <= 0;
-		st_up   <= 0;
-		serin   <= 0;
-		joy_sel <= 0;
 	end else begin
 		//synchronize between SPI and sys clock domains
 		spi_receiver_strobeD <= spi_receiver_strobe_r;
@@ -436,9 +413,8 @@ always @(posedge clk_sys, posedge rst) begin
 		spi_transfer_endD	<= spi_transfer_end_r;
 		spi_transfer_end	<= spi_transfer_endD;
 
-		key_strobe   <= 0;
+		key_strobe <= 0;
 		mouse_strobe <= 0;
-		joy_up       <= 0;
 		if (~spi_transfer_endD & spi_transfer_end) begin
 			abyte_cnt <= 8'd0;
 		end else if (spi_receiver_strobeD ^ spi_receiver_strobe) begin
@@ -452,18 +428,11 @@ always @(posedge clk_sys, posedge rst) begin
 				case(acmd)
 					// buttons and switches
 					8'h01: but_sw <= spi_byte_in;
-					8'h60, 8'h61, 8'h62, 8'h63, 8'h64: begin
-						joy_sel <= acmd[2:0];
-						serin <= { spi_byte_in, serin[SW-1:8] };
-						joy_up  <= abyte_cnt[2:0]==4;
-					end
-					/*
 					8'h60: if (abyte_cnt < 5) joystick_0[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 					8'h61: if (abyte_cnt < 5) joystick_1[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 					8'h62: if (abyte_cnt < 5) joystick_2[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 					8'h63: if (abyte_cnt < 5) joystick_3[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 					8'h64: if (abyte_cnt < 5) joystick_4[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
-					*/
 					8'h04: begin
 						// store incoming ps2 mouse bytes
 						ps2_mouse_fifo[ps2_mouse_wptr] <= spi_byte_in;
@@ -516,14 +485,10 @@ always @(posedge clk_sys, posedge rst) begin
 						end
 					end
 
-					//8'h15: status <= spi_byte_in;
+					8'h15: status <= spi_byte_in;
 
 					// status, 64bit version
-					8'h1e: begin
-						serin <= { spi_byte_in, serin[SW-1:8] };
-						st_up <= abyte_cnt[3:0]==8;
-					end
-					//8'h1e: if(abyte_cnt<9) status[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
+					8'h1e: if(abyte_cnt<9) status[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 
 					// core variant
 					8'h21: core_mod <= spi_byte_in[6:0];
