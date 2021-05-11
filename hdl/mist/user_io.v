@@ -388,8 +388,24 @@ always@(posedge spi_sck or posedge SPI_SS_IO) begin
 	end
 end
 
-// Process bytes from SPI at the clk_sys domain
+reg        joy_up;
+reg [31:0] joy_ser;
+reg [ 2:0] joy_sel;
+
 always @(posedge clk_sys) begin
+	if( joy_up ) begin
+		case( joy_sel )
+			2'd0: joystick_0 <= joy_ser;
+			2'd1: joystick_1 <= joy_ser;
+			2'd2: joystick_2 <= joy_ser;
+			2'd3: joystick_3 <= joy_ser;
+			2'd4: joystick_4 <= joy_ser;
+		endcase
+	end
+end
+
+// Process bytes from SPI at the clk_sys domain
+always @(posedge clk_sys, posedge rst) begin
 
 	reg       spi_receiver_strobe;
 	reg       spi_transfer_end;
@@ -406,6 +422,9 @@ always @(posedge clk_sys) begin
 
 	if( rst ) begin
 		core_mod <= 7'b01; // see readme file for documentation on each bit
+		joy_up   <= 0;
+		joy_ser  <= 0;
+		joy_sel  <= 0;
 	end else begin
 		//synchronize between SPI and sys clock domains
 		spi_receiver_strobeD <= spi_receiver_strobe_r;
@@ -413,8 +432,9 @@ always @(posedge clk_sys) begin
 		spi_transfer_endD	<= spi_transfer_end_r;
 		spi_transfer_end	<= spi_transfer_endD;
 
-		key_strobe <= 0;
+		key_strobe   <= 0;
 		mouse_strobe <= 0;
+		joy_up       <= 0;
 		if (~spi_transfer_endD & spi_transfer_end) begin
 			abyte_cnt <= 8'd0;
 		end else if (spi_receiver_strobeD ^ spi_receiver_strobe) begin
@@ -428,11 +448,18 @@ always @(posedge clk_sys) begin
 				case(acmd)
 					// buttons and switches
 					8'h01: but_sw <= spi_byte_in;
+					8'h60, 8'h61, 8'h62, 8'h63, 8'h64: begin
+						joy_sel <= acmd[2:0];
+						joy_ser <= { spi_byte_in, joy_ser[31:8] };
+						joy_up  <= abyte_cnt[2:0]==4;
+					end
+					/*
 					8'h60: if (abyte_cnt < 5) joystick_0[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 					8'h61: if (abyte_cnt < 5) joystick_1[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 					8'h62: if (abyte_cnt < 5) joystick_2[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 					8'h63: if (abyte_cnt < 5) joystick_3[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
 					8'h64: if (abyte_cnt < 5) joystick_4[(abyte_cnt-1)<<3 +:8] <= spi_byte_in;
+					*/
 					8'h04: begin
 						// store incoming ps2 mouse bytes
 						ps2_mouse_fifo[ps2_mouse_wptr] <= spi_byte_in;
