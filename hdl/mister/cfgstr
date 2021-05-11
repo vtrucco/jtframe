@@ -18,5 +18,6 @@ H0OEF,Aspect Ratio,Original,Full screen,[ARC1],[ARC2];
 {{ .CORE_OSD }}
 {{ .SEPARATOR }}
 {{ if not .JTFRAME_OSD_NOCREDITS }} OC,Credits,Off,On; {{ end }}
-R0,RST;
-V,v{{ .DATE }};
+{{ .CORE_KEYMAP }}
+R0,Reset;
+V,v{{ .DATE }} jotego;
