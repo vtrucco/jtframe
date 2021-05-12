@@ -140,7 +140,8 @@ initial begin
             $display("INFO: PROM download: %6X bytes loaded from file (%m)", readcnt, SIMFILE);
             $fclose(f);
             if( dumpcnt >= readcnt ) begin
-                $display("WARNING: PROM_START is set beyond the end of the file");
+                $display("WARNING: PROM_START (%X) is set beyond the end of the file (%X)", PROM_START, dumpcnt);
+                $display("         GAME_ROM_LEN=%X",GAME_ROM_LEN);
             end else begin
                 $display("INFO: fast PROM download from %X to %X", dumpcnt, GAME_ROM_LEN);
             end

@@ -125,6 +125,7 @@ make || exit $?
 echo Extra arguments: "$EXTRA"
 HDL=../../../hdl
 SIMEXE=$RANDOM_$RANDOM_$RANDOM.sim
+EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_BANKS"
 $SIM test.v $HDL/sdram/jtframe_sdram64*.v $HDL/ver/mt48lc16m16a2.v \
     -o $SIMEXE ${MACRO}JTFRAME_SDRAM_test.BANKS ${MACRO}SIMULATION $DUMP $EXTRA \
     ${MACRO}SDRAM_SHIFT=$SDRAM_SHIFT \

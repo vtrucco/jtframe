@@ -210,7 +210,23 @@ mt48lc16m16a2 #(.filename(GAME_ROMNAME)) u_sdram (
 );
 `endif
 
-spitx #(.filename(GAME_ROMNAME), .TX_LEN(TX_LEN) )
+// Length of the downloading process
+// If JTFRAME_DWNLD_PROM_ONLY is defined
+// it is set to zero, so jtframe_dwnld can transfer the PROMs directly.
+// Otherwise, if LOADROM is defined, the full length of the ROM file is done
+// Otherwise, only 256 are transferred to let the core experience the pulse
+// of the downloading signal
+`ifndef JTFRAME_DWNLD_PROM_ONLY
+    `ifdef LOADROM
+        localparam DWNLEN = TX_LEN;
+    `else
+        localparam DWNLEN = 256;
+    `endif
+`else
+    localparam DWNLEN = 0;
+`endif
+
+spitx #(.filename(GAME_ROMNAME), .TX_LEN(DWNLEN) )
     u_spitx(
     .rst        ( rst        ),
     .SPI_DO     ( 1'b0       ),

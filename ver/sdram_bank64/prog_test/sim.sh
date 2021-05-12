@@ -96,6 +96,7 @@ done
 
 echo Extra arguments: "$EXTRA"
 HDL=../../../hdl
+EXTRA="$EXTRA ${MACRO}JTFRAME_SDRAM_BANKS"
 $SIM test.v $HDL/sdram/jtframe_{sdram64*,dwnld}.v $HDL/ver/mt48lc16m16a2.v \
     -o sim ${MACRO}JTFRAME_SDRAM_test.BANKS ${MACRO}SIMULATION $DUMP $EXTRA \
     ${MACRO}SDRAM_SHIFT=$SDRAM_SHIFT \
