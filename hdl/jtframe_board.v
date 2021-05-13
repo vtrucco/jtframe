@@ -261,18 +261,23 @@ jtframe_keyboard u_keyboard(
     .debug_minus ( debug_minus   )
 );
 
-jtframe_debug u_debug(
-    .clk         ( clk_sys       ),
-    .rst         ( rst           ),
+    `ifndef JTFRAME_RELEASE
+        jtframe_debug u_debug(
+            .clk         ( clk_sys       ),
+            .rst         ( rst           ),
 
-    .shift       ( key_shift     ),
-    .key_gfx     ( key_gfx       ),
-    .debug_plus  ( debug_plus    ),
-    .debug_minus ( debug_minus   ),
+            .shift       ( key_shift     ),
+            .key_gfx     ( key_gfx       ),
+            .debug_plus  ( debug_plus    ),
+            .debug_minus ( debug_minus   ),
 
-    .gfx_en      ( gfx_en        ),
-    .debug_bus   ( debug_bus     )
-);
+            .gfx_en      ( gfx_en        ),
+            .debug_bus   ( debug_bus     )
+        );
+    `else
+        assign gfx_en    = ~0;
+        assign debug_bus =  0;
+    `endif
 `else
 assign key_joy3    = 10'h0;
 assign key_joy2    = 10'h0;

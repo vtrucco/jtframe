@@ -44,8 +44,6 @@ always @(posedge clk, posedge rst) begin
         last_m   <= debug_minus;
         last_gfx <= key_gfx;
 
-        `ifndef JTFRAME_RELEASE
-
         if( debug_plus & ~last_p ) begin
             debug_bus <= debug_bus + shift;
         end else if( debug_minus & ~last_m ) begin
@@ -53,8 +51,6 @@ always @(posedge clk, posedge rst) begin
         end
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
-
-        `endif
     end
 end
 
