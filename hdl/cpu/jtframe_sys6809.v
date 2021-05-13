@@ -105,6 +105,7 @@ module jtframe_sys6809(
     // memory interface
     output  [15:0]  A,
     output          RnW,
+    output reg      VMA,
     input           ram_cs,
     input           rom_cs,
     input           rom_ok,
@@ -118,9 +119,16 @@ module jtframe_sys6809(
     parameter RAM_AW=12;
     wire    ram_we = ram_cs & ~RnW;
     wire    cen_E, cen_Q;
-    wire    BA, BS;
+    wire    BA, BS, AVMA;
 
     assign  irq_ack = {BA,BS}==2'b01;
+
+    always @(posedge clk, negedge rstn) begin
+        if( !rstn )
+            VMA <= 1;
+        else
+            if( cen_E ) VMA <= AVMA;
+    end
 
     jtframe_6809wait u_wait(
         .rstn       ( rstn      ),
@@ -159,7 +167,7 @@ module jtframe_sys6809(
         .nIRQ    ( nIRQ    ),
         .nFIRQ   ( nFIRQ   ),
         .nNMI    ( nNMI    ),
-        .AVMA    (         ),
+        .AVMA    ( AVMA    ),
         .BUSY    (         ),
         .LIC     (         ),
         .nDMABREQ( 1'b1    ),
