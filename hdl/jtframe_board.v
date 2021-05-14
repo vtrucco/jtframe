@@ -489,7 +489,7 @@ wire              pre2x_LHBL, pre2x_LVBL;
         `ifdef JTFRAME_CREDITS_NOROTATE
             .rotate ( 2'd0          ),
         `else
-            .rotate ( rotate        ),
+            .rotate ( rotate^2'b10  ),
         `endif
         .toggle     ( toggle        ),
         .fast_scroll( fast_scroll   ),

@@ -70,7 +70,7 @@ wire [8:0]        scan_data;
 wire [7:0]        font_data;
 reg  [MSGW-1:0]   scan_addr;
 wire [9:0]        font_addr = {scan_data[6:0],
-                        rotate[1] ? (~vdump[2:0]+3'd1) : vdump[2:0] };
+                        rotate==2'b11 ? (~vdump[2:0]+3'd1) : vdump[2:0] };
 wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
 reg               show, hide;
@@ -103,7 +103,8 @@ localparam SCROLL_EN = MSGW > 10;
 wire hb = BLKPOL ? HB : ~HB;
 wire vb = BLKPOL ? VB : ~VB;
 reg [7:0] pxl_data;
-wire tate = rotate[0];
+wire tate      = rotate[0],
+     tate_flip = rotate==2'b11;
 
 reg last_hb, last_vb;
 reg [3:0] scr_base;
@@ -112,10 +113,12 @@ wire hb_edge = hb && !last_hb;
 
 always @(posedge clk) if(pxl_cen) begin
     if( tate || hb_edge ) begin
-        vdump1  <= scrpos + (rotate[0] ? (hn-HSTART) : vrender);
+        vdump1  <= scrpos + (tate ? (hn-HSTART) : vrender);
         vdump   <= vdump1;
     end
 end
+
+wire [VPOSW-1:3] vidx_flip = (~vdump[VPOSW-1:3])+1'd1;
 
 always @(posedge clk) begin
     if( rst ) begin
@@ -135,7 +138,7 @@ always @(posedge clk) begin
         // scrpos: scroll counter
         // gets reset each time the pause button is pressed
         if( enable && !last_enable ) begin
-            scrpos <=  rotate==2'b11 ? MAXVISIBLE : {VPOSW{1'b0}};
+            scrpos <=  tate_flip ? MAXVISIBLE : {VPOSW{1'b0}};
         end else begin
             if ( vb ) begin
                 vrender  <= 0;
@@ -143,7 +146,7 @@ always @(posedge clk) begin
                     // Scroll runs at max speed when the visible pages are over
                     // otherwise it runs at SPEED
                     if( scr_base == SPEED || scrpos>MAXVISIBLE || fast_scroll ) begin
-                        scrpos <= rotate==2'b11 ? (scrpos-1'b1) : (scrpos + 1'b1);
+                        scrpos <= tate_flip ? (scrpos-1'b1) : (scrpos + 1'b1);
                         scr_base <= 4'd0;
                     end else scr_base <= scr_base + 4'd1;
                 end
@@ -151,7 +154,7 @@ always @(posedge clk) begin
         end
         //if( /*tate || hn[2:0]==3'd0 || hb || vb ) begin
             scan_addr <= tate ?
-                { vdump[VPOSW-1:3]^{VPOSW-3{rotate[1]}}, vrender[7:3]^{5{~rotate[1]}} } :
+                { rotate[1] ? vidx_flip : vdump[VPOSW-1:3], vrender[7:3]^{5{~rotate[1]}} } :
                 { vdump[VPOSW-1:3], hn[7:3] };
         //end
         // Draw
@@ -411,7 +414,7 @@ always @(posedge clk) if(pxl_cen) begin
             /*|| (blanks[1:0]^{2{~BLKPOL[0]}}!=2'b00)*/ ) begin
             rgb_out            <= dim;
         end else begin
-            if( pxl[0] ) begin // CHAR
+            if( pxl[0] || tate ) begin // CHAR, OBJ disabled for TATE
                 case( pxl[2:1] )
                     2'd0: rgb_out <= extend(PAL0);
                     2'd1: rgb_out <= extend(PAL1);
