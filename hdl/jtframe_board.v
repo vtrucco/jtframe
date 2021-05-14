@@ -486,6 +486,7 @@ wire              pre2x_LHBL, pre2x_LVBL;
         `else
             .enable ( ~dip_pause    ),
         `endif
+        .rotate     ( rotate        ),
         .toggle     ( toggle        ),
         .fast_scroll( fast_scroll   ),
         // output image

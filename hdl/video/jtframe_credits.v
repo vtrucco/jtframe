@@ -41,6 +41,7 @@ module jtframe_credits #(
     input               enable, // shows the screen and resets the scroll counter
     input               toggle, // disables the screen. Only has an effect if enable is high
     input               fast_scroll,
+    input [1:0]         rotate,
 
     // output image
     output reg              HB_out,
@@ -53,6 +54,7 @@ localparam MSGW  = PAGES == 1 ? 10 :
                    (PAGES > 2 && PAGES <=4 ? 12 :
                    (PAGES > 5 && PAGES <=8 ? 13 : 14 ))); // Support for upto 16 pages
 localparam VPOSW = MSGW-2;
+localparam HPOSW = 9;
 localparam [VPOSW-1:0] MAXVISIBLE = PAGES*32*8-1;
 
 `ifndef JTFRAME_CREDITS_HSTART
@@ -61,12 +63,14 @@ localparam [VPOSW-1:0] MAXVISIBLE = PAGES*32*8-1;
     localparam [8:0] HSTART=9'h0-`JTFRAME_CREDITS_HSTART;
 `endif
 
-reg  [8:0]        hn;
-reg  [VPOSW-1:0]  vpos, vrender, vdump, vdump1;
+reg  [HPOSW-1:0]  hn;
+reg  [VPOSW-1:0]  scrpos, vdump, vdump1;
+reg  [8:0]        vrender;
 wire [8:0]        scan_data;
 wire [7:0]        font_data;
 reg  [MSGW-1:0]   scan_addr;
-wire [9:0]        font_addr = {scan_data[6:0], vdump[2:0] };
+wire [9:0]        font_addr = {scan_data[6:0],
+                        rotate[1] ? (~vdump[2:0]+3'd1) : vdump[2:0] };
 wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
 reg               show, hide;
@@ -99,16 +103,24 @@ localparam SCROLL_EN = MSGW > 10;
 wire hb = BLKPOL ? HB : ~HB;
 wire vb = BLKPOL ? VB : ~VB;
 reg [7:0] pxl_data;
+wire tate = rotate[0];
 
 reg last_hb, last_vb;
 reg [3:0] scr_base;
 
 wire hb_edge = hb && !last_hb;
 
+always @(posedge clk) if(pxl_cen) begin
+    if( tate || hb_edge ) begin
+        vdump1  <= scrpos + (rotate[0] ? (hn-HSTART) : vrender);
+        vdump   <= vdump1;
+    end
+end
+
 always @(posedge clk) begin
     if( rst ) begin
         hn       <= HSTART;
-        vpos     <= {VPOSW{1'b0}};
+        scrpos   <= {VPOSW{1'b0}};
         vrender  <= 8'd0;
         scr_base <= 4'd0;
     end else if(pxl_cen) begin
@@ -117,38 +129,42 @@ always @(posedge clk) begin
         if( hb_edge ) begin
             hn      <= HSTART;
             vrender <= vrender + 8'd1;
-            vdump1  <= vpos + vrender;
-            vdump   <= vdump1;
         end else if( !hb ) begin
             hn <= hn + 9'd1;
         end
-        // vpos: scroll counter
+        // scrpos: scroll counter
         // gets reset each time the pause button is pressed
         if( enable && !last_enable ) begin
-            vpos <= {VPOSW{1'b0}};
+            scrpos <=  rotate==2'b11 ? MAXVISIBLE : {VPOSW{1'b0}};
         end else begin
             if ( vb ) begin
                 vrender  <= 0;
                 if( !last_vb && SCROLL_EN ) begin
                     // Scroll runs at max speed when the visible pages are over
                     // otherwise it runs at SPEED
-                    if( scr_base == SPEED || vrender>MAXVISIBLE || fast_scroll ) begin
-                        vpos <= vpos + 1'b1;
+                    if( scr_base == SPEED || scrpos>MAXVISIBLE || fast_scroll ) begin
+                        scrpos <= rotate==2'b11 ? (scrpos-1'b1) : (scrpos + 1'b1);
                         scr_base <= 4'd0;
                     end else scr_base <= scr_base + 4'd1;
                 end
             end
         end
-        if( hn[2:0]==3'd0 || hb || vb ) begin
-            scan_addr <= { vdump[VPOSW-1:3], hn[7:3] };
-        end
+        //if( /*tate || hn[2:0]==3'd0 || hb || vb ) begin
+            scan_addr <= tate ?
+                { vdump[VPOSW-1:3]^{VPOSW-3{rotate[1]}}, vrender[7:3]^{5{~rotate[1]}} } :
+                { vdump[VPOSW-1:3], hn[7:3] };
+        //end
         // Draw
-        pxl <= { pal, pxl_data[7] };
-        if( hn[2:0]==3'd1 ) begin
-            pal      <= scan_data[8:7];
-            pxl_data <= font_data;
+        if( tate ) begin
+            pxl <= { scan_data[8:7], font_data[ vrender[2:0] ^{3{rotate[1]}} ] };
         end else begin
-            pxl_data <= pxl_data << 1;
+            pxl <= { pal, pxl_data[7] };
+            if( hn[2:0]==3'd1 ) begin
+                pal      <= scan_data[8:7];
+                pxl_data <= font_data;
+            end else begin
+                pxl_data <= pxl_data << 1;
+            end
         end
     end
 end
@@ -405,6 +421,8 @@ always @(posedge clk) if(pxl_cen) begin
             end else rgb_out <= extend(obj_pxl); // OBJ
         end
     end
+
+    if( vb || hb ) rgb_out <= 0;
 end
 
 endmodule
