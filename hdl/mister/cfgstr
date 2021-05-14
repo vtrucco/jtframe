@@ -13,11 +13,15 @@ H0OEF,Aspect Ratio,Original,Full screen,[ARC1],[ARC2];
 {{ if .JTFRAME_OSD_SND_EN }}        O8,FX,On,Off; O9,FM,On,Off; {{ end }}
 {{ if .JTFRAME_OSD_TEST }}          OA,Test mode,Off,On; {{ end }}
 {{ .SEPARATOR }}
-{{ if .JTFRAME_MRA_DIP }}        DIP; {{ end }}
-{{ .SEPARATOR }}
-{{ .CORE_OSD }}
-{{ .SEPARATOR }}
+{{ if .JTFRAME_MRA_DIP }}
+    DIP;
+    {{ .SEPARATOR }}
+{{ end }}
+{{ if .CORE_OSD }}
+    {{ .CORE_OSD }}
+    {{ .SEPARATOR }}
+{{ end }}
 {{ if not .JTFRAME_OSD_NOCREDITS }} OC,Credits,Off,On; {{ end }}
-{{ .CORE_KEYMAP }}
+{{ with .CORE_KEYMAP }} {{ . }} {{ end }}
 R0,Reset;
 V,v{{ .DATE }} jotego;
