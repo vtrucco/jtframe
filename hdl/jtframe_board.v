@@ -486,7 +486,11 @@ wire              pre2x_LHBL, pre2x_LVBL;
         `else
             .enable ( ~dip_pause    ),
         `endif
-        .rotate     ( rotate        ),
+        `ifdef JTFRAME_CREDITS_NOROTATE
+            .rotate ( 2'd0          ),
+        `else
+            .rotate ( rotate        ),
+        `endif
         .toggle     ( toggle        ),
         .fast_scroll( fast_scroll   ),
         // output image
