@@ -234,8 +234,9 @@ jtframe_resync u_resync(
 
 wire [15:0] status_menumask;
 
-assign status_menumask[15:1] = 15'd0;
-assign status_menumask[0]    = direct_video;
+assign status_menumask[15:2] = 0,
+       status_menumask[1]    = ~core_mod[0],
+       status_menumask[0]    = direct_video;
 
 jtframe_mister_dwnld u_dwnld(
     .rst            ( rst            ),
