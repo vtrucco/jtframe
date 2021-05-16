@@ -21,7 +21,13 @@
     // comparison is performed. Useful when the dumped file to load
     // has part of it invalid
 
-module jtframe_prom #(parameter dw=8, aw=10, simfile="", offset=0 )(
+module jtframe_prom #(parameter
+    dw      = 8,
+    aw      = 10,
+    simfile = "",
+    offset  = 0,
+    ASYNC   = 0     // makes the read asynchronous (will not map as BRAM)
+)(
     input   clk,
     input   cen,
     input   [dw-1:0] data,
@@ -89,11 +95,23 @@ end
 /* verilator lint_on WIDTH */
 `endif
 
-// no clock enable for writtings to allow correct operation during SPI downloading.
-always @(posedge clk) begin
-    if( cen ) q <= mem[rd_addr];
-    if( we ) mem[wr_addr] <= data;
-end
+generate
+    if( ASYNC ) begin
+        always @(posedge clk) begin
+            if( we ) mem[wr_addr] <= data;
+        end
+
+        always @(*) begin
+            q = mem[rd_addr];
+        end
+    end else begin
+        // no clock enable for writtings to allow correct operation during SPI downloading.
+        always @(posedge clk) begin
+            if( cen ) q <= mem[rd_addr];
+            if( we ) mem[wr_addr] <= data;
+        end
+    end
+endgenerate
 
 
 endmodule // jtframe_ram
