@@ -30,7 +30,11 @@ module video_dump(
     initial $display("INFO: dumping video to %s\n",`DUMP_VIDEO_FNAME);
 `endif
 
+integer vcnt=-1, hcnt=-1, hvinfo_done=-1, finfo;
 integer fvideo;
+
+reg last_vb, last_hb;
+
 initial begin
     fvideo = $fopen(`DUMP_VIDEO_FNAME,"wb");
 end
@@ -43,8 +47,30 @@ wire [31:0] video_dump = { 8'hff, {2{blue}}, {2{green}}, {2{red}} };
 `define VIDEO_START 0
 `endif
 
-always @(posedge pxl_clk) if(pxl_cen && frame_cnt>=`VIDEO_START ) begin
+always @(posedge pxl_clk) if(pxl_cen && frame_cnt>=`VIDEO_START && hvinfo_done>=0 ) begin
     if( !pxl_hb && !pxl_vb ) $fwrite(fvideo,"%u", video_dump);
+end
+
+always @(posedge pxl_clk) if( pxl_cen && hvinfo_done<1 ) begin
+    last_vb <= pxl_vb;
+    last_hb <= pxl_hb;
+    if( pxl_vb ) begin
+        vcnt<=0;
+        if( hvinfo_done==0 && vcnt>0 && hcnt>0 ) begin
+            finfo  = $fopen("video.info","w");
+            $fdisplay( finfo, "1%d\n%1d\n", hcnt, vcnt );
+            $display( "Visible screen size: %1dx%1d\n", hcnt, vcnt );
+            $fclose(finfo);
+            hvinfo_done <= 1;
+        end else if(hvinfo_done<0) begin
+            hvinfo_done <= 0;
+        end
+    end else if( pxl_hb===1 && last_hb===0 )
+        vcnt<=vcnt+1;
+
+    if( pxl_hb )
+        hcnt <= 0;
+    else hcnt <= hcnt + 1;
 end
 
 `endif
