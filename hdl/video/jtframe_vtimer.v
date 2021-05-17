@@ -79,7 +79,7 @@ parameter [8:0] V_START  = 9'd0,
                 HS_END   = HS_START+9'd27, // Default 4.5us for a 6MHz clock
                 H_VB     = HB_START,
                 H_VS     = HS_START,
-                H_VNEXT  = HB_END,
+                H_VNEXT  = HS_START,
                 HINIT    = H_VNEXT,
                 HCNT_START=9'd0;
 
