@@ -327,6 +327,11 @@ assign AUDIO_S = `SIGNED_SND;
 assign prog_data = {2{prog_data8}};
 `endif
 
+reg pxl1_cen;
+
+// this places the pxl1_cen in the pixel centre
+always @(posedge clk_sys) pxl1_cen <= pxl2_cen & ~pxl_cen;
+
 jtframe_mister #(
     .SDRAMW        ( SDRAMW         ),
     .BUTTONS       ( GAME_BUTTONS   ),
@@ -356,7 +361,7 @@ u_frame(
     .LVBL           ( LVBL           ),
     .hs             ( hs             ),
     .vs             ( vs             ),
-    .pxl_cen        ( pxl_cen        ),
+    .pxl_cen        ( pxl1_cen       ),
     .pxl2_cen       ( pxl2_cen       ),
 
     `ifdef JTFRAME_VERTICAL
