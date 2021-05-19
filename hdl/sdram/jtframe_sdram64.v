@@ -136,6 +136,7 @@ reg         rfsh_bg;
 reg  [15:0] dq_pad;
 reg  [ 1:0] dqm;
 wire [ 1:0] mask_mux;
+wire        all_dqm, prog_busy, pre_br;
 
 assign {sdram_ncs, sdram_nras, sdram_ncas, sdram_nwe } = cmd;
 assign {sdram_dqmh, sdram_dqml} = MISTER ? sdram_a[12:11] : dqm;
@@ -186,7 +187,7 @@ always @(posedge clk) begin
         if( next_cmd==CMD_ACTIVE )
             sdram_a[12:11] <= next_a[12:11];
         else
-            sdram_a[12:11] <= wr_cycle ? mask_mux : 0;
+            sdram_a[12:11] <= wr_cycle ? mask_mux : 2'd0;
     end else begin
         sdram_a[12:11] <= next_a[12:11];
         dqm <= wr_cycle ? mask_mux : 0;
@@ -493,9 +494,9 @@ always @(*) begin
         if( BAPRIO ) begin
             casez( br ) // Bank requests have priority (eases timing)
                 4'b???1: bg=4'b0001;
-                4'b??1?: bg=4'b0010;
-                4'b?1??: bg=4'b0100;
-                4'b1???: bg=4'b1000;
+                4'b??10: bg=4'b0010;
+                4'b?100: bg=4'b0100;
+                4'b1000: bg=4'b1000;
                 default: bg=0;
             endcase
         end else begin // Bank requests are randomized (tougher timing)

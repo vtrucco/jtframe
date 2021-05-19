@@ -111,7 +111,7 @@ reg  [STW-1:0] st, next_st, rot_st;
 reg            last_act;
 wire           rd_wr;
 
-reg            adv, do_prech, do_act, do_read, written;
+reg            do_prech, do_act, do_read, written;
 
 // state phases
 reg            in_busy, in_busy64;
@@ -149,7 +149,6 @@ always @(posedge clk, posedge rst) begin
 end
 
 always @(*) begin
-    adv=0;
     rot_st  = { st[STW-2:0], st[STW-1] };
     next_st = st;
     if( st[IDLE] ) begin
@@ -215,8 +214,7 @@ always @(*) begin
           do_read  ? (rd ? CMD_READ : CMD_WRITE ) : CMD_NOP ));
     sdram_a[12:11] =  addr_row[12:11];
     sdram_a[10:0] = do_act ? addr_row[10:0] :
-            { do_read ? AUTOPRECH[0] : PRECHARGE_ALL, addr[AW-1], addr[8:0]};
-
+            { do_read ? AUTOPRECH[0] : PRECHARGE_ALL[0], addr[AW-1], addr[8:0]};
 end
 
 always @(posedge clk, posedge rst) begin
