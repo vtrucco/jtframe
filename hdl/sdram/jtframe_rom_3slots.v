@@ -60,6 +60,7 @@ module jtframe_rom_3slots #(parameter
     input               sdram_ack,
     output  reg         sdram_req,
     output  reg [SDRAMW-1:0] sdram_addr,
+    input               data_dst,
     input               data_rdy,
     input       [15:0]  data_read
 );
