@@ -27,12 +27,18 @@ module jtframe_tilebuf #(
     input               rst,
     input               clk,
     input               pxl2_cen,
+
+    // screen
     input      [HW-1:0] hdump,
     input      [VW-1:0] vdump,
+
+    // to graphics block
+    output              scan_cen,
     output reg [HW-1:0] hscan,
     output reg [VW-1:0] vscan,
-    input               rom_ok,
     input      [PW-1:0] pxl_data,
+    input               rom_ok,     // SDRAM output
+
     output     [PW-1:0] pxl_dump
 );
 
@@ -43,7 +49,7 @@ wire [HW-1:0] hread = hdump + HOFFSET[HW-1:0];
 
 assign hnext = hscan + 1'd1;
 assign we    = pxl2_cen & rom_ok & !done;
-
+assign scan_cen = pxl2_cen & rom_ok;
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
