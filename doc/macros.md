@@ -44,8 +44,15 @@ JTFRAME_RELEASE          |         | Disables gfx_en control via keyboard
 JTFRAME_SAVESDRAM        |         | Saves SDRAM contents at the end of each frame (slow)
 JTFRAME_SCAN2X_NOBLEND   | MiST    | Disables pixel blending
 JTFRAME_SDRAM96          |         | SDRAM is clocked at 96MHz and the clk input of game is 96MHz
-JTFRAME_SDRAM_ADQM       | MiSTer  | A12 and A11 are equal to DQMH/L
 JTFRAME_SDRAM_BANKS      |         | Game module ports will support interleaved bank access
+JTFRAME_SUPPORT_4WAY     |         | Enables support for 4-way joysticks if the MRA sets it
+JTFRAME_VERTICAL         |         | Enables support for vertical games
+
+# SDRAM Banks
+
+Macro                    | Target  |  Usage
+-------------------------|---------|----------------------
+JTFRAME_SDRAM_ADQM       | MiSTer  | A12 and A11 are equal to DQMH/L
 JTFRAME_SDRAM_BWAIT      |         | Adds a wait cycle in the SDRAM
 JTFRAME_SDRAM_CHECK      |         | Double check SDRAM data through modules (slow)
 JTFRAME_SDRAM_DEBUG      |         | Outputs debug messages for SDRAM during simulation
@@ -53,8 +60,13 @@ JTFRAME_SDRAM_LARGE      | MiSTer  | Enables 64MB access to SDRAM modules
 JTFRAME_SDRAM_MUXLATCH   |         | Extra latch for SDRAM mux for <64MHz operation
 JTFRAME_SDRAM_NO_DWNRFSH |         | No refresh during download (non-interleaved SDRAM controller)
 JTFRAME_SDRAM_REPACK     |         | Extra latch stage at SDRAM mux output
-JTFRAME_SUPPORT_4WAY     |         | Enables support for 4-way joysticks if the MRA sets it
-JTFRAME_VERTICAL         |         | Enables support for vertical games
+
+# SDRAM64
+
+Macro                    | Target  |  Usage
+-------------------------|---------|----------------------
+JTFRAME_BAx_AUTOPRECH    |         | Enables auto precharge on bank X (0,1,2,3)
+JTFRAME_BAx_LEN          |         | Sets length of bank x, valid values 16, 32 or 64
 
 # Simulation-only Macros
 
