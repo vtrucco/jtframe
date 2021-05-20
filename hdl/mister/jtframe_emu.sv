@@ -293,9 +293,14 @@ wire [ 1:0] ba0_din_m;
 wire [15:0] sdram_dout;
 
 `ifndef JTFRAME_SDRAM_BANKS
-assign prog_data = {2{prog_data8}};
+// tie down unused bank signals
+assign prog_data  = {2{prog_data8}};
 assign ba_rd[3:1] = 0;
 assign ba_wr      = 0;
+assign prog_ba    = 2'd0;
+assign ba1_addr   = 22'd0;
+assign ba2_addr   = 22'd0;
+assign ba3_addr   = 22'd0;
 `endif
 
 `ifndef COLORW
@@ -641,16 +646,6 @@ end
 
 `ifndef STEREO_GAME
     assign snd_right = snd_left;
-`endif
-
-`ifndef JTFRAME_SDRAM_BANKS
-assign ba_wr     = 1'b0;
-assign prog_ba   = 2'd0;
-// tie down unused bank signals
-assign ba_rd[3:2] = 0;
-assign ba1_addr = 22'd0;
-assign ba2_addr = 22'd0;
-assign ba3_addr = 22'd0;
 `endif
 
 `ifdef SIMULATION
