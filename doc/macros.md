@@ -41,7 +41,6 @@ JTFRAME_OSD_VOL          |         | Show FX volume control on OSD
 JTFRAME_OSDCOLOR         |         | Sets the OSD colour
 JTFRAME_PLL              |         | PLL module name to be used. Defaults to jtframe_pll0
 JTFRAME_RELEASE          |         | Disables gfx_en control via keyboard
-JTFRAME_SAVESDRAM        |         | Saves SDRAM contents at the end of each frame (slow)
 JTFRAME_SCAN2X_NOBLEND   | MiST    | Disables pixel blending
 JTFRAME_SDRAM96          |         | SDRAM is clocked at 96MHz and the clk input of game is 96MHz
 JTFRAME_SDRAM_BANKS      |         | Game module ports will support interleaved bank access
@@ -76,12 +75,19 @@ Macro                    | Target  |  Usage
 -------------------------|---------|---------------------------------------------
 DUMP_VIDEO               |         | Enables video dump to a file
 DUMP_VIDEO_FNAME         |         | Internal. Do not assign.
+JTFRAME_SAVESDRAM        |         | Saves SDRAM contents at the end of each frame (slow)
 JTFRAME_SDRAM_STATS      |         | Produce SDRAM usage data during simulation
 JTFRAME_SIM_DIPS         |         | Define DIP switch values during simulation
-JTFRAME_SIM_LOAD_EXTRA   |         | Extra wait time when transferring ROM in simulation
 JTFRAME_SIM_ROMRQ_NOCHECK|         | Disable protocol checking of romrq
 JTFRAME_SIM_SCAN2X       |         | Enables scan doubler simulation
-LOADROM                  |         | Sends ROM data via serial interface
 SIMULATION               |         | Enables simulation features
 VIDEO_START              |         | First frame for which video output is provided
                          |         | use it to prevent a split first frame
+
+## ROM Downloading
+
+Macro                    | Target  |  Usage
+-------------------------|---------|---------------------------------------------
+LOADROM                  |         | Sends ROM data via serial interface
+JTFRAME_DWNLD_PROM_ONLY  |         | Skip the regular download and go directly to the PROM section
+JTFRAME_SIM_LOAD_EXTRA   |         | Extra wait time when transferring ROM in simulation
