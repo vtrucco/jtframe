@@ -138,8 +138,14 @@ module jtframe_z80_romwait (
 );
 
 `ifdef SIMULATION
-always @(negedge clk) begin
-    if( A === 16'hXXXX && rst_n) begin
+integer rstd=0;
+
+// It waits for a second reset signal, so
+// the download is over
+always @(negedge rst_n) rstd <= rstd + 1;
+
+always @(posedge clk) begin
+    if( A === 16'hXXXX && rst_n && rstd>1 ) begin
         $display("\nError: Z80 address bus is XXXX (%m)\n");
         $finish;
     end
