@@ -53,6 +53,8 @@ module jtframe_6801mcu(
     input         prom_we
 );
 
+parameter ROMBIN="";
+
 wire [ 7:0] rom_data, ram_data, ram_q;
 wire [15:0] rom_addr;
 wire [ 6:0] ram_addr;
@@ -71,7 +73,7 @@ always @(posedge clk) if(cen) begin
 end
 
 // You need to clock gate for reading or the MCU won't work
-jtframe_dual_ram #(.aw(12)) u_prom(
+jtframe_dual_ram #(.aw(12),.simfile(ROMBIN)) u_prom(
     .clk0   ( clk_rom   ),
     .clk1   ( clkx      ),
     // Port 0
