@@ -18,11 +18,7 @@
 
 */
 
-// Instantiates the m6801 core with some
-// of the logic needed to become a 63701 MCU
-// such as the one used in Double Dragon or Bubble Bobble
-
-module jtframe_6801mcu(
+module jtframe_8751mcu(
     input         rst,
     input         clk,
     input         cen,
