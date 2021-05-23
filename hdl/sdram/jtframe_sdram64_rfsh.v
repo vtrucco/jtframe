@@ -27,6 +27,7 @@ module jtframe_sdram64_rfsh #(parameter HF=1, RFSHCNT=9)
     input               noreq,
     output   reg        rfshing,
     output   reg  [3:0] cmd,
+    output   reg        help,
     output       [12:0] sdram_a
 );
 
@@ -36,6 +37,8 @@ module jtframe_sdram64_rfsh #(parameter HF=1, RFSHCNT=9)
 
 localparam STW  = 3+7-(HF==1? 0 : 4),
            RFRSH= HF?2:1;
+
+localparam CW=6;
 
 //                             /CS /RAS /CAS /WE
 localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
@@ -48,14 +51,23 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
            CMD_NOP         = 4'b0___1____1____1, // 7
            CMD_INHIBIT     = 4'b1___0____0____0; // 8
 
+`ifdef SIMULATION
+initial begin
+    if( RFSHCNT >= (1<<CW)-1 ) begin
+        $display("ERROR: RFSHCNT is too large for the size of CW (%m)");
+        $finish;
+    end
+end
+`endif
+
 assign sdram_a = 13'h400;   // used for precharging all banks
 
-reg     [4:0] cnt;
+reg  [CW-1:0] cnt;
 reg [STW-1:0] st;
 reg           last_start;
-wire    [5:0] next_cnt;
+wire   [CW:0] next_cnt;
 
-assign next_cnt = {1'b0, cnt} + RFSHCNT[5:0];
+assign next_cnt = {1'b0, cnt} + RFSHCNT[CW-1:0];
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
@@ -64,10 +76,17 @@ always @(posedge clk, posedge rst) begin
         cnt     <= 0;
         br      <= 0;
         rfshing <= 0;
+        help    <= 0;
     end else begin
+        // Forces a refresh if we have built up too much debt
+        if( next_cnt[CW] )
+            help <= 1;
+        if( next_cnt[CW:CW-1]==0 ) // at least half the debt must go
+            help <= 0;
+
         last_start <= start;
         if( start && !last_start ) begin
-            cnt <= next_cnt[5] ? ~5'h0 : next_cnt[4:0]; // carry over from previous "frame"
+            cnt <= help ? {CW{1'b1}} : next_cnt[CW-1:0]; // carry over from previous "frame"
         end
         if( cnt!=0 && !rfshing ) begin
             br  <= 1;

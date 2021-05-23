@@ -113,7 +113,7 @@ localparam CMD_LOAD_MODE   = 4'b0___0____0____0, // 0
 wire  [3:0] br, bx0_cmd, bx1_cmd, bx2_cmd, bx3_cmd, rfsh_cmd,
             ba_dst, ba_dbusy, ba_dbusy64, ba_rdy, ba_dok,
             init_cmd, post_act, next_cmd, dqm_busy, match;
-wire        all_act, rfshing, rfsh_br, noreq;
+wire        all_act, rfshing, rfsh_br, noreq, help;
 reg         all_dbusy, all_dbusy64;
 reg   [3:0] bg, cmd;
 reg  [14:0] prio_lfsr;
@@ -247,6 +247,7 @@ jtframe_sdram64_rfsh #(.HF(HF),.RFSHCNT(RFSHCNT)) u_rfsh(
     .noreq      ( noreq     ),
     .rfshing    ( rfshing   ),
     .cmd        ( rfsh_cmd  ),
+    .help       ( help      ),
     .sdram_a    ( rfsh_a    )
 );
 
@@ -486,9 +487,9 @@ jtframe_sdram64_bank #(
 );
 
 always @(*) begin
-    rfsh_bg = &idle && noreq && rfsh_br;
+    rfsh_bg = &idle && (noreq | help) && rfsh_br;
     prog_bg = pre_br & !rfshing;
-    if( rfshing ) begin
+    if( rfshing | help ) begin
         bg=0;
     end else begin
         if( BAPRIO ) begin
