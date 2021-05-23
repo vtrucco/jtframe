@@ -57,7 +57,7 @@ always @(posedge clk, posedge rst) begin : dtack_gen
     end else begin
         if( ASn ) begin
             DTACKn <= 1;
-            wait1 <= 1;
+            wait1  <= 1;
         end else if( !ASn ) begin
             if( cpu_cen  ) wait1 <= 0;
             if( cpu_cenb ) begin

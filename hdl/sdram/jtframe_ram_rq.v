@@ -78,10 +78,10 @@ module jtframe_ram_rq #(parameter
                 if( FASTWR && !req_rnw ) begin
                     data_ok <= 1;
                 end
-                if( /*din_ok*/ dst ) begin
-                    if( !FASTWR || req_rnw ) data_ok <= 1;
+                if( dst ) begin
                     dout    <= din[DW-1:0];
                 end
+                if( din_ok && (!FASTWR || req_rnw) ) data_ok <= 1;
             end else if( cs_posedge || pending ) begin
                 req        <= 1;
                 req_rnw    <= ~wrin;
