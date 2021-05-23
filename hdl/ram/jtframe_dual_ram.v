@@ -33,12 +33,12 @@ module jtframe_dual_ram #(parameter dw=8, aw=10,
     input   [dw-1:0] data0,
     input   [aw-1:0] addr0,
     input   we0,
-    output reg [dw-1:0] q0,
+    output  [dw-1:0] q0,
     // Port 1
     input   [dw-1:0] data1,
     input   [aw-1:0] addr1,
     input   we1,
-    output reg [dw-1:0] q1
+    output  [dw-1:0] q1
     `ifdef JTFRAME_DUAL_RAM_DUMP
     ,input dump
     `endif
