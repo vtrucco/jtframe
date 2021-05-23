@@ -44,6 +44,58 @@ module jtframe_dual_ram #(parameter dw=8, aw=10,
     `endif
 );
 
+    jtframe_dual_ram_cen #(
+        .dw         ( dw        ),
+        .aw         ( aw        ),
+        .simfile    ( simfile   ),
+        .simhexfile ( simhexfile),
+        .synfile    ( synfile   ),
+        .dumpfile   ( dumpfile  )
+    ) u_ram (
+        .clk0   ( clk0  ),
+        .cen0   ( 1'b1  ),
+        .clk1   ( clk1  ),
+        .cen1   ( 1'b1  ),
+        // Port 0
+        .data0  ( data0 ),
+        .addr0  ( addr0 ),
+        .we0    ( we0   ),
+        .q0     ( q0    ),
+        // Port 1
+        .data1  ( data1 ),
+        .addr1  ( addr1 ),
+        .we1    ( we1   ),
+        .q1     ( q1    )
+        `ifdef JTFRAME_DUAL_RAM_DUMP
+        ,.dump  ( dump  )
+        `endif
+    );
+endmodule
+
+
+
+module jtframe_dual_ram_cen #(parameter dw=8, aw=10,
+    simfile="", simhexfile="", synfile="", dumpfile="dump.hex"
+)(
+    input   clk0,
+    input   cen0,
+    input   clk1,
+    input   cen1,
+    // Port 0
+    input   [dw-1:0] data0,
+    input   [aw-1:0] addr0,
+    input   we0,
+    output reg [dw-1:0] q0,
+    // Port 1
+    input   [dw-1:0] data1,
+    input   [aw-1:0] addr1,
+    input   we1,
+    output reg [dw-1:0] q1
+    `ifdef JTFRAME_DUAL_RAM_DUMP
+    ,input dump
+    `endif
+);
+
 (* ramstyle = "no_rw_check" *) reg [dw-1:0] mem[0:(2**aw)-1];
 
 /* verilator lint_off WIDTH */
@@ -85,12 +137,12 @@ end
 initial if(synfile!="" )$readmemh(synfile,mem);
 `endif
 
-always @(posedge clk0) begin
+always @(posedge clk0) if(cen0) begin
     q0 <= mem[addr0];
     if(we0) mem[addr0] <= data0;
 end
 
-always @(posedge clk1) begin
+always @(posedge clk1) if(cen1) begin
     q1 <= mem[addr1];
     if(we1) mem[addr1] <= data1;
 end
