@@ -21,7 +21,6 @@ data_io.v
 ../mister/sys/video_cleaner.sv
 ../mister/sys/scandoubler.v
 ../mister/hq2x_dummy.sv
-../ram/jtframe_dual_clk_ram.v
 -sv rgb2ypbpr.sv
 osd.sv
 ../sdram/jtframe_sdram_stats.v

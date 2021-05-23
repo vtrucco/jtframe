@@ -18,11 +18,7 @@
 
 */
 
-// Instantiates the m6801 core with some
-// of the logic needed to become a 63701 MCU
-// such as the one used in Double Dragon or Bubble Bobble
-
-module jtframe_6801mcu(
+module jtframe_8751mcu(
     input         rst,
     input         clk,
     input         cen,
@@ -53,6 +49,8 @@ module jtframe_6801mcu(
     input         prom_we
 );
 
+parameter ROMBIN="";
+
 wire [ 7:0] rom_data, ram_data, ram_q;
 wire [15:0] rom_addr;
 wire [ 6:0] ram_addr;
@@ -70,10 +68,16 @@ always @(posedge clk) if(cen) begin
     p3_s     <= p3_i;
 end
 
+reg [11:0] rom_acen;
+
+always @(posedge clk) if( cen ) rom_acen <= rom_addr[11:0];
+
 // You need to clock gate for reading or the MCU won't work
-jtframe_dual_ram #(.aw(12)) u_prom(
+jtframe_dual_ram_cen #(.aw(12),.simfile(ROMBIN)) u_prom(
     .clk0   ( clk_rom   ),
-    .clk1   ( clkx      ),
+    .cen0   ( 1'b1      ),
+    .clk1   ( clk       ),
+    .cen1   ( cen       ),
     // Port 0
     .data0  ( prom_din  ),
     .addr0  ( prog_addr ),
@@ -97,8 +101,8 @@ jtframe_ram #(.aw(7),.cen_rd(1)) u_ramu(
 
 mc8051_core u_mcu(
     .reset      ( rst       ),
-    .clk        ( clkx      ),
-    .cen        ( 1'b1      ),  // this input is not reliable
+    .clk        ( clk       ),
+    .cen        ( cen       ),
     // code ROM
     .rom_data_i ( rom_data  ),
     .rom_adr_o  ( rom_addr  ),
@@ -109,7 +113,7 @@ mc8051_core u_mcu(
     .ram_wr_o   ( ram_we    ),
     .ram_en_o   (           ),
     // external memory: connected to main CPU
-    .datax_i    ( xin_sync  ),
+    .datax_i    ( x_din     ),
     .datax_o    ( x_dout    ),
     .adrx_o     ( x_addr    ),
     .wrx_o      ( x_wr      ),
@@ -123,16 +127,16 @@ mc8051_core u_mcu(
     .all_rxd_i  ( 1'b0      ),
     .all_rxd_o  (           ),
     // Ports
-    .p0_i       ( p0_s      ),
+    .p0_i       ( p0_i      ),
     .p0_o       ( p0_o      ),
 
-    .p1_i       ( p1_s      ),
+    .p1_i       ( p1_i      ),
     .p1_o       ( p1_o      ),
 
-    .p2_i       ( p2_s      ),
+    .p2_i       ( p2_i      ),
     .p2_o       ( p2_o      ),
 
-    .p3_i       ( p3_s      ),
+    .p3_i       ( p3_i      ),
     .p3_o       ( p3_o      )
 );
 

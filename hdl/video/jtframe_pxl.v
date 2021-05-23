@@ -63,4 +63,4 @@ always @(posedge clk) if(cen) begin
     end
 end
 
-endmodule // jtgng_vgapxl
+endmodule
