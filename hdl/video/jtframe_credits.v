@@ -63,6 +63,8 @@ localparam [VPOSW-1:0] MAXVISIBLE = PAGES*32*8-1;
     localparam [8:0] HSTART=9'h0-`JTFRAME_CREDITS_HSTART;
 `endif
 
+localparam [8:0] HEND = HSTART+9'h102;
+
 reg  [HPOSW-1:0]  hn;
 reg  [VPOSW-1:0]  scrpos, vdump, vdump1;
 reg  [8:0]        vrender;
@@ -74,7 +76,6 @@ wire [9:0]        font_addr = {scan_data[6:0],
 wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
 reg               show, hide;
-wire              hout;
 
 jtframe_ram #(.dw(9), .aw(MSGW),.synbinfile("msg.bin")) u_msg(
     .clk    ( clk       ),
@@ -130,11 +131,9 @@ always @(posedge clk) begin
         last_hb <= hb;
         last_vb <= vb;
         if( hb_edge ) begin
-            hn      <= HSTART;
             vrender <= vrender + 8'd1;
-        end else if( !hb ) begin
-            hn <= hn + 9'd1;
         end
+        hn <= hb ? HSTART : hn+9'd1;
         // scrpos: scroll counter
         // gets reset each time the pause button is pressed
         if( enable && !last_enable ) begin
@@ -394,16 +393,9 @@ always @(posedge clk, posedge rst) begin
     end
 end
 
-jtframe_sh #(.width(1),.stages(3)) u_hnsh(
-    .clk    ( clk       ),
-    .clk_en ( pxl_cen   ),
-    .din    ( hn[8]     ),
-    .drop   ( hout      )
-);
-
 always @(posedge clk) if(pxl_cen) begin
     { HB_out, VB_out } <= { HB, VB };
-    if( !show || hout )
+    if( !show || (hn>HEND) )
         rgb_out <= rgb_in;
     else begin
         if( (!pxl[0] && !obj_ok) || !visible ) begin
