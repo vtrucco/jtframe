@@ -14,4 +14,4 @@
 {{ .CORE_OSD }}
 {{ with .CORE_NVRAM_SIZE }}         R{{ . }},Save NVRAM;{{ end }}
 T0,RST;
-V,patreon.com/topapate
+V,{{ .COMMIT }} - patreon.com/topapate

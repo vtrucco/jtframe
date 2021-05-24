@@ -24,4 +24,4 @@ H0OEF,Aspect Ratio,Original,Full screen,[ARC1],[ARC2];
 {{ if not .JTFRAME_OSD_NOCREDITS }} OC,Credits,Off,On; {{ end }}
 {{ with .CORE_KEYMAP }} {{ . }} {{ end }}
 R0,Reset;
-V,v{{ .DATE }} jotego;
+V,v{{ .COMMIT }};
