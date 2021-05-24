@@ -403,7 +403,7 @@ jtframe_sh #(.width(1),.stages(3)) u_hnsh(
 
 always @(posedge clk) if(pxl_cen) begin
     { HB_out, VB_out } <= { HB, VB };
-    if( !show || hvisible )
+    if( !show )
         rgb_out <= rgb_in;
     else begin
         if( (!pxl[0] && !obj_ok) || !visible ) begin
@@ -418,6 +418,7 @@ always @(posedge clk) if(pxl_cen) begin
                 endcase
             end else rgb_out <= extend(obj_pxl); // OBJ
         end
+        if( vb || hb ) rgb_out <= 0;
     end
 end
 
