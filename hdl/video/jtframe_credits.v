@@ -74,7 +74,7 @@ wire [9:0]        font_addr = {scan_data[6:0],
 wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
 reg               show, hide;
-wire              hvisible;
+wire              hout;
 
 jtframe_ram #(.dw(9), .aw(MSGW),.synbinfile("msg.bin")) u_msg(
     .clk    ( clk       ),
@@ -398,12 +398,12 @@ jtframe_sh #(.width(1),.stages(3)) u_hnsh(
     .clk    ( clk       ),
     .clk_en ( pxl_cen   ),
     .din    ( hn[8]     ),
-    .drop   ( hvisible  )
+    .drop   ( hout      )
 );
 
 always @(posedge clk) if(pxl_cen) begin
     { HB_out, VB_out } <= { HB, VB };
-    if( !show )
+    if( !show || hout )
         rgb_out <= rgb_in;
     else begin
         if( (!pxl[0] && !obj_ok) || !visible ) begin
