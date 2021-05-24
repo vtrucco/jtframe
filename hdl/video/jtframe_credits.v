@@ -358,9 +358,7 @@ localparam G0 = COLW;
 localparam B1 = COLW-1;
 localparam B0 = 0;
 
-reg [COLW*3-1:0] old1, old2;
-reg [3:0]        blanks;
-wire [COLW*3-1:0] dim = { 1'b0, old2[R1:R0+1], 1'b0, old2[G1:G0+1], 1'b0, old2[B1:B0+1] };
+wire [COLW*3-1:0] dim = { 1'b0, rgb_in[R1:R0+1], 1'b0, rgb_in[G1:G0+1], 1'b0, rgb_in[B1:B0+1] };
 
 function [COLW*3-1:0] extend;
     input [11:0] rgb4;
@@ -404,14 +402,11 @@ jtframe_sh #(.width(1),.stages(3)) u_hnsh(
 );
 
 always @(posedge clk) if(pxl_cen) begin
-    old1 <= rgb_in;
-    old2 <= old1;
-    { blanks, HB_out, VB_out } <= { HB, VB, blanks };
-    if( !show || hvisible || !VB )
-        rgb_out <= old2;
+    { HB_out, VB_out } <= { HB, VB };
+    if( !show || hvisible )
+        rgb_out <= rgb_in;
     else begin
-        if( (!pxl[0] && !obj_ok) || !visible
-            /*|| (blanks[1:0]^{2{~BLKPOL[0]}}!=2'b00)*/ ) begin
+        if( (!pxl[0] && !obj_ok) || !visible ) begin
             rgb_out            <= dim;
         end else begin
             if( pxl[0] || tate ) begin // CHAR, OBJ disabled for TATE
@@ -424,8 +419,6 @@ always @(posedge clk) if(pxl_cen) begin
             end else rgb_out <= extend(obj_pxl); // OBJ
         end
     end
-
-    if( vb || hb ) rgb_out <= 0;
 end
 
 endmodule
