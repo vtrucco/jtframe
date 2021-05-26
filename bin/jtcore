@@ -104,6 +104,11 @@ if [ ! -e "$JTFRAME" ]; then
     exit 1
 fi
 
+if ! which jtcfgstr; then
+    echo "Cannot find jtcfgstr in the path. This file can be found in the"
+    echo "JTBIN repository, in the bin folder"
+fi
+
 # Is the project defined?
 case "$PRJ" in
     "")
@@ -176,11 +181,13 @@ function copy_templates {
     fi
     # Add definitions in "macros" files
     if [ -e $MACROS_FILE ]; then
-        gawk -f $JTFRAME/bin/jtmacros.awk target=$TARGET $MACROS_FILE >> $QSF
+        jtcfgstr -target=$TARGET -def $MACROS_FILE -output quartus | sort >> $QSF
         if [ -n "$SHOWMACROS" ]; then
             gawk -f $JTFRAME/bin/jtmacros.awk target=$TARGET $MACROS_FILE
             exit 0
         fi
+        # Prepare config string
+        jtcfgstr -output cfgstr -def $MACROS_FILE -target $TARGET $VERBOSE -commit $PRJCOMMIT
     fi
     # Copy SDC file and SDRAM constraints
     if [ $TARGET = mister ]; then
