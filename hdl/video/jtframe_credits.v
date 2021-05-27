@@ -58,14 +58,16 @@ localparam HPOSW = 9;
 localparam [VPOSW-1:0] MAXVISIBLE = PAGES*32*8-1;
 
 `ifndef JTFRAME_CREDITS_HSTART
-    localparam [8:0] HSTART=9'h0;
+    localparam [HPOSW-1:0] HOFFSET=0;
 `else
-    localparam [8:0] HSTART=9'h0-`JTFRAME_CREDITS_HSTART;
+    localparam [HPOSW-1:0] HOFFSET=`JTFRAME_CREDITS_HSTART;
 `endif
 
-localparam [8:0] HEND = HSTART+9'h102;
+localparam [HPOSW-1:0] HSTART= 0,
+                       HEND  = 'h102;
 
 reg  [HPOSW-1:0]  hn;
+wire [HPOSW-1:0]  hscan;
 reg  [VPOSW-1:0]  scrpos, vdump, vdump1;
 reg  [8:0]        vrender;
 wire [8:0]        scan_data;
@@ -76,6 +78,8 @@ wire [9:0]        font_addr = {scan_data[6:0],
 wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
 reg               show, hide;
+
+assign hscan = hn - HOFFSET;
 
 jtframe_ram #(.dw(9), .aw(MSGW),.synbinfile("msg.bin")) u_msg(
     .clk    ( clk       ),
@@ -114,7 +118,7 @@ wire hb_edge = hb && !last_hb;
 
 always @(posedge clk) if(pxl_cen) begin
     if( tate || hb_edge ) begin
-        vdump1  <= scrpos + (tate ? (hn-HSTART) : vrender);
+        vdump1  <= scrpos + (tate ? hscan : vrender);
         vdump   <= vdump1;
     end
 end
@@ -154,14 +158,14 @@ always @(posedge clk) begin
         //if( /*tate || hn[2:0]==3'd0 || hb || vb ) begin
             scan_addr <= tate ?
                 { rotate[1] ? vidx_flip : vdump[VPOSW-1:3], vrender[7:3]^{5{~rotate[1]}} } :
-                { vdump[VPOSW-1:3], hn[7:3] };
+                { vdump[VPOSW-1:3], hscan[7:3] };
         //end
         // Draw
         if( tate ) begin
             pxl <= { scan_data[8:7], font_data[ vrender[2:0] ^{3{rotate[1]}} ] };
         end else begin
             pxl <= { pal, pxl_data[7] };
-            if( hn[2:0]==3'd1 ) begin
+            if( hscan[2:0]==3'd1 ) begin
                 pal      <= scan_data[8:7];
                 pxl_data <= font_data;
             end else begin
@@ -203,7 +207,7 @@ jtframe_dual_ram #(.dw(8), .aw(9)) u_linebuffer(
     .q0     (           ),
     // Port 1
     .data1  ( ~8'd0     ),
-    .addr1  ( { ~line, hn[7:0] } ),
+    .addr1  ( { ~line, hscan[7:0] } ),
     .we1    ( buf_we1   ),
     .q1     ( pal_addr  )
 );
@@ -331,7 +335,7 @@ always @(posedge clk ) begin
         3: begin
             obj_pxl <= pal_data;
             obj_ok  <= pal_addr[3:0] != 4'hf; // visible pixel
-            buf_we1 <= !hn[8]; // do not empty the line buffer when
+            buf_we1 <= !hscan[8]; // do not empty the line buffer when
                                // scanning the left side of the screen
                                // This applies when JTFRAME_CREDITS_HSTART!=0
         end
@@ -395,7 +399,7 @@ end
 
 always @(posedge clk) if(pxl_cen) begin
     { HB_out, VB_out } <= { HB, VB };
-    if( !show || (hn>HEND) )
+    if( !show || hn<HOFFSET || hn>=(HEND+HOFFSET) )
         rgb_out <= rgb_in;
     else begin
         if( (!pxl[0] && !obj_ok) || !visible ) begin
