@@ -152,7 +152,7 @@ always @(posedge clk) begin
     rotate      <= { ~dip_flip, tate && !rot_control };
     dip_fxlevel <= 2'b10 ^ status[7:6];
     en_mixing   <= ~status[3];
-    `ifdef JTFRAME_OSD_NOSND
+    `ifndef JTFRAME_OSD_SND_EN
     enable_fm   <= 1;
     enable_psg  <= 1;
     `else
