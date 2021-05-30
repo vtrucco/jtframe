@@ -356,6 +356,55 @@ jtframe_dip u_dip(
     .dip_fxlevel( dip_fxlevel   )
 );
 
+wire [ 3:0] bax_rd, bax_wr;
+wire [15:0] bax_din;
+wire [ 1:0] bax_din_m;
+wire [ 3:0] bax_rdy;
+wire [SDRAMW-1:0] bax_addr;
+
+`ifdef JTFRAME_CHEATBIT
+    wire cheat_rd, cheat_rdy, cheat_wr;
+
+    jtframe_cheat #(
+        .AW         (  SDRAMW           ),
+        .CHEAT_ADDR (`JTFRAME_CHEAT_ADDR),
+        .CHEAT_VAL  (`JTFRAME_CHEAT_VAL )
+    )(
+        .rst        ( rst       ),
+        .clk_rom    ( clk_rom   ),
+
+        .LVBL       ( LVBL      ),
+        .enable     ( status[`JTFRAME_CHEATBIT] ),
+
+        // From/to game
+        .game_addr  ( ba0_addr  ),
+        .game_rd    ( ba_rd[0]  ),
+        .game_wr    ( ba_wr[0]  ),
+        .game_din   ( ba0_din   ),
+        .game_din_m ( ba0_din_m ),
+        .game_rdy   ( cheat_rdy ),
+
+        // From/to SDRAM bank 0
+        .ba0_addr   ( bax_addr  ),
+        .ba0_rd     ( cheat_rd  ),
+        .ba0_wr     ( cheat_wr  ),
+        .bax_din    ( bax_din   ),
+        .bax_din_m  ( bax_din_m ),
+
+        .ba0_rdy    ( bax_rdy[0] )
+    );
+    assign bax_rd = { ba_rd[3:1], cheat_rd };
+    assign bax_wr = { ba_wr[3:1], cheat_wr };
+    assign ba_rdy = { bax_rdy[3:1], cheat_rdy };
+`else
+    assign bax_rd    = ba_rd;
+    assign bax_wr    = ba_wr;
+    assign bax_din   = ba0_din;
+    assign bax_din_m = ba0_din_m;
+    assign bax_addr  = ba0_addr;
+    assign ba_rdy    = bax_rdy;
+`endif
+
 // support for 48MHz
 // Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
 // clock is shifted or not.
@@ -387,17 +436,17 @@ jtframe_sdram64 #(
     .clk        ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
     .init       ( sdram_init    ),
 
-    .ba0_addr   ( ba0_addr      ),
+    .ba0_addr   ( bax_addr      ),
     .ba1_addr   ( ba1_addr      ),
     .ba2_addr   ( ba2_addr      ),
     .ba3_addr   ( ba3_addr      ),
 
-    .rd         ( ba_rd         ),
-    .wr         ( ba_wr         ),
-    .din        ( ba0_din       ),
-    .din_m      ( ba0_din_m     ),  // write mask
+    .rd         ( bax_rd        ),
+    .wr         ( bax_wr        ),
+    .din        ( bax_din       ),
+    .din_m      ( bax_din_m     ),  // write mask
 
-    .rdy        ( ba_rdy        ),
+    .rdy        ( bax_rdy       ),
     .ack        ( ba_ack        ),
     .dok        ( ba_dok        ),
     .dst        ( ba_dst        ),
