@@ -66,7 +66,7 @@ assign eRWn          = ~wr_ena;
 assign eab           = address[23:1];
 
 always @(posedge clk) begin
-    cen <= ~cen & HALTn & BGn;
+    cen <= rst | (~cen & HALTn & BGn);
     if( !bus_busy && !BRn ) BGn <= 0;
     if( BRn ) BGn <= 1;
 end
