@@ -65,7 +65,9 @@ assign eRWn          = ~wr_ena;
 assign eab           = address[23:1];
 
 always @(posedge clk) begin
-    cen <= rst | (~cen & HALTn & BGn);
+    // During memory access (ASn low), we need to introduce some
+    // idle cycles (cen at 50%) for J68 to work well with the external glue logic
+    cen <= rst | ((~cen | ASn) & HALTn & BGn);
     if( ASn && !BRn ) BGn <= 0;
     if( BRn ) BGn <= 1;
 end
