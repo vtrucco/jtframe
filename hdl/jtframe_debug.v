@@ -33,7 +33,7 @@ reg        last_p, last_m;
 integer    cnt;
 reg  [3:0] last_gfx;
 
-wire [2:0] step = shift ? 4 : 1;
+wire [7:0] step = shift ? 16 : 1;
 
 always @(posedge clk, posedge rst) begin
     if( rst ) begin
