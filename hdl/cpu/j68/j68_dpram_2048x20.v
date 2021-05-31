@@ -20,19 +20,18 @@
 // Testbench
 module j68_dpram_2048x20
 (
-    // Clock & reset
-    input         reset,
+    // Clock
     input         clock,
     input         clocken,
     // Port A : micro-instruction fetch
     input         rden_a,
     input  [10:0] address_a,
-    output [19:0] q_a,
+    output reg [19:0] q_a,
     // Port B : m68k registers read/write
     input   [1:0] wren_b,
     input  [10:0] address_b,
     input  [15:0] data_b,
-    output [15:0] q_b
+    output reg [15:0] q_b
 );
     parameter RAM_INIT_FILE = "j68_ram.mem";
 
@@ -43,27 +42,18 @@ module j68_dpram_2048x20
         $readmemb(RAM_INIT_FILE, r_mem_blk);
     end
 
-    reg  [19:0] r_q_a;
-    reg  [15:0] r_q_b;
-
     // Port A (read only)
-    always@(posedge reset or posedge clock) begin : PORT_A
-
-        if (reset) begin
-            r_q_a <= 20'hC0458; // NOP instruction
-        end
-        else if (rden_a & clocken) begin
-            r_q_a <= r_mem_blk[address_a];
+    always@(posedge clock) begin : PORT_A
+        if (rden_a & clocken) begin
+            q_a <= r_mem_blk[address_a];
         end
     end
-
-    assign q_a = r_q_a;
 
     // Port B (read/write)
     always@(posedge clock) begin : PORT_B
 
         if (clocken) begin
-            r_q_b <= r_mem_blk[address_b][15:0];
+            q_b <= r_mem_blk[address_b][15:0];
             if (wren_b[0]) begin
                 r_mem_blk[address_b][7:0]  <= data_b[7:0];
             end
@@ -72,7 +62,5 @@ module j68_dpram_2048x20
             end
         end
     end
-
-    assign q_b = r_q_b;
 
 endmodule

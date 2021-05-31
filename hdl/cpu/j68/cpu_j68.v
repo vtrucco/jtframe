@@ -728,7 +728,6 @@ module cpu_j68
     U_j68_dpram_2048x20
     (
         // Reset and clock
-        .reset     (1'b0),  // eases synthesis
         .clock     (clk),
         .clocken   (clk_ena),
         // Port A : micro-instruction fetch
