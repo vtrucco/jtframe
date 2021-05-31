@@ -45,9 +45,9 @@ always @(posedge clk, posedge rst) begin
         last_gfx <= key_gfx;
 
         if( debug_plus & ~last_p ) begin
-            debug_bus <= debug_bus + shift;
+            debug_bus <= debug_bus + step;
         end else if( debug_minus & ~last_m ) begin
-            debug_bus <= debug_bus - shift;
+            debug_bus <= debug_bus - step;
         end
         for(cnt=0; cnt<4; cnt=cnt+1)
             if( key_gfx[cnt] && !last_gfx[cnt] ) gfx_en[cnt] <= ~gfx_en[cnt];
