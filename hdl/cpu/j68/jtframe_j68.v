@@ -23,11 +23,11 @@ module jtframe_j68(
     input   HALTn,
 
     output  [23:1] eab,
-    output  ASn,
-    output  LDSn,
-    output  UDSn,
-    output  eRWn,
-    input   DTACKn,
+    output     reg ASn,
+    output         LDSn,
+    output         UDSn,
+    output         eRWn,
+    input          DTACKn,
 
     // Data bus
     input   [15:0] iEdb,
@@ -49,7 +49,7 @@ module jtframe_j68(
     output  FC2
 );
 
-reg cen=0, bus_busy;
+reg cen=0;
 
 wire [1:0]  byte_ena;     // Byte enable
 wire [31:0] address;      // Address bus
@@ -61,24 +61,23 @@ assign {FC2,FC1,FC0} = fc;
 assign ipl_n         =  { IPL2n, IPL1n, IPL0n };
 assign {UDSn,LDSn}   = ~byte_ena;
 assign data_ack      = ~DTACKn;
-assign ASn           = ~(rd_ena | wr_ena | bus_busy);
 assign eRWn          = ~wr_ena;
 assign eab           = address[23:1];
 
 always @(posedge clk) begin
     cen <= rst | (~cen & HALTn & BGn);
-    if( !bus_busy && !BRn ) BGn <= 0;
+    if( ASn && !BRn ) BGn <= 0;
     if( BRn ) BGn <= 1;
 end
 
 always @(posedge clk) begin
     if( rst )
-        bus_busy <= 0;
+        ASn <= 1;
     else begin
         if( rd_ena | wr_ena )
-            bus_busy <= 1;
+            ASn <= 0;
         else if( data_ack )
-            bus_busy <= 0;
+            ASn <= 1;
     end
 end
 
