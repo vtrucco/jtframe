@@ -29,6 +29,8 @@ reg [stages-1:0] bits[width-1:0];
 // This makes the argument stages=1 valid:
 localparam WM = stages>1 ? stages-2 : 0;
 
+// The tool Verilator is troubled when stages==1
+/* verilator lint_off WIDTH */
 generate
     genvar i;
     for (i=0; i < width; i=i+1) begin: bit_shifter
@@ -38,5 +40,6 @@ generate
         assign drop[i] = bits[i][stages-1];
     end
 endgenerate
+/* verilator lint_on WIDTH */
 
 endmodule
