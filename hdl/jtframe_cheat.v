@@ -70,6 +70,13 @@ wire        pwr, kwr, prd;
 reg         irq, LVBL_last;
 wire        iack;
 
+reg  [3:0]  watchdog;
+reg         prst;
+
+always @(posedge clk) begin
+    prst <= watchdog[3] | rst;
+end
+
 always @(posedge clk) begin
     LVBL_last <= LVBL;
     if( !LVBL && LVBL_last ) irq <= 1;
@@ -100,6 +107,12 @@ always @(posedge clk) begin
     if( sdram_busy && owner ) begin
         sdram_req <= 0;
     end
+    // watchdog
+    if( !LVBL && LVBL_last ) begin
+        watchdog <= watchdog+1'd1;
+    end
+    if( (pwr && paddr[7:6]==2'b01) || prst )
+        watchdog <= 0;
 end
 
 always @(*) begin
@@ -107,7 +120,7 @@ always @(*) begin
     if( paddr < 8 )
         pin = ports[ paddr[2:0] ];
     if( paddr[7] )
-        pin = { owner, ~sdram_busy, 6'b0 }; // 8'hc0 means that the SDRAM data is ready
+        pin = { owner, ~sdram_busy & ~sdram_req, 6'b0 }; // 8'hc0 means that the SDRAM data is ready
 end
 
 // SDRAM arbitrer
@@ -142,7 +155,7 @@ end
 
 pauloBlaze u_blaze(
     .clk            ( clk       ),
-    .reset          ( rst       ),
+    .reset          ( prst      ),
     .sleep          ( 1'b0      ),
 
     .address        ( iaddr     ),
@@ -200,7 +213,7 @@ always @(posedge clk) begin
     end
 end
 
-jtframe_prom #(.dw(18),aw(12)) u_irom(
+jtframe_prom #(.dw(18),aw(12),.simhex("cheat.mem")) u_irom(
     .clk    ( clk       ),
     .cen    ( 1'b1      ),
     .data   ( prog_word ),

@@ -25,6 +25,7 @@ module jtframe_prom #(parameter
     dw      = 8,
     aw      = 10,
     simfile = "",
+    simhex  = "",
     offset  = 0,
     ASYNC   = 0     // makes the read asynchronous (will not map as BRAM)
 )(
@@ -56,6 +57,10 @@ initial begin
             $display("WARNING: %m cannot open %s", simfile);
         end
     end else begin
+        if( simhex != "" ) begin
+            $display("INFO: reading %14s (hex) for %m", simhex );
+            $readmemh( simhex, mem );
+        end
         for( readcnt=0; readcnt<(2**aw)-1; readcnt=readcnt+1 )
             mem[readcnt] = {dw{1'b0}};
     end
