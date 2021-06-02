@@ -366,25 +366,22 @@ jtframe_dip u_dip(
     .dip_fxlevel( dip_fxlevel   )
 );
 
-wire [ 3:0] bax_rd, bax_wr;
+wire [ 3:0] bax_rd, bax_wr, bax_ack;
 wire [15:0] bax_din;
 wire [ 1:0] bax_din_m;
 wire [ 3:0] bax_rdy, bax_dst;
 wire [SDRAMW-1:0] bax_addr;
 
 `ifdef JTFRAME_CHEAT
-    wire cheat_rd, cheat_dst, cheat_rdy, cheat_wr;
+    wire cheat_rd, cheat_ack, cheat_dst, cheat_rdy, cheat_wr;
 
     jtframe_cheat #(
-        .AW         (  SDRAMW           ),
-        .CHEAT_ADDR (`JTFRAME_CHEAT_ADDR),
-        .CHEAT_VAL  (`JTFRAME_CHEAT_VAL )
+        .AW         (  SDRAMW           )
     ) u_cheat(
         .rst        ( rst       ),
         .clk_rom    ( clk_rom   ),
 
         .LVBL       ( LVBL      ),
-        .enable     ( status[`JTFRAME_CHEATBIT] ),
 
         // From/to game
         .game_addr  ( ba0_addr  ),
@@ -392,6 +389,7 @@ wire [SDRAMW-1:0] bax_addr;
         .game_wr    ( ba_wr[0]  ),
         .game_din   ( ba0_din   ),
         .game_din_m ( ba0_din_m ),
+        .game_ack   ( cheat_ack ),
         .game_dst   ( cheat_dst ),
         .game_rdy   ( cheat_rdy ),
 
@@ -401,11 +399,12 @@ wire [SDRAMW-1:0] bax_addr;
         .ba0_wr     ( cheat_wr  ),
         .ba0_dst    ( bax_dst[0]),
         .ba0_rdy    ( bax_rdy[0]),
-        .bax_din    ( bax_din   ),
-        .bax_din_m  ( bax_din_m ),
+        .ba0_ack    ( bax_ack[0]),
+        .ba0_din    ( bax_din   ),
+        .ba0_din_m  ( bax_din_m ),
         .data_read  ( sdram_dout),
 
-        .flag       ( cheat     ),
+        .flags      ( cheat     ),
 
         // Program
         .prog_en    ( cheat_prog),
@@ -414,6 +413,7 @@ wire [SDRAMW-1:0] bax_addr;
     );
     assign bax_rd = { ba_rd[3:1], cheat_rd };
     assign bax_wr = { ba_wr[3:1], cheat_wr };
+    assign ba_ack = { bax_ack[3:1], cheat_ack };
     assign ba_rdy = { bax_rdy[3:1], cheat_rdy };
     assign ba_dst = { bax_rdy[3:1], cheat_dst };
 `else
@@ -422,6 +422,7 @@ wire [SDRAMW-1:0] bax_addr;
     assign bax_din   = ba0_din;
     assign bax_din_m = ba0_din_m;
     assign bax_addr  = ba0_addr;
+    assign ba_ack    = bax_ack;
     assign ba_rdy    = bax_rdy;
     assign ba_dst    = bax_dst;
 `endif
@@ -468,7 +469,7 @@ jtframe_sdram64 #(
     .din_m      ( bax_din_m     ),  // write mask
 
     .rdy        ( bax_rdy       ),
-    .ack        ( ba_ack        ),
+    .ack        ( bax_ack       ),
     .dok        ( ba_dok        ),
     .dst        ( bax_dst       ),
 
