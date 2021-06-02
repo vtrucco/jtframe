@@ -359,11 +359,11 @@ jtframe_dip u_dip(
 wire [ 3:0] bax_rd, bax_wr;
 wire [15:0] bax_din;
 wire [ 1:0] bax_din_m;
-wire [ 3:0] bax_rdy;
+wire [ 3:0] bax_rdy, bax_dst;
 wire [SDRAMW-1:0] bax_addr;
 
 `ifdef JTFRAME_CHEATBIT
-    wire cheat_rd, cheat_rdy, cheat_wr;
+    wire cheat_rd, cheat_dst, cheat_rdy, cheat_wr;
 
     jtframe_cheat #(
         .AW         (  SDRAMW           ),
@@ -382,20 +382,25 @@ wire [SDRAMW-1:0] bax_addr;
         .game_wr    ( ba_wr[0]  ),
         .game_din   ( ba0_din   ),
         .game_din_m ( ba0_din_m ),
+        .game_dst   ( cheat_dst ),
         .game_rdy   ( cheat_rdy ),
 
         // From/to SDRAM bank 0
         .ba0_addr   ( bax_addr  ),
         .ba0_rd     ( cheat_rd  ),
         .ba0_wr     ( cheat_wr  ),
+        .ba0_dst    ( ba0_dst   ),
+        .ba0_rdy    ( ba0_rdy   ),
         .bax_din    ( bax_din   ),
         .bax_din_m  ( bax_din_m ),
+        .data_read  ( sdram_dout),
 
         .ba0_rdy    ( bax_rdy[0] )
     );
     assign bax_rd = { ba_rd[3:1], cheat_rd };
     assign bax_wr = { ba_wr[3:1], cheat_wr };
     assign ba_rdy = { bax_rdy[3:1], cheat_rdy };
+    assign ba_dst = { bax_rdy[3:1], cheat_dst };
 `else
     assign bax_rd    = ba_rd;
     assign bax_wr    = ba_wr;
@@ -403,6 +408,7 @@ wire [SDRAMW-1:0] bax_addr;
     assign bax_din_m = ba0_din_m;
     assign bax_addr  = ba0_addr;
     assign ba_rdy    = bax_rdy;
+    assign ba_dst    = bax_dst;
 `endif
 
 // support for 48MHz
@@ -449,7 +455,7 @@ jtframe_sdram64 #(
     .rdy        ( bax_rdy       ),
     .ack        ( ba_ack        ),
     .dok        ( ba_dok        ),
-    .dst        ( ba_dst        ),
+    .dst        ( bax_dst       ),
 
     // ROM-load interface
     .prog_en    ( downloading   ),

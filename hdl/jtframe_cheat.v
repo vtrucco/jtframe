@@ -35,18 +35,19 @@ parameter [AW-1:0] CHEAT_ADDR==0,
     input           game_wr,
     input  [ 15:0]  game_din,
     input  [  1:0]  game_din_m,
+    output          game_dst,
     output          game_rdy,
 
     // From/to SDRAM bank 0
     output [AW-1:0] ba0_addr,
     output          ba0_rd,
     output          ba0_wr,
+    input           ba0_dst,
+    input           ba0_rdy,
     output [ 15:0]  ba0_din,
     output [  1:0]  ba0_din_m,
     input  [ 15:0]  data_read,
 
-    input           ba0_dst,
-    input           ba0_rdy,
 
     // PBlaze Program
     input           prog_en,      // resets the address counter
@@ -94,7 +95,10 @@ always @(posedge clk) begin
     end
     if( pwr && paddr[7] ) begin
         sdram_req <= 1;
-        sdran_req_wr <= paddr[6];
+        sdram_req_wr <= paddr[6];
+    end
+    if( sdram_busy && owner ) begin
+        sdram_req <= 0;
     end
 end
 
@@ -102,9 +106,39 @@ always @(*) begin
     pin = 0;
     if( paddr < 8 )
         pin = ports[ paddr[2:0] ];
+    if( paddr[7] )
+        pin = { owner, ~sdram_busy, 6'b0 }; // 8'hc0 means that the SDRAM data is ready
 end
 
 // SDRAM arbitrer
+reg sdram_busy=0;
+reg owner=0;
+
+always @(posedge clk) begin
+    if( ba0_rdy )
+        sdram_busy <= 0;
+    if( !sdram_busy  ) begin
+        if( game_rd || game_wr ) begin
+            sdram_busy <= 1;
+            owner <= 0;
+        end else if( sdram_rq ) begin
+            sdram_busy <= 1;
+            owner <= 1;
+        end
+    end
+end
+
+always @(*) begin
+    ba0_addr  = owner ? blaze_sdram_addr  : game_addr;
+    ba0_rd    = owner ? ~sdram_req_wr     : game_rd;
+    ba0_wr    = owner ?  sdram_req_wr     : game_wr;
+    ba0_din   = owner ? blaze_sdram_din   : game_din;
+    ba0_din_m = owner ? blaze_sdram_din_m : game_din_m;
+    game_dst  = ~owner & ba0_dst;
+    game_rdy  = ~owner & ba0_rdy;
+end
+
+// PicoBlaze compatible module
 
 pauloBlaze u_blaze(
     .clk            ( clk       ),
