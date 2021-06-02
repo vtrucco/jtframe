@@ -34,7 +34,7 @@ reg [W-1:0] cs_latch;
 // ram_cs and vram_cs signals go down before DSWn signals
 // that causes a false read request to the SDRAM. In order
 // to avoid that a little bit of logic is needed:
-assign cs  = dsn_dly ? cs_latch  : pre_cs;
+assign cs  = dsn_dly ? (cs_latch&pre_cs)  : pre_cs;
 
 always @(posedge clk) begin
     if( rst ) begin
