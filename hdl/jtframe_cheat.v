@@ -43,7 +43,9 @@ parameter [AW-1:0] CHEAT_ADDR==0,
     output          ba0_wr,
     output [ 15:0]  ba0_din,
     output [  1:0]  ba0_din_m,
+    input  [ 15:0]  data_read,
 
+    input           ba0_dst,
     input           ba0_rdy,
 
     // PBlaze Program
@@ -64,8 +66,45 @@ reg  [17:0] pin;
 wire        pwr, kwr, prd;
 
 // interrupts
-reg         irq;
+reg         irq, LVBL_last;
 wire        iack;
+
+always @(posedge clk) begin
+    LVBL_last <= LVBL;
+    if( !LVBL && LVBL_last ) irq <= 1;
+    else if( iack ) irq <= 0;
+end
+
+// Ports
+reg [7:0] ports[0:7];
+wire [23:0] blaze_sdram_addr;
+wire [15:0] blaze_sdram_din;
+wire [ 1:0] blaze_sdram_din_m;
+
+assign blaze_sdram_addr  = { ports[2], ports[1], ports[0] };
+assign blaze_sdram_din   = { ports[4], ports[3] };
+assign blaze_sdram_din_m = ports[5][1:0];
+
+always @(posedge clk) begin
+    if( pwr && paddr<=5 ) begin
+        ports[ paddr[2:0] ] <= pout;
+    end
+    if( ba0_dst ) begin
+        {ports[7], ports[6]} <= data_read;
+    end
+    if( pwr && paddr[7] ) begin
+        sdram_req <= 1;
+        sdran_req_wr <= paddr[6];
+    end
+end
+
+always @(*) begin
+    pin = 0;
+    if( paddr < 8 )
+        pin = ports[ paddr[2:0] ];
+end
+
+// SDRAM arbitrer
 
 pauloBlaze u_blaze(
     .clk            ( clk       ),
