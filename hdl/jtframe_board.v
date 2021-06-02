@@ -123,6 +123,12 @@ module jtframe_board #(parameter
     // HDMI outputs (only for MiSTer)
     inout     [21:0]  gamma_bus,
     input             direct_video,
+
+    // ROM downloading (cheat engine)
+    input             cheat_prog,
+    input             ioctl_wr,
+    input       [7:0] ioctl_data,
+
     // scan doubler
     input             scan2x_enb,
     output     [7:0]  scan2x_r,
@@ -134,6 +140,10 @@ module jtframe_board #(parameter
     output            scan2x_cen,
     output            scan2x_de,
     output     [1:0]  scan2x_sl,
+
+    // Cheat
+    input      [31:0] cheat,
+
     // GFX enable
     output     [3:0]  gfx_en,
     output     [7:0]  debug_bus
@@ -362,14 +372,14 @@ wire [ 1:0] bax_din_m;
 wire [ 3:0] bax_rdy, bax_dst;
 wire [SDRAMW-1:0] bax_addr;
 
-`ifdef JTFRAME_CHEATBIT
+`ifdef JTFRAME_CHEAT
     wire cheat_rd, cheat_dst, cheat_rdy, cheat_wr;
 
     jtframe_cheat #(
         .AW         (  SDRAMW           ),
         .CHEAT_ADDR (`JTFRAME_CHEAT_ADDR),
         .CHEAT_VAL  (`JTFRAME_CHEAT_VAL )
-    )(
+    ) u_cheat(
         .rst        ( rst       ),
         .clk_rom    ( clk_rom   ),
 
@@ -389,13 +399,18 @@ wire [SDRAMW-1:0] bax_addr;
         .ba0_addr   ( bax_addr  ),
         .ba0_rd     ( cheat_rd  ),
         .ba0_wr     ( cheat_wr  ),
-        .ba0_dst    ( ba0_dst   ),
-        .ba0_rdy    ( ba0_rdy   ),
+        .ba0_dst    ( bax_dst[0]),
+        .ba0_rdy    ( bax_rdy[0]),
         .bax_din    ( bax_din   ),
         .bax_din_m  ( bax_din_m ),
         .data_read  ( sdram_dout),
 
-        .ba0_rdy    ( bax_rdy[0] )
+        .flag       ( cheat     ),
+
+        // Program
+        .prog_en    ( cheat_prog),
+        .prog_wr    ( ioctl_wr  ),
+        .prog_data  ( ioctl_data)
     );
     assign bax_rd = { ba_rd[3:1], cheat_rd };
     assign bax_wr = { ba_wr[3:1], cheat_wr };

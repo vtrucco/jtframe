@@ -48,12 +48,16 @@ parameter [AW-1:0] CHEAT_ADDR==0,
     output [  1:0]  ba0_din_m,
     input  [ 15:0]  data_read,
 
+    input  [ 31:0]  flags,
 
     // PBlaze Program
     input           prog_en,      // resets the address counter
     input           prog_wr,      // strobe for new data
     input  [7:0]    prog_data
 );
+
+localparam CHEATW=12;  // 12=>9kB (8 BRAM)
+                       // 10=>2.25kB (2 BRAM), 9=>1.12kB (1 BRAM)
 
 wire clk = clk_rom;
 
@@ -119,8 +123,16 @@ always @(*) begin
     pin = 0;
     if( paddr < 8 )
         pin = ports[ paddr[2:0] ];
-    if( paddr[7] )
+    else if( paddr[7:4]==1 ) begin
+        case( addr[1:0] )
+            0: pin = flags[ 7: 0];
+            1: pin = flags[15: 8];
+            2: pin = flags[23:16];
+            3: pin = flags[31:24];
+        endcase
+    end else if( paddr[7] ) begin
         pin = { owner, ~sdram_busy & ~sdram_req, 6'b0 }; // 8'hc0 means that the SDRAM data is ready
+    end
 end
 
 // SDRAM arbitrer
@@ -213,11 +225,11 @@ always @(posedge clk) begin
     end
 end
 
-jtframe_prom #(.dw(18),aw(12),.simhex("cheat.mem")) u_irom(
+jtframe_prom #(.dw(18),aw(CHEATW),.simhex("cheat.mem")) u_irom(
     .clk    ( clk       ),
     .cen    ( 1'b1      ),
     .data   ( prog_word ),
-    .rd_addr( iaddr     ),
+    .rd_addr( iaddr[CHEATW-1:0] ),
     .wr_addr( prog_addr ),
     .we     ( word_we   ),
     .q      ( idata     )

@@ -96,6 +96,7 @@ module jtframe_mister #(parameter
     // NVRAM
     input        [ 7:0] ioctl_din,
     output              ioctl_ram,
+    output              ioctl_cheat,
 
     input               dwnld_busy,
     output              downloading,
@@ -258,6 +259,7 @@ jtframe_mister_dwnld u_dwnld(
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_dout     ( ioctl_dout     ),
     .ioctl_ram      ( ioctl_ram      ),
+    .ioctl_cheat    ( ioctl_cheat    ),
 
     // Configuration
     .core_mod       ( core_mod       ),

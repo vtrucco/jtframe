@@ -52,6 +52,7 @@ module jtframe_mister_dwnld(
 
     output reg        ioctl_rom_wr,
     output reg        ioctl_ram,
+    output reg        ioctl_cheat,
     output reg [26:0] ioctl_addr,
     output reg [ 7:0] ioctl_dout,
 
@@ -72,10 +73,12 @@ module jtframe_mister_dwnld(
 localparam [7:0] IDX_ROM   = 8'h0,
                  IDX_MOD   = 8'h1,
                  IDX_NVRAM = 8'h2,
+                 IDX_CHEAT = 8'h10,
                  IDX_DIPSW = 8'd254;
 
 always @(posedge clk) begin
     ioctl_ram   <= hps_download && hps_index==IDX_NVRAM;
+    ioctl_cheat <= hps_download && hps_index==IDX_CHEAT;
 end
 
 always @(posedge clk, posedge rst) begin
