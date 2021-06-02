@@ -415,7 +415,7 @@ wire [SDRAMW-1:0] bax_addr;
     assign bax_wr = { ba_wr[3:1], cheat_wr };
     assign ba_ack = { bax_ack[3:1], cheat_ack };
     assign ba_rdy = { bax_rdy[3:1], cheat_rdy };
-    assign ba_dst = { bax_rdy[3:1], cheat_dst };
+    assign ba_dst = { bax_dst[3:1], cheat_dst };
 `else
     assign bax_rd    = ba_rd;
     assign bax_wr    = ba_wr;
