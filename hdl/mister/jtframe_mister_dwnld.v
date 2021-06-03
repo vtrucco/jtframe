@@ -60,6 +60,7 @@ module jtframe_mister_dwnld(
     output reg [ 6:0] core_mod,
     input      [31:0] status,
     output     [31:0] dipsw,
+    output     [31:0] cheat,
 
     // DDR3 RAM
     input             ddram_busy,
@@ -70,11 +71,12 @@ module jtframe_mister_dwnld(
     output reg        ddram_rd
 );
 
-localparam [7:0] IDX_ROM   = 8'h0,
-                 IDX_MOD   = 8'h1,
-                 IDX_NVRAM = 8'h2,
-                 IDX_CHEAT = 8'h10,
-                 IDX_DIPSW = 8'd254;
+localparam [7:0] IDX_ROM          = 8'h0,
+                 IDX_MOD          = 8'h1,
+                 IDX_NVRAM        = 8'h2,
+                 IDX_CHEAT        = 8'h10,
+                 IDX_DIPSW        = 8'd254,
+                 IDX_CHEAT_STATUS = 8'd255;
 
 always @(posedge clk) begin
     ioctl_ram   <= hps_download && hps_index==IDX_NVRAM;
@@ -114,6 +116,22 @@ end
             dsw[hps_addr[1:0]] <= hps_dout;
     end
 `endif
+
+// Cheat
+reg [ 7:0] cheat_flags[4];
+assign cheat = { cheat_flags[3], cheat_flags[2], cheat_flags[1], cheat_flags[0] };
+always @(posedge clk) begin
+    if( rst ) begin
+        cheat_flags[3] <= 0;
+        cheat_flags[2] <= 0;
+        cheat_flags[1] <= 0;
+        cheat_flags[0] <= 0;
+    end else begin
+        if (hps_wr && (hps_index==IDX_CHEAT_STATUS) && !hps_addr[24:2])
+            cheat_flags[hps_addr[1:0]] <= hps_dout;
+    end
+end
+
 
 // DDR ROM download
 localparam BW=7;

@@ -17,3 +17,7 @@ set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) video/j
 
 # Bank interleaving SDRAM controller
 set_global_assignment -name QIP_FILE     [file join $::quartus(qip_path) sdram/jtframe_sdram64.qip   ]
+
+# Cheat system (enabled with JTFRAME_CHEAT)
+set_global_assignment -name QIP_FILE     [file join $::quartus(qip_path) cpu/pauloblaze/pauloblaze.qip   ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jtframe_cheat.v      ]

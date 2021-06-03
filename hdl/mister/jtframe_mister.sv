@@ -165,6 +165,7 @@ module jtframe_mister #(parameter
     output            dip_pause,
     inout             dip_flip,
     output    [ 1:0]  dip_fxlevel,
+    // Control words
     output    [31:0]  dipsw,
     // Debug
     output            LED,
@@ -188,6 +189,7 @@ wire [ 7:0] ioctl_index;
 wire        ioctl_wr;
 
 wire [ 3:0] hoffset, voffset;
+wire [31:0] cheat;
 
 wire [15:0] joystick1, joystick2, joystick3, joystick4;
 wire        ps2_kbd_clk, ps2_kbd_data;
@@ -265,6 +267,7 @@ jtframe_mister_dwnld u_dwnld(
     .core_mod       ( core_mod       ),
     .status         ( status         ),
     .dipsw          ( dipsw          ),
+    .cheat          ( cheat          ),
 
     // DDR
     .ddram_busy     ( ddrld_busy       ),
@@ -437,6 +440,7 @@ jtframe_board #(
     // Common signals
     .sdram_dout ( sdram_dout    ),
 
+    .cheat      ( cheat         ),
     // Base video
     .osd_rotate     ( rotate          ),
     .game_r         ( game_r          ),
