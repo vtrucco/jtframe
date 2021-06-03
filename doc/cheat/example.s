@@ -1,4 +1,4 @@
-; Assemble with: opbasm example.s -m 1024 -x
+; Assemble with: opbasm example.s -m 1024 -x -6
 ; Convert to 8-bit hex dump with: pico2hex example.hex
 ; SDRAM_ADDR0 DSOUT  $0
 ; SDRAM_ADDR1 DSOUT  $1
