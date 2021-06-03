@@ -16,6 +16,8 @@
 ; FLAG0       DSIN   $10
 ; FLAG1       DSIN   $11
 
+; CPSx work RAM offset = 30'0000h
+
     ; enable interrupt
     load sa,0   ; SA = frame counter, modulo 60
 BEGIN:
@@ -42,10 +44,11 @@ ISR:
     input sf,0x10
     test  sf,1      ; bit 0
     jump Z,TEST_FLAG1
-    ; FF02E8=09 Infinite Credits
-    load  s0,0xe8
-    load  s1,0x02
-    load  s2,0xff
+    ; Infinite Credits
+    ; FF02E8=09 -> (0F02E8/2+30'0000) = 378174
+    load  s0,0x74
+    load  s1,0x81
+    load  s2,0x37
     load  s3,0x09
     load  s4,0
     load  s5,2
@@ -55,10 +58,11 @@ TEST_FLAG1:
     input sf,0x10
     test  sf,2      ; bit 1
     jump Z,TEST_FLAG2
-    ; FF02E8=09 Infinite Lives
-    load  s0,0xf2
-    load  s1,0xf5
-    load  s2,0xff
+    ; Infinite Lives
+    ; FFF5F2=09  -> (0FF5F2/2+30'0000) = 37FAF9
+    load  s0,0xf9
+    load  s1,0xfA
+    load  s2,0x37
     load  s3,0x09
     load  s4,0
     load  s5,2
@@ -68,12 +72,13 @@ TEST_FLAG2:
     input sf,0x10
     test  sf,2      ; bit 1
     jump Z,TEST_FLAG3
-    ; FF877A=FF once per second Invincibility
+    ; Invincibility
+    ; FF877A=FF -> 37C3BD once per second
     compare sa,0
     jump nz,TEST_FLAG3
-    load  s0,0xf2
-    load  s1,0xf5
-    load  s2,0xff
+    load  s0,0xBD
+    load  s1,0xC3
+    load  s2,0x37
     load  s3,0x09
     load  s4,0
     load  s5,2
