@@ -210,8 +210,9 @@ always @(posedge clk) begin
         word_cnt  <= 0;
         prog_post <= 0;
         prog_addr <= 0;
+        prog_word <= 0;
     end else begin
-        if( prog_wr ) begin
+        if( prog_wr & prog_en ) begin
             prog_fifo <= { prog_data, prog_fifo[15:8] };
             word_cnt  <= word_cnt[3] ? 4'd0 : word_cnt + 4'd1;
             case( word_cnt )

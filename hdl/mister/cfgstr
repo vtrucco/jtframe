@@ -17,6 +17,10 @@ H0OEF,Aspect Ratio,Original,Full screen,[ARC1],[ARC2];
     DIP;
     {{ .SEPARATOR }}
 {{ end }}
+{{ if .JTFRAME_CHEAT }}
+    CHEAT;
+    {{ .SEPARATOR }}
+{{ end }}
 {{ if .CORE_OSD }}
     {{ .CORE_OSD }}
     {{ .SEPARATOR }}

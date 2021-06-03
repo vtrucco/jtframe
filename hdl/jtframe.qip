@@ -21,3 +21,4 @@ set_global_assignment -name QIP_FILE     [file join $::quartus(qip_path) sdram/j
 # Cheat system (enabled with JTFRAME_CHEAT)
 set_global_assignment -name QIP_FILE     [file join $::quartus(qip_path) cpu/pauloblaze/pauloblaze.qip   ]
 set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) jtframe_cheat.v      ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) ram/jtframe_prom.v   ]

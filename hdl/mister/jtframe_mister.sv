@@ -96,7 +96,6 @@ module jtframe_mister #(parameter
     // NVRAM
     input        [ 7:0] ioctl_din,
     output              ioctl_ram,
-    output              ioctl_cheat,
 
     input               dwnld_busy,
     output              downloading,
@@ -186,10 +185,10 @@ localparam JTFRAME_MR_FASTIO=`JTFRAME_MR_FASTIO;
 wire [21:0] gamma_bus;
 
 wire [ 7:0] ioctl_index;
-wire        ioctl_wr;
 
 wire [ 3:0] hoffset, voffset;
 wire [31:0] cheat;
+wire        ioctl_cheat;
 
 wire [15:0] joystick1, joystick2, joystick3, joystick4;
 wire        ps2_kbd_clk, ps2_kbd_data;
@@ -440,7 +439,11 @@ jtframe_board #(
     // Common signals
     .sdram_dout ( sdram_dout    ),
 
-    .cheat      ( cheat         ),
+    // Cheat!
+    .cheat          ( cheat           ),
+    .cheat_prog     ( ioctl_cheat     ),
+    .ioctl_wr       ( hps_wr          ),
+    .ioctl_data     ( ioctl_dout      ),
     // Base video
     .osd_rotate     ( rotate          ),
     .game_r         ( game_r          ),

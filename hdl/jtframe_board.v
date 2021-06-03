@@ -376,7 +376,7 @@ wire [SDRAMW-1:0] bax_addr;
     wire cheat_rd, cheat_ack, cheat_dst, cheat_rdy, cheat_wr;
 
     jtframe_cheat #(
-        .AW         (  SDRAMW           )
+        .AW         (  SDRAMW   )
     ) u_cheat(
         .rst        ( game_rst  ),
         .clk_rom    ( clk_rom   ),
