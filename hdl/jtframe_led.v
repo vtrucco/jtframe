@@ -24,6 +24,7 @@ module jtframe_led(
     input        osd_shown,
     input [3:0]  gfx_en,
     input [1:0]  game_led,
+    input        cheat_led,
     output reg   led
 );
 
@@ -36,7 +37,7 @@ localparam POL = 1;
 localparam POL = 0;
 `endif
 
-assign sys_led = ~( downloading /*| osd_shown*/ | (|(~gfx_en)));
+assign sys_led = ~( downloading | cheat_led /*| osd_shown*/ | (|(~gfx_en)));
 
 always @(posedge clk) begin
     last_LVBL <= LVBL;
@@ -58,7 +59,7 @@ always @(posedge clk, posedge rst) begin
     if( rst ) begin
         led <= POL[0];
     end else begin
-        led <= (~enlarged & (sys_led /*| game_led[1]*/)) ^ POL[0];
+        led <= (~enlarged & sys_led ) ^ POL[0];
     end
 end
 

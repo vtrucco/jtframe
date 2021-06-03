@@ -16,6 +16,7 @@ Port   | I/O    |  Usage
 4,3    | O      | data to SDRAM
 5      | O      | SDRAM write data mask, only bits 1,0. Active low
 7,6    | I      | data read from SDRAM
+6      | O      | bit 0 = board LED
 0x40   | O      | Resets the watchdog
 0x80   | O      | Starts SDRAM read
 0x80   | I      | Reads peripheral status (bits 7:6)

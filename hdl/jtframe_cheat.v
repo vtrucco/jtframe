@@ -45,6 +45,7 @@ module jtframe_cheat #(parameter AW=22)(
 
     // control
     input  [ 31:0]  flags,
+    output reg      led,
 
     // PBlaze Program
     input           prog_en,      // resets the address counter
@@ -121,6 +122,11 @@ always @(posedge clk) begin
     end
     if( (pwr && paddr[7:6]==2'b01) || prst )
         watchdog <= 0;
+    // led
+    if( prst )
+        led <= 0;
+    else if( (pwr|kwr) && paddr==6 )
+        led <= pout[0];
 end
 
 always @(posedge clk) begin

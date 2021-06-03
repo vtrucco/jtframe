@@ -212,6 +212,7 @@ wire         debug_plus, debug_minus, key_shift;
 
 wire         sdram_init, key_reset, key_pause, key_test, rot_control;
 wire         game_pause, soft_rst;
+wire         cheat_led;
 
 wire   [9:0] key_joy1, key_joy2, key_joy3;
 wire   [3:0] key_start, key_coin;
@@ -244,6 +245,7 @@ jtframe_led u_led(
     .osd_shown  ( osd_shown     ),
     .gfx_en     ( gfx_en        ),
     .game_led   ( game_led      ),
+    .cheat_led  ( cheat_led     ),
     .led        ( led           )
 );
 
@@ -405,6 +407,7 @@ wire [SDRAMW-1:0] bax_addr;
         .data_read  ( sdram_dout),
 
         .flags      ( cheat     ),
+        .led        ( cheat_led ),
 
         // Program
         .prog_en    ( cheat_prog),
@@ -425,6 +428,7 @@ wire [SDRAMW-1:0] bax_addr;
     assign ba_ack    = bax_ack;
     assign ba_rdy    = bax_rdy;
     assign ba_dst    = bax_dst;
+    assign cheat_led = 0;
 `endif
 
 // support for 48MHz
