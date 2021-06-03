@@ -16,10 +16,25 @@
 ; FLAG0       DSIN   $10
 ; FLAG1       DSIN   $11
 
-    enable interrupt
+    ; enable interrupt
     load sa,0   ; SA = frame counter, modulo 60
 BEGIN:
     output s0,0x40
+
+    ; Detect blanking
+    input s0,0x80
+    and   s0,0x02;   test for blanking
+    jump z,inblank
+    jump notblank
+inblank:
+    fetch s1,0
+    test s1,0x2
+    jump z,notblank
+    store s0,0  ; stores last LVBL
+    call ISR ; do blank procedure
+    jump BEGIN
+notblank:
+    store s0,0
     jump BEGIN
 
 ISR:
@@ -72,7 +87,8 @@ TEST_FLAG3:
     jump nz,.else
     load sa,0
 .else:
-    returni ENABLE
+    return
+    ;returni ENABLE
 
     ; SDRAM address in s2-s0
     ; SDRAM data out in s4-s3

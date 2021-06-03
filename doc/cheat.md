@@ -18,14 +18,14 @@ Port   | I/O    |  Usage
 7,6    | I      | data read from SDRAM
 0x40   | O      | Resets the watchdog
 0x80   | O      | Starts SDRAM read
-0x80   | I      | Reads SDRAM status (bits 7:6)
+0x80   | I      | Reads peripheral status (bits 7:6)
 0xC0   | O      | Starts SDRAM write
 
-## SDRAM
-
-The SDRAM status bits are read from port 0x80
+The peripheral status bits are read from port 0x80:
 
 Bit   |  Meaning
 ------|--------------
 7     | Bus ownership, when high the Picoblaze is controlling the SDRAM
-6     |
+6     | high if a PicoBlaze started SDRAM transaction has not finished
+5     | Low during vertical blanking
+4:0   | Reserved

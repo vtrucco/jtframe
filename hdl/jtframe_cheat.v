@@ -137,7 +137,7 @@ always @(posedge clk) begin
                 3: pin <= flags[31:24];
             endcase
         end else if( paddr[7] ) begin
-            pin <= { owner, pico_busy, 6'b0 }; // 8'hc0 means that the SDRAM data is ready
+            pin <= { owner, pico_busy, LVBL, 5'b0 }; // 8'hc0 means that the SDRAM data is ready
         end
     end
 end
@@ -190,7 +190,8 @@ pauloBlaze u_blaze(
     .k_write_strobe ( kwr       ),
     .read_strobe    ( prd       ),
 
-    .interrupt      ( irq       ),
+    //.interrupt      ( irq       ),
+    .interrupt      ( 1'b0      ), // The interrupt in pauloBlaze is buggy
     .interrupt_ack  ( iack      )
 );
 
