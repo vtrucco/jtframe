@@ -240,7 +240,7 @@ always @(posedge clk) begin
     end
 end
 
-jtframe_prom #(.dw(18),.aw(CHEATW),.simhex("cheat.mem")) u_irom(
+jtframe_prom #(.dw(18),.aw(CHEATW),.simhex("cheat.hex")) u_irom(
     .clk    ( clk       ),
     .cen    ( 1'b1      ),
     .data   ( prog_word ),
