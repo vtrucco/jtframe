@@ -58,18 +58,18 @@ entity io_module is
 end io_module;
 
 architecture Behavioral of io_module is
-	
+
 	signal strobe_o : std_logic;
 
 begin
-	
+
 	reg_value		<= in_port;
-	read_strobe		<= io_op_in and strobe_o and clk2;
+	read_strobe		<= io_op_in and not clk2;
 	write_strobe	<= io_op_out and strobe_o and clk2;
 	k_write_strobe	<= io_kk_en and strobe_o and clk2;
-	reg_we			<= io_op_in;			-- FIXME!! ???
-	
-	out_proc : process (reset, out_data, reg_reg0, reg_reg1, io_kk_en, io_kk_port, io_kk_data, io_op_out_pp) begin		
+	reg_we			<= io_op_in and clk2;
+
+	out_proc : process (reset, out_data, reg_reg0, reg_reg1, io_kk_en, io_kk_port, io_kk_data, io_op_out_pp) begin
 		if (reset = '1') then
 			port_id <= (others => '0');
 			out_port <= (others => '0');
@@ -87,9 +87,9 @@ begin
 			end if;
 		end if;
 	end process out_proc;
-		
+
 	process (clk) begin
-		if (rising_edge(clk)) then		
+		if (rising_edge(clk)) then
 			if (reset = '1') then
 				strobe_o <= '0';
 			else
