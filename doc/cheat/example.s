@@ -23,12 +23,12 @@ BEGIN:
 
     ; Detect blanking
     input s0,0x80
-    and   s0,0x02;   test for blanking
+    and   s0,0x20;   test for blanking
     jump z,inblank
     jump notblank
 inblank:
     fetch s1,0
-    test s1,0x2
+    test s1,0x20
     jump z,notblank
     store s0,0  ; stores last LVBL
     call ISR ; do blank procedure
