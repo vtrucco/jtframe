@@ -1,3 +1,5 @@
+; Assemble with: opbasm example.s -m 1024 -x
+; Convert to 8-bit hex dump with: pico2hex example.hex
 ; SDRAM_ADDR0 DSOUT  $0
 ; SDRAM_ADDR1 DSOUT  $1
 ; SDRAM_ADDR2 DSOUT  $2
@@ -15,39 +17,84 @@
 ; FLAG1       DSIN   $11
 
     enable interrupt
+    load sa,0   ; SA = frame counter, modulo 60
 BEGIN:
     output s0,0x40
     jump BEGIN
 
 ISR:
     ; interrupt routine
-    input s0,0x10
-    test  s0,1      ; bit 0 enables
+    input sf,0x10
+    test  sf,1      ; bit 0
     jump Z,TEST_FLAG1
     ; FF02E8=09 Infinite Credits
-    load  s1,0xe8
-    output s1,0
+    load  s0,0xe8
     load  s1,0x02
-    output s1,1
-    load  s1,0xff
-    output s1,2
-    load  s1,0x09
-    output s1,3
-    load  s1,0x2
-    output s1,5
+    load  s2,0xff
+    load  s3,0x09
+    load  s4,0
+    load  s5,2
     call  WRITE_SDRAM
+
 TEST_FLAG1:
+    input sf,0x10
+    test  sf,2      ; bit 1
+    jump Z,TEST_FLAG2
+    ; FF02E8=09 Infinite Lives
+    load  s0,0xf2
+    load  s1,0xf5
+    load  s2,0xff
+    load  s3,0x09
+    load  s4,0
+    load  s5,2
+    call  WRITE_SDRAM
 
+TEST_FLAG2:
+    input sf,0x10
+    test  sf,2      ; bit 1
+    jump Z,TEST_FLAG3
+    ; FF877A=FF once per second Invincibility
+    compare sa,0
+    jump nz,TEST_FLAG3
+    load  s0,0xf2
+    load  s1,0xf5
+    load  s2,0xff
+    load  s3,0x09
+    load  s4,0
+    load  s5,2
+    call  WRITE_SDRAM
 
+TEST_FLAG3:
+
+    ; Frame counter
+    add sa,1
+    compare sa,60'd
+    jump nz,.else
+    load sa,0
+.else:
     returni ENABLE
 
+    ; SDRAM address in s2-s0
+    ; SDRAM data out in s4-s3
+    ; SDRAM data mask in s5
+    ; Modifies sf
 WRITE_SDRAM:
+    output s5, 5
+    output s4, 4
+    output s3, 3
+    output s2, 2
+    output s1, 1
+    output s0, 0
     output s1, 0xC0   ; s1 value doesn't matter
 .loop:
-    input  s1, 0x80
-    compare s1, 0xC0
+    input  sf, 0x80
+    compare sf, 0xC0
     return z
     jump .loop
+
+default_jump fatal_error
+fatal_error:
+    jump fatal_error
 
     address 3FF    ; interrupt vector
     jump ISR

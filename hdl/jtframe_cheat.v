@@ -52,7 +52,7 @@ module jtframe_cheat #(parameter AW=22)(
     input  [7:0]    prog_data
 );
 
-localparam CHEATW=12;  // 12=>9kB (8 BRAM)
+localparam CHEATW=10;  // 12=>9kB (8 BRAM)
                        // 10=>2.25kB (2 BRAM), 9=>1.12kB (1 BRAM)
 
 wire clk = clk_rom;
