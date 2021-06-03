@@ -44,7 +44,7 @@ always @(posedge clk) begin
     end else begin
         if( prog_wr & prog_en ) begin
             prog_fifo <= { prog_data, prog_fifo[15:8] };
-            word_cnt  <= word_cnt==9 ? 4'd0 : word_cnt + 4'd1;
+            word_cnt  <= word_cnt[3] ? 4'd0 : word_cnt + 4'd1;
             case( word_cnt )
                 2: begin
                     word_we   <= 1;
