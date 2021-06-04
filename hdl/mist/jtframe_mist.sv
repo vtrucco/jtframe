@@ -150,6 +150,7 @@ wire          scan2x_enb;
 wire [6:0]    core_mod;
 
 wire  [ 1:0]  rotate;
+wire          ioctl_cheat;
 
 assign board_status = { {32-DIPBASE{1'b0}}, status[DIPBASE-1:0] };
 
@@ -218,6 +219,7 @@ jtframe_mist_base #(
     .ioctl_data2sd  ( ioctl_data2sd ),
     .ioctl_wr       ( ioctl_wr      ),
     .ioctl_ram      ( ioctl_ram     ),
+    .ioctl_cheat    ( ioctl_cheat   ),
     .downloading    ( downloading   )
 );
 
@@ -310,6 +312,12 @@ jtframe_board #(
 
     // Common signals
     .sdram_dout ( sdram_dout    ),
+
+    // Cheat!
+    .cheat      ( status[63:32] ),
+    .cheat_prog ( ioctl_cheat   ),
+    .ioctl_wr   ( ioctl_wr      ),
+    .ioctl_data ( ioctl_data    ),
 
     // Base video
     .osd_rotate     ( rotate          ),

@@ -164,6 +164,7 @@ module jtframe_mister #(parameter
     output            dip_pause,
     inout             dip_flip,
     output    [ 1:0]  dip_fxlevel,
+    // Control words
     output    [31:0]  dipsw,
     // Debug
     output            LED,
@@ -184,9 +185,10 @@ localparam JTFRAME_MR_FASTIO=`JTFRAME_MR_FASTIO;
 wire [21:0] gamma_bus;
 
 wire [ 7:0] ioctl_index;
-wire        ioctl_wr;
 
 wire [ 3:0] hoffset, voffset;
+wire [31:0] cheat;
+wire        ioctl_cheat;
 
 wire [15:0] joystick1, joystick2, joystick3, joystick4;
 wire        ps2_kbd_clk, ps2_kbd_data;
@@ -258,11 +260,13 @@ jtframe_mister_dwnld u_dwnld(
     .ioctl_addr     ( ioctl_addr     ),
     .ioctl_dout     ( ioctl_dout     ),
     .ioctl_ram      ( ioctl_ram      ),
+    .ioctl_cheat    ( ioctl_cheat    ),
 
     // Configuration
     .core_mod       ( core_mod       ),
     .status         ( status         ),
     .dipsw          ( dipsw          ),
+    .cheat          ( cheat          ),
 
     // DDR
     .ddram_busy     ( ddrld_busy       ),
@@ -435,6 +439,11 @@ jtframe_board #(
     // Common signals
     .sdram_dout ( sdram_dout    ),
 
+    // Cheat!
+    .cheat          ( cheat           ),
+    .cheat_prog     ( ioctl_cheat     ),
+    .ioctl_wr       ( hps_wr          ),
+    .ioctl_data     ( ioctl_dout      ),
     // Base video
     .osd_rotate     ( rotate          ),
     .game_r         ( game_r          ),

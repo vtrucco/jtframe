@@ -123,6 +123,12 @@ module jtframe_board #(parameter
     // HDMI outputs (only for MiSTer)
     inout     [21:0]  gamma_bus,
     input             direct_video,
+
+    // ROM downloading (cheat engine)
+    input             cheat_prog,
+    input             ioctl_wr,
+    input       [7:0] ioctl_data,
+
     // scan doubler
     input             scan2x_enb,
     output     [7:0]  scan2x_r,
@@ -134,6 +140,10 @@ module jtframe_board #(parameter
     output            scan2x_cen,
     output            scan2x_de,
     output     [1:0]  scan2x_sl,
+
+    // Cheat
+    input      [31:0] cheat,
+
     // GFX enable
     output     [3:0]  gfx_en,
     output     [7:0]  debug_bus
@@ -202,6 +212,7 @@ wire         debug_plus, debug_minus, key_shift;
 
 wire         sdram_init, key_reset, key_pause, key_test, rot_control;
 wire         game_pause, soft_rst;
+wire         cheat_led;
 
 wire   [9:0] key_joy1, key_joy2, key_joy3;
 wire   [3:0] key_start, key_coin;
@@ -234,6 +245,7 @@ jtframe_led u_led(
     .osd_shown  ( osd_shown     ),
     .gfx_en     ( gfx_en        ),
     .game_led   ( game_led      ),
+    .cheat_led  ( cheat_led     ),
     .led        ( led           )
 );
 
@@ -356,6 +368,69 @@ jtframe_dip u_dip(
     .dip_fxlevel( dip_fxlevel   )
 );
 
+wire [ 3:0] bax_rd, bax_wr, bax_ack;
+wire [15:0] bax_din;
+wire [ 1:0] bax_din_m;
+wire [ 3:0] bax_rdy, bax_dst;
+wire [SDRAMW-1:0] bax_addr;
+
+`ifdef JTFRAME_CHEAT
+    wire cheat_rd, cheat_ack, cheat_dst, cheat_rdy, cheat_wr;
+
+    jtframe_cheat #(
+        .AW         (  SDRAMW   )
+    ) u_cheat(
+        .rst        ( game_rst  ),
+        .clk_rom    ( clk_rom   ),
+
+        .LVBL       ( LVBL      ),
+
+        // From/to game
+        .game_addr  ( ba0_addr  ),
+        .game_rd    ( ba_rd[0]  ),
+        .game_wr    ( ba_wr[0]  ),
+        .game_din   ( ba0_din   ),
+        .game_din_m ( ba0_din_m ),
+        .game_ack   ( cheat_ack ),
+        .game_dst   ( cheat_dst ),
+        .game_rdy   ( cheat_rdy ),
+
+        // From/to SDRAM bank 0
+        .ba0_addr   ( bax_addr  ),
+        .ba0_rd     ( cheat_rd  ),
+        .ba0_wr     ( cheat_wr  ),
+        .ba0_dst    ( bax_dst[0]),
+        .ba0_rdy    ( bax_rdy[0]),
+        .ba0_ack    ( bax_ack[0]),
+        .ba0_din    ( bax_din   ),
+        .ba0_din_m  ( bax_din_m ),
+        .data_read  ( sdram_dout),
+
+        .flags      ( cheat     ),
+        .led        ( cheat_led ),
+
+        // Program
+        .prog_en    ( cheat_prog),
+        .prog_wr    ( ioctl_wr  ),
+        .prog_data  ( ioctl_data)
+    );
+    assign bax_rd = { ba_rd[3:1], cheat_rd };
+    assign bax_wr = { ba_wr[3:1], cheat_wr };
+    assign ba_ack = { bax_ack[3:1], cheat_ack };
+    assign ba_rdy = { bax_rdy[3:1], cheat_rdy };
+    assign ba_dst = { bax_dst[3:1], cheat_dst };
+`else
+    assign bax_rd    = ba_rd;
+    assign bax_wr    = ba_wr;
+    assign bax_din   = ba0_din;
+    assign bax_din_m = ba0_din_m;
+    assign bax_addr  = ba0_addr;
+    assign ba_ack    = bax_ack;
+    assign ba_rdy    = bax_rdy;
+    assign ba_dst    = bax_dst;
+    assign cheat_led = 0;
+`endif
+
 // support for 48MHz
 // Above 64MHz HF should be 1. SHIFTED depends on whether the SDRAM
 // clock is shifted or not.
@@ -387,20 +462,20 @@ jtframe_sdram64 #(
     .clk        ( clk_rom       ), // 96MHz = 32 * 6 MHz -> CL=2
     .init       ( sdram_init    ),
 
-    .ba0_addr   ( ba0_addr      ),
+    .ba0_addr   ( bax_addr      ),
     .ba1_addr   ( ba1_addr      ),
     .ba2_addr   ( ba2_addr      ),
     .ba3_addr   ( ba3_addr      ),
 
-    .rd         ( ba_rd         ),
-    .wr         ( ba_wr         ),
-    .din        ( ba0_din       ),
-    .din_m      ( ba0_din_m     ),  // write mask
+    .rd         ( bax_rd        ),
+    .wr         ( bax_wr        ),
+    .din        ( bax_din       ),
+    .din_m      ( bax_din_m     ),  // write mask
 
-    .rdy        ( ba_rdy        ),
-    .ack        ( ba_ack        ),
+    .rdy        ( bax_rdy       ),
+    .ack        ( bax_ack       ),
     .dok        ( ba_dok        ),
-    .dst        ( ba_dst        ),
+    .dst        ( bax_dst       ),
 
     // ROM-load interface
     .prog_en    ( downloading   ),
