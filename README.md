@@ -22,7 +22,7 @@ You can show your appreciation through
 * [The credit screen](doc/credits.md)
 * [Debug features](doc/debug.md)
 * [Cheat subsystem](doc/cheat.md)
-* [Compilation Macros](doc/macros.md)
+* [Compilation macros](doc/macros.md)
 * [IP reference](doc/ip.md)
 
 # Licensing
