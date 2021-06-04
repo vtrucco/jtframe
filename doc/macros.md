@@ -93,8 +93,7 @@ JTFRAME_SIM_DIPS         |         | Define DIP switch values during simulation
 JTFRAME_SIM_ROMRQ_NOCHECK|         | Disable protocol checking of romrq
 JTFRAME_SIM_SCAN2X       |         | Enables scan doubler simulation
 SIMULATION               |         | Enables simulation features
-VIDEO_START              |         | First frame for which video output is provided
-                         |         | use it to prevent a split first frame
+VIDEO_START              |         | First frame for which video output is provided use it to prevent a split first frame
 
 ## ROM Downloading
 

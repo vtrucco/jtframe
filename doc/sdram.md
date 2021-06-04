@@ -15,9 +15,9 @@ For I/O (SDRAM download, etc.) the following indexes are used
 
 SDRAM clock can be shifted with respect to the internal clock (clk_rom in the diagram).
 
-![SDRAM clock forwarded](doc/sdram_adv.png)
+![SDRAM clock forwarded](sdram_adv.png)
 
-![SDRAM clock forwarded](doc/sdram_dly.png)
+![SDRAM clock forwarded](sdram_dly.png)
 
 # SDRAM Controller
 
