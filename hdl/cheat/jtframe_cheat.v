@@ -90,7 +90,7 @@ always @(posedge clk) begin
 end
 
 // Ports
-reg [7:0] ports[0:7];
+reg  [ 7:0] ports[0:7];
 wire [23:0] blaze_sdram_addr;
 wire [15:0] blaze_sdram_din;
 wire [ 1:0] blaze_sdram_din_m;

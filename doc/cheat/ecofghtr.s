@@ -1,25 +1,15 @@
-; Assemble with: opbasm example.s -m 1024 -x -6
-; Convert to 8-bit hex dump with: pico2hex example.hex
-; SDRAM_ADDR0 DSOUT  $0
-; SDRAM_ADDR1 DSOUT  $1
-; SDRAM_ADDR2 DSOUT  $2
-; SDRAM_DOUT0 DSIO   $3
-; SDRAM_DOUT1 DSIO   $4
-; SDRAM_MASK  DSIO   $5
-; SDRAM_DIN0  DSIN   $6
-; SDRAM_DIN1  DSIN   $7
-; SDRAM_READ  DSOUT  $80
-; SDRAM_WRITE DSOUT  $C0
-; WATCHDOG    DSOUT  $40
-;
-; SDRAM_ST    DSIN   $80
-; FLAG0       DSIN   $10
-; FLAG1       DSIN   $11
+; use "cheatzip" script to assemble and send to MiSTer
 
+; The LED will blink if the cheat bits 7:0 are enabled
 ; CPSx work RAM offset = 30'0000h
+
+; Register use
+; SA = frame counter
+; SB = LED
 
     ; enable interrupt
     load sa,0   ; SA = frame counter, modulo 60
+    load sb,0
 BEGIN:
     output s0,0x40
 
@@ -40,15 +30,29 @@ notblank:
     jump BEGIN
 
 ISR:
+    input sf,0x10
+    test sf,0xff
+    jump z,.nothing
+
+    compare sa,59'd
+    jump nz,PARSE_FLAGS
+    ; invert LED signal
+    add sb,1
+    jump PARSE_FLAGS
+.nothing:
+    load sb,0      ; turn off LED
+    jump CLOSE_FRAME
+
+PARSE_FLAGS:
     ; interrupt routine
     input sf,0x10
     test  sf,1      ; bit 0
     jump Z,TEST_FLAG1
     ; Infinite Credits
-    ; FF02E8=09 -> (0F02E8/2+30'0000) = 378174
+    ; FF02E8=09 -> (02E8/2+30'0000) = 300174
     load  s0,0x74
-    load  s1,0x81
-    load  s2,0x37
+    load  s1,0x01
+    load  s2,0x30
     load  s3,0x09
     load  s4,0
     load  s5,2
@@ -59,10 +63,10 @@ TEST_FLAG1:
     test  sf,2      ; bit 1
     jump Z,TEST_FLAG2
     ; Infinite Lives
-    ; FFF5F2=09  -> (0FF5F2/2+30'0000) = 37FAF9
+    ; FFF5F2=09  -> (F5F2/2+30'0000) = 307AF9
     load  s0,0xf9
-    load  s1,0xfA
-    load  s2,0x37
+    load  s1,0x7A
+    load  s2,0x30
     load  s3,0x09
     load  s4,0
     load  s5,2
@@ -73,19 +77,20 @@ TEST_FLAG2:
     test  sf,2      ; bit 1
     jump Z,TEST_FLAG3
     ; Invincibility
-    ; FF877A=FF -> 37C3BD once per second
+    ; FF877A=FF -> 3043BD once per second
     compare sa,0
     jump nz,TEST_FLAG3
     load  s0,0xBD
-    load  s1,0xC3
-    load  s2,0x37
-    load  s3,0x09
+    load  s1,0x43
+    load  s2,0x30
+    load  s3,0xff
     load  s4,0
     load  s5,2
     call  WRITE_SDRAM
 
 TEST_FLAG3:
-
+CLOSE_FRAME:
+    output sb,6     ; LED
     ; Frame counter
     add sa,1
     compare sa,60'd
