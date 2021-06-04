@@ -20,7 +20,8 @@ You can show your appreciation through
 * [Audio filters](doc/audio.md)
 * [User inputs](doc/inputs.md)
 * [The credit screen](doc/credits.md)
-* [Debuf features](doc/debug.md)
+* [Debug features](doc/debug.md)
+* [Cheat subsystem](doc/cheat.md)
 * [IP reference](doc/ip.md)
 
 # Licensing
