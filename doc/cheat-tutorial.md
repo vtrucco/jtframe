@@ -190,7 +190,7 @@ individual linux commands:
 
 First, the file is assembled using [opbasm](https://github.com/kevinpt/opbasm).
 Then the output is converted to a binary format that MiSTer can handle using
-pico2hex (available in JTFRAME's bin folder). This utility basically converts
+pico2hex (available in JTBIN's bin folder). This utility basically converts
 a 18-bit hex stream to a 8-bit one. Finally the binary file is added to
 cheat.zip and transferred to MiSTer.
 
