@@ -34,7 +34,7 @@ ISR:
     test sf,0xff
     jump z,.nothing
 
-    compare sa,59'd
+    compare sa,0
     jump nz,PARSE_FLAGS
     ; invert LED signal
     add sb,1
