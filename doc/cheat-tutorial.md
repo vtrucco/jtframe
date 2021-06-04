@@ -26,7 +26,7 @@ The cheat engine is built around a small processor called the PicoBlaze. You
 will need to write a small piece of code that modifies the game data as needed.
 
 There is plenty of information about cheat code on the internet, including a
-wonderful tutorial on how to develop cheat codes (here)[http://cheat.retrogames.com/download/holycheat!.zip].
+wonderful tutorial on how to develop cheat codes [here](http://cheat.retrogames.com/download/holycheat!.zip).
 
 The cheat information is added to the core by enabling it on the MRA file, and
 then adding a new PicoBlaze instruction ROM to the MiSTer's cheat.zip. Do not
