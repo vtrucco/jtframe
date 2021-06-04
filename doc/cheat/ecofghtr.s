@@ -53,9 +53,9 @@ PARSE_FLAGS:
     load  s0,0x74
     load  s1,0x01
     load  s2,0x30
-    load  s3,0x09
-    load  s4,0
-    load  s5,2
+    load  s3,0
+    load  s4,9
+    load  s5,1
     call  WRITE_SDRAM
 
 TEST_FLAG1:
@@ -67,14 +67,14 @@ TEST_FLAG1:
     load  s0,0xf9
     load  s1,0x7A
     load  s2,0x30
-    load  s3,0x09
-    load  s4,0
-    load  s5,2
+    load  s3,0
+    load  s4,9
+    load  s5,1
     call  WRITE_SDRAM
 
 TEST_FLAG2:
     input sf,0x10
-    test  sf,2      ; bit 1
+    test  sf,4      ; bit 1
     jump Z,TEST_FLAG3
     ; Invincibility
     ; FF877A=FF -> 3043BD once per second
@@ -83,9 +83,9 @@ TEST_FLAG2:
     load  s0,0xBD
     load  s1,0x43
     load  s2,0x30
-    load  s3,0xff
-    load  s4,0
-    load  s5,2
+    load  s3,0
+    load  s4,0xff
+    load  s5,1
     call  WRITE_SDRAM
 
 TEST_FLAG3:
@@ -93,7 +93,7 @@ CLOSE_FRAME:
     output sb,6     ; LED
     ; Frame counter
     add sa,1
-    compare sa,60'd
+    compare sa,59'd
     jump nz,.else
     load sa,0
 .else:
