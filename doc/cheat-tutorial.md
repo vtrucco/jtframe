@@ -222,3 +222,21 @@ Check the example for Ghouls'n Ghosts too:
 
 * [Assembler File](cheat/ghouls.s)
 * [MRA](https://github.com/jotego/jtcps1/blob/master/rom/mra/Ghouls'n%20Ghosts%20(cheat).mra)
+
+Finally, sometimes you need to read data from the SDRAM, you can find sample
+code for reading in [sf2hf.s](cheat/sf2hf.s).
+
+```
+    ; Read FF8AC2 => 304561 and check that its zero
+    load  s0,0x61
+    load  s1,0x45
+    load  s2,0x30
+    call  READ_SDRAM
+    compare s7,0
+    jump nz,char_select
+```
+
+This code reads the data in game address FF8AC2. The data is returned in
+registers s7 and s6. Because of the M68000 endianness, the lower byte is
+written in s7, and the upper in s6. Then you can perform a check on the
+value and jump accordingly.

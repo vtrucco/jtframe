@@ -47,28 +47,28 @@ entity ALU is
 		restore_flags   : in std_logic;
 		carry           : out STD_LOGIC;
 		zero            : out STD_LOGIC;
- 
+
 		reg_value       : out unsigned (7 downto 0);
 		reg_we          : out std_logic;
 		reg_reg0        : in unsigned (7 downto 0);
-		reg_reg1        : in unsigned (7 downto 0) 
+		reg_reg1        : in unsigned (7 downto 0)
 	);
 end ALU;
 
 architecture Behavioral of ALU is
 
- 
+
 	signal result : unsigned(7 downto 0);
 	signal res_valid : std_logic; -- result should be written to register
- 
+
 	signal inter_flank : std_logic;
 	signal carry_c : std_logic;
 	signal carry_o : std_logic;
 	signal carry_i : std_logic; -- saved during interrupt
 	signal zero_i : std_logic; -- same
-	signal zero_c : std_logic; 
+	signal zero_c : std_logic;
 	signal zero_o : std_logic;
- 
+
 	signal debug_opA_value : unsigned(7 downto 0);
 	signal debug_opB_value : unsigned(7 downto 0);
 
@@ -84,7 +84,7 @@ begin
 
 	carry <= carry_o;
 	zero <= zero_o;
- 
+
 	op : process (reset, opcode, opB, carry_o, zero_o, reg_reg0, reg_reg1, clk2)
 		variable opB_value : unsigned(7 downto 0);
 		variable opA_value : unsigned(7 downto 0);
@@ -99,7 +99,7 @@ begin
 		else -- LSB 1 = op_x sx, kk
 			opB_value := opB;
 		end if;
-	
+
 		if (debug) then
 			padding := '0'; --looks better during simulation
 			debug_opA_value <= opA_value;
@@ -116,12 +116,12 @@ begin
 		if (reset = '0') then
 			case opcode is
 				--register loading
-				when OP_LOAD_SX_SY | OP_LOAD_SX_KK | OP_LOADRETURN_SX_KK => 
+				when OP_LOAD_SX_SY | OP_LOAD_SX_KK | OP_LOADRETURN_SX_KK =>
 					result_v := padding & opB_value;
 					res_valid <= '1';
-				when OP_STAR_SX_SY => 
+				when OP_STAR_SX_SY =>
 					--Logical
-				when OP_AND_SX_SY | OP_AND_SX_KK => 
+				when OP_AND_SX_SY | OP_AND_SX_KK =>
 					result_v := padding & (opA_value and opB_value);
 					res_valid <= '1';
 					if (result_v(7 downto 0) = "00000000") then
@@ -130,7 +130,7 @@ begin
 						zero_c <= '0';
 					end if;
 					carry_c <= '0';
-				when OP_OR_SX_SY | OP_OR_SX_KK => 
+				when OP_OR_SX_SY | OP_OR_SX_KK =>
 					result_v := padding & (opA_value or opB_value);
 					res_valid <= '1';
 					if (result_v(7 downto 0) = "00000000") then
@@ -139,7 +139,7 @@ begin
 						zero_c <= '0';
 					end if;
 					carry_c <= '0';
-				when OP_XOR_SX_SY | OP_XOR_SX_KK => 
+				when OP_XOR_SX_SY | OP_XOR_SX_KK =>
 					result_v := padding & (opA_value xor opB_value);
 					res_valid <= '1';
 					if (result_v(7 downto 0) = "00000000") then
@@ -149,16 +149,16 @@ begin
 					end if;
 					carry_c <= '0';
 					--Arithmetic
-				when OP_ADD_SX_SY | OP_ADD_SX_KK | OP_SUB_SX_SY | OP_SUB_SX_KK | 
-					OP_ADDCY_SX_SY | OP_ADDCY_SX_KK | OP_SUBCY_SX_SY | OP_SUBCY_SX_KK => 
-					if (opcode(3) = '0') then 
+				when OP_ADD_SX_SY | OP_ADD_SX_KK | OP_SUB_SX_SY | OP_SUB_SX_KK |
+					OP_ADDCY_SX_SY | OP_ADDCY_SX_KK | OP_SUBCY_SX_SY | OP_SUBCY_SX_KK =>
+					if (opcode(3) = '0') then
 						result_v := ('0' & opA_value) + ('0' & opB_value) + ("" & (carry_o and opCode(1)));
 					else
 						result_v := ('0' & opA_value) - ('0' & opB_value) - ("" & (carry_o and opCode(1)));
 					end if;
- 
+
 					if (result_v(7 downto 0) = "00000000") then
-						if (opcode = OP_ADDCY_SX_SY or opcode = OP_ADDCY_SX_KK or opcode = OP_SUBCY_SX_SY or opcode = OP_SUBCY_SX_KK) then 
+						if (opcode = OP_ADDCY_SX_SY or opcode = OP_ADDCY_SX_KK or opcode = OP_SUBCY_SX_SY or opcode = OP_SUBCY_SX_KK) then
 							zero_c <= zero_o;
 						else
 							zero_c <= '1';
@@ -169,7 +169,7 @@ begin
 					carry_c <= result_v(8);
 					res_valid <= '1';
 					--Test and Compare
-				when OP_TEST_SX_SY | OP_TEST_SX_KK | OP_TESTCY_SX_SY | OP_TESTCY_SX_KK => 
+				when OP_TEST_SX_SY | OP_TEST_SX_KK | OP_TESTCY_SX_SY | OP_TESTCY_SX_KK =>
 					result_v := (padding & (opA_value and opB_value));
 					-- opCode(1) == 0 : TEST
 					-- opCode(1) == 1 : TESTCY
@@ -182,7 +182,7 @@ begin
 					else
 						zero_c <= '0';
 					end if;
- 
+
 					for i in 0 to 7 loop
 						parity_v := parity_v xor result_v(i);
 					end loop;
@@ -193,12 +193,12 @@ begin
 						-- TESTCY
 						carry_c <= parity_v xor carry_o;
 					end if;
-				when OP_COMPARE_SX_SY | OP_COMPARE_SX_KK | OP_COMPARECY_SX_SY | OP_COMPARECY_SX_KK => 
-					-- opCode(1) == 0 : COMAPRE
-					-- opCode(1) == 1 : COMAPRECY
+				when OP_COMPARE_SX_SY | OP_COMPARE_SX_KK | OP_COMPARECY_SX_SY | OP_COMPARECY_SX_KK =>
+					-- opCode(1) == 0 : COMPARE
+					-- opCode(1) == 1 : COMPARECY
 					-- mask carry with it
 					result_v := ('0' & opA_value) - ('0' & opB_value) - ("" & (opCode(1) and carry_o));
- 
+
 					if (result_v(7 downto 0) = "00000000") then
 						if (opCode(1) = '0') then
 							zero_c <= '1';
@@ -208,10 +208,10 @@ begin
 					else
 						zero_c <= '0';
 					end if;
- 
+
 					carry_c <= result_v(8);
 					--Shift and Rotate ... and hwbuild OP_HWBUILD_SX
-				when OP_SL0_SX => 
+				when OP_SL0_SX =>
 					if (opB(7) = '1') then -- hw build op
 						result_v := padding & hwbuild;
 						res_valid <= '1';
@@ -224,24 +224,24 @@ begin
 					else
 						-- shift and rotate
 						case opB(2 downto 0) is
-							when "110" | "111" => 
+							when "110" | "111" =>
 								tmp := opB(0);
 							when "010" => -- RL
 								tmp := opA_value(7);
 							when "100" => -- RR
 								tmp := opA_value(0);
-							when "000" => 
+							when "000" =>
 								tmp := carry_o;
-							when others => 
+							when others =>
 								tmp := '0';
 						end case;
- 
+
 						if (opB(3) = '1') then
 							result_v := opA_value(0) & tmp & opA_value(7 downto 1);
 						else -- concat the carry value into the result and shift
 							result_v := opA_value(7) & opA_value(6 downto 0) & tmp;
 						end if;
- 
+
 						carry_c <= result_v(8);
 						if (result_v(7 downto 0) = "00000000") then
 							zero_c <= '1';
@@ -250,7 +250,7 @@ begin
 						end if;
 						res_valid <= '1';
 					end if;
-				when others => 
+				when others =>
 					result_v := (others => padding);
 			end case;
 		end if;
