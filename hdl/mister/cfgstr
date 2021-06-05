@@ -12,20 +12,19 @@ H0OEF,Aspect Ratio,Original,Full screen,[ARC1],[ARC2];
 {{ if .JTFRAME_OSD_VOL }}           O67,FX volume, high, very high, very low, low; {{ end }}
 {{ if .JTFRAME_OSD_SND_EN }}        O8,FX,On,Off; O9,FM,On,Off; {{ end }}
 {{ if .JTFRAME_OSD_TEST }}          OA,Service mode,Off,On; {{ end }}
-{{ .SEPARATOR }}
+{{ if .CORE_OSD }}
+    {{ .CORE_OSD }}
+{{ end }}
+{{ if not .JTFRAME_OSD_NOCREDITS }} OC,Credits,Off,On; {{ end }}
+R0,Reset;
+{{ if (.JTFRAME_MRA_DIP) or (.JTFRAME_CHEAT) }}
+    {{ .SEPARATOR }}
+{{ end }}
 {{ if .JTFRAME_MRA_DIP }}
     DIP;
-    {{ .SEPARATOR }}
 {{ end }}
 {{ if .JTFRAME_CHEAT }}
     CHEAT;
-    {{ .SEPARATOR }}
 {{ end }}
-{{ if .CORE_OSD }}
-    {{ .CORE_OSD }}
-    {{ .SEPARATOR }}
-{{ end }}
-{{ if not .JTFRAME_OSD_NOCREDITS }} OC,Credits,Off,On; {{ end }}
 {{ with .CORE_KEYMAP }} {{ . }} {{ end }}
-R0,Reset;
 V,v{{ .COMMIT }};
