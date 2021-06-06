@@ -375,7 +375,10 @@ wire [ 3:0] bax_rdy, bax_dst;
 wire [SDRAMW-1:0] bax_addr;
 
 `ifdef JTFRAME_CHEAT
-    wire cheat_rd, cheat_ack, cheat_dst, cheat_rdy, cheat_wr;
+    wire       cheat_rd, cheat_ack, cheat_dst, cheat_rdy, cheat_wr;
+    // jtframe_credits video control
+    wire [7:0] vram_dout, vram_din, vram_addr;
+    wire       vram_we, vram_show;
 
     jtframe_cheat #(
         .AW         (  SDRAMW   )
@@ -408,6 +411,12 @@ wire [SDRAMW-1:0] bax_addr;
 
         .flags      ( cheat     ),
         .led        ( cheat_led ),
+        // Video
+        .vram_addr  ( vram_addr ),
+        .vram_din   ( vram_din  ),
+        .vram_dout  ( vram_dout ),
+        .vram_we    ( vram_we   ),
+        .vram_show  ( vram_show ),
 
         // Program
         .prog_en    ( cheat_prog),
@@ -419,6 +428,8 @@ wire [SDRAMW-1:0] bax_addr;
     assign ba_ack = { bax_ack[3:1], cheat_ack };
     assign ba_rdy = { bax_rdy[3:1], cheat_rdy };
     assign ba_dst = { bax_dst[3:1], cheat_dst };
+    // always enable credits for compilations with JTFRAME_CHEAT
+    `define JTFRAME_CREDITS
 `else
     assign bax_rd    = ba_rd;
     assign bax_wr    = ba_wr;
@@ -556,11 +567,6 @@ wire              pre2x_LHBL, pre2x_LVBL;
         .HB         ( LHBL          ),
         .VB         ( LVBL          ),
         .rgb_in     ( { game_r, game_g, game_b } ),
-        `ifdef JTFRAME_CREDITS_AON
-            .enable ( 1'b1          ),
-        `else
-            .enable ( ~dip_pause    ),
-        `endif
         `ifdef JTFRAME_CREDITS_NOROTATE
             .rotate ( 2'd0          ),
         `else
@@ -568,6 +574,28 @@ wire              pre2x_LHBL, pre2x_LVBL;
         `endif
         .toggle     ( toggle        ),
         .fast_scroll( fast_scroll   ),
+
+        `ifdef JTFRAME_CHEAT
+            // Cheat CPU can controll the video
+            .vram_din   ( vram_dout  ),
+            .vram_dout  ( vram_din   ),
+            .vram_addr  ( vram_addr  ),
+            .vram_we    ( vram_we    ),
+            .vram_mode  ( vram_show  ),
+            .enable     ( vram_show  | ~dip_pause ),
+        `else
+            .vram_din   ( 8'h0  ),
+            .vram_dout  (       ),
+            .vram_addr  ( 8'h0  ),
+            .vram_we    ( 1'b0  ),
+            .scroll_en  ( 1'b1  ),
+            `ifdef JTFRAME_CREDITS_AON
+                .enable ( 1'b1          ),
+            `else
+                .enable ( ~dip_pause    ),
+            `endif
+        `endif
+
         // output image
         .HB_out     ( pre2x_LHBL      ),
         .VB_out     ( pre2x_LVBL      ),

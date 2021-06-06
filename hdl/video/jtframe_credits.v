@@ -37,9 +37,16 @@ module jtframe_credits #(
     input               VB,
     input [COLW*3-1:0]  rgb_in,
 
+    // Optional VRAM control
+    input         [7:0] vram_din,
+    input         [7:0] vram_addr,
+    input               vram_we,
+    output        [7:0] vram_dout,
+
     // control
     input               enable, // shows the screen and resets the scroll counter
     input               toggle, // disables the screen. Only has an effect if enable is high
+    input               vram_mode,
     input               fast_scroll,
     input [1:0]         rotate,
 
@@ -81,13 +88,19 @@ reg               show, hide;
 
 assign hscan = hn - HOFFSET;
 
-jtframe_ram #(.dw(9), .aw(MSGW),.synbinfile("msg.bin")) u_msg(
-    .clk    ( clk       ),
-    .cen    ( 1'b1      ),
-    .data   ( 9'd0      ),
-    .addr   ( scan_addr ),
-    .we     ( 1'b0      ),
-    .q      ( scan_data )
+jtframe_dual_ram #(.dw(9), .aw(MSGW),.synfile("msg.bin")) u_msg(
+    .clk0   ( clk       ),
+    .clk1   ( clk       ),
+    // Port 0: optional write access
+    .data0  ( {1'b1, vram_din }             ),
+    .addr0  ( { {MSGW-8{1'b0}}, vram_addr } ),
+    .we0    ( vram_we   ),
+    .q0     ( vram_dout ),
+    // Port 1: video dump
+    .data1  ( 9'd0      ),
+    .addr1  ( scan_addr ),
+    .we1    ( 1'b0      ),
+    .q1     ( scan_data )
 );
 
 jtframe_ram #(.aw(10),.synfile("font0.hex")) u_font(
@@ -102,7 +115,7 @@ jtframe_ram #(.aw(10),.synfile("font0.hex")) u_font(
 reg  [1:0]      pal;
 reg  [2:0]      pxl;
 
-localparam SCROLL_EN = MSGW > 10;
+localparam MULTIPAGE = MSGW > 10;
 
 // hb and vb are always active high
 wire hb = BLKPOL ? HB : ~HB;
@@ -145,7 +158,7 @@ always @(posedge clk) begin
         end else begin
             if ( vb ) begin
                 vrender  <= 0;
-                if( !last_vb && SCROLL_EN ) begin
+                if( !last_vb && MULTIPAGE ) begin
                     // Scroll runs at max speed when the visible pages are over
                     // otherwise it runs at SPEED
                     if( scr_base == SPEED || scrpos>MAXVISIBLE || fast_scroll ) begin
@@ -155,6 +168,7 @@ always @(posedge clk) begin
                 end
             end
         end
+        if( vram_mode ) scrpos <= 0;
         //if( /*tate || hn[2:0]==3'd0 || hb || vb ) begin
             scan_addr <= tate ?
                 { rotate[1] ? vidx_flip : vdump[VPOSW-1:3], vrender[7:3]^{5{~rotate[1]}} } :
@@ -389,9 +403,14 @@ always @(posedge clk, posedge rst) begin
         last_enable <= enable;
         last_toggle <= toggle;
         if( enable ) begin
-            show <= ~hide;
-            if( toggle && !last_toggle ) begin
-                hide <= ~hide;
+            if( vram_mode ) begin
+                show <= 1;
+                hide <= 0;
+            end else begin
+                show <= ~hide;
+                if( toggle && !last_toggle ) begin
+                    hide <= ~hide;
+                end
             end
         end else show <= 0;
     end
@@ -402,8 +421,8 @@ always @(posedge clk) if(pxl_cen) begin
     if( !show || hn<HOFFSET || hn>=(HEND+HOFFSET) )
         rgb_out <= rgb_in;
     else begin
-        if( (!pxl[0] && !obj_ok) || !visible ) begin
-            rgb_out            <= dim;
+        if( (!pxl[0] && (!obj_ok || vram_mode)) || !visible ) begin
+            rgb_out <= vram_mode ? rgb_in : dim;
         end else begin
             if( pxl[0] || tate ) begin // CHAR, OBJ disabled for TATE
                 case( pxl[2:1] )

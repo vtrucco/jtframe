@@ -38,17 +38,25 @@ The MRA also needs to load the PizoBlaze firmware in ROM position 16:
 
 ## Port Map
 
-Port   | I/O    |  Usage
--------|--------|-------------------------
-2,1,0  | I/O    | SDRAM address (24 bits)
-4,3    | O      | data to SDRAM
-5      | O      | SDRAM write data mask, only bits 1,0. Active low
-7,6    | I      | data read from SDRAM
-6      | O      | bit 0 = board LED
-0x40   | O      | Resets the watchdog
-0x80   | O      | Starts SDRAM read
-0x80   | I      | Reads peripheral status (bits 7:6)
-0xC0   | O      | Starts SDRAM write
+Port (hex) | I/O    |  Usage
+-----------|--------|-------------------------
+2,1,0      | I/O    | SDRAM address (24 bits)
+4,3        | O      | data to SDRAM
+5          | O      | SDRAM write data mask, only bits 1,0. Active low
+7,6        | I      | data read from SDRAM
+6          | O      | bit 0 = board LED
+40         | O      | Resets the watchdog
+80         | O      | Starts SDRAM read
+80         | I      | Reads peripheral status (bits 7:6)
+C0         | O      | Starts SDRAM write
+
+Uses the credits VRAM to display information:
+
+Port (hex) | I/O    |  Usage
+-----------|--------|-------------------------
+8          | O      | VRAM address (JTFRAME_CREDITS required)
+9          | I/O    | VRAM reads or writes
+A          | O      | bit 0 enables the display
 
 The peripheral status bits are read from port 0x80:
 
@@ -63,8 +71,6 @@ Bit   |  Meaning
 
 The following features will be added to the cheat subsystem
 
-* Control of the credits VRAM, so it will be possible to dump internal
-core information on screen
 * Keyboard and joystick manipulation, both input and output
 * Interrupt at vertical blank -currently a bug in the softcore prevents it
 * Data dump via high-score/NVRAM interfaces
