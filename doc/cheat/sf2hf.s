@@ -11,22 +11,7 @@
     load sa,0   ; SA = frame counter, modulo 60
     load sb,0
 BEGIN:
-    output s0,0x40
-
-    ; Detect blanking
-    input s0,0x80
-    and   s0,0x20;   test for blanking
-    jump z,inblank
-    jump notblank
-inblank:
-    fetch s1,0
-    test s1,0x20
-    jump z,notblank
-    store s0,0  ; stores last LVBL
-    call ISR ; do blank procedure
-    jump BEGIN
-notblank:
-    store s0,0
+    output s0,0x40  ; watchdog
     jump BEGIN
 
 ISR:
