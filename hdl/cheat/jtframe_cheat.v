@@ -47,6 +47,10 @@ module jtframe_cheat #(parameter AW=22)(
     input  [ 31:0]  flags,
     output reg      led,
 
+    // Communication with game module
+    output reg [7:0] st_addr,
+    input      [7:0] st_dout,
+
     // Video RAM
     output reg [7:0] vram_addr,
     output reg [7:0] vram_dout,
@@ -129,6 +133,10 @@ always @(posedge clk) begin
     if( (pwr|kwr) && paddr<=5 ) begin
         ports[ paddr[2:0] ] <= pout;
     end
+    // Game status
+    if( (pwr|kwr) && paddr==8'hc ) begin
+        st_addr <= pout;
+    end
     // SDRAM
     if( ba0_dst && owner ) begin
         {ports[7], ports[6]} <= data_read;
@@ -168,8 +176,12 @@ always @(posedge clk) begin
             endcase
         end else if( paddr[7] ) begin
             pin <= { owner, pico_busy, LVBL, 5'b0 }; // 8'hc0 means that the SDRAM data is ready
-        end else if( paddr[3] ) begin // VRAM
-            pin <= vram_din;
+        end else begin // VRAM or status
+            case( paddr[3:0] )
+                9 : pin <= vram_din;
+                13: pin <= st_dout;
+                default: pin <= 0;
+            endcase
         end
     end
 end

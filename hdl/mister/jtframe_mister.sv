@@ -169,7 +169,9 @@ module jtframe_mister #(parameter
     // Debug
     output            LED,
     output    [ 3:0]  gfx_en,
-    output    [ 7:0]  debug_bus
+    output    [ 7:0]  debug_bus,
+    output    [ 7:0]  st_addr,
+    input     [ 7:0]  st_dout
 );
 
 `ifndef JTFRAME_MR_FASTIO
@@ -444,6 +446,8 @@ jtframe_board #(
     .cheat_prog     ( ioctl_cheat     ),
     .ioctl_wr       ( hps_wr          ),
     .ioctl_data     ( ioctl_dout      ),
+    .st_addr        ( st_addr         ),
+    .st_dout        ( st_dout         ),
     // Base video
     .osd_rotate     ( rotate          ),
     .game_r         ( game_r          ),

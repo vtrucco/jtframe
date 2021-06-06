@@ -303,6 +303,8 @@ assign ba2_addr   = 22'd0;
 assign ba3_addr   = 22'd0;
 `endif
 
+wire [7:0] st_addr, st_dout;
+
 `ifndef COLORW
 `define COLORW 4
 `endif
@@ -490,6 +492,9 @@ u_frame(
     .scan2x_cen     ( CE_PIXEL       ),
     .scan2x_de      ( VGA_DE         ),
     .scan2x_sl      ( VGA_SL         ),
+    // status
+    .st_addr        ( st_addr        ),
+    .st_dout        ( st_dout        ),
     // Debug
     .gfx_en         ( gfx_en         ),
     .debug_bus      ( debug_bus      )
@@ -639,6 +644,10 @@ end
     // unconnected
     .sample       ( sample           ),
 
+    `ifdef JTFRAME_STATUS
+        .st_addr  ( st_addr          ),
+        .st_dout  ( st_dout          ),
+    `endif
     .gfx_en       ( gfx_en           )
     `ifdef JTFRAME_DEBUG
     ,.debug_bus   ( debug_bus        )

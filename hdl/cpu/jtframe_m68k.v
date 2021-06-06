@@ -1,4 +1,4 @@
-/*  This file is part of JTFRAME.
+ /*  This file is part of JTFRAME.
     JTFRAME program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -19,7 +19,10 @@
 /*
         Logic cells  | Registers | Memory bits | M9Ks | Compilation time (jtcore shinobi -q -p)
 fx68k    5174        |  1388     | 39584       |  6   | 3m00s
+fx68k*   3078        |   881     | 40608       |  8   | 3m30s
 j68      9020        |  1870     |  7344       |  2   | 5m00s
+
+* using Gyurco's BRAM option
 
 */
 

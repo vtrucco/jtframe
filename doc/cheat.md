@@ -58,6 +58,14 @@ Port (hex) | I/O    |  Usage
 9          | I/O    | VRAM reads or writes
 A          | O      | bit 0 enables the display
 
+Communication with game module
+
+Port (hex) | I/O    |  Usage
+-----------|--------|-------------------------
+C          | O      | Status address (JTFRAME_STATUS required)
+D          | I      | Status data from game
+
+
 The peripheral status bits are read from port 0x80:
 
 Bit   |  Meaning

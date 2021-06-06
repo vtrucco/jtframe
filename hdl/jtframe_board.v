@@ -143,6 +143,8 @@ module jtframe_board #(parameter
 
     // Cheat
     input      [31:0] cheat,
+    output     [ 7:0] st_addr,
+    input      [ 7:0] st_dout,
 
     // GFX enable
     output     [3:0]  gfx_en,
@@ -411,6 +413,11 @@ wire [SDRAMW-1:0] bax_addr;
 
         .flags      ( cheat     ),
         .led        ( cheat_led ),
+
+        // Game module
+        .st_addr    ( st_addr   ),
+        .st_dout    ( st_dout   ),
+
         // Video
         .vram_addr  ( vram_addr ),
         .vram_din   ( vram_din  ),
