@@ -52,11 +52,11 @@ module jtframe_cheat #(parameter AW=22)(
     input      [7:0] st_dout,
 
     // Video RAM
-    output reg [7:0] vram_addr,
+    output reg [9:0] vram_addr,
     output reg [7:0] vram_dout,
     input      [7:0] vram_din,
     output reg       vram_we,
-    output reg       vram_show,
+    output reg [1:0] vram_ctrl,
 
     // PBlaze Program
     input           prog_en,      // resets the address counter
@@ -113,17 +113,19 @@ assign blaze_sdram_addr  = { ports[2], ports[1], ports[0] };
 assign blaze_sdram_din   = { ports[4], ports[3] };
 assign blaze_sdram_din_m = ports[5][1:0];
 
+// VRAM
 always @(posedge clk) begin
     if( rst ) begin
         vram_we    <= 0;
-        vram_show  <= 0;
+        vram_ctrl  <= 0;
     end else begin
         vram_we <= 0;
         if( (pwr|kwr) && paddr[7:3]==5'b0000_1 ) begin
             case( paddr[2:0] )
-                0: vram_addr <= pout;
-                1: { vram_we, vram_dout } <= { 1'b1, 1'b1, pout[6:0] };
-                2: vram_show <= pout[0];
+                0: vram_addr[4:0] <= pout[4:0];
+                1: vram_addr[9:5] <= pout[4:0];
+                2: { vram_we, vram_dout } <= { 1'b1, 1'b1, pout[6:0] };
+                3: vram_ctrl <= pout[1:0];
             endcase
         end
     end
@@ -178,7 +180,7 @@ always @(posedge clk) begin
             pin <= { owner, pico_busy, LVBL, 5'b0 }; // 8'hc0 means that the SDRAM data is ready
         end else begin // VRAM or status
             case( paddr[3:0] )
-                9 : pin <= vram_din;
+                10: pin <= vram_din;
                 13: pin <= st_dout;
                 default: pin <= 0;
             endcase

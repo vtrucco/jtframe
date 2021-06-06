@@ -39,14 +39,14 @@ module jtframe_credits #(
 
     // Optional VRAM control
     input         [7:0] vram_din,
-    input         [7:0] vram_addr,
+    input         [9:0] vram_addr,
     input               vram_we,
     output        [7:0] vram_dout,
 
     // control
     input               enable, // shows the screen and resets the scroll counter
     input               toggle, // disables the screen. Only has an effect if enable is high
-    input               vram_mode,
+    input [1:0]         vram_ctrl,
     input               fast_scroll,
     input [1:0]         rotate,
 
@@ -85,6 +85,7 @@ wire [9:0]        font_addr = {scan_data[6:0],
 wire              visible = vrender < MAXVISIBLE;
 reg               last_toggle, last_enable;
 reg               show, hide;
+wire              vram_mode = vram_ctrl[0];
 
 assign hscan = hn - HOFFSET;
 
@@ -93,7 +94,7 @@ jtframe_dual_ram #(.dw(9), .aw(MSGW),.synfile("msg.bin")) u_msg(
     .clk1   ( clk       ),
     // Port 0: optional write access
     .data0  ( {1'b1, vram_din }             ),
-    .addr0  ( { {MSGW-8{1'b0}}, vram_addr } ),
+    .addr0  ( { {MSGW-10{1'b0}}, vram_addr } ),
     .we0    ( vram_we   ),
     .q0     ( vram_dout ),
     // Port 1: video dump
@@ -422,7 +423,7 @@ always @(posedge clk) if(pxl_cen) begin
         rgb_out <= rgb_in;
     else begin
         if( (!pxl[0] && (!obj_ok || vram_mode)) || !visible ) begin
-            rgb_out <= vram_mode ? rgb_in : dim;
+            rgb_out <= vram_ctrl==2'b11 ? rgb_in : dim;
         end else begin
             if( pxl[0] || tate ) begin // CHAR, OBJ disabled for TATE
                 case( pxl[2:1] )

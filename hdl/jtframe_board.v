@@ -379,8 +379,10 @@ wire [SDRAMW-1:0] bax_addr;
 `ifdef JTFRAME_CHEAT
     wire       cheat_rd, cheat_ack, cheat_dst, cheat_rdy, cheat_wr;
     // jtframe_credits video control
-    wire [7:0] vram_dout, vram_din, vram_addr;
-    wire       vram_we, vram_show;
+    wire [7:0] vram_dout, vram_din;
+    wire [9:0] vram_addr;
+    wire       vram_we;
+    wire [1:0] vram_ctrl;
 
     jtframe_cheat #(
         .AW         (  SDRAMW   )
@@ -423,7 +425,7 @@ wire [SDRAMW-1:0] bax_addr;
         .vram_din   ( vram_din  ),
         .vram_dout  ( vram_dout ),
         .vram_we    ( vram_we   ),
-        .vram_show  ( vram_show ),
+        .vram_ctrl  ( vram_ctrl ),
 
         // Program
         .prog_en    ( cheat_prog),
@@ -588,14 +590,14 @@ wire              pre2x_LHBL, pre2x_LVBL;
             .vram_dout  ( vram_din   ),
             .vram_addr  ( vram_addr  ),
             .vram_we    ( vram_we    ),
-            .vram_mode  ( vram_show  ),
-            .enable     ( vram_show  | ~dip_pause ),
+            .vram_ctrl  ( vram_ctrl  ),
+            .enable     ( vram_ctrl[0] | ~dip_pause ),
         `else
             .vram_din   ( 8'h0  ),
             .vram_dout  (       ),
             .vram_addr  ( 8'h0  ),
             .vram_we    ( 1'b0  ),
-            .scroll_en  ( 1'b1  ),
+            .vram_ctrl  ( 2'b0  ),
             `ifdef JTFRAME_CREDITS_AON
                 .enable ( 1'b1          ),
             `else
