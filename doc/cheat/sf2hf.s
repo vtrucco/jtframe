@@ -7,7 +7,7 @@
 ; SA = frame counter
 ; SB = LED
 
-    ; enable interrupt
+    enable interrupt
     load sa,0   ; SA = frame counter, modulo 60
     load sb,0
 BEGIN:
@@ -98,8 +98,7 @@ CLOSE_FRAME:
     jump nz,.else
     load sa,0
 .else:
-    return
-    ;returni ENABLE
+    returni ENABLE
 
     ; SDRAM address in s2-s0
     ; SDRAM data out in s4-s3
