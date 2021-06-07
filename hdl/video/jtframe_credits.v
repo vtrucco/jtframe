@@ -46,7 +46,7 @@ module jtframe_credits #(
     // control
     input               enable, // shows the screen and resets the scroll counter
     input               toggle, // disables the screen. Only has an effect if enable is high
-    input [1:0]         vram_ctrl,
+    input [2:0]         vram_ctrl,
     input               fast_scroll,
     input [1:0]         rotate,
 
@@ -423,7 +423,11 @@ always @(posedge clk) if(pxl_cen) begin
         rgb_out <= rgb_in;
     else begin
         if( (!pxl[0] && (!obj_ok || vram_mode)) || !visible ) begin
-            rgb_out <= vram_ctrl==2'b11 ? rgb_in : dim;
+            if( vram_ctrl[0] ) begin
+                rgb_out <= (vdump[7] ? vram_ctrl[2] : vram_ctrl[1]) ? dim : rgb_in;
+            end else begin
+                rgb_out <= dim;
+            end
         end else begin
             if( pxl[0] || tate ) begin // CHAR, OBJ disabled for TATE
                 case( pxl[2:1] )

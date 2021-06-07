@@ -57,7 +57,7 @@ module jtframe_cheat #(parameter AW=22)(
     output reg [7:0] vram_dout,
     input      [7:0] vram_din,
     output reg       vram_we,
-    output reg [1:0] vram_ctrl,
+    output reg [2:0] vram_ctrl,
 
     // PBlaze Program
     input           prog_en,      // resets the address counter
@@ -126,7 +126,7 @@ always @(posedge clk) begin
                 0: vram_addr[4:0] <= pout[4:0];
                 1: vram_addr[9:5] <= pout[4:0];
                 2: { vram_we, vram_dout } <= { 1'b1, 1'b1, pout[6:0] };
-                3: vram_ctrl <= pout[1:0];
+                3: vram_ctrl <= pout[2:0];
             endcase
         end
     end

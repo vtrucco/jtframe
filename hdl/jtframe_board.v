@@ -382,7 +382,7 @@ wire [SDRAMW-1:0] bax_addr;
     wire [7:0] vram_dout, vram_din;
     wire [9:0] vram_addr;
     wire       vram_we;
-    wire [1:0] vram_ctrl;
+    wire [2:0] vram_ctrl;
 
     jtframe_cheat #(
         .AW         (  SDRAMW   )
