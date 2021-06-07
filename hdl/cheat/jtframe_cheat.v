@@ -50,6 +50,7 @@ module jtframe_cheat #(parameter AW=22)(
     // Communication with game module
     output reg [7:0] st_addr,
     input      [7:0] st_dout,
+    input      [7:0] debug_bus,
 
     // Video RAM
     output reg [9:0] vram_addr,
@@ -182,6 +183,7 @@ always @(posedge clk) begin
             case( paddr[3:0] )
                 10: pin <= vram_din;
                 13: pin <= st_dout;
+                15: pin <= debug_bus;
                 default: pin <= 0;
             endcase
         end

@@ -419,6 +419,7 @@ wire [SDRAMW-1:0] bax_addr;
         // Game module
         .st_addr    ( st_addr   ),
         .st_dout    ( st_dout   ),
+        .debug_bus  ( debug_bus ),
 
         // Video
         .vram_addr  ( vram_addr ),

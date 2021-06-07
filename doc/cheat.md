@@ -65,7 +65,7 @@ Port (hex) | I/O    |  Usage
 -----------|--------|-------------------------
 C          | O      | Status address (JTFRAME_STATUS required)
 D          | I      | Status data from game
-
+F          | I      | Debug bus
 
 The peripheral status bits are read from port 0x80:
 
@@ -83,7 +83,6 @@ The following features will be added to the cheat subsystem
 * Keyboard and joystick manipulation, both input and output
 * Interrupt at vertical blank -currently a bug in the softcore prevents it
 * Data dump via high-score/NVRAM interfaces
-* Access to core state bus (memory mapped registers, etc.)
 
 ## Resources
 
