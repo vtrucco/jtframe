@@ -44,7 +44,8 @@ module jtframe_cheat #(parameter AW=22)(
     input      [ 15:0]  data_read,
 
     // control
-    input  [ 31:0]  flags,
+    input    [31:0] flags,
+    input    [ 7:0] joy0,
     output reg      led,
 
     // Communication with game module
@@ -168,25 +169,23 @@ always @(posedge clk) begin
     if(prst) begin
         pin <= 0;
     end else if(prd) begin
-        if( paddr < 8 )
-            pin <= ports[ paddr[2:0] ];
-        else if( paddr[7:4]==1 ) begin
-            case( paddr[1:0] )
-                0: pin <= flags[ 7: 0];
-                1: pin <= flags[15: 8];
-                2: pin <= flags[23:16];
-                3: pin <= flags[31:24];
-            endcase
-        end else if( paddr[7] ) begin
-            pin <= { owner, pico_busy, LVBL, 5'b0 }; // 8'hc0 means that the SDRAM data is ready
-        end else begin // VRAM or status
-            case( paddr[3:0] )
-                10: pin <= vram_din;
-                13: pin <= st_dout;
-                15: pin <= debug_bus;
-                default: pin <= 0;
-            endcase
-        end
+        casez( paddr[7:0] )
+            0,1,2,3,4,5,6,7:
+                   pin <= ports[ paddr[2:0] ];
+            // VRAM or status
+            8'h0a: pin <= vram_din;
+            8'h0d: pin <= st_dout;
+            8'h0f: pin <= debug_bus;
+            // Flags
+            8'h10: pin <= flags[ 7: 0];
+            8'h11: pin <= flags[15: 8];
+            8'h12: pin <= flags[23:16];
+            8'h13: pin <= flags[31:24];
+            // Joystick
+            8'h18: pin <= joy0;
+            8'h80: pin <= { owner, pico_busy, LVBL, 5'b0 }; // 8'hc0 means that the SDRAM data is ready
+            default: pin <= 0;
+        endcase
     end
 end
 

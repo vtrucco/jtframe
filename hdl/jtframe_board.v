@@ -414,6 +414,7 @@ wire [SDRAMW-1:0] bax_addr;
         .data_read  ( sdram_dout),
 
         .flags      ( cheat     ),
+        .joy0       ( game_joystick1[7:0] ),
         .led        ( cheat_led ),
 
         // Game module
