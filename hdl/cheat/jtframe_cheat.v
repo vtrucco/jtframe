@@ -73,6 +73,8 @@ localparam CHEATW=10;  // 12=>9kB (8 BRAM)
                        // 10=>2.25kB (2 BRAM), 9=>1.12kB (1 BRAM)
 
 localparam [31:0] BUILDTIME = `JTFRAME_TIMESTAMP; // Build time
+//localparam [31:0] BUILDHASH = `JTFRAME_BUILDHASH;
+//localparam [31:0] UNLOCKKEY = `JTFRAME_UNLOCKKEY;
 
 wire clk = clk_rom;
 
@@ -93,6 +95,9 @@ wire        iack;
 reg  [ 5:0] frame_cnt=0;
 reg  [23:0] sec_cnt=0;   // count up to 194 days
 wire [31:0] cur_time = timestamp + {8'd0, sec_cnt};
+
+// locked features
+reg locked=1;
 
 reg  [3:0]  watchdog;
 reg         prst=0;

@@ -34,6 +34,29 @@ reg         word_we;
 reg  [ 3:0] word_cnt;
 reg  [AW-1:0] prog_addr;
 
+
+`ifdef JTFRAME_CHEAT_SCRAMBLE
+    reg  [7:0] new_data;
+    reg  [7:0] mask;
+    localparam [15:0] SCRAMBLE = `JTFRAME_CHEAT_SCRAMBLE;
+
+    always @(*) begin
+        new_data = prog_data;
+        mask = iaddr[7:0] ^ SCRAMBLE[7:0];
+        if( mask[0] ) new_data[1:0] = {new_data[0], new_data[1]};
+        if( mask[1] ) new_data[3:2] = {new_data[2], new_data[3]};
+        if( mask[2] ) new_data[5:4] = {new_data[4], new_data[5]};
+        if( mask[3] ) new_data[7:6] = {new_data[6], new_data[7]};
+        new_data = new_data ^ SCRAMBLE[15:8];
+        if( mask[4] ) new_data[1:0] = {new_data[0], new_data[1]};
+        if( mask[5] ) new_data[3:2] = {new_data[2], new_data[3]};
+        if( mask[6] ) new_data[5:4] = {new_data[4], new_data[5]};
+        if( mask[7] ) new_data[7:6] = {new_data[6], new_data[7]};
+    end
+`else
+    wire [7:0] new_data = prog_data;
+`endif
+
 always @(posedge clk) begin
     last_en <= prog_en;
     if( prog_en & ~last_en ) begin
@@ -43,24 +66,24 @@ always @(posedge clk) begin
         prog_word <= 0;
     end else begin
         if( prog_wr & prog_en ) begin
-            prog_fifo <= { prog_data, prog_fifo[15:8] };
+            prog_fifo <= { new_data, prog_fifo[15:8] };
             word_cnt  <= word_cnt[3] ? 4'd0 : word_cnt + 4'd1;
             case( word_cnt )
                 2: begin
                     word_we   <= 1;
-                    prog_word <= { prog_data[1:0], prog_fifo };
+                    prog_word <= { new_data[1:0], prog_fifo };
                 end
                 4: begin
                     word_we   <= 1;
-                    prog_word <= { prog_data[3:0], prog_fifo[15:2] };
+                    prog_word <= { new_data[3:0], prog_fifo[15:2] };
                 end
                 6: begin
                     word_we   <= 1;
-                    prog_word <= { prog_data[5:0], prog_fifo[15:4] };
+                    prog_word <= { new_data[5:0], prog_fifo[15:4] };
                 end
                 8: begin
                     word_we   <= 1;
-                    prog_word <= { prog_data[7:0], prog_fifo[15:6] };
+                    prog_word <= { new_data[7:0], prog_fifo[15:6] };
                 end
                 default: word_we <= 0;
             endcase

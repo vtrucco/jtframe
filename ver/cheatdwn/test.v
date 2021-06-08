@@ -59,8 +59,13 @@ jtframe_cheat_rom uut(
 );
 
 initial begin
+`ifndef IVERILOG
     $shm_open("test.shm");
     $shm_probe(test,"AS");
+`else
+    $dumpfile("test.lxt");
+    $dumpvars;
+`endif
 end
 
 endmodule

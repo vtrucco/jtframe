@@ -318,6 +318,7 @@ jtframe_board #(
     .cheat_prog ( ioctl_cheat   ),
     .ioctl_wr   ( ioctl_wr      ),
     .ioctl_data ( ioctl_data    ),
+    .timestamp  ( 32'd0         ),
 
     // Base video
     .osd_rotate     ( rotate          ),
