@@ -50,6 +50,7 @@ module jtframe_cheat #(parameter AW=22)(
     input    [31:0] timestamp,
     input           pause_in,
     output          pause_out,
+    output          lock,
 
     // Communication with game module
     output reg [7:0] st_addr,
@@ -74,8 +75,12 @@ localparam CHEATW=10;  // 12=>9kB (8 BRAM)
                        // 10=>2.25kB (2 BRAM), 9=>1.12kB (1 BRAM)
 
 localparam [31:0] BUILDTIME = `JTFRAME_TIMESTAMP; // Build time
+`ifdef JTFRAME_UNLOCKKEY
+    localparam [31:0] UNLOCKKEY = `JTFRAME_UNLOCKKEY;
+`else
+    localparam [31:0] UNLOCKKEY = 0;
+`endif
 //localparam [31:0] BUILDHASH = `JTFRAME_BUILDHASH;
-//localparam [31:0] UNLOCKKEY = `JTFRAME_UNLOCKKEY;
 
 wire clk = clk_rom;
 
@@ -97,8 +102,6 @@ reg  [ 5:0] frame_cnt=0;
 reg  [23:0] sec_cnt=0;   // count up to 194 days
 wire [31:0] cur_time = timestamp + {8'd0, sec_cnt};
 
-// locked features
-reg locked=1;
 
 reg  [3:0]  watchdog;
 reg         prst=0;
@@ -108,6 +111,44 @@ assign pause_out = pause_in;
 always @(posedge clk) begin
     prst <= watchdog[3] | rst;
 end
+
+`ifdef JTFRAME_EXPIRATION
+    localparam [31:0] EXPIRATION = `JTFRAME_EXPIRATION;
+    reg expired;
+
+    always @(posedge clk) expired = cur_time > EXPIRATION;
+`else
+    wire expired=0;
+`endif
+
+`ifdef JTFRAME_UNLOCKKEY
+// locked features
+reg [7:0] lock_key[0:3];
+reg locked;
+
+always @(posedge clk) begin
+    if( prst ) begin
+        lock_key[0] <= 0;
+        lock_key[1] <= 0;
+        lock_key[2] <= 0;
+        lock_key[3] <= 0;
+        locked <= 1;
+    end else begin
+        if( pwr ) begin
+            case( paddr )
+                8'h30: lock_key[0] <= pout;
+                8'h31: lock_key[1] <= pout;
+                8'h32: lock_key[2] <= pout;
+                8'h33: lock_key[3] <= pout;
+            endcase
+        end
+        locked <= UNLOCKKEY != { lock_key[3], lock_key[2], lock_key[1], lock_key[0] } || expired;
+    end
+end
+assign lock = locked;
+`else
+assign lock = 0;
+`endif
 
 always @(posedge clk) begin
     LVBL_last <= LVBL;
@@ -191,7 +232,7 @@ always @(posedge clk) begin
     if( prst )
         led <= 0;
     else if( (pwr|kwr) && paddr==6 )
-        led <= pout[0];
+        led <= pout[1:0];
 end
 
 reg [7:0] timemux;
@@ -234,7 +275,7 @@ always @(posedge clk) begin
             // Joystick
             8'h18: pin <= joy0;
             8'h2?: pin <= timemux; // Time
-            8'h80: pin <= { owner, pico_busy, LVBL, 5'b0 }; // 8'hc0 means that the SDRAM data is ready
+            8'h80: pin <= { owner, pico_busy, LVBL, 3'b0, expired, locked }; // 8'hc0 means that the SDRAM data is ready
             default: pin <= 0;
         endcase
     end

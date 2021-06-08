@@ -47,6 +47,7 @@ Port (hex) | I/O    |  Usage
 6          | O      | bit 0 = board LED
 10-13      | I      | cheat flags (meaning defined in MRA file)
 18         | I      | 1P joystick
+30-33      | O      | Lock key
 40         | O      | Resets the watchdog
 80         | O      | Starts SDRAM read
 80         | I      | Reads peripheral status (bits 7:6)
@@ -85,7 +86,9 @@ Bit   |  Meaning
 7     | Bus ownership, when high the Picoblaze is controlling the SDRAM
 6     | high if a PicoBlaze started SDRAM transaction has not finished
 5     | Low during vertical blanking
-4:0   | Reserved
+4:2   | Reserved
+1     | Beta period has expired
+0     | System is locked
 
 ## Future Features
 

@@ -49,6 +49,7 @@ module jtframe_inputs(
     output reg [3:0]  game_coin,
     output reg [3:0]  game_start,
     output reg        game_service,
+    input             lock, // disable joystick inputs
 
     // For simulation only
     input             downloading,
@@ -173,6 +174,14 @@ always @(posedge clk) begin
         game_joy2 <= apply_rotation(joy2_sync | key_joy2, rot_control, ~dip_flip );
         game_joy3 <= apply_rotation(joy3_sync | key_joy3, rot_control, ~dip_flip );
         game_joy4 <= apply_rotation(joy4_sync           , rot_control, ~dip_flip );
+
+        // Disable inputs for locked cores
+        if( lock ) begin
+            game_joy1 <= {10{ACTIVE_LOW[0]}};
+            game_joy2 <= {10{ACTIVE_LOW[0]}};
+            game_joy3 <= {10{ACTIVE_LOW[0]}};
+            game_joy4 <= {10{ACTIVE_LOW[0]}};
+        end
 
         soft_rst <= key_reset && !last_reset;
 

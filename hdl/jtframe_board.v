@@ -221,6 +221,7 @@ wire   [9:0] key_joy1, key_joy2, key_joy3;
 wire   [3:0] key_start, key_coin;
 wire   [3:0] key_gfx;
 wire         key_service;
+wire         lock;
 
 jtframe_reset u_reset(
     .clk_sys    ( clk_sys       ),
@@ -342,6 +343,7 @@ jtframe_inputs #(
     .game_coin      ( game_coin       ),
     .game_start     ( game_start      ),
     .game_service   ( game_service    ),
+    .lock           ( lock            ),
 
     // Simulation helpers
     .game_pause     ( game_pause      ),
@@ -417,6 +419,7 @@ wire [SDRAMW-1:0] bax_addr;
         .flags      ( cheat     ),
         .joy0       ( game_joystick1[7:0] ),
         .led        ( cheat_led ),
+        .lock       ( lock      ),
         .timestamp  ( timestamp ),
 
         .pause_in   ( pre_pause ),
