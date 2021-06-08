@@ -47,6 +47,9 @@ module jtframe_cheat #(parameter AW=22)(
     input    [31:0] flags,
     input    [ 7:0] joy0,
     output reg      led,
+    input    [31:0] timestamp,
+    input           pause_in,
+    output          pause_out,
 
     // Communication with game module
     output reg [7:0] st_addr,
@@ -69,6 +72,8 @@ module jtframe_cheat #(parameter AW=22)(
 localparam CHEATW=10;  // 12=>9kB (8 BRAM)
                        // 10=>2.25kB (2 BRAM), 9=>1.12kB (1 BRAM)
 
+localparam [31:0] BUILDTIME = `JTFRAME_TIMESTAMP; // Build time
+
 wire clk = clk_rom;
 
 // Instruction ROM
@@ -84,20 +89,38 @@ wire        pwr, kwr, prd;
 reg         irq=0, LVBL_last;
 wire        iack;
 
+// uptime
+reg  [ 5:0] frame_cnt=0;
+reg  [23:0] sec_cnt=0;   // count up to 194 days
+wire [31:0] cur_time = timestamp + {8'd0, sec_cnt};
+
 reg  [3:0]  watchdog;
 reg         prst=0;
+
+assign pause_out = pause_in;
 
 always @(posedge clk) begin
     prst <= watchdog[3] | rst;
 end
 
 always @(posedge clk) begin
+    LVBL_last <= LVBL;
+    if( !LVBL && LVBL_last ) begin
+        if( frame_cnt==59 ) begin
+            frame_cnt <= 0;
+            sec_cnt   <= sec_cnt + 1'd1;
+        end else begin
+            frame_cnt <= frame_cnt+1;
+        end
+    end
+end
+
+always @(posedge clk) begin
     if( prst ) begin
         irq       <= 0;
-        LVBL_last <= 0;
     end else begin
-        LVBL_last <= LVBL;
-        if( !LVBL && LVBL_last ) irq <= 1;
+        if( !LVBL && LVBL_last )
+            irq <= 1;
         else if( iack ) irq <= 0;
     end
 end
@@ -165,6 +188,26 @@ always @(posedge clk) begin
         led <= pout[0];
 end
 
+reg [7:0] timemux;
+
+always @(*) begin
+    case( paddr[7:0] )
+        8'h20: timemux = timestamp[ 7: 0];
+        8'h21: timemux = timestamp[15: 8];
+        8'h22: timemux = timestamp[23:16];
+        8'h23: timemux = timestamp[31:24];
+        8'h24: timemux = BUILDTIME[ 7: 0];
+        8'h25: timemux = BUILDTIME[15: 8];
+        8'h26: timemux = BUILDTIME[23:16];
+        8'h27: timemux = BUILDTIME[31:24];
+        8'h28: timemux = cur_time[ 7: 0];
+        8'h29: timemux = cur_time[15: 8];
+        8'h2a: timemux = cur_time[23:16];
+        8'h2b: timemux = cur_time[31:24];
+        8'h2c: timemux = {2'd0, frame_cnt };
+    endcase
+end
+
 always @(posedge clk) begin
     if(prst) begin
         pin <= 0;
@@ -183,6 +226,7 @@ always @(posedge clk) begin
             8'h13: pin <= flags[31:24];
             // Joystick
             8'h18: pin <= joy0;
+            8'h2?: pin <= timemux; // Time
             8'h80: pin <= { owner, pico_busy, LVBL, 5'b0 }; // 8'hc0 means that the SDRAM data is ready
             default: pin <= 0;
         endcase

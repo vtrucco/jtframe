@@ -47,6 +47,10 @@ Port (hex) | I/O    |  Usage
 6          | O      | bit 0 = board LED
 10-13      | I      | cheat flags (meaning defined in MRA file)
 18         | I      | 1P joystick
+20-23      | I      | timestamp
+24-27      | I      | build timestamp
+28-2B      | I      | current timestamp
+29         | I      | frame counter
 40         | O      | Resets the watchdog
 80         | O      | Starts SDRAM read
 80         | I      | Reads peripheral status (bits 7:6)

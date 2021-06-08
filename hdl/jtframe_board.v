@@ -141,11 +141,11 @@ module jtframe_board #(parameter
     output            scan2x_de,
     output     [1:0]  scan2x_sl,
 
-    // Cheat
+    // Cheat Engine
     input      [31:0] cheat,
     output     [ 7:0] st_addr,
     input      [ 7:0] st_dout,
-
+    input      [31:0] timestamp,
     // GFX enable
     output     [3:0]  gfx_en,
     output     [7:0]  debug_bus
@@ -214,7 +214,7 @@ wire         debug_plus, debug_minus, key_shift;
 
 wire         sdram_init, key_reset, key_pause, key_test, rot_control;
 wire         game_pause, soft_rst;
-wire         cheat_led;
+wire         cheat_led, pre_pause;
 
 wire   [9:0] key_joy1, key_joy2, key_joy3;
 wire   [3:0] key_start, key_coin;
@@ -365,7 +365,7 @@ jtframe_dip u_dip(
     .osd_pause  ( osd_pause     ),
     .key_test   ( key_test      ),
     .dip_test   ( dip_test      ),
-    .dip_pause  ( dip_pause     ),
+    .dip_pause  ( pre_pause     ),
     .dip_flip   ( dip_flip      ),
     .dip_fxlevel( dip_fxlevel   )
 );
@@ -416,6 +416,10 @@ wire [SDRAMW-1:0] bax_addr;
         .flags      ( cheat     ),
         .joy0       ( game_joystick1[7:0] ),
         .led        ( cheat_led ),
+        .timestamp  ( timestamp ),
+
+        .pause_in   ( pre_pause ),
+        .pause_out  ( dip_pause ),
 
         // Game module
         .st_addr    ( st_addr   ),
@@ -451,6 +455,7 @@ wire [SDRAMW-1:0] bax_addr;
     assign ba_rdy    = bax_rdy;
     assign ba_dst    = bax_dst;
     assign cheat_led = 0;
+    assign dip_pause = pre_pause;
 `endif
 
 // support for 48MHz

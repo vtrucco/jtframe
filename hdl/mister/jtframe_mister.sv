@@ -185,7 +185,7 @@ module jtframe_mister #(parameter
 localparam JTFRAME_MR_FASTIO=`JTFRAME_MR_FASTIO;
 
 wire [21:0] gamma_bus;
-
+wire [31:0] timestamp;
 wire [ 7:0] ioctl_index;
 
 wire [ 3:0] hoffset, voffset;
@@ -329,7 +329,7 @@ hps_io #( .STRLEN(0), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_hps_io
     // Unused:
     .ps2_key         (                ),
     .RTC             (                ),
-    .TIMESTAMP       (                ),
+    .TIMESTAMP       ( timestamp      ),
     .ps2_mouse       (                ),
     .ps2_mouse_ext   (                ),
     .ioctl_file_ext  (                )
@@ -378,6 +378,7 @@ jtframe_board #(
     .dip_pause      ( dip_pause       ),
     .dip_flip       ( dip_flip        ),
     .dip_fxlevel    ( dip_fxlevel     ),
+    .timestamp      ( timestamp       ),
     // screen
     .gamma_bus      ( gamma_bus       ),
     .direct_video   ( direct_video    ),
