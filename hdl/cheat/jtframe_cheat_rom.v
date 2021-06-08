@@ -97,7 +97,14 @@ always @(posedge clk) begin
     end
 end
 
-jtframe_prom #(.dw(18),.aw(AW),.simhex("cheat.hex")) u_irom(
+jtframe_prom #(
+    .dw(18),
+    .aw(AW),
+    `ifdef JTFRAME_CHEAT_FIRMWARE
+        .synhex("cheat.hex"),
+    `endif
+    .simhex("cheat.hex")
+) u_irom(
     .clk    ( clk       ),
     .cen    ( 1'b1      ),
     .data   ( prog_word ),

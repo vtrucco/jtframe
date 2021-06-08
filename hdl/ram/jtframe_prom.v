@@ -26,6 +26,7 @@ module jtframe_prom #(parameter
     aw      = 10,
     simfile = "",
     simhex  = "",
+    synhex  = "",
     offset  = 0,
     ASYNC   = 0     // makes the read asynchronous (will not map as BRAM)
 )(
@@ -97,6 +98,13 @@ end
     end
 `endif
 /* verilator lint_on WIDTH */
+`else
+    // Not simulation
+    initial begin
+        if( synhex != "" ) begin
+            $readmemh(synhex, mem);
+        end
+    end
 `endif
 
 generate
