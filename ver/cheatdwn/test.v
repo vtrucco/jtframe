@@ -55,6 +55,7 @@ jtframe_cheat_rom uut(
     // PBlaze Program
     .prog_en    ( prog_en   ),
     .prog_wr    ( prog_wr   ),
+    .prog_addr  ( prog_addr[7:0] ),
     .prog_data  ( prog_data )
 );
 

@@ -128,6 +128,7 @@ module jtframe_board #(parameter
     input             cheat_prog,
     input             ioctl_wr,
     input       [7:0] ioctl_data,
+    input       [7:0] ioctl_addr,
 
     // scan doubler
     input             scan2x_enb,
@@ -435,6 +436,7 @@ wire [SDRAMW-1:0] bax_addr;
 
         // Program
         .prog_en    ( cheat_prog),
+        .prog_addr  ( ioctl_addr[7:0] ),
         .prog_wr    ( ioctl_wr  ),
         .prog_data  ( ioctl_data)
     );

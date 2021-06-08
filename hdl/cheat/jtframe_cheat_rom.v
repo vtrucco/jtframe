@@ -23,6 +23,7 @@ module jtframe_cheat_rom #(parameter AW=10)(
     // PBlaze Program
     input           prog_en,      // resets the address counter
     input           prog_wr,      // strobe for new data
+    input  [7:0]    prog_addr,
     input  [7:0]    prog_data
 );
 
@@ -32,7 +33,7 @@ reg         last_en, prog_post;
 reg  [17:0] prog_word;
 reg         word_we;
 reg  [ 3:0] word_cnt;
-reg  [AW-1:0] prog_addr;
+reg  [AW-1:0] prom_addr;
 
 
 `ifdef JTFRAME_CHEAT_SCRAMBLE
@@ -40,9 +41,11 @@ reg  [AW-1:0] prog_addr;
     reg  [7:0] mask;
     localparam [15:0] SCRAMBLE = `JTFRAME_CHEAT_SCRAMBLE;
 
+    initial $display("scramble!");
+
     always @(*) begin
         new_data = prog_data;
-        mask = iaddr[7:0] ^ SCRAMBLE[7:0];
+        mask = prog_addr[7:0] ^ SCRAMBLE[7:0];
         if( mask[0] ) new_data[1:0] = {new_data[0], new_data[1]};
         if( mask[1] ) new_data[3:2] = {new_data[2], new_data[3]};
         if( mask[2] ) new_data[5:4] = {new_data[4], new_data[5]};
@@ -62,7 +65,7 @@ always @(posedge clk) begin
     if( prog_en & ~last_en ) begin
         word_cnt  <= 0;
         prog_post <= 0;
-        prog_addr <= 0;
+        prom_addr <= 0;
         prog_word <= 0;
     end else begin
         if( prog_wr & prog_en ) begin
@@ -90,7 +93,7 @@ always @(posedge clk) begin
         end else begin
             word_we <= 0;
         end
-        if( word_we ) prog_addr <= prog_addr+1'd1;
+        if( word_we ) prom_addr <= prom_addr+1'd1;
     end
 end
 
@@ -99,7 +102,7 @@ jtframe_prom #(.dw(18),.aw(AW),.simhex("cheat.hex")) u_irom(
     .cen    ( 1'b1      ),
     .data   ( prog_word ),
     .rd_addr( iaddr[AW-1:0] ),
-    .wr_addr( prog_addr ),
+    .wr_addr( prom_addr ),
     .we     ( word_we   ),
     .q      ( idata     )
 );

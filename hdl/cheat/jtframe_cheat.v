@@ -66,6 +66,7 @@ module jtframe_cheat #(parameter AW=22)(
     // PBlaze Program
     input           prog_en,      // resets the address counter
     input           prog_wr,      // strobe for new data
+    input  [7:0]    prog_addr,    // only 8 bits are needed regardless of actual length
     input  [7:0]    prog_data
 );
 
@@ -210,6 +211,7 @@ always @(*) begin
         8'h2a: timemux = cur_time[23:16];
         8'h2b: timemux = cur_time[31:24];
         8'h2c: timemux = {2'd0, frame_cnt };
+        default: timemux = 0;
     endcase
 end
 
@@ -296,6 +298,7 @@ jtframe_cheat_rom #(.AW(CHEATW)) u_rom(
     .iaddr      ( iaddr     ),
     .idata      ( idata     ),
     // PBlaze Program
+    .prog_addr  ( prog_addr ),
     .prog_en    ( prog_en   ),      // resets the address counter
     .prog_wr    ( prog_wr   ),      // strobe for new data
     .prog_data  ( prog_data )
