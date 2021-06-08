@@ -121,10 +121,12 @@ end
     wire expired=0;
 `endif
 
+reg locked=0;
+assign lock = locked;
+
 `ifdef JTFRAME_UNLOCKKEY
 // locked features
 reg [7:0] lock_key[0:3];
-reg locked;
 
 always @(posedge clk) begin
     if( prst ) begin
@@ -145,9 +147,6 @@ always @(posedge clk) begin
         locked <= UNLOCKKEY != { lock_key[3], lock_key[2], lock_key[1], lock_key[0] } || expired;
     end
 end
-assign lock = locked;
-`else
-assign lock = 0;
 `endif
 
 always @(posedge clk) begin
