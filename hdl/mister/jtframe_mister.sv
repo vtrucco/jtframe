@@ -26,6 +26,7 @@ module jtframe_mister #(parameter
 )(
     input           clk_sys,
     input           clk_rom,
+    input           clk_pico,
     input           pll_locked,
     // interface with microcontroller
     output [31:0]   status,
@@ -354,6 +355,7 @@ jtframe_board #(
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
+    .clk_pico       ( clk_pico        ),
 
     .core_mod       ( core_mod        ),
     // joystick

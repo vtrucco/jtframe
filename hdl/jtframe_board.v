@@ -36,6 +36,7 @@ module jtframe_board #(parameter
 
     input               clk_sys,
     input               clk_rom,
+    input               clk_pico,
 
     input        [ 6:0] core_mod,
     // LED
@@ -391,6 +392,7 @@ wire [SDRAMW-1:0] bax_addr;
         .AW         (  SDRAMW   )
     ) u_cheat(
         .rst        ( game_rst  ),
+        .clk_pico   ( clk_pico  ),
         .clk_rom    ( clk_rom   ),
 
         .LVBL       ( LVBL      ),

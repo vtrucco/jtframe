@@ -17,7 +17,8 @@
     Date: 1-6-2021 */
 
 module jtframe_cheat_rom #(parameter AW=10)(
-    input           clk,
+    input           clk_rom,
+    input           clk_pico,
     input  [AW-1:0] iaddr,
     output   [17:0] idata,
     // PBlaze Program
@@ -60,7 +61,7 @@ reg  [AW-1:0] prom_addr;
     wire [7:0] new_data = prog_data;
 `endif
 
-always @(posedge clk) begin
+always @(posedge clk_rom) begin
     last_en <= prog_en;
     if( prog_en & ~last_en ) begin
         word_cnt  <= 0;
@@ -96,7 +97,7 @@ always @(posedge clk) begin
         if( word_we ) prom_addr <= prom_addr+1'd1;
     end
 end
-
+/*
 jtframe_prom #(
     .dw(18),
     .aw(AW),
@@ -112,6 +113,29 @@ jtframe_prom #(
     .wr_addr( prom_addr ),
     .we     ( word_we   ),
     .q      ( idata     )
+);*/
+
+jtframe_dual_ram #(
+    .dw(18),
+    .aw(AW),
+    `ifdef JTFRAME_CHEAT_FIRMWARE
+        .synfile("cheat.hex"),
+    `endif
+    .simhexfile("cheat.hex")
+
+)(
+    .clk0   ( clk_rom   ),
+    .clk1   ( clk_pico  ),
+    // Port 0
+    .data0  ( prog_word ),
+    .addr0  ( prom_addr ),
+    .we0    ( word_we   ),
+    .q0     (           ),
+    // Port 1
+    .data1  (           ),
+    .addr1  ( iaddr[AW-1:0] ),
+    .we1    ( 1'b0      ),
+    .q1     ( idata     )
 );
 
 endmodule

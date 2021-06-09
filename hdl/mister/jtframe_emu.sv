@@ -160,6 +160,7 @@ wire [3:0] hoffset, voffset;
 ////////////////////   CLOCKS   ///////////////////
 
 wire clk_sys, clk_rom, clk96, clk96sh, clk48, clk48sh, clk24, clk6;
+wire clk_pico;
 wire pxl2_cen, pxl_cen;
 wire pll_locked;
 reg  pll_rst = 1'b0;
@@ -213,6 +214,8 @@ end
     assign clk_sys = clk48;
     `endif
 `endif
+
+assign clk_pico = clk48;
 
 `ifndef JTFRAME_180SHIFT
     `ifdef JTFRAME_SDRAM96
@@ -353,6 +356,7 @@ jtframe_mister #(
 u_frame(
     .clk_sys        ( clk_sys        ),
     .clk_rom        ( clk_rom        ),
+    .clk_pico       ( clk_pico       ),
     .pll_locked     ( pll_locked     ),
     // interface with microcontroller
     .status         ( status         ),

@@ -19,6 +19,7 @@
 module jtframe_cheat #(parameter AW=22)(
     input   rst,
     input   clk_rom,
+    input   clk_pico, // always 48 MHz
 
     input   LVBL,
 
@@ -82,7 +83,7 @@ localparam [31:0] BUILDTIME = `JTFRAME_TIMESTAMP; // Build time
 `endif
 //localparam [31:0] BUILDHASH = `JTFRAME_BUILDHASH;
 
-wire clk = clk_rom;
+wire clk = clk_pico;
 
 // Instruction ROM
 wire [11:0] iaddr;
@@ -172,7 +173,8 @@ always @(posedge clk) begin
 end
 
 // Ports
-reg  [ 7:0] ports[0:7];
+reg  [ 7:0] ports[0:5];
+reg  [ 7:0] sdram_lsb, sdram_msb;
 wire [23:0] blaze_sdram_addr;
 wire [15:0] blaze_sdram_din;
 wire [ 1:0] blaze_sdram_din_m;
@@ -209,17 +211,6 @@ always @(posedge clk) begin
     // Game status
     if( (pwr|kwr) && paddr==8'hc ) begin
         st_addr <= pout;
-    end
-    // SDRAM
-    if( ba0_dst && owner ) begin
-        {ports[7], ports[6]} <= data_read;
-    end
-    if( pwr && paddr[7] ) begin
-        sdram_req <= 1;
-        sdram_req_wr <= paddr[6];
-    end
-    if( ba0_ack && owner ) begin
-        sdram_req <= 0;
     end
     // watchdog
     if( !LVBL && LVBL_last ) begin
@@ -260,8 +251,10 @@ always @(posedge clk) begin
         pin <= 0;
     end else if(prd) begin
         casez( paddr[7:0] )
-            0,1,2,3,4,5,6,7:
+            0,1,2,3,4,5:
                    pin <= ports[ paddr[2:0] ];
+            6: pin <= sdram_lsb;
+            7: pin <= sdram_msb;
             // VRAM or status
             8'h0a: pin <= vram_din;
             8'h0d: pin <= st_dout;
@@ -280,9 +273,23 @@ always @(posedge clk) begin
     end
 end
 
-// SDRAM arbitrer
 
-always @(posedge clk) begin
+// SDRAM signals must use clk_rom
+always @(posedge clk_rom) begin
+    if( ba0_dst && owner ) begin
+        {sdram_msb, sdram_lsb} <= data_read;
+    end
+    if( pwr && paddr[7] ) begin
+        sdram_req <= 1;
+        sdram_req_wr <= paddr[6];
+    end
+    if( ba0_ack && owner ) begin
+        sdram_req <= 0;
+    end
+end
+
+// SDRAM arbitrer
+always @(posedge clk_rom) begin
     if( ba0_rdy ) begin
         sdram_busy <= 0;
         if( owner ) pico_busy <= 0;
@@ -334,7 +341,8 @@ pauloBlaze u_blaze(
 );
 
 jtframe_cheat_rom #(.AW(CHEATW)) u_rom(
-    .clk        ( clk       ),
+    .clk_rom    ( clk_rom   ),
+    .clk_pico   ( clk_pico  ),
     .iaddr      ( iaddr     ),
     .idata      ( idata     ),
     // PBlaze Program
