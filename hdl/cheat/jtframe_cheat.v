@@ -76,12 +76,6 @@ localparam CHEATW=10;  // 12=>9kB (8 BRAM)
                        // 10=>2.25kB (2 BRAM), 9=>1.12kB (1 BRAM)
 
 localparam [31:0] BUILDTIME = `JTFRAME_TIMESTAMP; // Build time
-`ifdef JTFRAME_UNLOCKKEY
-    localparam [31:0] UNLOCKKEY = `JTFRAME_UNLOCKKEY;
-`else
-    localparam [31:0] UNLOCKKEY = 0;
-`endif
-//localparam [31:0] BUILDHASH = `JTFRAME_BUILDHASH;
 
 wire clk = clk_pico;
 
@@ -127,6 +121,8 @@ end
 // locked features
 reg locked=1;
 reg [7:0] lock_key[0:3];
+
+localparam [31:0] UNLOCKKEY = `JTFRAME_UNLOCKKEY;
 
 always @(posedge clk) begin
     if( prst ) begin
