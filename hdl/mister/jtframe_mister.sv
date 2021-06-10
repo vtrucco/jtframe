@@ -471,6 +471,11 @@ jtframe_board #(
 wire rot_clk;
 
 `ifdef JTFRAME_VERTICAL
+    `ifdef JTFRAME_MR_ROTCCW
+    localparam ROTCCW=1;
+    `else
+    localparam ROTCCW=0;
+    `endif
     screen_rotate u_rotate(
         .CLK_VIDEO      ( scan2x_clk     ),
         .CE_PIXEL       ( scan2x_cen     ),
@@ -482,7 +487,7 @@ wire rot_clk;
         .VGA_VS         ( scan2x_vs      ),
         .VGA_DE         ( scan2x_de      ),
 
-        .rotate_ccw     ( 1'b0           ),
+        .rotate_ccw     ( ROTCCW         ),
         .no_rotate      ( ~rotate[0]     ),
 
         .FB_EN          ( FB_EN          ),
