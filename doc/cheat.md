@@ -66,8 +66,8 @@ Uses the credits VRAM to display information (JTFRAME_CREDITS required):
 
 Port (hex) | I/O    |  Usage
 -----------|--------|-------------------------
-8          | O      | VRAM row address (bits 4:0)
-9          | O      | VRAM column address (bits 4:0)
+8          | O      | VRAM column address (bits 4:0)
+9          | O      | VRAM row address (bits 4:0)
 A          | I/O    | VRAM reads or writes
 B          | O      | bit 0 enables the display
 
