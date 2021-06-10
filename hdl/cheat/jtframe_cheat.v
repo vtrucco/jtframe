@@ -122,11 +122,10 @@ end
     wire expired=0;
 `endif
 
-reg locked=0;
-assign lock = locked;
 
 `ifdef JTFRAME_UNLOCKKEY
 // locked features
+reg locked=1;
 reg [7:0] lock_key[0:3];
 
 always @(posedge clk) begin
@@ -148,7 +147,10 @@ always @(posedge clk) begin
         locked <= UNLOCKKEY != { lock_key[3], lock_key[2], lock_key[1], lock_key[0] } || expired;
     end
 end
+`else
+wire locked=0;
 `endif
+assign lock = locked;
 
 always @(posedge clk) begin
     LVBL_last <= LVBL;
@@ -188,7 +190,7 @@ assign blaze_sdram_din_m = ports[5][1:0];
 
 // VRAM
 always @(posedge clk) begin
-    if( rst ) begin
+    if( prst ) begin
         vram_we    <= 0;
         vram_ctrl  <= 0;
     end else begin
