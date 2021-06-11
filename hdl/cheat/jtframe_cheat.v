@@ -277,7 +277,7 @@ always @(posedge clk_rom) begin
     if( ba0_dst && owner ) begin
         {sdram_msb, sdram_lsb} <= data_read;
     end
-    if( pwr && paddr[7] ) begin
+    if( pwr && paddr[7] && !locked ) begin
         sdram_req <= 1;
         sdram_req_wr <= paddr[6];
     end
