@@ -53,13 +53,13 @@ reg [21:0] osd_t;
 reg [21:0] osd_w;
 
 reg  [1:0] rot = 0;
+reg        highres = 0;
 
 always@(posedge clk_sys) begin
     reg [12:0] bcnt;
     reg  [7:0] cmd;
     reg        has_cmd;
     reg        old_strobe;
-    reg        highres = 0;
 
     osd_t <= rot[0] ? OSD_WIDTH : (OSD_HEIGHT<<1);
     osd_h <= rot[0] ? (info ? infow : OSD_WIDTH) : info ? infoh : (OSD_HEIGHT<<highres);
@@ -275,7 +275,7 @@ always @(posedge clk_video) begin : GEOMETRY
                     (osd_hcnt[4:2] ^{3{~rot[1]}}) :
                     // no rotation:
                     osd_vcnt[3:1];
-        back_pixel <= info ? 1'b0 : back_byte[ back_idx ]; // do not use background for the info box
+        back_pixel <= (info || !highres) ? 1'b0 : back_byte[ back_idx ]; // do not use background for the info box
         `endif
     end
 end
