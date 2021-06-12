@@ -32,6 +32,11 @@ module jtframe_neptuno_joy(
 wire joy1_up, joy1_down, joy1_left, joy1_right, joy1_p6, joy1_p9;
 wire joy2_up, joy2_down, joy2_left, joy2_right, joy2_p6, joy2_p9;
 
+wire [11:0] inv1, inv2;
+
+assign joy1 = ~inv1;
+assign joy2 = ~inv2;
+
 joydecoder u_serial  (
     .clk          ( clk        ),
     .joy_data     ( joy_data   ),
@@ -59,8 +64,8 @@ joystick_sega u_sega
     .joy0 ({ joy1_p9, joy1_p6, joy1_up, joy1_down, joy1_left, joy1_right }),
     .joy1 ({ joy2_p9, joy2_p6, joy2_up, joy2_down, joy2_left, joy2_right }),
 
-    .player1     ( joy1       ),
-    .player2     ( joy2       ),
+    .player1     ( inv1       ),
+    .player2     ( inv2       ),
     .sega_clk    ( hs         ),
     .sega_strobe ( joy_select )
 );
