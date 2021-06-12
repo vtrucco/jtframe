@@ -1,0 +1,14 @@
+# Common files to MiST, SiDi and NeptUNO
+set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) ../jtframe.qip                 ]
+
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_mist_base.v            ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) osd.sv                         ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sound/hybrid_pwm_sd.v       ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sound/hifi_1bit_dac.v       ]
+set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) rgb2ypbpr.sv                   ]
+
+# Constraints
+set_global_assignment -name SDC_FILE           [file join $::quartus(qip_path) mist_io.sdc                    ]
+
+# JTFRAME scan doubler for memory constrained systems
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../video/jtframe_scan2x.v  ]
