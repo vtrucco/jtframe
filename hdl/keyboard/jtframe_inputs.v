@@ -175,13 +175,6 @@ always @(posedge clk) begin
         game_joy3 <= apply_rotation(joy3_sync | key_joy3, rot_control, ~dip_flip );
         game_joy4 <= apply_rotation(joy4_sync           , rot_control, ~dip_flip );
 
-        // Disable inputs for locked cores
-        if( lock ) begin
-            game_joy1 <= {10{ACTIVE_LOW[0]}};
-            game_joy2 <= {10{ACTIVE_LOW[0]}};
-            game_joy3 <= {10{ACTIVE_LOW[0]}};
-            game_joy4 <= {10{ACTIVE_LOW[0]}};
-        end
 
         soft_rst <= key_reset && !last_reset;
 
@@ -198,6 +191,18 @@ always @(posedge clk) begin
         game_pause <= 1'b1;
         `endif
         game_service <= key_service ^ ACTIVE_LOW[0];
+
+        // Disable inputs for locked cores
+        if( lock ) begin
+            game_joy1    <= {10{ACTIVE_LOW[0]}};
+            game_joy2    <= {10{ACTIVE_LOW[0]}};
+            game_joy3    <= {10{ACTIVE_LOW[0]}};
+            game_joy4    <= {10{ACTIVE_LOW[0]}};
+            game_start   <= {4{ACTIVE_LOW[0]}};
+            game_coin    <= {4{ACTIVE_LOW[0]}};
+            game_pause   <= 0;
+            game_service <= ACTIVE_LOW[0];
+        end
     end
 end
 
