@@ -1,0 +1,12 @@
+# Common with MiST
+set_global_assignment -name QIP_FILE     [ file join $::quartus(qip_path) ../mist/common.qip ]
+
+# Joysticks
+set_global_assignment -name VERILOG_FILE [ file join $::quartus(qip_path) joydecoder.v ]
+set_global_assignment -name VHDL_FILE    [ file join $::quartus(qip_path) joystick_sega.vhd ]
+set_global_assignment -name VERILOG_FILE [ file join $::quartus(qip_path) jtframe_neptuno_joy.vhd ]
+
+# Framework
+set_global_assignment -name SYSTEMVERILOG_FILE [ file join $::quartus(qip_path) jtframe_neptuno_top.sv ]
+set_global_assignment -name VERILOG_FILE [ file join $::quartus(qip_path) jtframe_neptuno.v ]
+set_global_assignment -name VERILOG_FILE [ file join $::quartus(qip_path) data_io_mc2.v ]
