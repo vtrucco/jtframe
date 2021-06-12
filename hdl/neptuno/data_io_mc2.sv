@@ -21,29 +21,29 @@
 //
 ///////////////////////////////////////////////////////////////////////
 
-module data_io # (
-parameter STRLEN        =   0
-)
-(
-    input             clk_sys,
-    input             SPI_SCK,
-    input             SPI_SS2,
-    input             SPI_DI,
-    output            SPI_DO,
+module data_io(
+    input              SPI_SCK,
+    input              SPI_SS2,
+    input              SPI_DI,
+    output             SPI_DO,
     
-    input   [7:0]           data_in,
-    input [(8*STRLEN)-1:0] conf_str,
-    output reg [31:0] status,
-    output reg  [7:0]   config_buffer_o[15:0],  // 15 bytes for general use
-    output reg    [6:0] core_mod, // core variant, sent before the config string is requested
+    input        [7:0] data_in,
+
+    // Config string
+    output       [9:0] conf_addr, // RAM address for config string
+    input        [7:0] conf_chr,
+
+    output reg  [31:0] status,
+    output reg  [ 7:0] config_buffer_o[15:0],  // 15 bytes for general use
+    output reg  [ 6:0] core_mod, // core variant, sent before the config string is requested
         
     // ARM -> FPGA download
-    input             ioctl_wait,
-    output reg        ioctl_download = 0, // signal indicating an active download
-    output reg  [7:0] ioctl_index,        // menu index used to upload the file
-    output            ioctl_wr,
-    output reg [24:0] ioctl_addr,
-    output reg  [7:0] ioctl_dout
+    input              clk_sys,
+    output reg         ioctl_download = 0, // signal indicating an active download
+    output reg   [7:0] ioctl_index,        // menu index used to upload the file
+    output             ioctl_wr,
+    output reg  [24:0] ioctl_addr,
+    output reg   [7:0] ioctl_dout
 );
 
 ///////////////////////////////   DOWNLOADING   ///////////////////////////////
@@ -63,6 +63,8 @@ reg [7:0]   ACK = 8'd75; // letter K - 0x4b
 reg  [10:0]  byte_cnt;   // counts bytes
 reg  [7:0] cmd;
 reg  [4:0] cnt;
+
+assign conf_addr = byte_cnt;
     
     // SPI MODE 0 : incoming data on Rising, outgoing on Falling
     always@(negedge SPI_SCK, posedge SPI_SS2) 
@@ -90,11 +92,11 @@ reg  [4:0] cnt;
                     
                             else if(cmd == 8'h14) //command 0x14 - reading config string
                                 begin
-                                
-                                    if(byte_cnt < STRLEN + 1 ) // returning a byte from string
-                                        sdo_s <= conf_str[{STRLEN - byte_cnt,~cnt[2:0]}];
-                                    else
-                                        sdo_s <= 1'b0;
+                                    sdo_s <= conf_chr[ ~cnt[2:0] ];
+                                    //if(byte_cnt < STRLEN + 1 ) // returning a byte from string
+                                    //    sdo_s <= conf_str[{STRLEN - byte_cnt,~cnt[2:0]}];
+                                    //else
+                                    //    sdo_s <= 1'b0;
                                         
                                 end 
                         
@@ -218,7 +220,7 @@ end
 assign ioctl_wr = |ioctl_wrd;
 reg [1:0] ioctl_wrd;
 
-always@(negedge clk_sys) begin
+always @(posedge clk_sys) begin
     reg        rclkD, rclkD2;
 
     rclkD    <= rclk;

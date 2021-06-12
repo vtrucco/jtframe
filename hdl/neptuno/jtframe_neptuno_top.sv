@@ -54,7 +54,7 @@ module neptuno_top(
     output          JOY_CLK,
     output          JOY_LOAD,
     input           JOY_DATA,
-    output          JOY_SELECT,
+    output          JOY_SELECT
 
     `ifdef SIMULATION
     ,output         sim_pxl_cen,
@@ -263,7 +263,7 @@ u_frame(
     .JOY_DATA       ( JOY_DATA       ),
     .JOY_SELECT     ( JOY_SELECT     ),
 
-    .PS2_CLK        ( PS2_CLK,       ),
+    .PS2_CLK        ( PS2_CLK        ),
     .PS2_DATA       ( PS2_DATA       ),
 
     // ROM access from game

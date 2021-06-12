@@ -244,6 +244,7 @@ assign ypbpr = 1'b0;
         .ioctl_filesize     (                   )
     );
 `else
+    // Neptuno
     data_io  u_datain (
         .SPI_SCK            ( SPI_SCK           ),
         .SPI_SS2            ( SPI_SS2           ),
@@ -261,7 +262,9 @@ assign ypbpr = 1'b0;
         .ioctl_addr         ( ioctl_addr        ),
         .ioctl_dout         ( ioctl_data        ),
         .ioctl_wr           ( ioctl_wr          ),
-        .ioctl_index        ( ioctl_index       )
+        .ioctl_index        ( ioctl_index       ),
+        // Unused
+        .config_buffer_o    (                   )
     );
     assign status[63:32]=0;
 `endif

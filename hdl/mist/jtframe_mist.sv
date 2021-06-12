@@ -242,7 +242,8 @@ jtframe_board #(
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
-
+    .clk_pico       ( clk_sys         ),    // it's done different in MiSTer, this is
+                                            // a place holder
     .core_mod       ( core_mod        ),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
@@ -266,6 +267,7 @@ jtframe_board #(
     .dip_pause      ( dip_pause       ),
     .dip_flip       ( dip_flip        ),
     .dip_fxlevel    ( dip_fxlevel     ),
+    .timestamp      ( 32'd0           ), // MiST doesn't -normally- have a RTC
     // screen
     .rotate         ( rotate          ),
     // LED
@@ -318,7 +320,9 @@ jtframe_board #(
     .cheat_prog ( ioctl_cheat   ),
     .ioctl_wr   ( ioctl_wr      ),
     .ioctl_data ( ioctl_data    ),
-    .timestamp  ( 32'd0         ),
+    .ioctl_addr ( ioctl_addr[7:0])
+    .st_addr    ( st_addr       ),
+    .st_dout    ( st_dout       ),
 
     // Base video
     .osd_rotate     ( rotate          ),

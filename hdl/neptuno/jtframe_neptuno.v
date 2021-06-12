@@ -199,9 +199,9 @@ jtframe_mist_base #(
     .SPI_DI         ( SPI_DI        ),
     .SPI_SCK        ( SPI_SCK       ),
     .SPI_SS2        ( SPI_SS2       ),
-    .SPI_SS3        ( SPI_SS3       ),
-    .SPI_SS4        ( SPI_SS4       ),
-    .CONF_DATA0     ( CONF_DATA0    ),
+    .SPI_SS3        (               ),  // unused on NeptUNO
+    .SPI_SS4        (               ),
+    .CONF_DATA0     (               ),
     // control
     .status         ( status        ),
     .joystick1      (               ),

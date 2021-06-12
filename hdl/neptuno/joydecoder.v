@@ -1,25 +1,4 @@
-`timescale 1ns / 1ps
-`default_nettype none
-
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    09:00:25 07/20/2018 
-// Design Name: 
-// Module Name:    joydecoder 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
+// This file comes from the Antonio Villena's Neptuno repositry
 
 module joydecoder (
 //-------------------------------------------
