@@ -59,35 +59,30 @@ localparam UIO_FILE_TX      = 8'h53;
 localparam UIO_FILE_TX_DAT  = 8'h54;
 localparam UIO_FILE_INDEX   = 8'h55;
 
-reg [7:0]   ACK = 8'd75; // letter K - 0x4b
-reg  [10:0]  byte_cnt;   // counts bytes
-reg  [7:0] cmd;
-reg  [4:0] cnt;
+reg [ 7:0]  ACK = 8'd75; // letter K - 0x4b
+reg [12:0] tx_cnt;   // counts bits
+reg [ 7:0] cmd;
+reg [ 4:0] cnt;
 
-assign conf_addr = byte_cnt[9:0];
+assign conf_addr = tx_cnt[12:3];
     
 // SPI MODE 0 : incoming data on Rising, outgoing on Falling
 always@(negedge SPI_SCK, posedge SPI_SS2) begin
     //each time the SS goes down, we will receive a command from the SPI master
     if (SPI_SS2) begin // not selected
-        sdo_s <= 1'bZ;
-        byte_cnt <= 11'd0;
+        sdo_s  <= 1'bz;
+        tx_cnt <= 0;
     end else begin
         if (cmd == 8'h10 ) //command 0x10 - send the data to the microcontroller
-            sdo_s <= data_in[~cnt[2:0]];
+            sdo_s <= data_in[~tx_cnt[2:0]];
         else if (cmd == 8'h00 ) //command 0x00 - ACK
-            sdo_s <= ACK[~cnt[2:0]];
-    //  else if (cmd == 8'h61 ) //command 0x61 - echo the pumped data
-    //      sdo_s <= sram_data_s[~cnt[2:0]];
+            sdo_s <= ACK[~tx_cnt[2:0]];
         else if(cmd == 8'h14) begin //command 0x14 - reading config string
-            sdo_s <= conf_chr[ ~cnt[2:0] ];
-            //if(byte_cnt < STRLEN + 1 ) // returning a byte from string
-            //    sdo_s <= conf_str[{STRLEN - byte_cnt,~cnt[2:0]}];
-            //else
-            //    sdo_s <= 1'b0;
+            sdo_s <= conf_chr[ ~tx_cnt[2:0] ];
+        end else begin
+            sdo_s <= 0;
         end
-        if(cnt[2:0] == 7)
-            byte_cnt <= byte_cnt + 8'd1;
+        tx_cnt <= tx_cnt + 1'd1;
     end
 end
 

@@ -220,7 +220,7 @@ always @(posedge clk) begin
     if( prst )
         led <= 0;
     else if( (pwr|kwr) && paddr==6 )
-        led <= pout[1:0];
+        led <= pout[0];
 end
 
 reg [7:0] timemux;
@@ -341,7 +341,7 @@ pauloBlaze u_blaze(
 jtframe_cheat_rom #(.AW(CHEATW)) u_rom(
     .clk_rom    ( clk_rom   ),
     .clk_pico   ( clk_pico  ),
-    .iaddr      ( iaddr     ),
+    .iaddr      ( iaddr[CHEATW-1:0] ),
     .idata      ( idata     ),
     // PBlaze Program
     .prog_addr  ( prog_addr ),

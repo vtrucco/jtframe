@@ -123,7 +123,7 @@ wire [3:0] gfx_en;
 wire data_rdy, sdram_ack;
 
 // PLL's
-wire clk_vga_in, clk_vga, pll_locked;
+wire pll_locked, clk_pico;
 
 `ifndef STEREO_GAME
 assign snd_right = snd_left;
@@ -165,6 +165,8 @@ assign snd_right = snd_left;
         assign clk_sys   = clk_rom;
     `endif
 `endif
+
+assign clk_pico = clk48;
 
 
 wire [7:0] dipsw_a, dipsw_b;
@@ -215,6 +217,7 @@ jtframe_neptuno #(
 u_frame(
     .clk_sys        ( clk_sys        ),
     .clk_rom        ( clk_rom        ),
+    .clk_pico       ( clk_pico       ),
     .pll_locked     ( pll_locked     ),
     .status         ( status         ),
     // Base video

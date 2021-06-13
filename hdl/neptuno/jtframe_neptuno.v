@@ -28,6 +28,7 @@ module jtframe_neptuno #(parameter
 )(
     input           clk_sys,
     input           clk_rom,
+    input           clk_pico,
     input           pll_locked,
     // interface with microcontroller
     output  [63:0]  status,
@@ -157,7 +158,7 @@ wire          scan2x_enb;
 wire [6:0]    core_mod;
 
 wire  [ 1:0]  rotate;
-wire          ioctl_cheat;
+wire          ioctl_cheat, sdram_init;
 
 assign board_status = { {32-DIPBASE{1'b0}}, status[DIPBASE-1:0] };
 
@@ -166,6 +167,7 @@ jtframe_mist_base #(
     .COLORW      ( COLORW           )
 ) u_base(
     .rst            ( rst           ),
+    .sdram_init     ( sdram_init    ),
     .clk_sys        ( clk_sys       ),
     .clk_rom        ( clk_rom       ),
     .core_mod       ( core_mod      ),
@@ -249,11 +251,13 @@ jtframe_board #(
     .game_rst       ( game_rst        ),
     .game_rst_n     ( game_rst_n      ),
     .rst_req        ( rst_req         ),
+    .sdram_init     ( sdram_init      ),
     .pll_locked     ( pll_locked      ),
     .downloading    ( dwnld_busy      ), // use busy signal from game module
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
+    .clk_pico       ( clk_pico        ),
 
     .core_mod       ( core_mod        ),
     // joystick
@@ -328,6 +332,7 @@ jtframe_board #(
     // Cheat!
     .cheat      ( status[63:32] ),
     .cheat_prog ( ioctl_cheat   ),
+    .ioctl_addr ( ioctl_addr[7:0] ),
     .ioctl_wr   ( ioctl_wr      ),
     .ioctl_data ( ioctl_data    ),
     .timestamp  ( 32'd0         ),

@@ -23,6 +23,7 @@ module jtframe_mist_base #(parameter
     input           rst,
     input           clk_sys,
     input           clk_rom,
+    input           sdram_init,
     output          osd_shown,
     output  [6:0]   core_mod,
     // Base video
@@ -256,14 +257,14 @@ assign ypbpr = 1'b0;
     reg [7:0] nept_din;
     reg       dwn_done;
     always @(posedge clk_sys) begin
-        if( rst ) begin
+        if( sdram_init ) begin
             nept_din <= 8'hff;
             dwn_done <= 0;
         end else begin
             if( downloading ) begin
                 dwn_done <= 1;
             end
-            nept_din <= dwn_done ? ~joystick1[7:0] : 8'h3f;
+            nept_din <= dwn_done ? /*~joystick1[7:0]*/ 8'hff : 8'h3f;
         end
     end
 

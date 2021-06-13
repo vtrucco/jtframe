@@ -30,6 +30,7 @@ module jtframe_board #(parameter
     output              rst_n,
     output              game_rst,
     output              game_rst_n,
+    output              sdram_init,
     // reset forcing signals:
     input               rst_req,
     input               pll_locked,
@@ -214,7 +215,7 @@ wire         en_mixing;
 wire         osd_pause;
 wire         debug_plus, debug_minus, key_shift;
 
-wire         sdram_init, key_reset, key_pause, key_test, rot_control;
+wire         key_reset, key_pause, key_test, rot_control;
 wire         game_pause, soft_rst;
 wire         cheat_led, pre_pause;
 
