@@ -227,7 +227,12 @@ jtframe_mist_base #(
     .ioctl_wr       ( ioctl_wr      ),
     .ioctl_ram      ( ioctl_ram     ),
     .ioctl_cheat    ( ioctl_cheat   ),
-    .downloading    ( downloading   )
+    .downloading    ( downloading   ),
+
+    .JOY_CLK        ( JOY_CLK       ),
+    .JOY_LOAD       ( JOY_LOAD      ),
+    .JOY_DATA       ( JOY_DATA      ),
+    .JOY_SELECT     ( JOY_SELECT    )
 );
 
 jtframe_board #(

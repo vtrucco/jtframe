@@ -81,6 +81,14 @@ module jtframe_mist_base #(parameter
     output          ioctl_ram,
     output          ioctl_cheat,
     output          downloading
+
+`ifdef NEPTUNO
+    // Joystick
+    ,output         JOY_CLK,
+    output          JOY_LOAD,
+    input           JOY_DATA,
+    output          JOY_SELECT
+`endif
 );
 
 localparam [7:0] IDX_CHEAT = 8'h10,
@@ -247,7 +255,7 @@ assign ypbpr = 1'b0;
     // Neptuno
     reg [7:0] nept_din;
     reg       dwn_done;
-    always @(posedge clk_rom) begin
+    always @(posedge clk_sys) begin
         if( rst ) begin
             nept_din <= 8'hff;
             dwn_done <= 0;
@@ -255,7 +263,7 @@ assign ypbpr = 1'b0;
             if( downloading ) begin
                 dwn_done <= 1;
             end
-            nept_din <= dwn_done ? { 3'd0, joystick1[4:0] } : 8'h3f;
+            nept_din <= dwn_done ? ~{ 3'd0, joystick1[4:0] } : 8'h3f;
         end
     end
 
