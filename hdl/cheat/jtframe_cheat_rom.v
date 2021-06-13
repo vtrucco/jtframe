@@ -118,9 +118,8 @@ jtframe_prom #(
 jtframe_dual_ram #(
     .dw(18),
     .aw(AW),
-    `ifdef JTFRAME_CHEAT_FIRMWARE
-        .synfile("cheat.hex"),
-    `endif
+    .synfile("cheat.hex"),  // there must always be a firmware file,
+                            // to prevent the CPU from going crazy
     .simhexfile("cheat.hex")
 
 ) u_irom(

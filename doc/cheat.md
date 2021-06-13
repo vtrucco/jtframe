@@ -17,11 +17,11 @@ See the [cheat tutorial](cheat-tutorial.md) for learning how to add new cheats.
 Cheats are added to the MRA file like this:
 
 ```
-    <cheats>
-        <dip name="Infinite Credits" bits="0" ids="No,Yes"/>
-        <dip name="P1 Infinite Lives" bits="1" ids="No,Yes"/>
-        <dip name="P1 Invincibility" bits="2" ids="No,Yes"/>
-    </cheats>
+<cheats>
+    <dip name="Infinite Credits" bits="0" ids="No,Yes"/>
+    <dip name="P1 Infinite Lives" bits="1" ids="No,Yes"/>
+    <dip name="P1 Invincibility" bits="2" ids="No,Yes"/>
+</cheats>
 ```
 
 It basically follows the same syntax as the DIP switches, but the top element
@@ -31,9 +31,9 @@ firmware must be older than 4th June 2021 to support it.
 The MRA also needs to load the PizoBlaze firmware in ROM position 16:
 
 ```
-    <rom index="16" zip="cheat.zip" md5="None">
-        <part name="mycheat.bin"/>
-    </rom>
+<rom index="16" zip="cheat.zip" md5="None">
+    <part name="mycheat.bin"/>
+</rom>
 ```
 
 ## Port Map
@@ -69,7 +69,17 @@ Port (hex) | I/O    |  Usage
 8          | O      | VRAM column address (bits 4:0)
 9          | O      | VRAM row address (bits 4:0)
 A          | I/O    | VRAM reads or writes
-B          | O      | bit 0 enables the display
+B          | O      | VRAM control, see below
+
+VRAM control port (B)
+
+Bit   |   Usage
+------|----------
+0     | Sets credits OSD to be controlled by the picoblaze
+1     | dims the top half of the screen
+2     | dims the bottom half of the screen
+
+The screen is dimmed only if bit 0 is set too
 
 Communication with game module
 

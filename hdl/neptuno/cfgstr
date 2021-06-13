@@ -1,4 +1,4 @@
-P,{{.CORENAME}};
+P,CORE_NAME.dat;
 
 {{ if not .JTFRAME_OSD_NOLOAD }}    S,DAT,Load ROM...; {{ end }}
 {{ if .JTFRAME_VERTICAL }}
