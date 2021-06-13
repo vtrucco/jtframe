@@ -204,10 +204,10 @@ jtframe_mist_base #(
     .CONF_DATA0     (               ),
     // control
     .status         ( status        ),
-    .joystick1      (               ),
-    .joystick2      (               ),
-    .joystick3      (               ),
-    .joystick4      (               ),
+    .joystick1      ( joystick1     ),
+    .joystick2      ( joystick2     ),
+    .joystick3      ( joystick3     ),
+    .joystick4      ( joystick4     ),
     // Analog joystick
     .joystick_analog_0( joystick_analog_0   ),
     .joystick_analog_1( joystick_analog_1   ),
@@ -229,25 +229,6 @@ jtframe_mist_base #(
     .ioctl_cheat    ( ioctl_cheat   ),
     .downloading    ( downloading   )
 );
-
-assign joystick3 = 0;
-assign joystick4 = 0;
-
-jtframe_neptuno_joy u_joysticks(
-    .clk        ( clk_sys       ),
-    .hs         ( hs            ),
-
-    .joy_clk    ( JOY_CLK       ),
-    .joy_data   ( JOY_DATA      ),
-    .joy_load   ( JOY_LOAD      ),
-    .joy_select ( JOY_SELECT    ),
-
-    .joy1       ( joystick1[11:0] ),
-    .joy2       ( joystick2[11:0] )
-);
-
-assign joystick1[31:12]=0;
-assign joystick2[31:12]=0;
 
 jtframe_board #(
     .BUTTONS               ( BUTTONS               ),

@@ -152,18 +152,18 @@ end
 
 // the ps2 decoder has been taken from the zx spectrum core
 ps2_intf ps2_keyboard (
-    .CLK     ( clk           ),
-    .nRESET  ( !rst          ),
+    .CLK      (  clk      ),
+    .nRESET   ( ~rst      ),
 
     // PS/2 interface
-    .PS2_CLK  ( ps2_clk         ),
-    .PS2_DATA ( ps2_data        ),
+    .PS2_CLK  ( ps2_clk   ),
+    .PS2_DATA ( ps2_data  ),
 
     // ps2byte-wide data interface - only valid for one clock
     // so must be latched externally if required
-    .DATA         ( ps2byte   ),
-    .VALID    ( valid  ),
-    .ERROR    ( error  )
+    .DATA     ( ps2byte   ),
+    .VALID    ( valid     ),
+    .ERROR    ( error     )
 );
 
 endmodule

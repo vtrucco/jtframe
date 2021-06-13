@@ -66,47 +66,30 @@ reg  [4:0] cnt;
 
 assign conf_addr = byte_cnt;
     
-    // SPI MODE 0 : incoming data on Rising, outgoing on Falling
-    always@(negedge SPI_SCK, posedge SPI_SS2) 
-    begin
-    
-        
-                //each time the SS goes down, we will receive a command from the SPI master
-                if (SPI_SS2) // not selected
-                    begin
-                        sdo_s <= 1'bZ;
-                        byte_cnt <= 11'd0;
-                    end
-                else
-                    begin
-                            
-                            if (cmd == 8'h10 ) //command 0x10 - send the data to the microcontroller
-                                sdo_s <= data_in[~cnt[2:0]];
-                                
-                            else if (cmd == 8'h00 ) //command 0x00 - ACK
-                                sdo_s <= ACK[~cnt[2:0]];
-                            
-                        //  else if (cmd == 8'h61 ) //command 0x61 - echo the pumped data
-                        //      sdo_s <= sram_data_s[~cnt[2:0]];            
-                    
-                    
-                            else if(cmd == 8'h14) //command 0x14 - reading config string
-                                begin
-                                    sdo_s <= conf_chr[ ~cnt[2:0] ];
-                                    //if(byte_cnt < STRLEN + 1 ) // returning a byte from string
-                                    //    sdo_s <= conf_str[{STRLEN - byte_cnt,~cnt[2:0]}];
-                                    //else
-                                    //    sdo_s <= 1'b0;
-                                        
-                                end 
-                        
-                
-                            if(cnt[2:0] == 7) 
-                                byte_cnt <= byte_cnt + 8'd1;
-                            
-                    end
+// SPI MODE 0 : incoming data on Rising, outgoing on Falling
+always@(negedge SPI_SCK, posedge SPI_SS2) begin
+    //each time the SS goes down, we will receive a command from the SPI master
+    if (SPI_SS2) begin // not selected
+        sdo_s <= 1'bZ;
+        byte_cnt <= 11'd0;
+    end else begin
+        if (cmd == 8'h10 ) //command 0x10 - send the data to the microcontroller
+            sdo_s <= data_in[~cnt[2:0]];
+        else if (cmd == 8'h00 ) //command 0x00 - ACK
+            sdo_s <= ACK[~cnt[2:0]];
+    //  else if (cmd == 8'h61 ) //command 0x61 - echo the pumped data
+    //      sdo_s <= sram_data_s[~cnt[2:0]];
+        else if(cmd == 8'h14) begin //command 0x14 - reading config string
+            sdo_s <= conf_chr[ ~cnt[2:0] ];
+            //if(byte_cnt < STRLEN + 1 ) // returning a byte from string
+            //    sdo_s <= conf_str[{STRLEN - byte_cnt,~cnt[2:0]}];
+            //else
+            //    sdo_s <= 1'b0;
+        end
+        if(cnt[2:0] == 7)
+            byte_cnt <= byte_cnt + 8'd1;
     end
-    
+end
 
 // data_io has its own SPI interface to the io controller
 always@(posedge SPI_SCK, posedge SPI_SS2) begin

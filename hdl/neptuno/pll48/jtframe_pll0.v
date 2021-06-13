@@ -121,7 +121,7 @@ module jtframe_pll0 (
 		altpll_component.clk2_divide_by = 25,
 		altpll_component.clk2_duty_cycle = 50,
 		altpll_component.clk2_multiply_by = 24,
-		altpll_component.clk2_phase_shift = "10417",
+		altpll_component.clk2_phase_shift = "6504",
 		altpll_component.clk3_divide_by = 25,
 		altpll_component.clk3_duty_cycle = 50,
 		altpll_component.clk3_multiply_by = 12,
@@ -273,13 +273,13 @@ endmodule
 // Retrieval info: PRIVATE: PHASE_RECONFIG_INPUTS_CHECK STRING "0"
 // Retrieval info: PRIVATE: PHASE_SHIFT0 STRING "0.00000000"
 // Retrieval info: PRIVATE: PHASE_SHIFT1 STRING "0.00000000"
-// Retrieval info: PRIVATE: PHASE_SHIFT2 STRING "180.00000000"
+// Retrieval info: PRIVATE: PHASE_SHIFT2 STRING "6.50406500"
 // Retrieval info: PRIVATE: PHASE_SHIFT3 STRING "0.00000000"
 // Retrieval info: PRIVATE: PHASE_SHIFT4 STRING "0.00000000"
 // Retrieval info: PRIVATE: PHASE_SHIFT_STEP_ENABLED_CHECK STRING "0"
 // Retrieval info: PRIVATE: PHASE_SHIFT_UNIT0 STRING "ps"
 // Retrieval info: PRIVATE: PHASE_SHIFT_UNIT1 STRING "deg"
-// Retrieval info: PRIVATE: PHASE_SHIFT_UNIT2 STRING "deg"
+// Retrieval info: PRIVATE: PHASE_SHIFT_UNIT2 STRING "ns"
 // Retrieval info: PRIVATE: PHASE_SHIFT_UNIT3 STRING "ps"
 // Retrieval info: PRIVATE: PHASE_SHIFT_UNIT4 STRING "ps"
 // Retrieval info: PRIVATE: PLL_ADVANCED_PARAM_CHECK STRING "0"
@@ -336,7 +336,7 @@ endmodule
 // Retrieval info: CONSTANT: CLK2_DIVIDE_BY NUMERIC "25"
 // Retrieval info: CONSTANT: CLK2_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK2_MULTIPLY_BY NUMERIC "24"
-// Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "10417"
+// Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "6504"
 // Retrieval info: CONSTANT: CLK3_DIVIDE_BY NUMERIC "25"
 // Retrieval info: CONSTANT: CLK3_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK3_MULTIPLY_BY NUMERIC "12"

@@ -245,13 +245,27 @@ assign ypbpr = 1'b0;
     );
 `else
     // Neptuno
+    reg [7:0] nept_din;
+    reg       dwn_done;
+    always @(posedge clk_rom) begin
+        if( rst ) begin
+            nept_din <= 8'hff;
+            dwn_done <= 0;
+        end else begin
+            if( downloading ) begin
+                dwn_done <= 1;
+            end
+            nept_din <= dwn_done ? { 3'd0, joystick1[4:0] } : 8'h3f;
+        end
+    end
+
     data_io  u_datain (
         .SPI_SCK            ( SPI_SCK           ),
         .SPI_SS2            ( SPI_SS2           ),
         .SPI_DI             ( SPI_DI            ),
         .SPI_DO             ( SPI_DO            ),
 
-        .data_in            ( 8'd0              ),
+        .data_in            ( nept_din          ),
         .conf_addr          ( cfg_addr          ),
         .conf_chr           ( cfg_dout          ),
         .status             ( status[31:0]      ),
@@ -266,7 +280,27 @@ assign ypbpr = 1'b0;
         // Unused
         .config_buffer_o    (                   )
     );
+
     assign status[63:32]=0;
+
+    assign joystick3 = 0;
+    assign joystick4 = 0;
+
+    jtframe_neptuno_joy u_joysticks(
+        .clk        ( clk_sys       ),
+        .hs         ( hs            ),
+
+        .joy_clk    ( JOY_CLK       ),
+        .joy_data   ( JOY_DATA      ),
+        .joy_load   ( JOY_LOAD      ),
+        .joy_select ( JOY_SELECT    ),
+
+        .joy1       ( joystick1[11:0] ),
+        .joy2       ( joystick2[11:0] )
+    );
+
+    assign joystick1[31:12]=0;
+    assign joystick2[31:12]=0;
 `endif
 
 // OSD will only get simulated if SIMULATE_OSD is defined
