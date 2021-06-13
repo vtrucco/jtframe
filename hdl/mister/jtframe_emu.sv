@@ -300,10 +300,10 @@ wire [15:0] sdram_dout;
 assign prog_data  = {2{prog_data8}};
 assign ba_rd[3:1] = 0;
 assign ba_wr      = 0;
-assign prog_ba    = 2'd0;
-assign ba1_addr   = 22'd0;
-assign ba2_addr   = 22'd0;
-assign ba3_addr   = 22'd0;
+assign prog_ba    = 0;
+assign ba1_addr   = 0;
+assign ba2_addr   = 0;
+assign ba3_addr   = 0;
 `endif
 
 wire [7:0] st_addr, st_dout;

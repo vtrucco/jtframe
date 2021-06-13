@@ -14,7 +14,6 @@ JTFRAME_CLK6             |         | Adds an additional clock input
 JTFRAME_CLK96            |         | Adds an additional clock input
 JTFRAME_CHEAT            |         | Enables the [cheat engine](cheat.md)
 JTFRAME_CHEAT_SCRAMBLE   |         | Enables cheat firmware encryption
-JTFRAME_CHEAT_FIRMWARE   |         | Embeds the cheat firmware at compilation time: cheat.hex, 18-bit words
 JTFRAME_CREDITS          |         | Adds credits screen
 JTFRAME_CREDITS_AON      |         | credits screen is always on
 JTFRAME_CREDITS_HSTART   |         | Horizontal offset for the 256-pxl wide credits

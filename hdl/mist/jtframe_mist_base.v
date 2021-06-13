@@ -81,6 +81,14 @@ module jtframe_mist_base #(parameter
     output          ioctl_ram,
     output          ioctl_cheat,
     output          downloading
+
+`ifdef NEPTUNO
+    // Joystick
+    ,output         JOY_CLK,
+    output          JOY_LOAD,
+    input           JOY_DATA,
+    output          JOY_SELECT
+`endif
 );
 
 localparam [7:0] IDX_CHEAT = 8'h10,

@@ -463,6 +463,7 @@ wire [SDRAMW-1:0] bax_addr;
     assign ba_dst    = bax_dst;
     assign cheat_led = 0;
     assign dip_pause = pre_pause;
+    assign st_addr   = 0;
 `endif
 
 // support for 48MHz
@@ -611,7 +612,7 @@ wire              pre2x_LHBL, pre2x_LVBL;
             .vram_dout  (       ),
             .vram_addr  ( 8'h0  ),
             .vram_we    ( 1'b0  ),
-            .vram_ctrl  ( 2'b0  ),
+            .vram_ctrl  ( 3'b0  ),
             `ifdef JTFRAME_CREDITS_AON
                 .enable ( 1'b1          ),
             `else
