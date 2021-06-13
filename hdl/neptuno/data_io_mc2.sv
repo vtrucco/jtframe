@@ -38,7 +38,7 @@ module data_io(
     output reg  [ 6:0] core_mod, // core variant, sent before the config string is requested
         
     // ARM -> FPGA download
-    input              clk_sys,
+    input              clk_rom,
     output reg         ioctl_download = 0, // signal indicating an active download
     output reg   [7:0] ioctl_index,        // menu index used to upload the file
     output             ioctl_wr,
@@ -222,10 +222,10 @@ always@(posedge SPI_SCK, posedge SPI_SS2) begin
     end
 end
 
-assign ioctl_wr = |ioctl_wrd;
+assign ioctl_wr = ioctl_wrd==2'b10; // single strobe
 reg [1:0] ioctl_wrd;
 
-always @(posedge clk_sys) begin
+always @(posedge clk_rom) begin
     reg        rclkD, rclkD2;
 
     rclkD    <= rclk;

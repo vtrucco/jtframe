@@ -254,17 +254,24 @@ assign ypbpr = 1'b0;
     );
 `else
     // Neptuno
-    reg [7:0] nept_din;
+    reg [7:0] nept_din=8'hff;
     reg       dwn_done;
+    reg [15:0] cntdown;
+
     always @(posedge clk_sys) begin
         if( sdram_init ) begin
             nept_din <= 8'hff;
             dwn_done <= 0;
+            cntdown <= ~0;
         end else begin
             if( downloading ) begin
                 dwn_done <= 1;
             end
-            nept_din <= dwn_done ? /*~joystick1[7:0]*/ 8'hff : 8'h3f;
+            if ( cntdown!=0 ) begin
+                cntdown <= cntdown-1;
+                nept_din <= 8'hff;
+            end else
+                nept_din <= dwn_done ? /*~joystick1[7:0]*/ 8'hff : 8'h3f;
         end
     end
 
@@ -280,7 +287,7 @@ assign ypbpr = 1'b0;
         .status             ( status[31:0]      ),
         .core_mod           ( core_mod          ),
 
-        .clk_sys            ( clk_rom           ),
+        .clk_rom            ( clk_rom           ),
         .ioctl_download     ( ioctl_download    ),
         .ioctl_addr         ( ioctl_addr        ),
         .ioctl_dout         ( ioctl_data        ),
