@@ -463,6 +463,7 @@ wire [SDRAMW-1:0] bax_addr;
     assign ba_dst    = bax_dst;
     assign cheat_led = 0;
     assign dip_pause = pre_pause;
+    assign st_addr   = 0;
 `endif
 
 // support for 48MHz

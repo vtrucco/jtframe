@@ -123,7 +123,7 @@ jtframe_dual_ram #(
     `endif
     .simhexfile("cheat.hex")
 
-)(
+) u_irom(
     .clk0   ( clk_rom   ),
     .clk1   ( clk_pico  ),
     // Port 0

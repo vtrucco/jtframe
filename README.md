@@ -10,6 +10,7 @@ You can show your appreciation through
 # Topics
 
 * [Compilation](doc/compilation.md)
+* [MiST derivatives](doc/mist.md)
 * [CPUs](doc/cpus.md)
 * [74xx Library Simulation](doc/74.md)
 * [SDRAM](doc/sdram.md)

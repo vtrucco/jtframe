@@ -64,7 +64,7 @@ reg  [10:0]  byte_cnt;   // counts bytes
 reg  [7:0] cmd;
 reg  [4:0] cnt;
 
-assign conf_addr = byte_cnt;
+assign conf_addr = byte_cnt[9:0];
     
 // SPI MODE 0 : incoming data on Rising, outgoing on Falling
 always@(negedge SPI_SCK, posedge SPI_SS2) begin

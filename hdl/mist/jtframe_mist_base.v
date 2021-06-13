@@ -263,7 +263,7 @@ assign ypbpr = 1'b0;
             if( downloading ) begin
                 dwn_done <= 1;
             end
-            nept_din <= dwn_done ? ~{ 3'd0, joystick1[4:0] } : 8'h3f;
+            nept_din <= dwn_done ? ~joystick1[7:0] : 8'h3f;
         end
     end
 
@@ -290,9 +290,14 @@ assign ypbpr = 1'b0;
     );
 
     assign status[63:32]=0;
+    assign scan2x_enb = 0; // scan doubler enabled
 
     assign joystick3 = 0;
     assign joystick4 = 0;
+    assign joystick_analog_0 = 0;
+    assign joystick_analog_1 = 0;
+    assign ps2_kbd_clk = 0;
+    assign ps2_kbd_data = 0;
 
     jtframe_neptuno_joy u_joysticks(
         .clk        ( clk_sys       ),
