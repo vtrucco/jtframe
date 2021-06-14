@@ -21,7 +21,9 @@ SDRAM clock can be shifted with respect to the internal clock (clk_rom in the di
 
 # SDRAM Controller
 
-##JTFRAME_SDRAM
+There are three different SDRAM controllers in JTFRAME. They all work and are stable, however only the latest one is connected to jtframe_board. The others are left for reference.
+
+## JTFRAME_SDRAM
 
 **jtframe_sdram** is a generic SDRAM controller that runs upto 48MHz because it is designed for CL=2. It mainly serves for reading ROMs from the SDRAM but it has some support for writting (apart from the initial ROM download process).
 
@@ -40,7 +42,7 @@ The data bus is held down all the time and only released when the SDRAM is expec
 
 In simulation data from the SDRAM can be double checked in the jtframe_rom/ram_xslots modules if **JTFRAME_SDRAM_CHECK** is defined. The simulation will stop if the read data does not meet the expected values.
 
-##JTFRAME_SDRAM_BANK
+## JTFRAME_SDRAM_BANK
 
 **jtframe_sdram_bank**  is a high-performance SDRAM controller that achieves high data throughput by using bank interleaving.
 

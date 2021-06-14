@@ -12,9 +12,13 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
                     MISTER_VIDEO_MIXER  uses the Mr video modules
                     JTFRAME_SCAN2X      uses simple scan doubler from JTFRAME
                     DEBUG_NOHDMI        skips MiSTer HDMI related logic. Speeds up compilation.
-    -mister     compiles MiSTer version. Default is MiST.
+    Target options
+    -mister     compiles the MiSTer version
+    -mist       compiles the MiST version. This is the default
+    -sidi       compiles the SIDI version. This uses MiST's folders and settings but different pinout
+    -neptuno    compiles the NeptUNO version
+
     -seed       sets random seed for compilation
-    -sidi       compiles SIDI version. This uses MiST's folders and settings but different pinout
     -rename     name used for copying the RBF file into the SD card
     -help       displays this message
 EOF
@@ -49,10 +53,8 @@ function parse_args {
         case "$1" in
             -mister | -mr)
                 TARGET=mister;;
-            -mist)
-                TARGET=mist;;
-            -sidi)
-                TARGET=sidi;;
+            -mist|-sidi|-neptuno)
+                TARGET=${1:1};;
             -d)
                 shift
                 MACROS="$1 $MACROS"
@@ -96,6 +98,12 @@ cd $JTROOT
 MODULES=$JTROOT/modules
 JTFRAME=$MODULES/jtframe
 
+# Sets the commit string to a short commit and an optional -dirty suffix
+PRJCOMMIT=$(git rev-parse --short HEAD)
+if (git status --short | grep "^ M " > /dev/null); then
+    PRJCOMMIT="$PRJCOMMIT-dirty"
+fi
+
 CORESTAMP=$(date +"%Y%m%d")
 
 if [ ! -e "$JTFRAME" ]; then
@@ -107,6 +115,7 @@ fi
 if ! which jtcfgstr; then
     echo "Cannot find jtcfgstr in the path. This file can be found in the"
     echo "JTBIN repository, in the bin folder"
+    exit 1
 fi
 
 # Is the project defined?
@@ -205,18 +214,8 @@ function copy_templates {
     fi
 }
 
-function link_if_missing {
-    if [ ! -e $1 ]; then
-        if [ -e ../mist/$1 ]; then
-            ln -sr ../mist/$1 && echo "Linked file $1" && git add $1 -f
-        else
-            echo -e "${yBG}WARNING:${NC}${wBG} Missing ${red}$1${NC}"
-        fi
-    fi
-}
 
 function report {
-    PRJCOMMIT=$(git rev-parse --short HEAD)
     cd $JTFRAME
     JTFRAMECOMMIT=$(git rev-parse --short HEAD)
     cd -
@@ -271,7 +270,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
     ############################################
     # Link filter files in case they are needed
     for i in $JTFRAME/hdl/sound/*.hex; do
-        ln -srf $i
+        ln -srf $i $(basename $i) || exit $?
     done
 
     # If JT6295 exists, adds its filter file to the folder
@@ -283,7 +282,9 @@ if [ $SKIP_COMPILE = FALSE ]; then
 
     # Link .hex files in hdl, if they exist
     for i in $PRJPATH/hdl/*.hex; do
-        ln -srf $i $PRJPATH/$TARGET/$(basename $i)
+        if [ -e "$i" ]; then
+            ln -srf $i $PRJPATH/$TARGET/$(basename $i)
+        fi
     done
 
     ############################################
