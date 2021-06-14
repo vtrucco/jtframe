@@ -239,7 +239,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
         exit 1
     fi
     # Create MiST(er) folders if they don't exist
-    mkdir -p $PRJPATH/{mist,mister,sidi}
+    mkdir -p $PRJPATH/{mist,mister,sidi,neptuno}
     # Update message file
     if [ -e bin/jt${PRJ}_msg.py ]; then
         cd bin
@@ -286,6 +286,15 @@ if [ $SKIP_COMPILE = FALSE ]; then
             ln -srf $i $PRJPATH/$TARGET/$(basename $i)
         fi
     done
+
+    # Link .hex files in mist, if they exist
+    if [ $TARGET != mist ]; then
+        for i in $PRJPATH/mist/*.hex; do
+            if [ -e "$i" ]; then
+                ln -srf $i $PRJPATH/$TARGET/$(basename $i)
+            fi
+        done
+    fi
 
     ############################################
     # Recompile
