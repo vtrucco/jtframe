@@ -12,6 +12,12 @@ it is disabled by default. It is enabled by defining the macro **JTFRAME_CHEAT**
 
 See the [cheat tutorial](cheat-tutorial.md) for learning how to add new cheats.
 
+## Compilation Requirements
+
+Note that if **JTFRAME_CHEAT** is set, you will need a cheat.hex file in the compilation folder. As with other hex files, normally you place it in the mist folder and _jtcore_ will link it from there when you compile other targets. It is also possible to place it in the _hdl_ folder.
+
+The _cheat.hex_ contains the 18-bit hex words for the firmware, and can be generated as described in the [cheat tutorial](cheat-tutorial.md).
+
 ## MRA File
 
 Cheats are added to the MRA file like this:

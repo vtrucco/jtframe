@@ -1,5 +1,5 @@
 # OSD colours
-The macro JTFRAME_OSDCOLOR should be defined with a 6-bit value encoding an RGB tone. This is used for
+The macro **JTFRAME_OSDCOLOR** should be defined with a 6-bit value encoding an RGB tone. This is used for
 the OSD background. The meanins are:
 
 Value | Meaning                 | Colour
