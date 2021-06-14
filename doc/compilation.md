@@ -90,4 +90,4 @@ JTFRAME_CHEAT
 
 Will include the file *common.def*, then define several macros and concatenate more values to those already present in CORE_OSD. Then, only for MiSTer, it will define some extra options
 
-Macros are evaluated by (jtcfgstr)[https://github.com/jotego/jtbin/blob/master/bin/jtcfgstr]
+Macros are evaluated by [jtcfgstr](https://github.com/jotego/jtbin/blob/master/bin/jtcfgstr)
