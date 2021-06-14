@@ -54,3 +54,40 @@ And that will produce the MiSTer version.
 Run `jtcore -h` to get help on the commands.
 
 jtcore can also program the FPGA (MiST or MiSTer) with the ```-p``` option. In order to use an USB Blaster cable in Ubuntu you need to setup two urules files. The script **jtblaster** does that for you.
+
+## Macro definition
+
+Macros for each core are defined in a **.def** file. This file is expected to be in the **hdl** folder. The syntax is:
+
+* Each line contains a macro definition, with an optional value after `=`
+* A value definition can be concatenated to a previos value by usin `+=` instead of `=`
+* Each time a line starts with `[name]`, then a section starts that apply only to the FPGA platform called *name*
+* It is possible to include another file by using `include myfile.def`
+* `#` marks a comment
+
+Example:
+
+```
+include common.def
+
+CPS1
+CORENAME=JTCPS1
+GAMETOP=jtcps1_game
+JTFRAME_MRA_DIP
+JTFRAME_CREDITS
+
+CORE_OSD+=;O1,Original filter,Off,On;
+
+[mister]
+# OSD options
+JTFRAME_ADPCM
+JTFRAME_OSD_VOL
+JTFRAME_OSD_SND_EN
+
+JTFRAME_AVATARS
+JTFRAME_CHEAT
+```
+
+Will include the file *common.def*, then define several macros and concatenate more values to those already present in CORE_OSD. Then, only for MiSTer, it will define some extra options
+
+Macros are evaluated by (jtcfgstr)[https://github.com/jotego/jtbin/blob/master/bin/jtcfgstr]
