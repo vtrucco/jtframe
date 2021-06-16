@@ -28,6 +28,7 @@ module jtframe_mist #(parameter
 )(
     input           clk_sys,
     input           clk_rom,
+    input           clk_pico,
     input           pll_locked,
     // interface with microcontroller
     output  [63:0]  status,
@@ -242,8 +243,7 @@ jtframe_board #(
 
     .clk_sys        ( clk_sys         ),
     .clk_rom        ( clk_rom         ),
-    .clk_pico       ( clk_sys         ),    // it's done different in MiSTer, this is
-                                            // a place holder
+    .clk_pico       ( clk_pico        ),
     .core_mod       ( core_mod        ),
     // joystick
     .ps2_kbd_clk    ( ps2_kbd_clk     ),
