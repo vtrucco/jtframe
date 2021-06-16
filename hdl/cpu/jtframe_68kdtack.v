@@ -23,7 +23,7 @@ module jtframe_68kdtack(
     output reg  cpu_cenb,
     input       bus_cs,
     input       bus_busy,
-    input       ASn,
+    input       BUSn,   // BUSn = ASn | (LDSn & UDSn)
 
     output reg  DTACKn
 );
@@ -36,8 +36,8 @@ reg [MISSW-1:0] miss;
 reg [$clog2(CENCNT):0] cencnt=0;
 reg wait1;
 
-//wire hurry   = ASn===1 && (miss!=0);
-wire hurry   = ASn===1 || (ASn===0 && !DTACKn) && (miss!=0);
+//wire hurry   = BUSn===1 && (miss!=0);
+wire hurry   = BUSn===1 || (BUSn===0 && !DTACKn) && (miss!=0);
 wire recover = hurry && cencnt==1;
 
 `ifdef SIMULATION
@@ -55,10 +55,10 @@ always @(posedge clk, posedge rst) begin : dtack_gen
         wait1  <= 1;
         miss   <= 0;
     end else begin
-        if( ASn ) begin
+        if( BUSn ) begin // DSn is needed for read-modify-write cycles
             DTACKn <= 1;
             wait1  <= 1;
-        end else if( !ASn ) begin
+        end else if( !BUSn ) begin
             if( cpu_cen  ) wait1 <= 0;
             if( cpu_cenb ) begin
                 if( !wait1 ) begin
