@@ -23,61 +23,60 @@ module jtframe_68kdtack(
     output reg  cpu_cenb,
     input       bus_cs,
     input       bus_busy,
+    input       bus_legit,
     input       BUSn,   // BUSn = ASn | (LDSn & UDSn)
 
     output reg  DTACKn
 );
 
-parameter CENCNT=6, CENSTEP=1, MISSW=$clog2(CENCNT+CENSTEP-1)+5;
-parameter RECOVER_EN=1;
+parameter CENCNT=6,  // denominator
+          CENSTEP=1; // numerator
+localparam CW=$clog2(CENCNT+CENSTEP-1)+6+1;
 
-localparam [MISSW-1:0] RECSTEP = CENCNT-2;
+reg [CW-1:0] cencnt=0;
+reg wait1, halt;
+wire over = cencnt>=CENCNT-1;
 
-reg [MISSW-1:0] miss;
-reg [$clog2(CENCNT+CENSTEP-1):0] cencnt=0;
-reg wait1;
-
-//wire hurry   = BUSn===1 && (miss!=0);
-wire hurry   = BUSn===1 || (BUSn===0 && !DTACKn) && (miss!=0);
-wire recover = RECOVER_EN && hurry && cencnt==1;
-
-`ifdef SIMULATION
 initial begin
     if( CENCNT<3 ) begin
-        $display("Error: CENCNT must be 3 or more (%m)");
+        $display("Error: CENCNT must be 3 or more, otherwise recovery won't work (%m)");
         $finish;
     end
 end
-`endif
 
 always @(posedge clk, posedge rst) begin : dtack_gen
     if( rst ) begin
         DTACKn <= 1'b1;
         wait1  <= 1;
-        miss   <= 0;
+        halt   <= 0;
     end else begin
         if( BUSn ) begin // DSn is needed for read-modify-write cycles
             DTACKn <= 1;
             wait1  <= 1;
+            halt   <= 0;
         end else if( !BUSn ) begin
             if( cpu_cen  ) wait1 <= 0;
-            if( cpu_cenb ) begin
-                if( !wait1 ) begin
-                    if( !bus_cs || (bus_cs && !bus_busy) ) DTACKn <= 0;
+            if( !wait1 ) begin
+                if( !bus_cs || (bus_cs && !bus_busy) ) begin
+                    DTACKn <= 0;
+                    halt <= 0;
+                end else begin
+                    halt <= !bus_legit;
                 end
             end
-            if( !wait1 && DTACKn ) miss <= miss + 1'd1;
         end
-        if( recover ) miss <= ( miss > RECSTEP ) ? miss - RECSTEP : 0;
     end
 end
 
-wire over = cencnt>=CENCNT-1;
-
 always @(posedge clk) begin
-    cencnt  <= (over || recover) ? (cencnt+CENSTEP-CENCNT) : (cencnt+CENSTEP);
-    cpu_cen <= over ? ~cpu_cen : over;
-    cpu_cenb<= cpu_cen;
+    cencnt  <= (over && !cpu_cen && !halt) ? (cencnt+CENSTEP-CENCNT) : (cencnt+CENSTEP);
+    if( halt ) begin
+        cpu_cen  <= 0;
+        cpu_cenb <= 0;
+    end else begin
+        cpu_cen <= over ? ~cpu_cen : 0;
+        cpu_cenb<= cpu_cen;
+    end
 end
 
 endmodule
