@@ -16,6 +16,27 @@
     Version: 1.0
     Date: 20-5-2021 */
 
+/*
+
+    Generates the standard /DTACK signal expected by the CPU,
+    i.e. there is an idle cycle for each bus cycle
+
+    If there is a special bus access, marked by bus_cs, and
+    it takes longer to complete than one cycle, the extra time
+    will be recovered for later. If bus_legit is high, the time
+    will not be recovered as it is identified as legitim wait
+    in the original system
+
+    BUSn -and not just ASn- must be used so read-modify-write
+    instructions have a second /DTACK signal generated for
+    the write cycle
+
+    Note that if jtframe_ramrq is used, then BUSn must also
+    gate the SDRAM requests so you get a cs toggle in the
+    middle of the read-modify-write cycles
+
+*/
+
 module jtframe_68kdtack(
     input       rst,
     input       clk,
