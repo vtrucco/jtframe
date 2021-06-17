@@ -28,17 +28,18 @@ module jtframe_68kdtack(
     output reg  DTACKn
 );
 
-parameter CENCNT=6, MISSW=7;
+parameter CENCNT=6, CENSTEP=1, MISSW=$clog2(CENCNT+CENSTEP-1)+5;
+parameter RECOVER_EN=1;
 
 localparam [MISSW-1:0] RECSTEP = CENCNT-2;
 
 reg [MISSW-1:0] miss;
-reg [$clog2(CENCNT):0] cencnt=0;
+reg [$clog2(CENCNT+CENSTEP-1):0] cencnt=0;
 reg wait1;
 
 //wire hurry   = BUSn===1 && (miss!=0);
 wire hurry   = BUSn===1 || (BUSn===0 && !DTACKn) && (miss!=0);
-wire recover = hurry && cencnt==1;
+wire recover = RECOVER_EN && hurry && cencnt==1;
 
 `ifdef SIMULATION
 initial begin
@@ -71,10 +72,12 @@ always @(posedge clk, posedge rst) begin : dtack_gen
     end
 end
 
+wire over = cencnt>=CENCNT-1;
+
 always @(posedge clk) begin
-    cencnt  <= (cencnt==(CENCNT-1) || recover) ? 0 : (cencnt+1'd1);
-    cpu_cen <= cencnt==0;
-    cpu_cenb<= cencnt==1;
+    cencnt  <= (over || recover) ? (cencnt+CENSTEP-CENCNT) : (cencnt+CENSTEP);
+    cpu_cen <= over ? ~cpu_cen : over;
+    cpu_cenb<= cpu_cen;
 end
 
 endmodule
