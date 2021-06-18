@@ -37,33 +37,39 @@
 
 */
 
-module jtframe_68kdtack(
-    input       rst,
-    input       clk,
-    output reg  cpu_cen,
-    output reg  cpu_cenb,
-    input       bus_cs,
-    input       bus_busy,
-    input       bus_legit,
-    input       BUSn,   // BUSn = ASn | (LDSn & UDSn)
+module jtframe_68kdtack
+#(parameter W=5
+)(
+    input         rst,
+    input         clk,
+    output   reg  cpu_cen,
+    output   reg  cpu_cenb,
+    input         bus_cs,
+    input         bus_busy,
+    input         bus_legit,
+    input         BUSn,   // BUSn = ASn | (LDSn & UDSn)
+    input [W-1:0] num,  // numerator
+    input [W-1:0] den,  // denominator
 
     output reg  DTACKn
 );
 
-parameter CENCNT=6,  // denominator
-          CENSTEP=1; // numerator
-localparam CW=$clog2(CENCNT+CENSTEP-1)+6+1;
+localparam CW=W+6;
 
 reg [CW-1:0] cencnt=0;
 reg wait1, halt;
-wire over = cencnt>=CENCNT-1;
+wire over = cencnt>=den-1;
 
+`ifdef SIMULATION
+real rnum = num;
+real rden = den;
 initial begin
-    if( CENCNT<3 ) begin
-        $display("Error: CENCNT must be 3 or more, otherwise recovery won't work (%m)");
+    if( rnum/rden<=3 ) begin
+        $display("Error: den must be 3 or more, otherwise recovery won't work (%m)");
         $finish;
     end
 end
+`endif
 
 always @(posedge clk, posedge rst) begin : dtack_gen
     if( rst ) begin
@@ -90,7 +96,7 @@ always @(posedge clk, posedge rst) begin : dtack_gen
 end
 
 always @(posedge clk) begin
-    cencnt  <= (over && !cpu_cen && !halt) ? (cencnt+CENSTEP-CENCNT) : (cencnt+CENSTEP);
+    cencnt  <= (over && !cpu_cen && !halt) ? (cencnt+num-den) : (cencnt+num);
     if( halt ) begin
         cpu_cen  <= 0;
         cpu_cenb <= 0;
