@@ -38,7 +38,7 @@ OUTPUTDIR=output_files
 PRJ=
 
 # Define colours if running on a terminal
-if [ -n $TERM ]; then
+if [ -n "$TERM" ]; then
     red=`tput setaf 1`
     green=`tput setaf 2`
     blue=`tput setaf 4`
