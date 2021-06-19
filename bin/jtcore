@@ -153,10 +153,17 @@ OUTPUTDIR=output_${SEED}
 # Check Quartus path
 case $TARGET in
     mister)
-        if ! (which quartus_sh|grep 17 -q); then
+        if ! (which quartus_sh|grep intelFPGA_lite -q); then
             PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:.
-            PATH=$PATH:$(locate intelFPGA_lite/17.1/quartus/bin | head -1)
-            export PATH
+            if [ -d /opt/intelFPGA_lite ]; then
+                cd /opt/intelFPGA_lite
+                cd $(ls | head -n 1)
+                PATH=$PATH:`pwd`/quartus/bin
+                export PATH
+            else
+                echo "Cannot find Quartus in /opt/intelFPGA_lite"
+                exit 1
+            fi
         fi;;
     mist|sidi)
         if ! (which quartus_sh|grep 13 -q); then
