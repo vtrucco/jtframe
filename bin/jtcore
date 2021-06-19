@@ -62,6 +62,9 @@ function parse_args {
                 shift
                 MACROS="$1 $MACROS"
                 ;;
+            -rename)
+                shift
+                RENAME=$1;;
             -help | -h)
                 show_usage;;
             *)  if [ -z "$PRJ" ]; then
