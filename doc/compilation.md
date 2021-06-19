@@ -14,11 +14,10 @@ All JT arcade cores depend on JTFRAME for compilation:
 These are the minimum compilation steps, using _Pirate Ship Higemaru_ as the example core
 
 ```
-> git clone https://github.com/jotego/jt_gng
+> git clone --recursive https://github.com/jotego/jt_gng
 > cd jt_gng
-> git submodule init
-> git submodule update --init --recursive
 > source setprj.sh
+> cd $JTFRAME/cc && make && cd -
 > jtcore hige
 ```
 
