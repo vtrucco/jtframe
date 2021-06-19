@@ -37,16 +37,19 @@ SEED=1
 OUTPUTDIR=output_files
 PRJ=
 
-red=`tput setaf 1`
-green=`tput setaf 2`
-blue=`tput setaf 4`
-white=`tput setaf 7`
-rBG=`tput setab 1; tput setaf 7`
-gBG=`tput setab 2; tput setaf 7`
-bBG=`tput setab 4; tput setaf 7`
-yBG=`tput setab 3; tput setaf 7`
-wBG=`tput setab 7; tput setaf 0`
-NC=`tput sgr0`
+# Define colours if running on a terminal
+if [ -n $TERM ]; then
+    red=`tput setaf 1`
+    green=`tput setaf 2`
+    blue=`tput setaf 4`
+    white=`tput setaf 7`
+    rBG=`tput setab 1; tput setaf 7`
+    gBG=`tput setab 2; tput setaf 7`
+    bBG=`tput setab 4; tput setaf 7`
+    yBG=`tput setab 3; tput setaf 7`
+    wBG=`tput setab 7; tput setaf 0`
+    NC=`tput sgr0`
+fi
 
 function parse_args {
     while [ $# -gt 0 ]; do
