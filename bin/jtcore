@@ -118,7 +118,7 @@ if [ ! -e "$JTFRAME" ]; then
     exit 1
 fi
 
-if ! which jtcfgstr; then
+if ! which jtcfgstr > /dev/null; then
     echo "Cannot find jtcfgstr in the path. This file can be found in the"
     echo "JTBIN repository, in the bin folder"
     exit 1
@@ -180,6 +180,14 @@ function escape_bars {
     echo ${1//\//\\/}
 }
 
+function parse_macros {
+    local MM=""
+    if [ -n "$MACROS" ]; then
+        MM="-def $MACROS"
+    fi
+    jtcfgstr -target=$TARGET -parse $MACROS_FILE $VERBOSE -commit $PRJCOMMIT $MM -output $1
+}
+
 # qsf line to disable SOUND synthesis
 # set_global_assignment -name VERILOG_MACRO "NOSOUND=<None>"
 function copy_templates {
@@ -203,13 +211,13 @@ function copy_templates {
     fi
     # Add definitions in "macros" files
     if [ -e $MACROS_FILE ]; then
-        jtcfgstr -target=$TARGET -def $MACROS_FILE -output quartus | sort >> $QSF
+        (parse_macros quartus | sort >> $QSF) || exit $?
         if [ -n "$SHOWMACROS" ]; then
             gawk -f $JTFRAME/bin/jtmacros.awk target=$TARGET $MACROS_FILE
             exit 0
         fi
         # Prepare config string
-        jtcfgstr -output cfgstr -def $MACROS_FILE -target $TARGET $VERBOSE -commit $PRJCOMMIT
+        parse_macros cfgstr > $JTROOT/log/$TARGET/cfgstr || exit $?
     fi
     # Copy SDC file and SDRAM constraints
     if [ $TARGET = mister ]; then
@@ -307,10 +315,6 @@ if [ $SKIP_COMPILE = FALSE ]; then
     LOG="$JTROOT/log/$TARGET/jt$PRJ.log"
     echo Log file: $LOG
     copy_templates
-    # Prepare macros
-    for m in $MACROS; do
-        echo -e "\n" set_global_assignment -name VERILOG_MACRO \"$m\" >> jt$PRJ.qsf
-    done
     echo -e "\nset_global_assignment -name seed $SEED" >> jt$PRJ.qsf
     if [ $SIM = FALSE ]; then
         # Compilation
