@@ -1,4 +1,14 @@
+# OSD Resolution
+
+Platform | Resolution | Buffer | Remarks
+---------|------------|--------|------------------
+MiST     | 256x64     | 2kB    |
+MiSTer   | 256x128    | 4kB    | HD mode +1kB
+
+In both cases, the buffer encodes pixel columns in bytes: each byte contains one 8-pixel row.
+
 # OSD colours
+
 The macro **JTFRAME_OSDCOLOR** should be defined with a 6-bit value encoding an RGB tone. This is used for
 the OSD background. The meanins are:
 
