@@ -258,11 +258,32 @@ assign ypbpr = 1'b0;
     reg       dwn_done;
     reg [15:0] cntdown;
 
+    localparam [4:0] NEPT_KEY_UP     = 30,
+                     NEPT_KEY_DOWN   = 29,
+                     NEPT_KEY_LEFT   = 27,
+                     NEPT_KEY_RIGHT  = 23,
+                     NEPT_KEY_RETURN = 15;
+
+    reg [4:0] nept_key;
+    reg [2:0] nept_cmd;
+
+    always @(*) begin
+        case( 1'b1 )
+            joystick1[0]: nept_key = NEPT_KEY_RIGHT;
+            joystick1[1]: nept_key = NEPT_KEY_LEFT;
+            joystick1[2]: nept_key = NEPT_KEY_UP;
+            joystick1[3]: nept_key = NEPT_KEY_DOWN;
+            joystick1[4]: nept_key = NEPT_KEY_RETURN;
+            default: nept_key = ~0;
+        endcase
+        nept_cmd = &joystick1[6:4] ? 3'b011 : 3'b111; // Bring up OSD if three buttons are pressed
+    end
+
     always @(posedge clk_sys) begin
         if( sdram_init ) begin
             nept_din <= 8'hff;
             dwn_done <= 0;
-            cntdown <= ~0;
+            cntdown  <= ~0;
         end else begin
             if( downloading ) begin
                 dwn_done <= 1;
@@ -271,7 +292,7 @@ assign ypbpr = 1'b0;
                 cntdown <= cntdown-1;
                 nept_din <= 8'hff;
             end else
-                nept_din <= dwn_done ? /*~joystick1[7:0]*/ 8'hff : 8'h3f;
+                nept_din <= dwn_done ? { nept_cmd ,nept_key } : 8'h3f;
         end
     end
 
