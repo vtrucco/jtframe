@@ -278,7 +278,7 @@ assign ypbpr = 1'b0;
             joy_mix[2]: nept_key = NEPT_KEY_UP;
             joy_mix[3]: nept_key = NEPT_KEY_DOWN;
             joy_mix[4]: nept_key = NEPT_KEY_RETURN;
-            default: nept_key = ~0;
+            default: nept_key = 5'h1f;
         endcase
         // Bring up OSD if three buttons are pressed
         nept_cmd = &joy_mix[6:4] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
