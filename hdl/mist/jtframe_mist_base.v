@@ -263,20 +263,25 @@ assign ypbpr = 1'b0;
                      NEPT_KEY_LEFT   = 27,
                      NEPT_KEY_RIGHT  = 23,
                      NEPT_KEY_RETURN = 15;
+    localparam [2:0] NEPT_CMD_NOP = 3'b111,
+                     NEPT_CMD_OSD = 3'b011;
 
     reg [4:0] nept_key;
     reg [2:0] nept_cmd;
 
+    wire [6:0] joy_mix = joystick1[6:0] | joystick2[6:0];
+
     always @(*) begin
         case( 1'b1 )
-            joystick1[0]: nept_key = NEPT_KEY_RIGHT;
-            joystick1[1]: nept_key = NEPT_KEY_LEFT;
-            joystick1[2]: nept_key = NEPT_KEY_UP;
-            joystick1[3]: nept_key = NEPT_KEY_DOWN;
-            joystick1[4]: nept_key = NEPT_KEY_RETURN;
+            joy_mix[0]: nept_key = NEPT_KEY_RIGHT;
+            joy_mix[1]: nept_key = NEPT_KEY_LEFT;
+            joy_mix[2]: nept_key = NEPT_KEY_UP;
+            joy_mix[3]: nept_key = NEPT_KEY_DOWN;
+            joy_mix[4]: nept_key = NEPT_KEY_RETURN;
             default: nept_key = ~0;
         endcase
-        nept_cmd = &joystick1[6:4] ? 3'b011 : 3'b111; // Bring up OSD if three buttons are pressed
+        // Bring up OSD if three buttons are pressed
+        nept_cmd = &joy_mix[6:4] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
     end
 
     always @(posedge clk_sys) begin
