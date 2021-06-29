@@ -289,8 +289,6 @@ assign ypbpr = 1'b0;
         .joystick2      (joystick2[11:0])
     );
 
-    assign status[63:32]=0;
-
     assign joystick1[31:12]=0;
     assign joystick2[31:12]=0;
     assign joystick3 = 0;

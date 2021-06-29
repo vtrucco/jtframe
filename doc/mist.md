@@ -28,7 +28,7 @@ Bits 7:5   | Use
 
 The _pump_ command will be executed by loading the file pointed by `P,...dat` in the config string.
 
-The keyboard and joystick inputs are coded in 5 bits and don't follow any standard. The source code documents the following values (in decimal):
+`KKKKK` encodes the keyboard and joystick inputs. The source code documents the following values (in decimal):
 
 ```
 #define KEY_UP  30
@@ -70,3 +70,15 @@ A sample I/O code can be seen [here](https://gitlab.com/victor.trucco/Multicore/
 
 
 NeptUNO has a 2MB SRAM module too, which JTFRAME does not support.
+
+### Button Assignments
+
+[../hdl/neptuno/jtframe_neptuno_io.v](The Neptuno I/O) module expects a Megadrive DB9 controller to work. Special inputs:
+
+Buttons | Use
+--------|--------
+Start+C | Display, hide OSD
+A       | Functions as enter in the OSD
+Start+B | Press during 2 seconds to toggle the scan doubler*
+
+* Not implemented yet

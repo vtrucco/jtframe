@@ -66,9 +66,10 @@ localparam [2:0] NEPT_CMD_NOP = 3'b111,
 reg [4:0] nept_key;
 reg [2:0] nept_cmd;
 
-wire [6:0] joy_mix = joystick1[6:0] | joystick2[6:0];
+wire [11:0] joy_mix = joystick1[11:0] | joystick2[11:0];
 
-wire osd_en = &joy_mix[6:4];
+// wire scan2x_toggle = joy_mix[10] & joy_mix[7]; // Start + B buttons
+wire osd_en = joy_mix[10] & joy_mix[6]; // Start + C buttons of Megadrive controller
 wire osd_en_filt;
 
 jtframe_enlarger #(4) u_enlarger(
@@ -81,8 +82,8 @@ jtframe_enlarger #(4) u_enlarger(
 
 always @(*) begin
     case( 1'b1 )
-        joy_mix[0]: nept_key = NEPT_KEY_LEFT;
-        joy_mix[1]: nept_key = NEPT_KEY_RIGHT;
+        joy_mix[0]: nept_key = NEPT_KEY_RIGHT;
+        joy_mix[1]: nept_key = NEPT_KEY_LEFT;
         joy_mix[2]: nept_key = NEPT_KEY_DOWN;
         joy_mix[3]: nept_key = NEPT_KEY_UP;
         joy_mix[4]: nept_key = NEPT_KEY_RETURN;

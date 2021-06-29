@@ -34,10 +34,19 @@ wire joy2_up, joy2_down, joy2_left, joy2_right, joy2_p6, joy2_p9;
 
 wire [11:0] inv1, inv2;
 
-assign joy1 = ~inv1;
-assign joy2 = ~inv2;
+// makes it active high, and sets the Mode, START, XYZ ABC button order
+// MX YZS ACB = input
+// MS XYZ ABC = output
+// BA 987 654
+function [11:0] translate;
+    input [11:0] in;
+    translate = ~{ in[11], in[7], in[10:8], in[5:4], in[6], in[3:0] };
+endfunction
 
-joydecoder u_serial  (
+assign joy1 = translate( inv1 );
+assign joy2 = translate( inv2 );
+
+joydecoder u_serial(
     .clk          ( clk        ),
     .joy_data     ( joy_data   ),
     .joy_clk      ( joy_clk    ),
@@ -59,8 +68,7 @@ joydecoder u_serial  (
     .joy2fire2    ( joy2_p9    )
 );
 
-joystick_sega u_sega
-(
+joystick_sega u_sega(
     .joy0 ({ joy1_p9, joy1_p6, joy1_up, joy1_down, joy1_left, joy1_right }),
     .joy1 ({ joy2_p9, joy2_p6, joy2_up, joy2_down, joy2_left, joy2_right }),
 
