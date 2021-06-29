@@ -68,6 +68,17 @@ reg [2:0] nept_cmd;
 
 wire [6:0] joy_mix = joystick1[6:0] | joystick2[6:0];
 
+wire osd_en = &joy_mix[6:4];
+wire osd_en_filt;
+
+jtframe_enlarger #(4) u_enlarger(
+    .rst        ( sdram_init    ),
+    .clk        ( clk_sys       ),
+    .cen        ( hs            ),
+    .pulse_in   ( osd_en        ),
+    .pulse_out  ( osd_en_filt   )
+);
+
 always @(*) begin
     case( 1'b1 )
         joy_mix[0]: nept_key = NEPT_KEY_LEFT;
@@ -78,7 +89,7 @@ always @(*) begin
         default: nept_key = 5'h1f;
     endcase
     // Bring up OSD if three buttons are pressed
-    nept_cmd = &joy_mix[6:4] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
+    nept_cmd = osd_en_filt ? NEPT_CMD_OSD : NEPT_CMD_NOP;
 end
 
 always @(posedge clk_sys) begin
