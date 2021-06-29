@@ -168,7 +168,7 @@ case $TARGET in
                 exit 1
             fi
         fi;;
-    mist|sidi)
+    *)
         if ! (which quartus_sh|grep 13 -q); then
             PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:.
             PATH=$PATH:$(locate altera/13.1/quartus/bin | head -1)
