@@ -55,7 +55,7 @@ module jtframe_mist_base #(parameter
     input           SPI_DI,
     input           SPI_SCK,
     input           SPI_SS2,
-    input           SPI_SS3,
+    input           SPI_SS3,    // OSD interface
     input           SPI_SS4,
     input           CONF_DATA0,
     // control
@@ -281,7 +281,8 @@ assign ypbpr = 1'b0;
             default: nept_key = 5'h1f;
         endcase
         // Bring up OSD if three buttons are pressed
-        nept_cmd = &joy_mix[6:4] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
+        //nept_cmd = &joy_mix[6:4] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
+        nept_cmd = joystick1[5] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
     end
 
     always @(posedge clk_sys) begin

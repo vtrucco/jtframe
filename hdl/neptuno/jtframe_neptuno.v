@@ -201,7 +201,7 @@ jtframe_mist_base #(
     .SPI_DI         ( SPI_DI        ),
     .SPI_SCK        ( SPI_SCK       ),
     .SPI_SS2        ( SPI_SS2       ),
-    .SPI_SS3        (               ),  // unused on NeptUNO
+    .SPI_SS3        ( SPI_SS2       ),  // SS2 reused on NeptUNO for OSD
     .SPI_SS4        (               ),
     .CONF_DATA0     (               ),
     // control
