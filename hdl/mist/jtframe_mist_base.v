@@ -254,101 +254,51 @@ assign ypbpr = 1'b0;
     );
 `else
     // Neptuno
-    reg [7:0] nept_din=8'hff;
-    reg       dwn_done;
-    reg [15:0] cntdown;
+    jtframe_neptuno_io u_neptuno_io(
+        .sdram_init     ( sdram_init    ),
+        .clk_sys        ( clk_sys       ),
+        .clk_rom        ( clk_rom       ),
+        .hs             ( hs            ),
 
-    localparam [4:0] NEPT_KEY_UP     = 30,
-                     NEPT_KEY_DOWN   = 29,
-                     NEPT_KEY_LEFT   = 27,
-                     NEPT_KEY_RIGHT  = 23,
-                     NEPT_KEY_RETURN = 15;
-    localparam [2:0] NEPT_CMD_NOP = 3'b111,
-                     NEPT_CMD_OSD = 3'b011;
+        .SPI_SCK        ( SPI_SCK       ),
+        .SPI_SS2        ( SPI_SS2       ),
+        .SPI_DI         ( SPI_DI        ),
+        .SPI_DO         ( SPI_DO        ),
 
-    reg [4:0] nept_key;
-    reg [2:0] nept_cmd;
+        // Config string
+        .cfg_addr       ( cfg_addr      ),
+        .cfg_dout       ( cfg_dout      ),
 
-    wire [6:0] joy_mix = joystick1[6:0] | joystick2[6:0];
+        .ioctl_download ( ioctl_download),
+        .ioctl_index    ( ioctl_index   ),
+        .ioctl_wr       ( ioctl_wr      ),
+        .ioctl_addr     ( ioctl_addr    ),
+        .ioctl_dout     ( ioctl_data    ),
 
-    always @(*) begin
-        case( 1'b1 )
-            joy_mix[0]: nept_key = NEPT_KEY_RIGHT;
-            joy_mix[1]: nept_key = NEPT_KEY_LEFT;
-            joy_mix[2]: nept_key = NEPT_KEY_UP;
-            joy_mix[3]: nept_key = NEPT_KEY_DOWN;
-            joy_mix[4]: nept_key = NEPT_KEY_RETURN;
-            default: nept_key = 5'h1f;
-        endcase
-        // Bring up OSD if three buttons are pressed
-        //nept_cmd = &joy_mix[6:4] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
-        nept_cmd = joystick1[5] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
-    end
+        .core_mod       ( core_mod      ),
+        .status         ( status        ),
+        .scan2x_enb     ( scan2x_enb    ),
 
-    always @(posedge clk_sys) begin
-        if( sdram_init ) begin
-            nept_din <= 8'hff;
-            dwn_done <= 0;
-            cntdown  <= ~0;
-        end else begin
-            if( downloading ) begin
-                dwn_done <= 1;
-            end
-            if ( cntdown!=0 ) begin
-                cntdown <= cntdown-1;
-                nept_din <= 8'hff;
-            end else
-                nept_din <= dwn_done ? { nept_cmd ,nept_key } : 8'h3f;
-        end
-    end
+        // DB9 Joysticks
+        .JOY_CLK        ( JOY_CLK       ),
+        .JOY_LOAD       ( JOY_LOAD      ),
+        .JOY_DATA       ( JOY_DATA      ),
+        .JOY_SELECT     ( JOY_SELECT    ),
 
-    data_io  u_datain (
-        .SPI_SCK            ( SPI_SCK           ),
-        .SPI_SS2            ( SPI_SS2           ),
-        .SPI_DI             ( SPI_DI            ),
-        .SPI_DO             ( SPI_DO            ),
-
-        .data_in            ( nept_din          ),
-        .conf_addr          ( cfg_addr          ),
-        .conf_chr           ( cfg_dout          ),
-        .status             ( status[31:0]      ),
-        .core_mod           ( core_mod          ),
-
-        .clk_rom            ( clk_rom           ),
-        .ioctl_download     ( ioctl_download    ),
-        .ioctl_addr         ( ioctl_addr        ),
-        .ioctl_dout         ( ioctl_data        ),
-        .ioctl_wr           ( ioctl_wr          ),
-        .ioctl_index        ( ioctl_index       ),
-        // Unused
-        .config_buffer_o    (                   )
+        .joystick1      (joystick1[11:0]),
+        .joystick2      (joystick2[11:0])
     );
 
     assign status[63:32]=0;
-    assign scan2x_enb = 0; // scan doubler enabled
 
+    assign joystick1[31:12]=0;
+    assign joystick2[31:12]=0;
     assign joystick3 = 0;
     assign joystick4 = 0;
     assign joystick_analog_0 = 0;
     assign joystick_analog_1 = 0;
     assign ps2_kbd_clk = 0;
     assign ps2_kbd_data = 0;
-
-    jtframe_neptuno_joy u_joysticks(
-        .clk        ( clk_sys       ),
-        .hs         ( hs            ),
-
-        .joy_clk    ( JOY_CLK       ),
-        .joy_data   ( JOY_DATA      ),
-        .joy_load   ( JOY_LOAD      ),
-        .joy_select ( JOY_SELECT    ),
-
-        .joy1       ( joystick1[11:0] ),
-        .joy2       ( joystick2[11:0] )
-    );
-
-    assign joystick1[31:12]=0;
-    assign joystick2[31:12]=0;
 `endif
 
 // OSD will only get simulated if SIMULATE_OSD is defined
