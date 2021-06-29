@@ -30,7 +30,7 @@ The _pump_ command will be executed by loading the file pointed by `P,...dat` in
 
 The keyboard and joystick inputs are coded in 5 bits and don't follow any standard. The source code documents the following values (in decimal):
 
-````
+```
 #define KEY_UP  30
 #define KEY_DOW 29
 #define KEY_LFT 27

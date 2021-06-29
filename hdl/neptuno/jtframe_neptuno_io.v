@@ -1,0 +1,139 @@
+/*  This file is part of JTFRAME.
+    JTFRAME program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    JTFRAME program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with JTFRAME.  If not, see <http://www.gnu.org/licenses/>.
+
+    Author: Jose Tejada Gomez. Twitter: @topapate
+    Version: 1.0
+    Date: 12-6-2021 */
+
+module jtframe_neptuno_io(
+    input          sdram_init,
+    input          clk_sys,
+    input          clk_rom,
+    input          hs,
+
+    input          SPI_SCK,
+    input          SPI_SS2,
+    input          SPI_DI,
+    output         SPI_DO,
+
+    // Config string
+    output   [9:0] cfg_addr,
+    input    [7:0] cfg_dout,
+
+    output         ioctl_download,
+    output   [7:0] ioctl_index,
+    output         ioctl_wr,
+    output  [24:0] ioctl_addr,
+    output   [7:0] ioctl_dout,
+
+    output  [ 6:0] core_mod,
+    output  [63:0] status,
+    output         scan2x_enb,
+
+    // DB9 Joysticks
+    output         JOY_CLK,
+    output         JOY_LOAD,
+    input          JOY_DATA,
+    output         JOY_SELECT,
+
+    output  [11:0] joystick1,
+    output  [11:0] joystick2
+);
+
+reg [7:0] nept_din=8'hff;
+reg       dwn_done;
+reg [15:0] cntdown;
+
+localparam [4:0] NEPT_KEY_UP     = 30,
+                 NEPT_KEY_DOWN   = 29,
+                 NEPT_KEY_LEFT   = 27,
+                 NEPT_KEY_RIGHT  = 23,
+                 NEPT_KEY_RETURN = 15;
+localparam [2:0] NEPT_CMD_NOP = 3'b111,
+                 NEPT_CMD_OSD = 3'b011;
+
+reg [4:0] nept_key;
+reg [2:0] nept_cmd;
+
+wire [6:0] joy_mix = joystick1[6:0] | joystick2[6:0];
+
+always @(*) begin
+    case( 1'b1 )
+        joy_mix[0]: nept_key = NEPT_KEY_LEFT;
+        joy_mix[1]: nept_key = NEPT_KEY_RIGHT;
+        joy_mix[2]: nept_key = NEPT_KEY_DOWN;
+        joy_mix[3]: nept_key = NEPT_KEY_UP;
+        joy_mix[4]: nept_key = NEPT_KEY_RETURN;
+        default: nept_key = 5'h1f;
+    endcase
+    // Bring up OSD if three buttons are pressed
+    nept_cmd = &joy_mix[6:4] ? NEPT_CMD_OSD : NEPT_CMD_NOP;
+end
+
+always @(posedge clk_sys) begin
+    if( sdram_init ) begin
+        nept_din <= 8'hff;
+        dwn_done <= 0;
+        cntdown  <= ~0;
+    end else begin
+        if( ioctl_download ) begin
+            dwn_done <= 1;
+        end
+        if ( cntdown!=0 ) begin
+            cntdown <= cntdown-1;
+            nept_din <= 8'hff;
+        end else
+            nept_din <= dwn_done ? { nept_cmd ,nept_key } : 8'h3f;
+    end
+end
+
+data_io  u_datain (
+    .SPI_SCK            ( SPI_SCK           ),
+    .SPI_SS2            ( SPI_SS2           ),
+    .SPI_DI             ( SPI_DI            ),
+    .SPI_DO             ( SPI_DO            ),
+
+    .data_in            ( nept_din          ),
+    .conf_addr          ( cfg_addr          ),
+    .conf_chr           ( cfg_dout          ),
+    .status             ( status[31:0]      ),
+    .core_mod           ( core_mod          ),
+
+    .clk_rom            ( clk_rom           ),
+    .ioctl_download     ( ioctl_download    ),
+    .ioctl_addr         ( ioctl_addr        ),
+    .ioctl_dout         ( ioctl_dout        ),
+    .ioctl_wr           ( ioctl_wr          ),
+    .ioctl_index        ( ioctl_index       ),
+    // Unused
+    .config_buffer_o    (                   )
+);
+
+assign status[63:32]=0;
+assign scan2x_enb = 0; // scan doubler enabled
+jtframe_neptuno_joy u_joysticks(
+    .clk        ( clk_sys       ),
+    .hs         ( hs            ),
+
+    .joy_clk    ( JOY_CLK       ),
+    .joy_data   ( JOY_DATA      ),
+    .joy_load   ( JOY_LOAD      ),
+    .joy_select ( JOY_SELECT    ),
+
+    .joy1       ( joystick1[11:0] ),
+    .joy2       ( joystick2[11:0] )
+);
+
+
+endmodule

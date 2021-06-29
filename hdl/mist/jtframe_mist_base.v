@@ -23,6 +23,7 @@ module jtframe_mist_base #(parameter
     input           rst,
     input           clk_sys,
     input           clk_rom,
+    input           sdram_init,
     output          osd_shown,
     output  [6:0]   core_mod,
     // Base video
@@ -54,7 +55,7 @@ module jtframe_mist_base #(parameter
     input           SPI_DI,
     input           SPI_SCK,
     input           SPI_SS2,
-    input           SPI_SS3,
+    input           SPI_SS3,    // OSD interface
     input           SPI_SS4,
     input           CONF_DATA0,
     // control
@@ -169,45 +170,50 @@ jtframe_ram #(.synfile("cfgstr.hex")) u_cfgstr(
     .q      ( cfg_dout  )
 );
 
-user_io #(.ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_userio(
-    .rst            ( rst       ),
-    .clk_sys        ( clk_sys   ),
+`ifndef NEPTUNO
+    user_io #(.ROM_DIRECT_UPLOAD(`JTFRAME_MIST_DIRECT)) u_userio(
+        .rst            ( rst       ),
+        .clk_sys        ( clk_sys   ),
 
-    // config string
-    .conf_str       (           ),
-    .conf_addr      ( cfg_addr  ),
-    .conf_chr       ( cfg_dout  ),
+        // config string
+        .conf_str       (           ),
+        .conf_addr      ( cfg_addr  ),
+        .conf_chr       ( cfg_dout  ),
 
-    .SPI_CLK        ( SPI_SCK   ),
-    .SPI_SS_IO      ( CONF_DATA0),
-    .SPI_MISO       ( SPI_DO    ),
-    .SPI_MOSI       ( SPI_DI    ),
-    .joystick_0     ( joystick2 ),
-    .joystick_1     ( joystick1 ),
-    .joystick_3     ( joystick3 ),
-    .joystick_4     ( joystick4 ),
-    // Analog joysticks
-    .joystick_analog_0  ( joystick_analog_0 ),
-    .joystick_analog_1  ( joystick_analog_1 ),
+        .SPI_CLK        ( SPI_SCK   ),
+        .SPI_SS_IO      ( CONF_DATA0),
+        .SPI_MISO       ( SPI_DO    ),
+        .SPI_MOSI       ( SPI_DI    ),
+        .joystick_0     ( joystick2 ),
+        .joystick_1     ( joystick1 ),
+        .joystick_3     ( joystick3 ),
+        .joystick_4     ( joystick4 ),
+        // Analog joysticks
+        .joystick_analog_0  ( joystick_analog_0 ),
+        .joystick_analog_1  ( joystick_analog_1 ),
 
-    .status         ( status    ),
-    .ypbpr          ( ypbpr     ),
-    .scandoubler_disable ( scan2x_enb ),
-    // keyboard
-    .ps2_kbd_clk    ( ps2_kbd_clk  ),
-    .ps2_kbd_data   ( ps2_kbd_data ),
-    // Core variant
-    .core_mod       ( core_mod  ),
-    // unused ports:
-    .serial_strobe  ( 1'b0      ),
-    .serial_data    ( 8'd0      ),
-    .sd_lba         ( 32'd0     ),
-    .sd_rd          ( 1'b0      ),
-    .sd_wr          ( 1'b0      ),
-    .sd_conf        ( 1'b0      ),
-    .sd_sdhc        ( 1'b0      ),
-    .sd_din         ( 8'd0      )
-);
+        .status         ( status    ),
+        .ypbpr          ( ypbpr     ),
+        .scandoubler_disable ( scan2x_enb ),
+        // keyboard
+        .ps2_kbd_clk    ( ps2_kbd_clk  ),
+        .ps2_kbd_data   ( ps2_kbd_data ),
+        // Core variant
+        .core_mod       ( core_mod  ),
+        // unused ports:
+        .serial_strobe  ( 1'b0      ),
+        .serial_data    ( 8'd0      ),
+        .sd_lba         ( 32'd0     ),
+        .sd_rd          ( 1'b0      ),
+        .sd_wr          ( 1'b0      ),
+        .sd_conf        ( 1'b0      ),
+        .sd_sdhc        ( 1'b0      ),
+        .sd_din         ( 8'd0      )
+    );
+`else
+    assign ypbpr = 0;
+`endif
+
 `else
 assign joystick1 = 32'd0;
 assign joystick2 = 32'd0;
@@ -225,26 +231,75 @@ assign scan2x_enb = `SCANDOUBLER_DISABLE;
 assign ypbpr = 1'b0;
 `endif
 
-data_io #(.ROM_DIRECT_UPLOAD(1'b1)) u_datain (
-    .SPI_SCK            ( SPI_SCK           ),
-    .SPI_SS2            ( SPI_SS2           ),
-    .SPI_SS4            ( SPI_SS4           ),
-    .SPI_DI             ( SPI_DI            ),
-    .SPI_DO             ( SPI_DO            ),
+`ifndef NEPTUNO
+    data_io #(.ROM_DIRECT_UPLOAD(1'b1)) u_datain (
+        .SPI_SCK            ( SPI_SCK           ),
+        .SPI_SS2            ( SPI_SS2           ),
+        .SPI_SS4            ( SPI_SS4           ),
+        .SPI_DI             ( SPI_DI            ),
+        .SPI_DO             ( SPI_DO            ),
 
-    .clk_sys            ( clk_rom           ),
-    .clkref_n           ( 1'b0              ), // this is not a clock.
-    .ioctl_download     ( ioctl_download    ),
-    .ioctl_addr         ( ioctl_addr        ),
-    .ioctl_dout         ( ioctl_data        ),
-    .ioctl_din          ( ioctl_data2sd     ),
-    .ioctl_wr           ( ioctl_wr          ),
-    .ioctl_index        ( ioctl_index       ),
-    // Unused:
-    .ioctl_upload       (                   ),
-    .ioctl_fileext      (                   ),
-    .ioctl_filesize     (                   )
-);
+        .clk_sys            ( clk_rom           ),
+        .clkref_n           ( 1'b0              ), // this is not a clock.
+        .ioctl_download     ( ioctl_download    ),
+        .ioctl_addr         ( ioctl_addr        ),
+        .ioctl_dout         ( ioctl_data        ),
+        .ioctl_din          ( ioctl_data2sd     ),
+        .ioctl_wr           ( ioctl_wr          ),
+        .ioctl_index        ( ioctl_index       ),
+        // Unused:
+        .ioctl_upload       (                   ),
+        .ioctl_fileext      (                   ),
+        .ioctl_filesize     (                   )
+    );
+`else
+    // Neptuno
+    jtframe_neptuno_io u_neptuno_io(
+        .sdram_init     ( sdram_init    ),
+        .clk_sys        ( clk_sys       ),
+        .clk_rom        ( clk_rom       ),
+        .hs             ( hs            ),
+
+        .SPI_SCK        ( SPI_SCK       ),
+        .SPI_SS2        ( SPI_SS2       ),
+        .SPI_DI         ( SPI_DI        ),
+        .SPI_DO         ( SPI_DO        ),
+
+        // Config string
+        .cfg_addr       ( cfg_addr      ),
+        .cfg_dout       ( cfg_dout      ),
+
+        .ioctl_download ( ioctl_download),
+        .ioctl_index    ( ioctl_index   ),
+        .ioctl_wr       ( ioctl_wr      ),
+        .ioctl_addr     ( ioctl_addr    ),
+        .ioctl_dout     ( ioctl_data    ),
+
+        .core_mod       ( core_mod      ),
+        .status         ( status        ),
+        .scan2x_enb     ( scan2x_enb    ),
+
+        // DB9 Joysticks
+        .JOY_CLK        ( JOY_CLK       ),
+        .JOY_LOAD       ( JOY_LOAD      ),
+        .JOY_DATA       ( JOY_DATA      ),
+        .JOY_SELECT     ( JOY_SELECT    ),
+
+        .joystick1      (joystick1[11:0]),
+        .joystick2      (joystick2[11:0])
+    );
+
+    assign status[63:32]=0;
+
+    assign joystick1[31:12]=0;
+    assign joystick2[31:12]=0;
+    assign joystick3 = 0;
+    assign joystick4 = 0;
+    assign joystick_analog_0 = 0;
+    assign joystick_analog_1 = 0;
+    assign ps2_kbd_clk = 0;
+    assign ps2_kbd_data = 0;
+`endif
 
 // OSD will only get simulated if SIMULATE_OSD is defined
 `ifndef SIMULATE_OSD
