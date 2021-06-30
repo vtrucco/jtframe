@@ -182,9 +182,9 @@ function escape_bars {
 
 function parse_macros {
     local MM=""
-    if [ -n "$MACROS" ]; then
-        MM="-def $MACROS"
-    fi
+    for i in $MACROS; do
+        MM="-def $i $MM"
+    done
     jtcfgstr -target=$TARGET -parse $MACROS_FILE $VERBOSE -commit $PRJCOMMIT $MM -output $1
 }
 

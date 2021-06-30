@@ -11,6 +11,13 @@ For I/O (SDRAM download, etc.) the following indexes are used
  DIP switches     |  N/A   |  254
  Cheat switches   |  N/A   |  255
 
+## core_mod (JTFRAME options)
+
+Bit    |  Use
+-------|---------
+0      | High for vertical games
+1      | 4-way joysticks
+
 # SDRAM Timing
 
 SDRAM clock can be shifted with respect to the internal clock (clk_rom in the diagram).
