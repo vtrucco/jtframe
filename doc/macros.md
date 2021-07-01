@@ -14,11 +14,6 @@ JTFRAME_CLK6             |         | Adds an additional clock input
 JTFRAME_CLK96            |         | Adds an additional clock input
 JTFRAME_CHEAT            |         | Enables the [cheat engine](cheat.md)
 JTFRAME_CHEAT_SCRAMBLE   |         | Enables cheat firmware encryption
-JTFRAME_CREDITS          |         | Adds credits screen
-JTFRAME_CREDITS_AON      |         | credits screen is always on
-JTFRAME_CREDITS_HSTART   |         | Horizontal offset for the 256-pxl wide credits
-JTFRAME_CREDITS_PAGES    |         | number of pages of credits text
-JTFRAME_CREDITS_NOROTATE |         | Always display the credits horizontally
 JTFRAME_DEBUG            |         | Enables the debug_bus signal connection to the game instance
 JTFRAME_DONTSIM_SCAN2X   |         | Internal. Do not define externally
 JTFRAME_DUAL_RAM_DUMP    |         | Enables dumping of RAM contents in simulation
@@ -99,10 +94,22 @@ JTFRAME_SIM_SCAN2X       |         | Enables scan doubler simulation
 SIMULATION               |         | Enables simulation features
 VIDEO_START              |         | First frame for which video output is provided use it to prevent a split first frame
 
-## ROM Downloading
+# ROM Downloading
 
 Macro                    | Target  |  Usage
 -------------------------|---------|---------------------------------------------
 LOADROM                  |         | Sends ROM data via serial interface
 JTFRAME_DWNLD_PROM_ONLY  |         | Skip the regular download and go directly to the PROM section
 JTFRAME_SIM_LOAD_EXTRA   |         | Extra wait time when transferring ROM in simulation
+
+# Credits
+
+JTFRAME_CREDITS is always enabled if JTFRAME_CHEAT is defined
+
+Macro                    | Target  |  Usage
+-------------------------|---------|---------------------------------------------
+JTFRAME_CREDITS          |         | Adds credits screen
+JTFRAME_CREDITS_AON      |         | credits screen is always on
+JTFRAME_CREDITS_HSTART   |         | Horizontal offset for the 256-pxl wide credits
+JTFRAME_CREDITS_PAGES    |         | number of pages of credits text
+JTFRAME_CREDITS_NOROTATE |         | Always display the credits horizontally
