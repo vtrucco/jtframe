@@ -403,9 +403,8 @@ cp $RBF $RELEASE.rbf
 END_TIME=$(date +%s)
 
 COMPILE_TIME=$[$END_TIME - $START_TIME]
-HOURS=$[$COMPILE_TIME / 3600]
 MINUTES=$[$COMPILE_TIME / 60]
 SECONDS=$[$COMPILE_TIME % 60]
 
-echo -e "${gBG}completed${NC}${wBG} at $(date) - compile Time: ${red}${HOURS}h${MINUTES}m${SECONDS}s${NC}"
+echo -e "${gBG}completed${NC}${wBG} at $(date) - compile Time: ${red}${MINUTES}m${SECONDS}s${NC}"
 exit $FAIL
