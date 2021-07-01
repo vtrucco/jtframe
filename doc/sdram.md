@@ -18,6 +18,21 @@ Bit    |  Use
 0      | High for vertical games
 1      | 4-way joysticks
 
+## Automatic SDRAM Dump
+
+A fraction of bank zero's SDRAM contents can be dumped to the SDRAM on MiSTer using the NVRAM interface. You have to define two macros:
+
+```
+JTFRAME_SHADOW=0x10_0000
+JTFRAME_SHADOW_LEN=10
+```
+
+The first one defines the start address, and the second the number of address bits to dump. The example above will dump 1k-word, i.e. 2kByte.
+
+The MRA file must include `<nvram index="2" size="2048"/>`. MiSTer will create a dump file each time the `save settings` option is selected in the OSD.
+
+At the time of writting, MiSTer firmware doesn't handle correctly NVRAM sizes equal or above 64kB.
+
 # SDRAM Timing
 
 SDRAM clock can be shifted with respect to the internal clock (clk_rom in the diagram).

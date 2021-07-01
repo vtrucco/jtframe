@@ -280,6 +280,30 @@ jtframe_mister_dwnld u_dwnld(
     .ddram_rd       ( ddrld_rd         )
 );
 
+wire [7:0] hps_din;
+
+`ifdef JTFRAME_SHADOW
+    jtframe_shadow #(
+        .AW    ( SDRAMW              ),
+        .START ( `JTFRAME_SHADOW     ),
+        .LW    ( `JTFRAME_SHADOW_LEN )  // length of data to be dumped as a power of 2
+    ) u_shadow (
+        .clk_rom    ( clk_rom       ),
+
+        // Capture SDRAM bank 0 inputs
+        .ba0_addr   ( ba0_addr      ),
+        .wr0        ( ba_wr[0]      ),
+        .din        ( ba0_din       ),
+        .din_m      ( ba0_din_m     ),  // write mask -active low
+
+        // Let data be dumped via NVRAM interface
+        .ioctl_addr ( ioctl_addr    ),
+        .ioctl_din  ( hps_din       )
+    );
+`else
+    assign hps_din = ioctl_din;
+`endif
+
 wire [9:0] cfg_addr;
 wire [7:0] cfg_dout;
 
@@ -312,7 +336,7 @@ hps_io #( .STRLEN(0), .PS2DIV(32), .WIDE(JTFRAME_MR_FASTIO) ) u_hps_io
     .ioctl_wr        ( hps_wr         ),
     .ioctl_addr      ( hps_addr       ),
     .ioctl_dout      ( hps_dout       ),
-    .ioctl_din       ( ioctl_din      ),
+    .ioctl_din       ( hps_din        ),
     .ioctl_index     ( hps_index      ),
     .ioctl_wait      ( hps_wait       ),
     // NVRAM support
