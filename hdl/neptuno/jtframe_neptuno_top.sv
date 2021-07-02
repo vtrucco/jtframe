@@ -416,8 +416,8 @@ u_game(
     .joystick4   ( game_joy4[BUTTONS+3:0]      ),
     `endif
     `ifdef JTFRAME_ANALOG
-    .joystick_analog_0( joystick_analog_0   ),
-    .joystick_analog_1( joystick_analog_1   ),
+    .joyana1     ( joystick_analog_0   ),
+    .joyana2     ( joystick_analog_1   ),
     `endif
 
     // Sound control
