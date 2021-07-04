@@ -188,14 +188,10 @@ set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
 set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 set_global_assignment -name FORCE_SYNCH_CLEAR ON
 
-set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/pll48/jtframe_pll0.qip
-set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/pll48/jtframe_pll1.qip
-set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/pll48/jtframe_pll96.qip
-set_global_assignment -name SYSTEMVERILOG_FILE ${MODULES}/jtframe/hdl/mist/jtframe_mist_top.sv
-set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/mist.qip
+set_global_assignment -name QIP_FILE ${MODULES}/jtframe/target/mist/mist.qip
 set_global_assignment -name QIP_FILE ${PRJPATH}/hdl/jt${CORENAME}.qip
 
-set_global_assignment -name VERILOG_MACRO "MIST=<None>"
-set_global_assignment -name VERILOG_MACRO "SIDI=<None>"
+set_global_assignment -name VERILOG_MACRO "MIST=1"
+set_global_assignment -name VERILOG_MACRO "SIDI=1"
 
 set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to SPI_SCK
