@@ -196,8 +196,8 @@ function copy_templates {
     # do not leave a space in the line below sedstr!
     sedstr='s/${CORENAME}/'${PRJ}'/g;s/${DATE}/'${datestr}'/g;s/${MODULES}/'$(escape_bars ${MODULES})'/g;s/${PRJPATH}/'$(escape_bars ${PRJPATH})'/g;'\
 's/${OUTPUTDIR}/'${OUTPUTDIR}'/g'
-    sed "$sedstr" $JTFRAME/hdl/$TARGET/$TARGET.qpf > $PRJPATH/$TARGET/jt${PRJ}.qpf
-    sed "$sedstr" $JTFRAME/hdl/$TARGET/$TARGET.qsf > $PRJPATH/$TARGET/jt${PRJ}.qsf
+    sed "$sedstr" $JTFRAME/target/$TARGET/$TARGET.qpf > $PRJPATH/$TARGET/jt${PRJ}.qpf
+    sed "$sedstr" $JTFRAME/target/$TARGET/$TARGET.qsf > $PRJPATH/$TARGET/jt${PRJ}.qsf
     # TCL in HDL folder is always appended
     TCL=$PRJPATH/hdl/jt${PRJ}.tcl
     MACROS_FILE=$PRJPATH/hdl/jt${PRJ}.def
@@ -222,12 +222,12 @@ function copy_templates {
     # Copy SDC file and SDRAM constraints
     if [ $TARGET = mister ]; then
         if grep JTFRAME_SDRAM96 $QSF; then
-            cp $JTFRAME/hdl/mister/sys/sdram_clk96.sdc $PRJPATH/$TARGET/sys_top.sdc
+            cp $JTFRAME/target/mister/sys/sdram_clk96.sdc $PRJPATH/$TARGET/sys_top.sdc
         else
-            cp $JTFRAME/hdl/mister/sys/sdram_clk48.sdc $PRJPATH/$TARGET/sys_top.sdc
-            cat $JTFRAME/hdl/mister/slew_rate.tcl >> $QSF
+            cp $JTFRAME/target/mister/sys/sdram_clk48.sdc $PRJPATH/$TARGET/sys_top.sdc
+            cat $JTFRAME/target/mister/slew_rate.tcl >> $QSF
         fi
-        cat $JTFRAME/hdl/mister/sys/sys_top.sdc >> $PRJPATH/$TARGET/sys_top.sdc
+        cat $JTFRAME/target/mister/sys/sys_top.sdc >> $PRJPATH/$TARGET/sys_top.sdc
         # Adds local SDC file if exists (only MiSTer)
         if [ -e $PRJPATH/mister/jt${PRJ}.sdc ]; then
             cat <(echo -e "\n") $PRJPATH/mister/jt${PRJ}.sdc >> $PRJPATH/$TARGET/sys_top.sdc
