@@ -133,29 +133,39 @@ assign snd_right = snd_left;
     `define JTFRAME_PLL jtframe_pll0
 `endif
 
+wire pll0_lock, pll1_lock, clk27;
+
+assign pll_locked = pll0_lock & pll1_lock;
+
+pll_neptuno u_pllneptuno(
+    .inclk0 ( CLK50     ),
+    .c0     ( clk27     ),
+    .locked ( pll0_lock )
+);
+
 // clk_rom is always 48MHz
 // clk96, clk24 and clk6 inputs to the core can be enabled via macros
 `ifdef JTFRAME_SDRAM96
     jtframe_pll96 u_pll_game (
-        .inclk0 ( CLK50       ),
+        .inclk0 ( clk27       ),
         .c0     ( clk48       ), // 48 MHz
         .c1     ( clk96       ), // 96 MHz
         .c2     ( SDRAM_CLK   ), // 96 MHz shifted
         .c3     ( clk24       ),
         .c4     ( clk6        ),
-        .locked ( pll_locked  )
+        .locked ( pll1_lock   )
     );
     assign clk_rom = clk96;
     assign clk_sys = clk96;
 `else
     `JTFRAME_PLL u_pll_game (
-        .inclk0 ( CLK50       ),
+        .inclk0 ( clk27       ),
         .c0     ( clk96       ),
         .c1     ( clk48       ), // 48 MHz
         .c2     ( SDRAM_CLK   ),
         .c3     ( clk24       ),
         .c4     ( clk6        ),
-        .locked ( pll_locked  )
+        .locked ( pll1_lock   )
     );
     assign clk_rom = clk48;
     `ifdef JTFRAME_CLK96
