@@ -17,6 +17,8 @@ JTCORE compilation tool. (c) Jose Tejada 2019, @topapate
     -mist       compiles the MiST version. This is the default
     -sidi       compiles the SIDI version. This uses MiST's folders and settings but different pinout
     -neptuno    compiles the NeptUNO version
+    -mc2        compiles the MultiCore2  version
+    -mcp        compiles the MultiCore2+ version
 
     -seed       sets random seed for compilation
     -rename     name used for copying the RBF file into the SD card
@@ -56,7 +58,7 @@ function parse_args {
         case "$1" in
             -mister | -mr)
                 TARGET=mister;;
-            -mist|-sidi|-neptuno)
+            -mist|-sidi|-neptuno|-mc2|-mcp)
                 TARGET=${1:1};;
             -d)
                 shift
@@ -260,7 +262,7 @@ if [ $SKIP_COMPILE = FALSE ]; then
         exit 1
     fi
     # Create MiST(er) folders if they don't exist
-    mkdir -p $PRJPATH/{mist,mister,sidi,neptuno}
+    mkdir -p $PRJPATH/{mist,mister,sidi,neptuno,mc2,mcp}
     # Update message file
     if [ -e bin/jt${PRJ}_msg.py ]; then
         cd bin
