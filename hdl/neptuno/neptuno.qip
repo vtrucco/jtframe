@@ -12,5 +12,4 @@ set_global_assignment -name QIP_FILE     [ file join $::quartus(qip_path) pll_ne
 
 # Framework
 set_global_assignment -name SYSTEMVERILOG_FILE [ file join $::quartus(qip_path) ../mist/jtframe_mist_top.sv ]
-set_global_assignment -name SYSTEMVERILOG_FILE [ file join $::quartus(qip_path) ../mist/jtframe_mist.sv ]
 set_global_assignment -name SYSTEMVERILOG_FILE [ file join $::quartus(qip_path) data_io_mc2.sv ]

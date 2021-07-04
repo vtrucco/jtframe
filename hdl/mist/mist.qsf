@@ -154,7 +154,6 @@ set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[*]
 set_instance_assignment -name FAST_INPUT_REGISTER ON -to SDRAM_DQ[*]
 set_global_assignment -name FORCE_SYNCH_CLEAR ON
 
-set_global_assignment -name SYSTEMVERILOG_FILE ${MODULES}/jtframe/hdl/mist/jtframe_mist_top.sv
 set_global_assignment -name QIP_FILE ${MODULES}/jtframe/hdl/mist/mist.qip
 set_global_assignment -name QIP_FILE ${PRJPATH}/hdl/jt${CORENAME}.qip
 
