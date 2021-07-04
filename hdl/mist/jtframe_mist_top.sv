@@ -130,42 +130,21 @@ assign ba_rd[3:1] = 0;
 assign ba_wr      = 0;
 `endif
 
-`ifndef JTFRAME_PLL
-    `define JTFRAME_PLL jtframe_pll0
-`endif
+jtframe_mist_clocks u_clocks(
+    .clk_ext    ( CLOCK_27[0]    ),    // 27MHz for MiST, 50MHz for Neptuno
 
-// clk_rom is always 48MHz
-// clk96, clk24 and clk6 inputs to the core can be enabled via macros
-`ifdef JTFRAME_SDRAM96
-    jtframe_pll96 u_pll_game (
-        .inclk0 ( CLOCK_27[0] ),
-        .c0     ( clk48       ), // 48 MHz
-        .c1     ( clk96       ), // 96 MHz
-        .c2     ( SDRAM_CLK   ), // 96 MHz shifted
-        .c3     ( clk24       ),
-        .c4     ( clk6        ),
-        .locked ( pll_locked  )
-    );
-    assign clk_rom = clk96;
-    assign clk_sys = clk96;
-`else
-    `JTFRAME_PLL u_pll_game (
-        .inclk0 ( CLOCK_27[0] ),
-        .c0     ( clk96       ),
-        .c1     ( clk48       ), // 48 MHz
-        .c2     ( SDRAM_CLK   ),
-        .c3     ( clk24       ),
-        .c4     ( clk6        ),
-        .locked ( pll_locked  )
-    );
-    assign clk_rom = clk48;
-    `ifdef JTFRAME_CLK96
-        assign clk_sys   = clk96; // it is possible to use clk48 instead but
-            // video mixer doesn't work well in HQ mode
-    `else
-        assign clk_sys   = clk_rom;
-    `endif
-`endif
+    // PLL outputs
+    .clk96      ( clk96          ),
+    .clk48      ( clk48          ),
+    .clk24      ( clk24          ),
+    .clk6       ( clk6           ),
+    .pll_locked ( pll_locked     ),
+
+    // System clocks
+    .clk_sys    ( clk_sys        ),
+    .clk_rom    ( clk_rom        ),
+    .SDRAM_CLK  ( SDRAM_CLK      )
+);
 
 assign clk_pico = clk48;
 

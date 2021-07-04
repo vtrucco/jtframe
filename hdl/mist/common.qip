@@ -2,6 +2,7 @@
 set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) ../jtframe.qip                 ]
 
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_mist_base.v            ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) jtframe_mist_clocks.v          ]
 set_global_assignment -name SYSTEMVERILOG_FILE [file join $::quartus(qip_path) osd.sv                         ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sound/hybrid_pwm_sd.v       ]
 set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) ../sound/hifi_1bit_dac.v       ]
