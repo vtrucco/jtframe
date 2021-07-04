@@ -22,7 +22,7 @@ set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE55F23C8
 set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
 
-set_global_assignment -name TOP_LEVEL_ENTITY neptuno_top
+set_global_assignment -name TOP_LEVEL_ENTITY mist_top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 11.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "17:14:01  JUNE 12, 2021"
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
@@ -47,7 +47,7 @@ set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 set_location_assignment PIN_E4 -to LED
 
 # NeptUNO has a single input clock
-set_location_assignment PIN_T2 -to CLK50
+set_location_assignment PIN_T2 -to CLK_EXT
 
 # NeptUNO has direct connection to the PS2 keyboard
 set_location_assignment PIN_N19 -to PS2_CLK

@@ -19,7 +19,7 @@
 // This is the MiST top level
 
 module mist_top(
-    input   [1:0]   CLOCK_27,
+    input           CLK_EXT,
     output  [5:0]   VGA_R,
     output  [5:0]   VGA_G,
     output  [5:0]   VGA_B,
@@ -42,14 +42,28 @@ module mist_top(
     input           SPI_DI,
     input           SPI_SCK,
     input           SPI_SS2,
+`ifndef NEPTUNO
     input           SPI_SS3,
     input           SPI_SS4,
     input           CONF_DATA0,
+`endif
     // sound
     output          AUDIO_L,
     output          AUDIO_R,
+`ifdef NEPTUNO
+    // NeptUNO exclusive pins -Not connected in MiST
+    // PS2
+    input           PS2_CLK,
+    input           PS2_DATA,
+    // Joystick
+    output          JOY_CLK,
+    output          JOY_LOAD,
+    input           JOY_DATA,
+    output          JOY_SELECT,
+`endif
     // user LED
     output          LED
+
     `ifdef SIMULATION
     ,output         sim_pxl_cen,
     output          sim_pxl_clk,
@@ -131,7 +145,7 @@ assign ba_wr      = 0;
 `endif
 
 jtframe_mist_clocks u_clocks(
-    .clk_ext    ( CLOCK_27[0]    ),    // 27MHz for MiST, 50MHz for Neptuno
+    .clk_ext    ( CLK_EXT        ),    // 27MHz for MiST, 50MHz for Neptuno
 
     // PLL outputs
     .clk96      ( clk96          ),
@@ -233,9 +247,32 @@ u_frame(
     .SPI_DI         ( SPI_DI         ),
     .SPI_SCK        ( SPI_SCK        ),
     .SPI_SS2        ( SPI_SS2        ),
+`ifdef NEPTUNO
+    .SPI_SS3        (                ),
+    .SPI_SS4        (                ),
+    .CONF_DATA0     (                ),
+`else
     .SPI_SS3        ( SPI_SS3        ),
     .SPI_SS4        ( SPI_SS4        ),
     .CONF_DATA0     ( CONF_DATA0     ),
+`endif
+
+
+`ifdef NEPTUNO
+    .ps2_clk        ( PS2_CLK        ),
+    .ps2_dout       ( PS2_DATA       ),
+    .JOY_CLK        ( JOY_CLK        ),
+    .JOY_LOAD       ( JOY_LOAD       ),
+    .JOY_DATA       ( JOY_DATA       ),
+    .JOY_SELECT     ( JOY_SELECT     ),
+`else // Explicitly disconnected so FPGA pins are not connected either
+    .ps2_clk        (                ),
+    .ps2_dout       (                ),
+    .JOY_CLK        (                ),
+    .JOY_LOAD       (                ),
+    .JOY_DATA       (                ),
+    .JOY_SELECT     (                ),
+`endif
 
     // ROM access from game
     // Bank 0: allows R/W

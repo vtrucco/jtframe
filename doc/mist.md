@@ -5,6 +5,8 @@ The MiST firmware was derived from Minimig, but it has served as the basis for o
 * SiDi, shares the same MCU and binary firmware
 * NeptUNO, comes from Multicore, which seems to be influenced by MiST
 
+MiST FPGA has two 27MHz clock inputs, but only one of them is used in JTFRAME and it is renamed to CLK_EXT (pin 54), the other one (pin 55) is left unconnected.
+
 ## NeptUNO
 
 This system has a primitive I/O and disk management:
