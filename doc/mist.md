@@ -5,6 +5,15 @@ The MiST firmware was derived from Minimig, but it has served as the basis for o
 * SiDi, shares the same MCU and binary firmware
 * NeptUNO, comes from Multicore, which seems to be influenced by MiST
 
+Some systems use a different file extension for the RBF
+
+System       | RBF file extension
+-------------|---------------------
+MiST, SiDi   | rbf
+Neptuno      | np1
+Multicore 2+ | mcp
+Multicore 2  | mc2
+
 ## NeptUNO
 
 This system has a primitive I/O and disk management:
