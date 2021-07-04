@@ -66,14 +66,20 @@ module jtframe_mist_base #(parameter
     output [31:0]   joystick4,
     output [15:0]   joystick_analog_0,
     output [15:0]   joystick_analog_1,
-    output          ps2_kbd_clk,
-    output          ps2_kbd_data,
+    // PS2 pins are outputs if NEPTUNO isn't defined
+    inout           ps2_kbd_clk,
+    inout           ps2_kbd_data,
     // Sound
     input           clk_dac,
     input   [15:0]  snd_left,
     input   [15:0]  snd_right,
     output          snd_pwm_left,
     output          snd_pwm_right,
+    // Direct joystick connection (Neptuno / MC)
+    output          JOY_CLK,
+    output          JOY_LOAD,
+    input           JOY_DATA,
+    output          JOY_SELECT,
     // ROM load from SPI
     output [24:0]   ioctl_addr,
     output [ 7:0]   ioctl_data,
@@ -83,13 +89,6 @@ module jtframe_mist_base #(parameter
     output          ioctl_cheat,
     output          downloading
 
-`ifdef NEPTUNO
-    // Joystick
-    ,output         JOY_CLK,
-    output          JOY_LOAD,
-    input           JOY_DATA,
-    output          JOY_SELECT
-`endif
 );
 
 localparam [7:0] IDX_CHEAT = 8'h10,
@@ -220,8 +219,6 @@ assign joystick2 = 32'd0;
 assign joystick3 = 32'd0;
 assign joystick4 = 32'd0;
 assign status    = 64'd0;
-assign ps2_kbd_data = 1'b0;
-assign ps2_kbd_clk  = 1'b0;
 `ifndef SCANDOUBLER_DISABLE
     `define SCANDOUBLER_DISABLE 1'b1
     initial $display("INFO: Use -d SCANDOUBLER_DISABLE=0 if you want video output.");
@@ -295,8 +292,6 @@ assign ypbpr = 1'b0;
     assign joystick4 = 0;
     assign joystick_analog_0 = 0;
     assign joystick_analog_1 = 0;
-    assign ps2_kbd_clk = 0;
-    assign ps2_kbd_data = 0;
 `endif
 
 // OSD will only get simulated if SIMULATE_OSD is defined

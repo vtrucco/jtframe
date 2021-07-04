@@ -94,6 +94,17 @@ module jtframe_mist #(parameter
     input           SPI_SS3,
     input           SPI_SS4,
     input           CONF_DATA0,
+    // PS2 are input pins for Neptuno
+    // and outputs for MiST
+    inout           ps2_clk,
+    inout           ps2_dout,
+`ifdef NEPTUNO
+    // Joystick
+    output          JOY_CLK,
+    output          JOY_LOAD,
+    input           JOY_DATA,
+    output          JOY_SELECT,
+`endif
     // ROM load from SPI
     output   [24:0] ioctl_addr,
     output   [ 7:0] ioctl_data,
@@ -151,7 +162,7 @@ wire          scan2x_enb;
 wire [6:0]    core_mod;
 
 wire  [ 1:0]  rotate;
-wire          ioctl_cheat;
+wire          ioctl_cheat, sdram_init;
 
 assign board_status = { {32-DIPBASE{1'b0}}, status[DIPBASE-1:0] };
 
@@ -160,6 +171,7 @@ jtframe_mist_base #(
     .COLORW      ( COLORW           )
 ) u_base(
     .rst            ( rst           ),
+    .sdram_init     ( sdram_init    ),
     .clk_sys        ( clk_sys       ),
     .clk_rom        ( clk_rom       ),
     .core_mod       ( core_mod      ),
@@ -193,8 +205,13 @@ jtframe_mist_base #(
     .SPI_DI         ( SPI_DI        ),
     .SPI_SCK        ( SPI_SCK       ),
     .SPI_SS2        ( SPI_SS2       ),
+`ifndef NEPTUNO
     .SPI_SS3        ( SPI_SS3       ),
     .SPI_SS4        ( SPI_SS4       ),
+`else
+    .SPI_SS3        ( SPI_SS2       ),  // SS2 reused on NeptUNO for OSD
+    .SPI_SS4        (               ),
+`endif
     .CONF_DATA0     ( CONF_DATA0    ),
     // control
     .status         ( status        ),
@@ -205,9 +222,14 @@ jtframe_mist_base #(
     // Analog joystick
     .joystick_analog_0( joystick_analog_0   ),
     .joystick_analog_1( joystick_analog_1   ),
-    // Keyobard
-    .ps2_kbd_clk    ( ps2_kbd_clk   ),
-    .ps2_kbd_data   ( ps2_kbd_data  ),
+    // Keyboard
+    .ps2_kbd_clk    ( ps2_clk       ),
+    .ps2_kbd_data   ( ps2_dout      ),
+    // Direct joystick connection (Neptuno / MC)
+    .JOY_CLK        ( JOY_CLK       ),
+    .JOY_LOAD       ( JOY_LOAD      ),
+    .JOY_DATA       ( JOY_DATA      ),
+    .JOY_SELECT     ( JOY_SELECT    ),
     // audio
     .clk_dac        ( clk_sys       ),
     .snd_left       ( snd_left      ),
@@ -238,6 +260,7 @@ jtframe_board #(
     .game_rst       ( game_rst        ),
     .game_rst_n     ( game_rst_n      ),
     .rst_req        ( rst_req         ),
+    .sdram_init     ( sdram_init      ),
     .pll_locked     ( pll_locked      ),
     .downloading    ( dwnld_busy      ), // use busy signal from game module
 
@@ -246,8 +269,8 @@ jtframe_board #(
     .clk_pico       ( clk_pico        ),
     .core_mod       ( core_mod        ),
     // joystick
-    .ps2_kbd_clk    ( ps2_kbd_clk     ),
-    .ps2_kbd_data   ( ps2_kbd_data    ),
+    .ps2_kbd_clk    ( ps2_clk         ),
+    .ps2_kbd_data   ( ps2_dout        ),
     .board_joystick1( joystick1[15:0] ),
     .board_joystick2( joystick2[15:0] ),
     .board_joystick3( joystick3[15:0] ),

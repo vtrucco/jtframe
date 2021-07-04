@@ -201,7 +201,7 @@ assign game_led[1] = 1'b0; // Let system LED info go through too
 
 localparam BUTTONS=`BUTTONS;
 
-jtframe_neptuno #(
+jtframe_mist #(
     .SDRAMW       ( SDRAMW         ),
     .SIGNED_SND   ( `SIGNED_SND    ),
     .BUTTONS      ( BUTTONS        ),
@@ -260,8 +260,8 @@ u_frame(
     .JOY_DATA       ( JOY_DATA       ),
     .JOY_SELECT     ( JOY_SELECT     ),
 
-    .PS2_CLK        ( PS2_CLK        ),
-    .PS2_DATA       ( PS2_DATA       ),
+    .ps2_clk        ( PS2_CLK        ),
+    .ps2_dout       ( PS2_DATA       ),
 
     // ROM access from game
     // Bank 0: allows R/W

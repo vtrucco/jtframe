@@ -9,5 +9,5 @@ set_global_assignment -name VERILOG_FILE [ file join $::quartus(qip_path) jtfram
 
 # Framework
 set_global_assignment -name SYSTEMVERILOG_FILE [ file join $::quartus(qip_path) jtframe_neptuno_top.sv ]
-set_global_assignment -name VERILOG_FILE [ file join $::quartus(qip_path) jtframe_neptuno.v ]
+set_global_assignment -name SYSTEMVERILOG_FILE [ file join $::quartus(qip_path) ../mist/jtframe_mist.sv ]
 set_global_assignment -name SYSTEMVERILOG_FILE [ file join $::quartus(qip_path) data_io_mc2.sv ]
