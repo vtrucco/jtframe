@@ -58,13 +58,17 @@ wire [ 6:0] ram_addr;
 wire        ram_we;
 reg  [ 7:0] xin_sync, p0_s, p1_s, p2_s, p3_s;   // input data must be sampled with cen
 reg         cen2=0; // The MCU has an internal clock divider
-wire        cen_eff = cen & (cen2 | ~CENDIV[0]);
+reg         cen_eff;
 
 // The memory is expected to suffer cen for both reads and writes
 wire clkx = clk & cen_eff;
 
-always @(posedge clk) if(cen) begin
-    cen2     <= ~cen2;
+always @(posedge clk) begin
+    cen_eff <= ~CENDIV[0];
+    if(cen) begin
+        cen2 <= ~cen2;
+        if( cen2 ) cen_eff <= 1;
+    end
 end
 
 always @(posedge clk) if(cen_eff) begin
