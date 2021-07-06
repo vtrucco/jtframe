@@ -23,8 +23,8 @@ module jtframe_8751mcu(
     input         clk,
     input         cen,
 
-    input         int0n,
-    input         int1n,
+    input         int0n,    // Pin P3.2
+    input         int1n,    // Pin P3.3
 
     input  [ 7:0] p0_i,
     input  [ 7:0] p1_i,
@@ -49,18 +49,25 @@ module jtframe_8751mcu(
     input         prom_we
 );
 
-parameter ROMBIN="";
+parameter ROMBIN="",
+          CENDIV=1;    // enables the internal clock divider
 
 wire [ 7:0] rom_data, ram_data, ram_q;
 wire [15:0] rom_addr;
 wire [ 6:0] ram_addr;
 wire        ram_we;
 reg  [ 7:0] xin_sync, p0_s, p1_s, p2_s, p3_s;   // input data must be sampled with cen
+reg         cen2=0; // The MCU has an internal clock divider
+wire        cen_eff = cen & (cen2 | ~CENDIV[0]);
 
 // The memory is expected to suffer cen for both reads and writes
-wire clkx = clk & cen;
+wire clkx = clk & cen_eff;
 
 always @(posedge clk) if(cen) begin
+    cen2     <= ~cen2;
+end
+
+always @(posedge clk) if(cen_eff) begin
     xin_sync <= x_din;
     p0_s     <= p0_i;
     p1_s     <= p1_i;
@@ -70,14 +77,14 @@ end
 
 reg [11:0] rom_acen;
 
-always @(posedge clk) if( cen ) rom_acen <= rom_addr[11:0];
+always @(posedge clk) if( cen_eff ) rom_acen <= rom_addr[11:0];
 
 // You need to clock gate for reading or the MCU won't work
 jtframe_dual_ram_cen #(.aw(12),.simfile(ROMBIN)) u_prom(
     .clk0   ( clk_rom   ),
     .cen0   ( 1'b1      ),
     .clk1   ( clk       ),
-    .cen1   ( cen       ),
+    .cen1   ( cen_eff   ),
     // Port 0
     .data0  ( prom_din  ),
     .addr0  ( prog_addr ),
@@ -92,7 +99,7 @@ jtframe_dual_ram_cen #(.aw(12),.simfile(ROMBIN)) u_prom(
 
 jtframe_ram #(.aw(7),.cen_rd(1)) u_ramu(
     .clk        ( clk               ),
-    .cen        ( cen               ),
+    .cen        ( cen_eff           ),
     .addr       ( ram_addr          ),
     .data       ( ram_data          ),
     .we         ( ram_we            ),
@@ -102,7 +109,7 @@ jtframe_ram #(.aw(7),.cen_rd(1)) u_ramu(
 mc8051_core u_mcu(
     .reset      ( rst       ),
     .clk        ( clk       ),
-    .cen        ( cen       ),
+    .cen        ( cen_eff   ),
     // code ROM
     .rom_data_i ( rom_data  ),
     .rom_adr_o  ( rom_addr  ),
