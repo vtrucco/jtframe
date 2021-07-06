@@ -228,10 +228,17 @@ jtframe_mist_base #(
     .ps2_kbd_clk    ( ps2_clk       ),
     .ps2_kbd_data   ( ps2_dout      ),
     // Direct joystick connection (Neptuno / MC)
+`ifdef NEPTUNO
     .JOY_CLK        ( JOY_CLK       ),
     .JOY_LOAD       ( JOY_LOAD      ),
     .JOY_DATA       ( JOY_DATA      ),
     .JOY_SELECT     ( JOY_SELECT    ),
+`else
+    .JOY_CLK        (               ),
+    .JOY_LOAD       (               ),
+    .JOY_DATA       (               ),
+    .JOY_SELECT     (               ),
+`endif
     // MC2(+) buttons
     .BUTTON_n       ( BUTTON_n      ),
     // audio
