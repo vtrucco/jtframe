@@ -58,6 +58,8 @@ module jtframe_mist_base #(parameter
     input           SPI_SS3,    // OSD interface
     input           SPI_SS4,
     input           CONF_DATA0,
+    // Buttons for MC2(+)
+    input    [ 3:0] BUTTON_n,
     // control
     output [63:0]   status,
     output [31:0]   joystick1,
@@ -283,7 +285,10 @@ assign ypbpr = 1'b0;
         .JOY_SELECT     ( JOY_SELECT    ),
 
         .joystick1      (joystick1[11:0]),
-        .joystick2      (joystick2[11:0])
+        .joystick2      (joystick2[11:0]),
+
+        // Buttons for MC2(+)
+        .button_n       ( BUTTON_n  )
     );
 
     assign joystick1[31:12]=0;

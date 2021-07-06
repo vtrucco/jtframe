@@ -94,6 +94,8 @@ module jtframe_mist #(parameter
     input           SPI_SS3,
     input           SPI_SS4,
     input           CONF_DATA0,
+    // Buttons for MC2(+)
+    input    [ 3:0] BUTTON_n,
     // PS2 are input pins for Neptuno
     // and outputs for MiST
     inout           ps2_clk,
@@ -230,6 +232,8 @@ jtframe_mist_base #(
     .JOY_LOAD       ( JOY_LOAD      ),
     .JOY_DATA       ( JOY_DATA      ),
     .JOY_SELECT     ( JOY_SELECT    ),
+    // MC2(+) buttons
+    .BUTTON_n       ( BUTTON_n      ),
     // audio
     .clk_dac        ( clk_sys       ),
     .snd_left       ( snd_left      ),

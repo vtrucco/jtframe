@@ -47,10 +47,10 @@ set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 # set_location_assignment PIN_E4 -to LED
 
 # Buttons -unused-
-set_location_assignment PIN_R8 -to BTN_N[4]
-set_location_assignment PIN_T8 -to BTN_N[3]
-set_location_assignment PIN_R9 -to BTN_N[2]
-set_location_assignment PIN_T9 -to BTN_N[1]
+set_location_assignment PIN_R8 -to BUTTON_n[3]
+set_location_assignment PIN_T8 -to BUTTON_n[2]
+set_location_assignment PIN_R9 -to BUTTON_n[1]
+set_location_assignment PIN_T9 -to BUTTON_n[0]
 
 # MultiCore2 has a single input clock
 set_location_assignment PIN_E1 -to CLK50

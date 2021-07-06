@@ -16,6 +16,15 @@
     Version: 1.0
     Date: 22-2-2019 */
 
+`ifdef MULTICORE2PLUS
+    `define MC2_BUTTONS
+`endif
+
+`ifdef MULTICORE2
+    `define MC2_BUTTONS
+`endif
+
+
 module neptuno_top(
     input           CLK50,
     output  [5:0]   VGA_R,
@@ -55,6 +64,10 @@ module neptuno_top(
     output          JOY_LOAD,
     input           JOY_DATA,
     output          JOY_SELECT
+`ifdef MC2_BUTTONS
+    // Buttons -only MC2 and MC2+
+    ,input [3:0]     BUTTON_n
+`endif
 
     `ifdef SIMULATION
     ,output         sim_pxl_cen,
@@ -105,6 +118,11 @@ wire [15:0] sdram_dout;
 `ifndef COLORW
 `define COLORW 4
 `endif
+
+`ifndef MC2_BUTTONS
+    wire [3:0] BUTTON_n = 4'hf;
+`endif
+
 
 localparam COLORW=`COLORW;
 
@@ -234,6 +252,7 @@ u_frame(
     .SPI_SCK        ( SPI_SCK        ),
     .SPI_SS2        ( SPI_SS2        ),
 
+    // Neptuno / MC2(+) pins
     .JOY_CLK        ( JOY_CLK        ),
     .JOY_LOAD       ( JOY_LOAD       ),
     .JOY_DATA       ( JOY_DATA       ),
@@ -241,6 +260,7 @@ u_frame(
 
     .ps2_clk        ( PS2_CLK        ),
     .ps2_dout       ( PS2_DATA       ),
+    .BUTTON_n       ( BUTTON_n       ),
 
     // ROM access from game
     // Bank 0: allows R/W

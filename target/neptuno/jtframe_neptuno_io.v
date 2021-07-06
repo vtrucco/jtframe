@@ -48,7 +48,10 @@ module jtframe_neptuno_io(
     output         JOY_SELECT,
 
     output  [11:0] joystick1,
-    output  [11:0] joystick2
+    output  [11:0] joystick2,
+
+    // Buttons for MC2(+)
+    input   [ 3:0] button_n
 );
 
 reg [7:0] nept_din=8'hff;
@@ -69,7 +72,8 @@ reg [2:0] nept_cmd;
 wire [11:0] joy_mix = joystick1[11:0] | joystick2[11:0];
 
 // wire scan2x_toggle = joy_mix[10] & joy_mix[7]; // Start + B buttons
-wire osd_en = joy_mix[10] & joy_mix[6]; // Start + C buttons of Megadrive controller
+wire osd_en = (joy_mix[10] & joy_mix[6]) // Start + C buttons of Megadrive controller
+            | ~button_n[3];
 wire osd_en_filt;
 
 jtframe_enlarger #(4) u_enlarger(
@@ -81,6 +85,7 @@ jtframe_enlarger #(4) u_enlarger(
 );
 
 always @(*) begin
+    // OSD control via joystick
     case( 1'b1 )
         joy_mix[0]: nept_key = NEPT_KEY_RIGHT;
         joy_mix[1]: nept_key = NEPT_KEY_LEFT;
@@ -88,6 +93,12 @@ always @(*) begin
         joy_mix[3]: nept_key = NEPT_KEY_UP;
         joy_mix[4]: nept_key = NEPT_KEY_RETURN;
         default: nept_key = 5'h1f;
+    endcase
+    // OSD control via buttons
+    case( 1'b0 )
+        button_n[0]: nept_key = NEPT_KEY_UP;
+        button_n[1]: nept_key = NEPT_KEY_RETURN;
+        button_n[2]: nept_key = NEPT_KEY_DOWN;
     endcase
     // Bring up OSD if three buttons are pressed
     nept_cmd = osd_en_filt ? NEPT_CMD_OSD : NEPT_CMD_NOP;
