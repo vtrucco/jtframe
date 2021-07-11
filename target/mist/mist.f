@@ -1,5 +1,6 @@
 jtframe_mist.sv
 jtframe_mist_base.v
+jtframe_mist_clocks.v
 ../../hdl/jtframe_board.v
 ../../hdl/jtframe_led.v
 ../../hdl/jtframe_reset.v
