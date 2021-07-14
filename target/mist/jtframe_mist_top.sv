@@ -302,9 +302,8 @@ u_frame(
     .BUTTON_n       ( 4'hf           ),
     .ps2_clk        (                ),
     .ps2_dout       (                ),
-    .JOY_CLK        (                ),
-    .JOY_LOAD       (                ),
-    .JOY_DATA       ( 1'b1           ),
+    .joy1_bus       (                ),
+    .joy2_bus       (                ),
     .JOY_SELECT     (                ),
     // DIP and OSD settings
     .enable_fm      ( enable_fm      ),
