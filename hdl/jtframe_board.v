@@ -218,7 +218,7 @@ wire         osd_pause;
 wire         debug_plus, debug_minus, key_shift;
 
 wire         key_reset, key_pause, key_test, rot_control;
-wire         game_pause, soft_rst;
+wire         game_pause, soft_rst, game_test;
 wire         cheat_led, pre_pause;
 
 wire   [9:0] key_joy1, key_joy2, key_joy3;
@@ -338,6 +338,7 @@ jtframe_inputs #(
     .key_coin       ( key_coin        ),
     .key_service    ( key_service     ),
     .key_pause      ( key_pause       ),
+    .key_test       ( key_test        ),
     .osd_pause      ( osd_pause       ),
     .key_reset      ( key_reset       ),
     .rot_control    ( rot_control     ),
@@ -349,6 +350,7 @@ jtframe_inputs #(
     .game_coin      ( game_coin       ),
     .game_start     ( game_start      ),
     .game_service   ( game_service    ),
+    .game_test      ( game_test       ),
     .lock           ( lock            ),
 
     // Simulation helpers
@@ -372,7 +374,7 @@ jtframe_dip u_dip(
     .enable_fm  ( enable_fm     ),
     .enable_psg ( enable_psg    ),
     .osd_pause  ( osd_pause     ),
-    .key_test   ( key_test      ),
+    .game_test  ( game_test     ),
     .dip_test   ( dip_test      ),
     .dip_pause  ( pre_pause     ),
     .dip_flip   ( dip_flip      ),

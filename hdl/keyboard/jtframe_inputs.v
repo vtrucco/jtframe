@@ -38,6 +38,7 @@ module jtframe_inputs(
     input       [3:0] key_start,
     input       [3:0] key_coin,
     input             key_service,
+    input             key_test,
 
     input             key_pause,
     input             osd_pause,
@@ -51,6 +52,7 @@ module jtframe_inputs(
     output reg [3:0]  game_coin,
     output reg [3:0]  game_start,
     output reg        game_service,
+    output            game_test,
     input             lock, // disable joystick inputs
 
     // For simulation only
@@ -143,6 +145,9 @@ endfunction
             frame_cnt <= 0;
         else frame_cnt <= frame_cnt+1;
     end
+    assign game_test = sim_inputs[frame_cnt][10];
+`else
+    assign game_test = key_test;
 `endif
 
 always @(posedge clk) begin
