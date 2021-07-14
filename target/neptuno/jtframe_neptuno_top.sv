@@ -200,33 +200,33 @@ assign snd_right = snd_left;
 `endif
 
 //joysticks
-wire [5:0] joy1_s;
-wire [5:0] joy2_s;
+wire [5:0] joy1_bus;
+wire [5:0] joy2_bus;
 
 `ifndef MULTICORE2
     joystick_serial u_serial(
-        .clk_i           ( clk_sys    ),
-        .joy_data_i      ( JOY_DATA   ),
-        .joy_clk_o       ( JOY_CLK    ),
-        .joy_load_o      ( JOY_LOAD   ),
+        .clk_i           ( clk_sys     ),
+        .joy_data_i      ( JOY_DATA    ),
+        .joy_clk_o       ( JOY_CLK     ),
+        .joy_load_o      ( JOY_LOAD    ),
 
-        .joy1_up_o       ( joy1_s[3] ),
-        .joy1_down_o     ( joy1_s[2] ),
-        .joy1_left_o     ( joy1_s[1] ),
-        .joy1_right_o    ( joy1_s[0] ),
-        .joy1_fire1_o    ( joy1_s[4] ),
-        .joy1_fire2_o    ( joy1_s[5] ),
+        .joy1_up_o       ( joy1_bus[3] ),
+        .joy1_down_o     ( joy1_bus[2] ),
+        .joy1_left_o     ( joy1_bus[1] ),
+        .joy1_right_o    ( joy1_bus[0] ),
+        .joy1_fire1_o    ( joy1_bus[4] ),
+        .joy1_fire2_o    ( joy1_bus[5] ),
 
-        .joy2_up_o       ( joy2_s[3] ),
-        .joy2_down_o     ( joy2_s[2] ),
-        .joy2_left_o     ( joy2_s[1] ),
-        .joy2_right_o    ( joy2_s[0] ),
-        .joy2_fire1_o    ( joy2_s[4] ),
-        .joy2_fire2_o    ( joy2_s[5] )
+        .joy2_up_o       ( joy2_bus[3] ),
+        .joy2_down_o     ( joy2_bus[2] ),
+        .joy2_left_o     ( joy2_bus[1] ),
+        .joy2_right_o    ( joy2_bus[0] ),
+        .joy2_fire1_o    ( joy2_bus[4] ),
+        .joy2_fire2_o    ( joy2_bus[5] )
     );
 `else
-    assign joy1_s = JOY1;
-    assign joy2_s = JOY2;
+    assign joy1_bus = JOY1;
+    assign joy2_bus = JOY2;
 `endif
 
 
@@ -288,10 +288,10 @@ jtframe_mist #(
     .DIPBASE      ( DIPBASE        ),
     .COLORW       ( COLORW         )
     `ifdef VIDEO_WIDTH
-    ,.VIDEO_WIDTH   ( `VIDEO_WIDTH   )
+    ,.VIDEO_WIDTH ( `VIDEO_WIDTH   )
     `endif
     `ifdef VIDEO_HEIGHT
-    ,.VIDEO_HEIGHT  ( `VIDEO_HEIGHT  )
+    ,.VIDEO_HEIGHT( `VIDEO_HEIGHT  )
     `endif
 )
 u_frame(
@@ -335,8 +335,8 @@ u_frame(
     .SPI_SCK        ( SPI_SCK        ),
     .SPI_SS2        ( SPI_SS2        ),
 
-    .joy1_bus       ( joy1_s         ),
-    .joy2_bus       ( joy2_s         ),
+    .joy1_bus       ( joy1_bus       ),
+    .joy2_bus       ( joy2_bus       ),
 
     .JOY_SELECT     ( JOY_SELECT     ),
 

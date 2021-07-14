@@ -68,7 +68,7 @@ assign mc_reset = ~btn_n_s[3];
     `define CLK_SPEED 48000
 `endif
 
-MC2_HID #( .CLK_SPEED( `CLK_SPEED ) ) k_hid
+MC2_HID #( .CLK_SPEED( `CLK_SPEED ) ) u_hid
 (
     .clk_i          ( clk          ),
     .reset_i        ( reset        ),
@@ -79,25 +79,25 @@ MC2_HID #( .CLK_SPEED( `CLK_SPEED ) ) k_hid
     .joystick_1_i   ( joy2_bus     ),
       
     //-- tilt, coin4-1, start4-1
-    .controls_o     ( controls_s ),
+    .controls_o     ( controls_s   ),
 
     //-- fire12-1, up, down, left, right
 
-    .player1_o      ( inv1 ),
-    .player2_o      ( inv2 ),
+    .player1_o      ( inv1         ),
+    .player2_o      ( inv2         ),
 
     //-- keys to the OSD
-    .osd_o          ( osd_s ),
-    .osd_enable_i   ( 1'b1 ), //osd_enable ), //ideally we need to know when the OSD is open
+    .osd_o          ( osd_s        ),
+    .osd_enable_i   ( 1'b1         ), //osd_enable ), //ideally we need to know when the OSD is open
     
-    .toggle_scandb_o ( toggle_scandb ),
+    .toggle_scandb_o(toggle_scandb ),
     
     //-- sega joystick strobe pin
-    .sega_strobe_o  ( joy_select ),
+    .sega_strobe_o  ( joy_select  ),
 
     //-- Front buttons
-    .front_buttons_i ( BUTTON_n ),
-    .front_buttons_o ( btn_n_s  )        
+    .front_buttons_i( BUTTON_n    ),
+    .front_buttons_o( btn_n_s     )
 );
 
 endmodule
