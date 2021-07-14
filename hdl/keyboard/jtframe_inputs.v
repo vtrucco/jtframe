@@ -29,6 +29,8 @@ module jtframe_inputs(
     input      [15:0] board_joy2,
     input      [15:0] board_joy3,
     input      [15:0] board_joy4,
+    input             board_coin,
+    input             board_start,
 
     input       [9:0] key_joy1,
     input       [9:0] key_joy2,
@@ -165,11 +167,11 @@ always @(posedge clk) begin
         game_joy1 <= apply_rotation(joy1_sync | key_joy1, rot_control, ~dip_flip );
         game_coin      <= {4{ACTIVE_LOW[0]}} ^
             ({  joy4_sync[COIN_BIT],joy3_sync[COIN_BIT],
-                joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin);
+                joy2_sync[COIN_BIT],joy1_sync[COIN_BIT]} | key_coin | board_coin );
 
         game_start     <= {4{ACTIVE_LOW[0]}} ^
             ({  joy4_sync[START_BIT],joy3_sync[START_BIT],
-                joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start);
+                joy2_sync[START_BIT],joy1_sync[START_BIT]} | key_start | board_start );
         `endif
         game_joy2 <= apply_rotation(joy2_sync | key_joy2, rot_control, ~dip_flip );
         game_joy3 <= apply_rotation(joy3_sync | key_joy3, rot_control, ~dip_flip );

@@ -66,6 +66,8 @@ module jtframe_mist_base #(parameter
     output [31:0]   joystick4,
     output [15:0]   joystick_analog_0,
     output [15:0]   joystick_analog_1,
+    output          but_coin,   // buttons, active high
+    output          but_start,
     // PS2 pins are outputs if NEPTUNO isn't defined
     inout           ps2_kbd_clk,
     inout           ps2_kbd_data,
@@ -100,10 +102,13 @@ localparam [7:0] IDX_CHEAT = 8'h10,
 wire        ypbpr;
 wire [7:0]  ioctl_index;
 wire        ioctl_download;
+wire [1:0]  buttons;
 
 assign downloading = ioctl_download;
 assign ioctl_ram   = ioctl_index == IDX_NVRAM && ioctl_download;
 assign ioctl_cheat = ioctl_index == IDX_CHEAT && ioctl_download;
+assign but_coin    = buttons[0];
+assign but_start   = buttons[1];
 
 `ifndef SIMULATION
     `ifndef NOSOUND
@@ -190,6 +195,7 @@ jtframe_ram #(.synfile("cfgstr.hex")) u_cfgstr(
         .joystick_1     ( joystick1 ),
         .joystick_3     ( joystick3 ),
         .joystick_4     ( joystick4 ),
+        .buttons        ( buttons   ),
         // Analog joysticks
         .joystick_analog_0  ( joystick_analog_0 ),
         .joystick_analog_1  ( joystick_analog_1 ),
@@ -300,6 +306,7 @@ assign ypbpr = 1'b0;
     assign joystick4 = 0;
     assign joystick_analog_0 = 0;
     assign joystick_analog_1 = 0;
+    assign buttons = ~BUTTON_n[1:0];
 `endif
 
 // OSD will only get simulated if SIMULATE_OSD is defined

@@ -90,6 +90,8 @@ module jtframe_board #(parameter
     input     [15:0]  board_joystick2,
     input     [15:0]  board_joystick3,
     input     [15:0]  board_joystick4,
+    input             board_start,
+    input             board_coin,
     output     [9:0]  game_joystick1,
     output     [9:0]  game_joystick2,
     output     [9:0]  game_joystick3,
@@ -326,6 +328,8 @@ jtframe_inputs #(
     .board_joy2     ( board_joystick2 ),
     .board_joy3     ( board_joystick3 ),
     .board_joy4     ( board_joystick4 ),
+    .board_start    ( board_start     ),
+    .board_coin     ( board_coin      ),
 
     .key_joy1       ( key_joy1        ),
     .key_joy2       ( key_joy2        ),

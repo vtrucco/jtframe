@@ -159,6 +159,7 @@ wire [7:0]    scan2x_r, scan2x_g, scan2x_b;
 wire          scan2x_hs, scan2x_vs, scan2x_clk;
 wire          scan2x_enb;
 wire [6:0]    core_mod;
+wire          but_start, but_coin;
 
 wire  [ 1:0]  rotate;
 wire          ioctl_cheat, sdram_init;
@@ -218,6 +219,8 @@ jtframe_mist_base #(
     .joystick2      ( joystick2     ),
     .joystick3      ( joystick3     ),
     .joystick4      ( joystick4     ),
+    .but_start      ( but_start     ),
+    .but_coin       ( but_coin      ),
     // Analog joystick
     .joystick_analog_0( joystick_analog_0   ),
     .joystick_analog_1( joystick_analog_1   ),
@@ -275,6 +278,8 @@ jtframe_board #(
     .board_joystick2( joystick2[15:0] ),
     .board_joystick3( joystick3[15:0] ),
     .board_joystick4( joystick4[15:0] ),
+    .board_start    ( but_start       ),
+    .board_coin     ( but_coin        ),
     .game_joystick1 ( game_joystick1  ),
     .game_joystick2 ( game_joystick2  ),
     .game_joystick3 ( game_joystick3  ),
